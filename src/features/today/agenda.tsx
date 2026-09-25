@@ -60,7 +60,7 @@ export function Agenda({
       <CardFooter>
         <Link
           href="/calendario"
-          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-brand-ink"
         >
           Ver calendário
           <ArrowRight className="size-3" />

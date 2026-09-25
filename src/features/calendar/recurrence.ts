@@ -7,7 +7,9 @@ import {
   toTimeLabel,
   type DateRange,
 } from "@/lib/dates"
-import type { CalendarEvent, DateKey } from "@/lib/types"
+import type { CalendarEvent, DateKey, RecurrenceRule } from "@/lib/types"
+
+export const WEEKLY: RecurrenceRule = "FREQ=WEEKLY"
 
 /** "toda segunda-feira às 07:00" · "todo sábado" (dia inteiro). */
 export function weeklyRecurrenceLabel(event: Pick<CalendarEvent, "start_at" | "all_day">): string {
@@ -58,7 +60,7 @@ export function expandEvents(events: CalendarEvent[], range: DateRange): Occurre
   for (const event of events) {
     const firstDate = toDateKey(event.start_at)
 
-    if (event.recurrence === "weekly") {
+    if (event.recurrence_rule === WEEKLY) {
       let date = firstDate
       if (date < range.start) {
         const weeksToSkip = Math.ceil(daysBetween(firstDate, range.start) / 7)

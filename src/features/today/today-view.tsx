@@ -3,9 +3,7 @@
 import { useState } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page"
-import { ProgressMeter } from "@/components/progress-meter"
 import { SegmentedControl } from "@/components/segmented-control"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   currentPlan,
   dayContext,
@@ -21,21 +19,16 @@ import { TaskSection } from "@/features/tasks/task-section"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { Agenda } from "@/features/today/agenda"
 import { TODAY_SCOPE_COOKIE, type TodayScope } from "@/features/today/constants"
+import { ProgressCard } from "@/features/today/progress-card"
 import { SummaryStats } from "@/features/today/summary-stats"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
-import { daysBetween, formatLongDate, formatRange, formatShortDate } from "@/lib/dates"
+import { formatLongDate } from "@/lib/dates"
 import type { CalendarEvent } from "@/lib/types"
 
 const SCOPE_OPTIONS = [
-  { value: "all", label: "Todas" },
   { value: "mine", label: "Minhas" },
+  { value: "all", label: "Todas" },
 ] as const
-
-function remainingDaysLabel(days: number): string {
-  if (days <= 0) return "termina hoje"
-  if (days === 1) return "falta 1 dia"
-  return `faltam ${days} dias`
-}
 
 export function TodayView({
   greeting,
@@ -60,8 +53,14 @@ export function TodayView({
   const groups = groupTasks(visible, ctx, keepInPlace)
   const summary = summarize(visible, ctx)
   const week = progressOf(dueWithin(visible, ctx.week))
+  // O plano é da equipe: o percentual principal conta todas as tarefas dele.
   const plan = currentPlan(plans, today)
-  const planProgress = plan ? progressOf(visible.filter((task) => task.plan_id === plan.id)) : null
+  const planTasks = plan ? tasks.filter((task) => task.plan_id === plan.id) : []
+  const planProgress = plan ? progressOf(planTasks) : null
+  const myPlanProgress =
+    plan && scope === "mine"
+      ? progressOf(planTasks.filter((task) => isAssignedTo(task, currentUser.id)))
+      : null
 
   return (
     <PageContainer className="max-w-[1240px]">
@@ -88,35 +87,15 @@ export function TodayView({
         Desktop: listas à esquerda; progresso e agenda na coluna da direita.
       */}
       <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Card
-          role="region"
-          aria-labelledby="progress-title"
+        <ProgressCard
+          plan={plan}
+          planProgress={planProgress}
+          mine={myPlanProgress}
+          week={week}
+          weekRange={ctx.week}
+          today={today}
           className="lg:col-start-2 lg:row-start-1"
-        >
-          <CardHeader>
-            <CardTitle id="progress-title" role="heading" aria-level={2}>
-              Progresso
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <ProgressMeter
-              label="Semana"
-              done={week.done}
-              total={week.total}
-              percent={week.percent}
-              hint={formatRange(ctx.week)}
-            />
-            {plan && planProgress ? (
-              <ProgressMeter
-                label={plan.name}
-                done={planProgress.done}
-                total={planProgress.total}
-                percent={planProgress.percent}
-                hint={`Até ${formatShortDate(plan.ends_on)} · ${remainingDaysLabel(daysBetween(today, plan.ends_on))}`}
-              />
-            ) : null}
-          </CardContent>
-        </Card>
+        />
 
         <div className="min-w-0 space-y-9 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <TaskSection
@@ -129,6 +108,7 @@ export function TodayView({
           <TaskSection
             id="hoje"
             title="Hoje"
+            tone="brand"
             tasks={groups.today}
             showDue={false}
             emptyText="Nenhuma tarefa com prazo para hoje."

@@ -10,13 +10,18 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Boop Admin — convenções do projeto
 
-- Contexto, schema proposto e plano: `docs/ARQUITETURA.md`. Como rodar: `README.md`.
+- Contexto, schema, RLS e infraestrutura: `docs/ARQUITETURA.md`. Como rodar: `README.md`.
 - Interface em português (pt-BR); código, tabelas e valores de enum em inglês
   (rótulos em `src/lib/labels.ts`).
 - Datas sempre por `src/lib/dates.ts`: fuso America/Sao_Paulo, semana de segunda
   a domingo, datas sem horário como `DateKey` (`yyyy-MM-dd`).
 - Regras de negócio puras em `src/features/*/logic.ts`. Server Actions validam a
   entrada, verificam a sessão (`requireUser`) e revalidam as telas.
-- Etapa atual: dados em memória (`src/server/mock`). Na troca para o Supabase,
-  mude só `queries.ts`, `actions.ts` e `features/auth`.
+- Banco: Supabase. Mudanças de schema só por migration nova em
+  `supabase/migrations` (nunca editar uma já aplicada); depois, regenerar
+  `src/lib/supabase/database.types.ts`. Acesso ao banco só no servidor
+  (`queries.ts`, `actions.ts`, `features/auth`), com a sessão da pessoa e RLS.
+  Nunca usar service role nem chave secreta no app.
+- Cor da marca só em detalhes (progresso, item ativo, foco, hoje, indicadores):
+  `brand` (#00C2FF) como preenchimento, `brand-ink` (#0079A8) quando for texto.
 - Antes de concluir uma mudança: `npm run lint`, `npm run typecheck` e `npm run build`.

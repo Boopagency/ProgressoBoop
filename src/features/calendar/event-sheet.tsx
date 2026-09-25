@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { EventTypeDot } from "@/features/calendar/event-type"
-import { weeklyRecurrenceLabel, type Occurrence } from "@/features/calendar/recurrence"
+import { WEEKLY, weeklyRecurrenceLabel, type Occurrence } from "@/features/calendar/recurrence"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { capitalize, formatLongDate } from "@/lib/dates"
@@ -124,7 +124,7 @@ function EventDetails({
           <DetailRow icon={<Clock />} label="Horário">
             <span className="tabular-nums">{time}</span>
           </DetailRow>
-          {event.recurrence === "weekly" ? (
+          {event.recurrence_rule === WEEKLY ? (
             <DetailRow icon={<Repeat />} label="Repetição">
               {capitalize(weeklyRecurrenceLabel(event))}
             </DetailRow>
@@ -159,10 +159,10 @@ function EventDetails({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {event.recurrence ? "Excluir todas as ocorrências?" : "Excluir este evento?"}
+              {event.recurrence_rule ? "Excluir todas as ocorrências?" : "Excluir este evento?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {event.recurrence
+              {event.recurrence_rule
                 ? `“${event.title}” é recorrente. A série inteira será removida do calendário.`
                 : `“${event.title}” será removido do calendário.`}
             </AlertDialogDescription>

@@ -1,6 +1,7 @@
 import { isDateKey } from "@/lib/dates"
 import { isTaskArea, isTaskPriority, isTaskStatus } from "@/lib/labels"
 import type { DateKey, TaskArea, TaskPriority, TaskStatus } from "@/lib/types"
+import { isUuid } from "@/lib/utils"
 
 /** Campos editáveis de uma tarefa. */
 export interface TaskInput {
@@ -28,7 +29,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function optionalId(value: unknown): string | null | undefined {
   if (value === null) return null
-  if (typeof value === "string" && value.length > 0) return value
+  if (isUuid(value)) return value
   return undefined
 }
 
@@ -60,11 +61,11 @@ export function parseTaskPatch(raw: unknown): Parsed<TaskPatch> {
 
   if ("assignee_ids" in raw) {
     const ids = raw.assignee_ids
-    if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string" && id.length > 0)) {
+    if (!Array.isArray(ids) || !ids.every(isUuid)) {
       return { ok: false, error: "Responsáveis inválidos." }
     }
     if (ids.length === 0) return { ok: false, error: "Escolha pelo menos um responsável." }
-    patch.assignee_ids = [...new Set(ids as string[])]
+    patch.assignee_ids = [...new Set(ids)]
   }
 
   if ("due_date" in raw) {

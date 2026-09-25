@@ -55,7 +55,7 @@ export function EventItem({
     >
       <span className="flex items-center gap-1 opacity-75 tabular-nums">
         {timeRange(occurrence)}
-        {event.recurrence ? <Repeat className="size-3" aria-label="Recorrente" /> : null}
+        {event.recurrence_rule ? <Repeat className="size-3" aria-label="Recorrente" /> : null}
       </span>
       <span className="mt-0.5 line-clamp-3 leading-4 font-medium">{event.title}</span>
     </button>

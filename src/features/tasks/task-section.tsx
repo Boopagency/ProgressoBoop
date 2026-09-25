@@ -22,7 +22,8 @@ export function TaskSection({
   title: string
   tasks: Task[]
   emptyText?: ReactNode
-  tone?: "default" | "danger"
+  /** "danger": ponto vermelho (atrasadas); "brand": ponto ciano (hoje). */
+  tone?: "default" | "danger" | "brand"
   action?: ReactNode
   showAssignees?: boolean
   showDue?: boolean
@@ -35,8 +36,11 @@ export function TaskSection({
     <section id={id} aria-label={title} className={cn("scroll-mt-16", className)}>
       <div className="flex h-8 items-center justify-between gap-2 border-b border-border/80">
         <SectionTitle count={openCount}>
-          {tone === "danger" && openCount > 0 ? (
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue" />
+          {tone !== "default" && openCount > 0 ? (
+            <span
+              aria-hidden="true"
+              className={cn("size-1.5 rounded-full", tone === "danger" ? "bg-overdue" : "bg-brand")}
+            />
           ) : null}
           {title}
         </SectionTitle>

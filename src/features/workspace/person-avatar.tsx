@@ -1,13 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
-/** Cores suaves e fixas por pessoa, na ordem da equipe. */
+/**
+ * Cores suaves e fixas por pessoa, na ordem da equipe, tiradas da paleta da
+ * marca (sem vermelho/verde/laranja, que têm significado no produto).
+ */
 const PERSON_COLORS = [
-  "bg-indigo-100 text-indigo-700",
-  "bg-rose-100 text-rose-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-800",
-  "bg-sky-100 text-sky-700",
+  "bg-brand-mist text-brand-navy",
+  "bg-brand-soft text-brand-ink",
+  "bg-brand-sand text-foreground",
+  "bg-brand-sky text-brand-navy",
 ]
 
 export function personColor(index: number): string {

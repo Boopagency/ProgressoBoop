@@ -1,20 +1,23 @@
 "use server"
 
-import { cookies, headers } from "next/headers"
+import type { AuthError } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 
-import { SESSION_COOKIE } from "@/features/auth/constants"
-import { mockDb } from "@/server/mock/db"
+import { createClient } from "@/lib/supabase/server"
 
 export interface SignInState {
   error: string | null
   email: string
 }
 
-/**
- * Login simulado (etapa 1): aceita os e-mails da equipe com qualquer senha.
- * Etapa 2: `supabase.auth.signInWithPassword`.
- */
+function signInErrorMessage(error: AuthError): string {
+  if (error.code === "invalid_credentials") return "E-mail ou senha incorretos."
+  if (error.code === "email_not_confirmed") return "Esta conta ainda não foi confirmada."
+  if (error.status === 429) return "Muitas tentativas. Aguarde um pouco e tente de novo."
+  return "Não foi possível entrar agora. Tente de novo."
+}
+
+/** Login com e-mail e senha no Supabase Auth. Só contas com perfil (a equipe) entram. */
 export async function signIn(_previous: SignInState, formData: FormData): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const password = String(formData.get("password") ?? "")
@@ -23,26 +26,26 @@ export async function signIn(_previous: SignInState, formData: FormData): Promis
     return { error: "Informe e-mail e senha.", email }
   }
 
-  const user = mockDb().users.find((candidate) => candidate.email === email)
-  if (!user) {
-    return { error: "E-mail ou senha incorretos.", email }
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { error: signInErrorMessage(error), email }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", data.user.id)
+    .maybeSingle()
+  if (!profile) {
+    await supabase.auth.signOut({ scope: "local" })
+    return { error: "Esta conta não tem acesso ao Boop Admin.", email }
   }
 
-  const [store, requestHeaders] = await Promise.all([cookies(), headers()])
-  store.set(SESSION_COOKIE, user.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    // Secure só em HTTPS (Vercel); em http://localhost alguns navegadores descartariam o cookie.
-    secure: requestHeaders.get("x-forwarded-proto") === "https",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  })
-
-  redirect("/")
+  redirect("/hoje")
 }
 
+/** Sai só deste navegador; as sessões em outros aparelhos continuam. */
 export async function signOut(): Promise<void> {
-  const store = await cookies()
-  store.delete(SESSION_COOKIE)
+  const supabase = await createClient()
+  await supabase.auth.signOut({ scope: "local" })
   redirect("/login")
 }

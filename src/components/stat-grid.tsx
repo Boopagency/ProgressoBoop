@@ -37,7 +37,7 @@ export function StatGrid({ items, className }: { items: StatItem[]; className?: 
             <dd className="mt-1.5 flex items-baseline gap-2">
               <span
                 className={cn(
-                  "text-[26px] leading-8 font-semibold tracking-tight tabular-nums",
+                  "font-display text-[26px] leading-8 font-semibold tracking-tight tabular-nums",
                   item.alert ? "text-overdue" : "text-foreground"
                 )}
               >

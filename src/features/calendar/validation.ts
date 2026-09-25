@@ -1,6 +1,7 @@
 import { isDateKey, isTimeLabel, zonedTimeToInstant } from "@/lib/dates"
 import { isEventType } from "@/lib/labels"
-import type { DateKey, EventRecurrence, EventType, Timestamp } from "@/lib/types"
+import type { DateKey, EventType, RecurrenceRule, Timestamp } from "@/lib/types"
+import { isUuid } from "@/lib/utils"
 
 /**
  * Evento como o formulário envia: data e horários de parede em São Paulo.
@@ -14,7 +15,7 @@ export interface EventInput {
   all_day: boolean
   start_time: string | null
   end_time: string | null
-  recurrence: EventRecurrence | null
+  recurrence_rule: RecurrenceRule | null
   client_id: string | null
 }
 
@@ -25,7 +26,7 @@ export interface EventRecord {
   start_at: Timestamp
   end_at: Timestamp | null
   all_day: boolean
-  recurrence: EventRecurrence | null
+  recurrence_rule: RecurrenceRule | null
   client_id: string | null
 }
 
@@ -51,10 +52,10 @@ export function parseEventInput(raw: unknown): Parsed<EventRecord> {
   if (!isEventType(raw.event_type)) return { ok: false, error: "Tipo inválido." }
   if (!isDateKey(raw.date)) return { ok: false, error: "Data inválida." }
   if (typeof raw.all_day !== "boolean") return { ok: false, error: "Dados inválidos." }
-  if (raw.recurrence !== null && raw.recurrence !== "weekly") {
+  if (raw.recurrence_rule !== null && raw.recurrence_rule !== "FREQ=WEEKLY") {
     return { ok: false, error: "Recorrência inválida." }
   }
-  if (raw.client_id !== null && (typeof raw.client_id !== "string" || !raw.client_id)) {
+  if (raw.client_id !== null && !isUuid(raw.client_id)) {
     return { ok: false, error: "Cliente inválido." }
   }
 
@@ -83,7 +84,7 @@ export function parseEventInput(raw: unknown): Parsed<EventRecord> {
       start_at: startAt,
       end_at: endAt,
       all_day: raw.all_day,
-      recurrence: raw.recurrence,
+      recurrence_rule: raw.recurrence_rule,
       client_id: raw.client_id,
     },
   }

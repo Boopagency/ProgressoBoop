@@ -35,11 +35,11 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent active:bg-transparent">
-              <Link href="/" onClick={closeOnMobile}>
-                <span className="flex size-7 shrink-0 items-center justify-center">
-                  <BoopMark className="size-7" />
+              <Link href="/hoje" onClick={closeOnMobile}>
+                <span className="flex size-8 shrink-0 items-center justify-center">
+                  <BoopMark className="w-[30px]" />
                 </span>
-                <span className="text-[15px] font-semibold tracking-tight text-foreground">
+                <span className="font-display text-[15px] font-semibold tracking-tight text-foreground">
                   Boop Admin
                 </span>
               </Link>
@@ -58,7 +58,7 @@ export function AppSidebar() {
                     asChild
                     isActive={isActivePath(pathname, item.href)}
                     tooltip={item.title}
-                    className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground data-[active=true]:text-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-foreground"
+                    className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground data-[active=true]:text-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-brand-ink"
                   >
                     <Link href={item.href} onClick={closeOnMobile}>
                       <item.icon />

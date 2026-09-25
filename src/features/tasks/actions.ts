@@ -9,62 +9,63 @@ import {
   type TaskInput,
   type TaskPatch,
 } from "@/features/tasks/validation"
-import type { ActionResult, Task } from "@/lib/types"
-import { mockDb, newId } from "@/server/mock/db"
+import { dbFailure } from "@/lib/supabase/errors"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
+import type { ActionResult } from "@/lib/types"
+import { isUuid } from "@/lib/utils"
 
 /*
- * Server Actions das tarefas. Etapa 1: alteram o "banco" em memória, imitando
- * as regras que o Postgres terá na etapa 2 (chaves estrangeiras e o trigger de
- * completed_at/updated_at). A assinatura não muda na troca para o Supabase.
+ * Server Actions das tarefas. O banco garante o resto: completed_at e
+ * updated_at (trigger set_task_timestamps), chaves estrangeiras e RLS.
  */
 
-function checkReferences(patch: TaskPatch): string | null {
-  const db = mockDb()
-  if (patch.assignee_ids?.some((id) => !db.profiles.some((profile) => profile.id === id))) {
-    return "Responsável não encontrado."
-  }
-  if (patch.client_id && !db.clients.some((client) => client.id === patch.client_id)) {
-    return "Cliente não encontrado."
-  }
-  if (patch.plan_id && !db.plans.some((plan) => plan.id === patch.plan_id)) {
-    return "Plano não encontrado."
-  }
-  return null
-}
-
-/** Equivalente ao trigger `set_task_timestamps` da etapa 2. */
-function withTimestamps(previous: Task | null, next: Task): Task {
-  const now = new Date().toISOString()
-  const becameDone = next.status === "done" && previous?.status !== "done"
-  return {
-    ...next,
-    updated_at: now,
-    completed_at:
-      next.status !== "done" ? null : becameDone ? now : (previous?.completed_at ?? now),
-  }
-}
+const NOT_FOUND = { ok: false, error: "Essa tarefa não existe mais." } as const
 
 function refreshApp() {
   revalidatePath("/", "layout")
 }
 
+/** Deixa a tarefa exatamente com estes responsáveis. */
+async function setAssignees(
+  supabase: SupabaseServerClient,
+  taskId: string,
+  profileIds: string[]
+): Promise<ActionResult> {
+  const { error: addError } = await supabase
+    .from("task_assignees")
+    .upsert(
+      profileIds.map((profileId) => ({ task_id: taskId, profile_id: profileId })),
+      { onConflict: "task_id,profile_id", ignoreDuplicates: true }
+    )
+  if (addError) return dbFailure(addError, "Não foi possível salvar os responsáveis.")
+
+  // Os ids já foram validados como UUID, então podem entrar no filtro.
+  const { error: removeError } = await supabase
+    .from("task_assignees")
+    .delete()
+    .eq("task_id", taskId)
+    .not("profile_id", "in", `(${profileIds.join(",")})`)
+  if (removeError) return dbFailure(removeError, "Não foi possível salvar os responsáveis.")
+
+  return { ok: true, data: null }
+}
+
 export async function createTask(input: TaskInput): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser()
+  await requireUser()
   const parsed = parseTaskInput(input)
   if (!parsed.ok) return parsed
-  const referenceError = checkReferences(parsed.value)
-  if (referenceError) return { ok: false, error: referenceError }
+  const { assignee_ids, ...fields } = parsed.value
 
-  const now = new Date().toISOString()
-  const task = withTimestamps(null, {
-    id: newId("task"),
-    ...parsed.value,
-    completed_at: null,
-    created_by: user.id,
-    created_at: now,
-    updated_at: now,
-  })
-  mockDb().tasks.push(task)
+  const supabase = await createClient()
+  const { data: task, error } = await supabase.from("tasks").insert(fields).select("id").single()
+  if (error) return dbFailure(error, "Não foi possível criar a tarefa.")
+
+  const assigned = await setAssignees(supabase, task.id, assignee_ids)
+  if (!assigned.ok) {
+    // Uma tarefa sem responsáveis sumiria das listas "Minhas": desfaz a criação.
+    await supabase.from("tasks").delete().eq("id", task.id)
+    return assigned
+  }
 
   refreshApp()
   return { ok: true, data: { id: task.id } }
@@ -72,17 +73,23 @@ export async function createTask(input: TaskInput): Promise<ActionResult<{ id: s
 
 export async function updateTask(id: string, patch: TaskPatch): Promise<ActionResult> {
   await requireUser()
+  if (!isUuid(id)) return NOT_FOUND
   const parsed = parseTaskPatch(patch)
   if (!parsed.ok) return parsed
-  const referenceError = checkReferences(parsed.value)
-  if (referenceError) return { ok: false, error: referenceError }
+  const { assignee_ids, ...fields } = parsed.value
 
-  const tasks = mockDb().tasks
-  const index = tasks.findIndex((task) => task.id === id)
-  const current = tasks[index]
-  if (!current) return { ok: false, error: "Essa tarefa não existe mais." }
+  const supabase = await createClient()
+  // Mesmo quando só os responsáveis mudam, a tarefa é "tocada": confirma que
+  // ela existe e atualiza updated_at (o trigger define o horário).
+  const changes = Object.keys(fields).length > 0 ? fields : { updated_at: new Date().toISOString() }
+  const { data, error } = await supabase.from("tasks").update(changes).eq("id", id).select("id")
+  if (error) return dbFailure(error, "Não foi possível salvar a tarefa.")
+  if (data.length === 0) return NOT_FOUND
 
-  tasks[index] = withTimestamps(current, { ...current, ...parsed.value })
+  if (assignee_ids) {
+    const assigned = await setAssignees(supabase, id, assignee_ids)
+    if (!assigned.ok) return assigned
+  }
 
   refreshApp()
   return { ok: true, data: null }
@@ -90,10 +97,12 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<ActionRe
 
 export async function deleteTask(id: string): Promise<ActionResult> {
   await requireUser()
-  const db = mockDb()
-  const before = db.tasks.length
-  db.tasks = db.tasks.filter((task) => task.id !== id)
-  if (db.tasks.length === before) return { ok: false, error: "Essa tarefa não existe mais." }
+  if (!isUuid(id)) return NOT_FOUND
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("tasks").delete().eq("id", id).select("id")
+  if (error) return dbFailure(error, "Não foi possível excluir a tarefa.")
+  if (data.length === 0) return NOT_FOUND
 
   refreshApp()
   return { ok: true, data: null }

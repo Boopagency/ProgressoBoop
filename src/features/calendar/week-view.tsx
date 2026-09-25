@@ -53,7 +53,7 @@ export function WeekView({
                   <span
                     className={cn(
                       "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-semibold tabular-nums",
-                      isToday ? "bg-primary text-primary-foreground" : "text-foreground"
+                      isToday ? "bg-brand text-brand-navy" : "text-foreground"
                     )}
                   >
                     {Number(day.slice(8))}

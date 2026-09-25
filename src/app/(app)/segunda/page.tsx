@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { getEvents } from "@/features/calendar/queries"
-import { weeklyRecurrenceLabel } from "@/features/calendar/recurrence"
+import { WEEKLY, weeklyRecurrenceLabel } from "@/features/calendar/recurrence"
 import { getTasks } from "@/features/tasks/queries"
 import { TasksProvider } from "@/features/tasks/tasks-provider"
 import { weekContext } from "@/features/weekly/logic"
@@ -21,7 +21,7 @@ export default async function WeeklyPage() {
   ])
 
   const meeting = events.find(
-    (event) => event.recurrence === "weekly" && event.event_type === "meeting"
+    (event) => event.recurrence_rule === WEEKLY && event.event_type === "meeting"
   )
   const meetingLabel = meeting ? `Reunião ${weeklyRecurrenceLabel(meeting)}` : null
 

@@ -1,29 +1,31 @@
 import "server-only"
 
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 
-import { SESSION_COOKIE } from "@/features/auth/constants"
+import { createClient } from "@/lib/supabase/server"
 import type { SessionUser } from "@/lib/types"
-import { mockDb } from "@/server/mock/db"
 
 /**
- * Usuário da requisição atual. Etapa 1: cookie simulado. Etapa 2:
- * `supabase.auth.getUser()` + perfil em `profiles`.
+ * Usuário da requisição atual: sessão válida no Supabase Auth (JWT
+ * verificado por getClaims) e perfil em `profiles`. Sem perfil, a conta não
+ * é da equipe e é tratada como deslogada.
  */
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
-  const userId = (await cookies()).get(SESSION_COOKIE)?.value
-  if (!userId) return null
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.getClaims()
+  if (error || !data?.claims) return null
 
-  const db = mockDb()
-  const user = db.users.find((candidate) => candidate.id === userId)
-  const profile = db.profiles.find((candidate) => candidate.id === userId)
-  if (!user || !profile) return null
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .eq("id", data.claims.sub)
+    .maybeSingle()
+  if (!profile) return null
 
   return {
     id: profile.id,
-    email: user.email,
+    email: typeof data.claims.email === "string" ? data.claims.email : "",
     full_name: profile.full_name,
     avatar_url: profile.avatar_url,
   }

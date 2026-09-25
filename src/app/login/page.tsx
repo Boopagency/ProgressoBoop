@@ -9,15 +9,15 @@ import { getSessionUser } from "@/features/auth/session"
 export const metadata: Metadata = { title: "Entrar" }
 
 export default async function LoginPage() {
-  if (await getSessionUser()) redirect("/")
+  if (await getSessionUser()) redirect("/hoje")
 
   return (
     <main className="flex min-h-svh flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-[380px]">
         <div className="mb-8 flex flex-col items-center gap-5 text-center">
-          <BoopMark className="size-10" />
+          <BoopMark className="w-14" />
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight">Entrar no Boop Admin</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight">Entrar no Boop Admin</h1>
             <p className="text-sm text-muted-foreground">Acesso restrito à equipe da Boop.</p>
           </div>
         </div>

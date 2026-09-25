@@ -90,7 +90,7 @@ function DayCell({
     <span
       className={cn(
         "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-medium tabular-nums",
-        isToday && "bg-primary text-primary-foreground",
+        isToday && "bg-brand font-semibold text-brand-navy",
         !isToday && outside && "text-subtle-foreground"
       )}
     >

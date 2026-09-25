@@ -1,14 +1,12 @@
 # Boop Admin
 
-Cockpit interno da Boop, planejado para `admin.deumboop.com.br`. Serve para
-ver em poucos segundos o que está atrasado, o que precisa acontecer hoje e na
-semana, quem é responsável por cada coisa e quanto do plano atual já foi
-concluído.
+Cockpit interno da Boop, em `admin.deumboop.com.br`. Serve para ver em poucos
+segundos o que está atrasado, o que precisa acontecer hoje e na semana, quem é
+responsável por cada coisa e quanto do plano atual já foi concluído.
 
-> **Etapa 1: protótipo visual.** As telas funcionam com dados em memória e
-> login simulado. O Supabase entra na etapa 2, depois da aprovação visual.
-> Arquitetura, schema proposto e plano completo:
-> [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+Next.js 16 + TypeScript + Supabase (Auth, PostgreSQL com RLS) + Tailwind v4 +
+shadcn/ui, publicado na Vercel. Arquitetura, schema, políticas de segurança e
+infraestrutura: [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
 ## Rodar localmente
 
@@ -16,16 +14,12 @@ Requer Node.js 20.9 ou mais novo (recomendado: 22).
 
 ```bash
 npm install
+cp .env.example .env.local   # preencha com a URL e a chave publicável do Supabase
 npm run dev
 ```
 
-Abra <http://localhost:3000> e entre com um destes e-mails e **qualquer senha**:
-
-- `jabez@deumboop.com.br`
-- `renatha@deumboop.com.br`
-- `leo@deumboop.com.br`
-
-A saudação, o filtro "Minhas" e o menu do usuário mudam conforme a pessoa.
+Abra <http://localhost:3000> e entre com a sua conta da equipe. Não existe
+cadastro: as contas são criadas no Supabase (veja "Contas" abaixo).
 
 ### Scripts
 
@@ -37,11 +31,22 @@ A saudação, o filtro "Minhas" e o menu do usuário mudam conforme a pessoa.
 | `npm run lint`      | ESLint                                      |
 | `npm run typecheck` | gera os tipos de rota e roda o TypeScript   |
 
-## O que já dá para avaliar
+### Variáveis de ambiente
 
-- **Hoje** (`/`): saudação, quatro indicadores, progresso da semana e do plano
-  "Estruturação da Boop", seções Atrasadas / Hoje / Esta semana e próximos
-  compromissos. A alternância Todas / Minhas fica salva no navegador.
+| Variável                               | Tipo   | Valor                                              |
+| -------------------------------------- | ------ | -------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | CONFIG | Project URL do Supabase                            |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | CONFIG | chave publicável (`sb_publishable_…`) do Supabase |
+
+As duas são públicas por natureza; a proteção dos dados é o RLS do banco. O
+app **não usa** chave secreta nem `service_role`.
+
+## Telas
+
+- **Hoje** (`/hoje`, tela inicial): saudação, quatro indicadores, progresso do
+  plano "Estruturação da Boop até 31/10" em destaque e da semana, seções
+  Atrasadas / Hoje / Esta semana e próximos compromissos. Abre em "Minhas";
+  a alternância Minhas / Todas fica salva no navegador.
 - **Tarefas** (`/tarefas`): filtros por pessoa, status, área, cliente e prazo,
   com a lista agrupada por prazo. Os filtros ficam na URL.
 - **Calendário** (`/calendario`): semana e mês, com tarefas, reuniões, eventos
@@ -54,17 +59,26 @@ A saudação, o filtro "Minhas" e o menu do usuário mudam conforme a pessoa.
 - Concluir uma tarefa atualiza contadores e progresso na hora. A tarefa fica
   riscada no lugar e o toast oferece "Desfazer".
 
-## Sobre os dados do protótipo
+## Banco de dados
 
-- O plano real (25 tarefas, de 25/09 a 31/10) já está cadastrado com as datas
-  e os responsáveis definidos.
-- Alguns itens de exemplo (marcados como `DEMO` em
-  `src/server/mock/seed.ts`) existem só para mostrar tarefas atrasadas,
-  concluídas e decisões. As datas deles são relativas ao dia de hoje. Eles não
-  vão para o banco real.
-- Tudo fica em memória no servidor: reiniciar o `npm run dev` volta ao estado
-  inicial. Em deploy serverless (Vercel), cada instância teria a própria
-  cópia, então o protótipo serve para avaliação local.
+- Schema, trigger e RLS: `supabase/migrations/`. Mudanças no banco entram
+  sempre como uma migration nova. Depois, regenere os tipos em
+  `src/lib/supabase/database.types.ts` (`npx supabase gen types typescript`).
+- Dados iniciais reais: `supabase/seed.sql` (perfis, clientes, o plano, as 25
+  tarefas e a reunião semanal). Pode rodar de novo sem duplicar.
+
+### Contas
+
+- Só a equipe entra: Jabez, Renatha e Léo (`@deumboop.com.br`).
+- Não há cadastro público. Para adicionar alguém: Supabase → Authentication →
+  Users → Add user (marque "Auto Confirm User") e depois crie o perfil:
+
+  ```sql
+  insert into public.profiles (id, full_name, role)
+  select id, 'Nome', 'Papel' from auth.users where email = 'nome@deumboop.com.br';
+  ```
+
+  Sem perfil, a conta não vê nenhum dado.
 
 ## Estrutura
 
@@ -73,13 +87,21 @@ src/
 ├── app/              rotas (App Router): (app)/ = área logada, login/
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
-│   └── layout/       sidebar, cabeçalho, menu do usuário
+│   └── layout/       sidebar, cabeçalho, menu do usuário, marca
 ├── features/         auth, workspace, tasks, today, calendar, weekly
 │                     (cada uma com queries, actions, lógica e componentes)
 ├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
-├── server/mock/      "banco" em memória da etapa 1
-└── proxy.ts          proteção de rotas (no Next 16, substitui o middleware)
+│   └── supabase/     clientes do Supabase e tipos do banco
+└── proxy.ts          sessão e proteção de rotas (no Next 16, substitui o middleware)
+supabase/             migrations e seed
+public/brand/         logo oficial da Boop (SVG)
 ```
+
+## Deploy
+
+Projeto `boop-admin` na Vercel, ligado a este repositório. Cada push na branch
+de produção publica em `admin.deumboop.com.br`; as funções rodam em São Paulo
+(`gru1`, em `vercel.json`), perto do banco (`sa-east-1`).
 
 ## shadcn/ui
 
@@ -95,13 +117,6 @@ Ajustes locais em relação ao código original do shadcn:
 - `use-mobile`: `useSyncExternalStore` no lugar de `setState` dentro de efeito.
 - `sidebar`: esqueleto com largura fixa em vez de `Math.random`.
 - `card`: espaçamento de 20px e sem sombra.
+- `progress`: trilho neutro e barra na cor da marca.
 - `sheet`, `dialog` e `alert-dialog`: overlay mais leve e textos de
   acessibilidade em português.
-
-## Próximos passos
-
-1. Aprovação visual desta etapa.
-2. Supabase: migrations, RLS, seed do plano e Auth real.
-3. Deploy na Vercel em `admin.deumboop.com.br`.
-
-Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md#11-plano-de-implementação).

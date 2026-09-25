@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createEvent, updateEvent } from "@/features/calendar/actions"
-import { weeklyRecurrenceLabel } from "@/features/calendar/recurrence"
+import { WEEKLY, weeklyRecurrenceLabel } from "@/features/calendar/recurrence"
 import type { EventInput } from "@/features/calendar/validation"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import {
@@ -100,7 +100,7 @@ function EventForm({
   const [endTime, setEndTime] = useState(
     event?.end_at && timed ? toTimeLabel(event.end_at) : event ? "" : "10:00"
   )
-  const [weekly, setWeekly] = useState(event?.recurrence === "weekly")
+  const [weekly, setWeekly] = useState(event?.recurrence_rule === WEEKLY)
   const [clientId, setClientId] = useState<string | null>(event?.client_id ?? null)
   const [description, setDescription] = useState(event?.description ?? "")
   const [error, setError] = useState<string | null>(null)
@@ -121,7 +121,7 @@ function EventForm({
       all_day: allDay,
       start_time: allDay ? null : startTime,
       end_time: allDay || !endTime ? null : endTime,
-      recurrence: weekly ? "weekly" : null,
+      recurrence_rule: weekly ? WEEKLY : null,
       client_id: clientId,
     }
     startSaving(async () => {
@@ -282,7 +282,7 @@ function EventForm({
           className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")}
           role={error ? "alert" : undefined}
         >
-          {error ?? (event?.recurrence ? "Alterações valem para todas as ocorrências." : null)}
+          {error ?? (event?.recurrence_rule ? "Alterações valem para todas as ocorrências." : null)}
         </p>
         <div className="flex shrink-0 gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>

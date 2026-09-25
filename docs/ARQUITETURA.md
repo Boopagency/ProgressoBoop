@@ -1,13 +1,13 @@
 # Boop Admin — Arquitetura e plano
 
 Documento de referência da primeira versão do Boop Admin, a ferramenta interna
-da Boop. Reúne a análise do repositório, a arquitetura, o schema proposto para
-o Supabase, as dependências, a estrutura das telas e o plano de implementação.
+da Boop. Reúne a análise do repositório, a arquitetura, o schema do Supabase,
+as dependências, a estrutura das telas, a infraestrutura e o plano de
+implementação.
 
-> Status: **Etapa 1 concluída (protótipo visual com dados mockados)**. As
-> quatro telas funcionam com dados em memória e login simulado. O Supabase
-> ainda não está conectado, e o schema abaixo é uma proposta para aprovação.
-> Como rodar: [README](../README.md).
+> Status: **V1 real em implantação**. O código já usa Supabase (Auth +
+> PostgreSQL com RLS) e dados reais; falta concluir a infraestrutura
+> (projeto no Supabase, Vercel e domínio). Como rodar: [README](../README.md).
 
 ---
 
@@ -19,8 +19,12 @@ o Supabase, as dependências, a estrutura das telas e o plano de implementação
   (`deumboop.com.br`). Nada do repositório do site foi lido, alterado ou
   reutilizado.
 - Todo o trabalho acontece na branch `claude/nifty-cray-02c7u5`. Nada é
-  commitado na `main`. Como o repositório estava vazio, essa branch pode
-  aparecer como padrão no GitHub até criarmos a `main` na aprovação.
+  commitado na `main`. Como o repositório estava vazio, essa é a única branch
+  e aparece como padrão no GitHub; por isso ela é também a branch de produção
+  do projeto na Vercel até a `main` ser criada.
+- A infraestrutura também é independente do site: organização "Boop" no
+  Supabase e projeto próprio na Vercel (`boop-admin`), sem compartilhar nada
+  com o projeto do site.
 
 ## 2. Stack
 
@@ -32,8 +36,8 @@ o Supabase, as dependências, a estrutura das telas e o plano de implementação
 | Componentes  | shadcn/ui (estilo new-york, primitivas Radix)                |
 | Ícones       | Lucide                                                       |
 | Datas        | date-fns (locale `pt-BR`)                                    |
-| Backend      | Supabase (Auth + PostgreSQL com RLS) — etapa 2               |
-| Deploy       | Vercel em `admin.deumboop.com.br` — etapa 3                  |
+| Backend      | Supabase (Auth + PostgreSQL com RLS), região `sa-east-1`      |
+| Deploy       | Vercel (projeto `boop-admin`, funções em `gru1`) em `admin.deumboop.com.br` |
 
 ## 3. Arquitetura de pastas
 
@@ -46,7 +50,7 @@ src/
 ├── app/
 │   ├── (app)/                  # área autenticada (layout com sidebar)
 │   │   ├── layout.tsx          # sidebar + dados de referência (equipe, clientes, planos)
-│   │   ├── page.tsx            # Hoje  → "/"
+│   │   ├── hoje/               # "/hoje" (a raiz "/" redireciona para cá)
 │   │   ├── loading.tsx / error.tsx
 │   │   ├── tarefas/            # "/tarefas"
 │   │   ├── calendario/         # "/calendario"
@@ -67,9 +71,15 @@ src/
 │   ├── calendar/               # semana/mês, recorrência, eventos
 │   └── weekly/                 # tela Segunda e decisões da semana
 ├── hooks/                      # use-mobile (shadcn)
-├── lib/                        # datas (fuso de SP), rótulos, tipos, cn()
-├── server/mock/                # "banco" em memória (somente etapa 1)
-└── proxy.ts                    # proteção de rotas (no Next 16, substitui o middleware)
+├── lib/
+│   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
+│   └── *.ts                    # datas (fuso de SP), rótulos, tipos, cn()
+└── proxy.ts                    # sessão + proteção de rotas (no Next 16, substitui o middleware)
+
+supabase/
+├── migrations/                 # schema, trigger e RLS (fonte da verdade do banco)
+└── seed.sql                    # dados reais: equipe, clientes, plano, 25 tarefas, reunião
+public/brand/                   # marca oficial da Boop (SVG do site)
 ```
 
 Regras:
@@ -84,198 +94,111 @@ Regras:
 
 ```
 Server Component (page.tsx)
-  └─ lê dados via queries.ts   ── etapa 1: mock em memória / etapa 2: Supabase
+  └─ lê dados via queries.ts   ── Supabase com a sessão da pessoa (RLS)
       └─ Client Component (visão da tela)
            ├─ useOptimistic → a UI muda no mesmo frame (checkbox, progresso)
-           └─ Server Action → grava → refresh() → o servidor re-renderiza a tela
+           └─ Server Action → grava no Supabase → revalida → o servidor re-renderiza
 ```
 
 - **Leitura:** as páginas são Server Components e buscam os dados no servidor.
   O volume é pequeno (dezenas ou centenas de tarefas), então cada tela busca o
   que precisa e os filtros rodam no cliente, de forma instantânea.
-- **Escrita:** Server Actions com validação simples no servidor. Na etapa 2, o
-  RLS do Postgres é a segunda camada de proteção.
+- **Escrita:** Server Actions com validação simples no servidor. O RLS do
+  Postgres é a segunda camada de proteção.
 - **Otimismo:** concluir uma tarefa atualiza checkbox, contadores e barras de
   progresso na hora. Se o servidor falhar, a UI volta e aparece um toast.
-- **Etapa 1 → etapa 2:** as telas não mudam. Só a implementação de
-  `queries.ts`/`actions.ts` e da sessão troca do mock para o Supabase.
+- **Sem cliente do Supabase no navegador.** Todo acesso ao banco passa pelo
+  servidor (Server Components e Server Actions) com a sessão da pessoa, via
+  `@supabase/ssr` e cookies.
 
-## 5. Schema do Supabase (proposta)
+## 5. Schema do Supabase
 
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
-`plans`.
+`plans`. O SQL completo está em
+[`supabase/migrations/20260925180000_initial_schema.sql`](../supabase/migrations/20260925180000_initial_schema.sql).
+
+| Tabela             | Colunas principais                                                                 |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `profiles`         | `id` (= `auth.users.id`), `full_name`, `avatar_url`, `role`, `created_at`          |
+| `clients`          | `id`, `name` (único), `active`, `created_at`                                       |
+| `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`                                 |
+| `tasks`            | `id`, `title`, `description`, `client_id`, `plan_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` |
+| `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
+| `events`           | `id`, `title`, `description`, `event_type`, `start_at`, `end_at`, `all_day`, `recurrence_rule`, `client_id`, `created_by`, `created_at` |
+| `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`         |
+
+Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
+`normal`, `high`), `task_area` (`commercial`, `finance`, `operations`,
+`brand`, `technology`, `clients`) e `event_type` (`meeting`, `internal`,
+`delivery`).
 
 ### 5.1 Decisões sobre o schema
 
 1. **`task_assignees` (tarefa ↔ pessoa)** em vez de `assignee_id`. O plano tem
-   tarefas de duas pessoas e de "Todos". A tabela de relação mantém
-   integridade (FK + cascade) e a consulta continua simples.
-   "Todos" = as três pessoas atribuídas, e a interface mostra "Todos".
-2. **`plans` (nova, pequena)**. A tela Hoje mostra
-   "Estruturação da Boop até 31/10 — 12 de 25 tarefas". Para isso é preciso
-   saber **quais** tarefas pertencem ao plano. Filtrar por data misturaria
-   tarefas avulsas de clientes com as do plano. Com `plans` + `tasks.plan_id`,
-   o progresso sai de uma contagem, e o próximo plano (novembro, por exemplo)
-   é só uma nova linha.
-3. **`recurrence`** substitui `recurring` + `recurrence_rule`. Uma coluna só
-   (`null` = não recorrente, `'weekly'` = toda semana no mesmo dia e horário)
-   evita estados inválidos e dispensa biblioteca de RRULE. Novos valores
-   (mensal etc.) entram por migration quando houver necessidade.
+   tarefas de uma, duas ou das três pessoas ("Todos"). A tabela de relação
+   mantém integridade (FK + cascade) e a consulta continua simples: a tarefa
+   vem com os responsáveis numa única chamada.
+2. **`plans` (nova, pequena)**. A tela Hoje mostra o progresso de
+   "Estruturação da Boop até 31/10". Para isso é preciso saber **quais**
+   tarefas pertencem ao plano; filtrar por data misturaria tarefas avulsas de
+   clientes com as do plano. Com `plans` + `tasks.plan_id`, o progresso sai de
+   uma contagem, e o próximo plano é só uma nova linha.
+3. **`recurrence_rule`** no formato do padrão iCalendar (RFC 5545). Nesta
+   versão só existe `FREQ=WEEKLY` (garantido por `check`): toda semana no
+   mesmo dia e horário de `start_at`. `null` = evento único. Sem motor de
+   recorrência: o app expande as ocorrências para o período visível. Outras
+   regras entram por migration quando houver necessidade.
 4. **`all_day`** em `events`: entregas costumam não ter horário.
 5. **Enums** com códigos em inglês e rótulos em português num único arquivo
    (`src/lib/labels.ts`).
-6. **`completed_at`** é preenchido por trigger no banco quando o status vira
-   `done` e limpo quando sai de `done`. A regra fica garantida para qualquer
-   cliente.
+6. **`completed_at` e `updated_at`** são mantidos pelo trigger
+   `set_task_timestamps`: `completed_at` é preenchido quando o status vira
+   `done` e limpo quando sai de `done`. A regra vale para qualquer cliente.
 7. **Área, cliente e prazo** são opcionais no banco. O formulário rápido pede
    prazo, mas não bloqueia.
 8. **Eventos chegam ao servidor como data + horário de São Paulo** (ex.:
    `2026-09-28` + `07:00`) e o servidor converte para `timestamptz`,
    calculando o deslocamento real do fuso. Assim a conversão fica certa mesmo
    se o horário de verão voltar.
+9. **Ordem da equipe** (Jabez, Renatha, Léo) = ordem de `profiles.created_at`.
+   Sem coluna extra.
 
-### 5.2 SQL
+### 5.2 Segurança (RLS)
 
-```sql
--- Tipos
-create type public.task_status     as enum ('todo', 'doing', 'done');
-create type public.task_priority   as enum ('low', 'normal', 'high');
-create type public.task_area       as enum ('commercial', 'finance', 'operations', 'brand', 'technology', 'clients');
-create type public.event_type      as enum ('meeting', 'internal', 'delivery');
-create type public.event_recurrence as enum ('weekly');
+- RLS ligado em **todas** as tabelas. Usuários anônimos não têm nenhuma
+  política, então não leem nem gravam nada.
+- **Ser da equipe = ter perfil em `profiles`.** A função
+  `private.is_team_member()` (`security definer`, `search_path` vazio, num
+  schema fora da API) responde isso para as políticas. Uma conta do Auth sem
+  perfil não vê nenhum dado, e o app a trata como deslogada.
+- Políticas da V1 (sem papéis nem permissões por pessoa):
 
--- Pessoas (1:1 com auth.users)
-create table public.profiles (
-  id          uuid primary key references auth.users on delete cascade,
-  full_name   text not null,
-  avatar_url  text,
-  role        text,
-  created_at  timestamptz not null default now()
-);
+| Tabela             | Quem é da equipe pode…                                        |
+| ------------------ | ------------------------------------------------------------- |
+| `profiles`         | ver a equipe; editar só o próprio perfil                      |
+| `clients`, `plans`, `task_assignees` | ver, criar, editar e excluir                  |
+| `tasks`, `events`  | ver, criar (sempre como autor: `created_by = auth.uid()`), editar e excluir |
+| `weekly_decisions` | ver, registrar (como autor) e excluir                         |
 
-create table public.clients (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null unique,
-  active      boolean not null default true,
-  created_at  timestamptz not null default now()
-);
+- Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
+  o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
+  para tudo o que o app faz.
 
-create table public.plans (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  starts_on   date not null,
-  ends_on     date not null check (ends_on >= starts_on),
-  created_at  timestamptz not null default now()
-);
+### 5.3 Contas
 
-create table public.tasks (
-  id            uuid primary key default gen_random_uuid(),
-  title         text not null check (length(btrim(title)) > 0),
-  description   text,
-  client_id     uuid references public.clients on delete set null,
-  plan_id       uuid references public.plans on delete set null,
-  area          public.task_area,
-  status        public.task_status not null default 'todo',
-  priority      public.task_priority not null default 'normal',
-  due_date      date,
-  completed_at  timestamptz,
-  created_by    uuid not null default auth.uid() references public.profiles,
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
-);
-
-create table public.task_assignees (
-  task_id     uuid not null references public.tasks on delete cascade,
-  profile_id  uuid not null references public.profiles on delete cascade,
-  primary key (task_id, profile_id)
-);
-
-create table public.events (
-  id           uuid primary key default gen_random_uuid(),
-  title        text not null check (length(btrim(title)) > 0),
-  description  text,
-  event_type   public.event_type not null default 'meeting',
-  start_at     timestamptz not null,
-  end_at       timestamptz check (end_at is null or end_at >= start_at),
-  all_day      boolean not null default false,
-  recurrence   public.event_recurrence,
-  client_id    uuid references public.clients on delete set null,
-  created_by   uuid not null default auth.uid() references public.profiles,
-  created_at   timestamptz not null default now()
-);
-
-create table public.weekly_decisions (
-  id          uuid primary key default gen_random_uuid(),
-  content     text not null check (length(btrim(content)) > 0),
-  week_start  date not null check (extract(isodow from week_start) = 1), -- sempre segunda
-  created_by  uuid not null default auth.uid() references public.profiles,
-  created_at  timestamptz not null default now()
-);
-
-create index on public.tasks (due_date);
-create index on public.tasks (plan_id);
-create index on public.task_assignees (profile_id);
-create index on public.events (start_at);
-create index on public.weekly_decisions (week_start);
-
--- completed_at e updated_at automáticos
-create function public.set_task_timestamps() returns trigger
-language plpgsql as $$
-begin
-  new.updated_at := now();
-  if new.status = 'done' then
-    if tg_op = 'INSERT' or old.status is distinct from 'done' then
-      new.completed_at := coalesce(new.completed_at, now());
-    end if;
-  else
-    new.completed_at := null;
-  end if;
-  return new;
-end $$;
-
-create trigger tasks_set_timestamps
-before insert or update on public.tasks
-for each row execute function public.set_task_timestamps();
-
--- Segurança: só quem tem perfil (a equipe) acessa
-create function public.is_team_member() returns boolean
-language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.profiles where id = (select auth.uid()))
-$$;
-
-alter table public.profiles         enable row level security;
-alter table public.clients          enable row level security;
-alter table public.plans            enable row level security;
-alter table public.tasks            enable row level security;
-alter table public.task_assignees   enable row level security;
-alter table public.events           enable row level security;
-alter table public.weekly_decisions enable row level security;
-
-create policy "equipe lê perfis" on public.profiles
-  for select to authenticated using (public.is_team_member());
-create policy "cada um edita o próprio perfil" on public.profiles
-  for update to authenticated using (id = (select auth.uid())) with check (id = (select auth.uid()));
-
--- Para clients, plans, tasks, task_assignees, events e weekly_decisions:
--- a equipe lê e escreve tudo (sem permissões por cargo nesta versão).
-create policy "equipe acessa" on public.tasks
-  for all to authenticated
-  using (public.is_team_member()) with check (public.is_team_member());
--- (mesma policy repetida para as demais tabelas)
-```
-
-### 5.3 Contas e segurança
-
-- Cadastro público **desativado** no Supabase (Auth → Email → sem signup).
-- As três contas são criadas manualmente no painel. Um `seed.sql` cria os
-  perfis correspondentes, os clientes, o plano, as 25 tarefas e a reunião
-  semanal.
-- O acesso depende de ter **perfil**, não só de estar autenticado. Um usuário
-  criado por engano, sem perfil, não vê nenhum dado.
+- Não há cadastro público nem botão "Criar conta". As três contas
+  (`jabez@`, `renatha@` e `leo@deumboop.com.br`) foram criadas direto no
+  Supabase Auth, com senha temporária.
+- `supabase/seed.sql` cria os perfis dessas contas, os clientes, o plano, as
+  25 tarefas e a reunião semanal. Pode rodar de novo sem duplicar nada.
+- Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
+  user (com "Auto Confirm User") e inserir o perfil
+  (`insert into profiles (id, full_name, role) values (...)`).
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
-  sessão e redireciona para `/login` quando não há usuário. Cada Server Action
-  também verifica a sessão.
+  sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
+  `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a
+  sessão e o perfil de novo no servidor (`requireUser`).
 
 ## 6. Dependências
 
@@ -290,7 +213,7 @@ create policy "equipe acessa" on public.tasks
 | `date-fns`                                   | datas em pt-BR                               |
 | `react-day-picker` (v9)                      | base do componente Calendar (seletor de data); fixado na v9, a versão para a qual o Calendar do shadcn foi escrito (é a que o próprio shadcn usa) |
 | `sonner`                                     | toasts discretos                             |
-| `@supabase/supabase-js`, `@supabase/ssr`     | **etapa 2**: banco e autenticação            |
+| `@supabase/supabase-js`, `@supabase/ssr`     | banco e autenticação (sessão em cookies)     |
 
 Sem biblioteca de estado global, de formulário, de calendário completo, de
 gráficos ou de validação. O volume de dados e as regras não justificam.
@@ -301,16 +224,20 @@ Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
 Tarefas, Calendário, Segunda; usuário e sair no rodapé) e conteúdo num painel
 branco sobre fundo off-white.
 
-### Hoje (`/`)
+### Hoje (`/hoje`)
 
+- É a tela inicial: o login leva para cá e a raiz `/` redireciona para cá.
 - Cabeçalho: "Bom dia, Jabez" (nome do usuário logado) + data por extenso +
   botão "Nova tarefa".
-- Alternância **Todas / Minhas**. A escolha fica salva no navegador.
+- Alternância **Minhas / Todas**, com **Minhas** como padrão. A escolha fica
+  salva no navegador.
 - Quatro indicadores discretos: atrasadas, para hoje, esta semana,
   concluídas na semana. Clicar leva à seção.
-- Progresso: **semana** (tarefas com prazo nesta semana: concluídas / total)
-  e **plano atual** ("Estruturação da Boop · até 31/10": concluídas / total,
-  dias restantes). Só barra, percentual e contagem.
+- Progresso: o **plano atual** ("Estruturação da Boop até 31/10") é a
+  informação principal: percentual grande, barra, "X de 25 tarefas" e dias
+  restantes. Conta a equipe inteira; no filtro Minhas aparece também a parte
+  da pessoa ("suas: X de Y"). A **semana** vem abaixo, menor (tarefas com
+  prazo nesta semana: concluídas / total). Só barra, percentual e contagem.
 - Seções em lista: **Atrasadas**, **Hoje**, **Esta semana**. Cada linha mostra
   checkbox, título, área, cliente, responsáveis e prazo.
 - Coluna lateral com **Próximos compromissos** (7 dias). É um bloco pequeno,
@@ -393,11 +320,15 @@ branco sobre fundo off-white.
 
 ## 10. Decisões técnicas importantes
 
-1. **Protótipo com dados em memória (etapa 1).** Um "banco" em memória no
-   servidor, com o plano real e alguns exemplos avulsos para exercitar
-   atrasadas e concluídas. Login simulado por cookie, com a mesma estrutura
-   do login real. Os dados voltam ao inicial quando o servidor reinicia. Serve
-   para avaliação local, não para uso real.
+1. **Identidade Boop em 5–10% da interface.** A base continua neutra
+   (branco, off-white, cinzas, quase preto). A cor da marca aparece só em
+   detalhes: barras de progresso, item ativo da sidebar, foco, o dia de hoje
+   no calendário, pontos indicadores e hover de links. Ciano `#00C2FF` só como
+   preenchimento; quando precisa ser texto, `#0079A8`; o botão principal é o
+   azul-marinho da marca (`#0B1B2C`). Vermelho, verde e laranja continuam
+   reservados para atrasado, concluído e atenção. Logo: o "olhar" oficial, o
+   mesmo SVG do favicon do site, sem redesenho. Poppins (fonte da marca) só em
+   títulos e números de destaque; o resto da interface usa Inter.
 2. **Sem cache do Next (`cacheComponents` desligado).** As telas dependem da
    sessão e mudam o tempo todo. Renderização dinâmica é simples e correta
    para três usuários.
@@ -417,7 +348,7 @@ branco sobre fundo off-white.
    `components.json` está configurado, então `npx shadcn add` funciona
    normalmente na máquina de vocês.
 8. **Região:** Supabase em São Paulo (`sa-east-1`) e funções da Vercel em
-   `gru1`, para reduzir latência.
+   `gru1` (`vercel.json`), para reduzir latência.
 9. **Tema escuro:** fora da v1. Os tokens de cor já estão centralizados, o que
    facilita adicionar depois.
 10. **Layout responsivo por container query.** A linha de tarefa e o
@@ -430,39 +361,45 @@ branco sobre fundo off-white.
 
 ## 11. Plano de implementação
 
-### Etapa 1 — protótipo visual (esta entrega) ✅
+### Etapa 1 — protótipo visual ✅
 
-1. Scaffold: Next 16, TypeScript estrito, Tailwind v4, ESLint, shadcn/ui,
-   tokens visuais e fonte.
-2. Domínio: tipos, rótulos, datas (fuso de SP), lógica pura (agrupamento e
-   progresso), mock em memória com o plano real.
-3. Layout: sidebar, menu do usuário, login visual com sessão simulada e rotas
-   protegidas.
-4. Tela Hoje completa, com Sheet de detalhes e "Nova tarefa".
-5. Tela Tarefas: filtros e agrupamento.
-6. Tela Segunda: visão geral, por pessoa e decisões.
-7. Tela Calendário: semana, mês e recorrência.
-8. Estados de loading, vazio e erro; responsivo; build e lint limpos.
+Scaffold, domínio, layout, as quatro telas com dados em memória, estados de
+loading/vazio/erro e responsivo. Aprovada visualmente.
 
-### Etapa 2 — Supabase e Auth (após aprovação visual)
+### Etapa 2 — V1 real (em andamento)
 
-1. Criar o projeto no Supabase (sa-east-1); migration com schema, trigger e
-   RLS.
-2. Desativar o signup, criar as três contas e rodar o seed (perfis, clientes,
-   plano, 25 tarefas, reunião semanal).
-3. `@supabase/ssr`: clients de servidor e navegador, sessão no `proxy.ts`,
-   login e logout reais.
-4. Trocar `queries.ts`/`actions.ts` do mock pelo Supabase e remover o mock.
-5. Gerar tipos TypeScript a partir do banco.
-6. Testar os fluxos e o RLS (usuário sem perfil não vê nada).
+1. Refinamentos de identidade: logo oficial, cor da marca nos detalhes,
+   Poppins nos títulos; "Minhas" como padrão e progresso do plano em
+   destaque na tela Hoje.
+2. Supabase: organização "Boop", projeto `boop-admin` (`sa-east-1`),
+   migration com schema, trigger e RLS; três contas e seed com os dados reais
+   (sem nada de demonstração).
+3. `@supabase/ssr`: sessão no `proxy.ts`, login e logout reais, queries e
+   Server Actions no banco; mock removido; tipos gerados do banco.
+4. Vercel: projeto `boop-admin` ligado só a este repositório, variáveis de
+   ambiente, deploy de produção e domínio `admin.deumboop.com.br`.
 
-### Etapa 3 — deploy
+### Próximos passos
 
-1. Projeto na Vercel ligado ao repositório, com as variáveis de ambiente.
-2. Domínio `admin.deumboop.com.br` (CNAME) e SSL.
-3. Teste em produção; criar a `main` e defini-la como branch padrão.
+1. Criar a `main` a partir desta branch e defini-la como branch padrão no
+   GitHub e de produção na Vercel.
+2. Cada pessoa troca a senha temporária.
 
-## 12. Fora do escopo (v1)
+## 12. Infraestrutura e variáveis de ambiente
+
+| Variável                               | Tipo   | Onde                          |
+| -------------------------------------- | ------ | ----------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | CONFIG | Vercel (Production e Preview) e `.env.local` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | CONFIG | Vercel (Production e Preview) e `.env.local` |
+
+- **CONFIG**: valores públicos por natureza. A chave publicável
+  (`sb_publishable_…`) pode estar no navegador; quem protege os dados é o RLS.
+- **SECRET**: nenhuma. O app não usa `service_role` nem chave secreta
+  (`sb_secret_…`). Se um dia alguma rotina administrativa precisar, ela deve
+  ficar só no servidor, como variável sensível, e nunca com prefixo
+  `NEXT_PUBLIC_`.
+
+## 13. Fora do escopo (v1)
 
 CRM, pipeline, Kanban, chat, comentários, portal do cliente, uploads,
 financeiro, aprovações, dashboards avançados, IA, notificações, automações,

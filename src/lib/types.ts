@@ -1,6 +1,6 @@
 /**
- * Tipos de domínio. Espelham o schema proposto para o Supabase
- * (docs/ARQUITETURA.md), com colunas em snake_case como o banco devolve.
+ * Tipos de domínio. Espelham o schema do Supabase
+ * (supabase/migrations), com colunas em snake_case como o banco devolve.
  */
 
 export type TaskStatus = "todo" | "doing" | "done"
@@ -13,7 +13,8 @@ export type TaskArea =
   | "technology"
   | "clients"
 export type EventType = "meeting" | "internal" | "delivery"
-export type EventRecurrence = "weekly"
+/** Regra de recorrência no formato RFC 5545. Nesta versão, só semanal. */
+export type RecurrenceRule = "FREQ=WEEKLY"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -66,7 +67,7 @@ export interface CalendarEvent {
   start_at: Timestamp
   end_at: Timestamp | null
   all_day: boolean
-  recurrence: EventRecurrence | null
+  recurrence_rule: RecurrenceRule | null
   client_id: string | null
   created_by: string
   created_at: Timestamp

@@ -19,10 +19,10 @@ implementação.
 - É um projeto **novo e independente** do site institucional
   (`deumboop.com.br`). Nada do repositório do site foi lido, alterado ou
   reutilizado.
-- Todo o trabalho acontece na branch `claude/nifty-cray-02c7u5`. Nada é
-  commitado na `main`. Como o repositório estava vazio, essa é a única branch
-  e aparece como padrão no GitHub; por isso ela é também a branch de produção
-  do projeto na Vercel até a `main` ser criada.
+- O código está na `main`, criada a partir de `claude/nifty-cray-02c7u5`
+  (a branch de desenvolvimento) depois da aprovação. Até a `main` virar a
+  branch padrão no GitHub e a branch de produção na Vercel, a produção
+  continua sendo publicada a partir de `claude/nifty-cray-02c7u5`.
 - A infraestrutura também é independente do site: organização "Boop" no
   Supabase e projeto próprio na Vercel (`boop-admin`), sem compartilhar nada
   com o projeto do site.
@@ -388,8 +388,9 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    Providers → "Allow new users to sign up"). O RLS já impede qualquer
    acesso de contas sem perfil; isso fecha também a criação de contas.
 3. Cada pessoa troca a senha temporária.
-4. Criar a `main` a partir desta branch e defini-la como branch padrão no
-   GitHub e de produção na Vercel.
+4. Definir a `main` (já criada) como branch padrão no GitHub (Settings →
+   General → Default branch) e como branch de produção na Vercel
+   (`boop-admin` → Settings → Git → Production Branch).
 
 ## 12. Infraestrutura e variáveis de ambiente
 
@@ -397,7 +398,7 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | ----------- | -------------------------------------------------------------------- |
 | Banco/Auth  | Supabase, organização "Boop", projeto `boop-admin` (`zqugfixszhfoochvaaol`), região `sa-east-1` |
 | Hospedagem  | Vercel, projeto `boop-admin` (só este repositório), funções em `gru1` |
-| Produção    | branch `claude/nifty-cray-02c7u5` → <https://boop-admin.vercel.app> |
+| Produção    | branch `claude/nifty-cray-02c7u5` (até trocar para `main`) → <https://boop-admin.vercel.app> |
 | Domínio     | `admin.deumboop.com.br` (DNS da zona `deumboop.com.br` no Registro.br) |
 
 - As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da

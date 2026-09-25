@@ -6,7 +6,9 @@ responsável por cada coisa e quanto do plano atual já foi concluído.
 
 Next.js 16 + TypeScript + Supabase (Auth, PostgreSQL com RLS) + Tailwind v4 +
 shadcn/ui, publicado na Vercel. Arquitetura, schema, políticas de segurança e
-infraestrutura: [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+infraestrutura: [docs/ARQUITETURA.md](docs/ARQUITETURA.md). O que cada tela
+faz, regras, limitações e ideias de otimização:
+[docs/FUNCIONALIDADES.md](docs/FUNCIONALIDADES.md).
 
 ## Rodar localmente
 

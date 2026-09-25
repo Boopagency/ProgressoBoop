@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // O indicador de desenvolvimento fica à direita para não cobrir o usuário na sidebar.
+  devIndicators: { position: "bottom-right" },
+}
 
-export default nextConfig;
+export default nextConfig

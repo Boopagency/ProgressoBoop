@@ -17,10 +17,9 @@ implementação.
 - É um projeto **novo e independente** do site institucional
   (`deumboop.com.br`). Nada do repositório do site foi lido, alterado ou
   reutilizado.
-- O código está na `main`, criada a partir de `claude/nifty-cray-02c7u5`
-  (a branch de desenvolvimento) depois da aprovação. Até a `main` virar a
-  branch padrão no GitHub e a branch de produção na Vercel, a produção
-  continua sendo publicada a partir de `claude/nifty-cray-02c7u5`.
+- A `main` é a branch padrão no GitHub e a branch de produção na Vercel. A
+  V1 foi desenvolvida em `claude/nifty-cray-02c7u5` e levada para a `main`
+  depois da aprovação.
 - A infraestrutura também é independente do site: organização "Boop" no
   Supabase e projeto próprio na Vercel (`boop-admin`), sem compartilhar nada
   com o projeto do site.
@@ -186,7 +185,8 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 
 ### 5.3 Contas
 
-- Não há cadastro público nem botão "Criar conta". As três contas
+- Não há cadastro público (desligado no Supabase Auth: "Allow new users to
+  sign up") nem botão "Criar conta". As três contas
   (`jabez@`, `renatha@` e `leo@deumboop.com.br`) foram criadas direto no
   Supabase Auth, com senha temporária.
 - `supabase/seed.sql` cria os perfis dessas contas, os clientes, o plano, as
@@ -380,13 +380,7 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ### Próximos passos
 
-1. Desligar o cadastro público no Supabase (Authentication → Sign In /
-   Providers → "Allow new users to sign up"). O RLS já impede qualquer
-   acesso de contas sem perfil; isso fecha também a criação de contas.
-2. Cada pessoa troca a senha temporária.
-3. Definir a `main` (já criada) como branch padrão no GitHub (Settings →
-   General → Default branch) e como branch de produção na Vercel
-   (`boop-admin` → Settings → Git → Production Branch).
+1. Cada pessoa troca a senha temporária.
 
 ## 12. Infraestrutura e variáveis de ambiente
 
@@ -394,7 +388,7 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | ----------- | -------------------------------------------------------------------- |
 | Banco/Auth  | Supabase, organização "Boop", projeto `boop-admin` (`zqugfixszhfoochvaaol`), região `sa-east-1` |
 | Hospedagem  | Vercel, projeto `boop-admin` (só este repositório), funções em `gru1` |
-| Produção    | branch `claude/nifty-cray-02c7u5` (até trocar para `main`) → <https://admin.deumboop.com.br> e <https://boop-admin.vercel.app> |
+| Produção    | branch `main` → <https://admin.deumboop.com.br> e <https://boop-admin.vercel.app> |
 | Domínio     | `admin.deumboop.com.br`: CNAME e TXT `_vercel` na zona `deumboop.com.br` (Registro.br) |
 
 - As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da

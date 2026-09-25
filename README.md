@@ -99,10 +99,9 @@ public/brand/         logo oficial da Boop (SVG)
 
 ## Deploy
 
-Projeto `boop-admin` na Vercel, ligado a este repositório. Cada push na branch
-de produção (hoje `claude/nifty-cray-02c7u5`; a troca para `main` é feita em
-Settings → Git na Vercel) publica em
-<https://boop-admin.vercel.app> e em `admin.deumboop.com.br`. As funções rodam
+Projeto `boop-admin` na Vercel, ligado a este repositório. Cada push na `main`
+publica em <https://admin.deumboop.com.br> (e em <https://boop-admin.vercel.app>);
+as outras branches geram só prévias. As funções rodam
 em São Paulo (`gru1`, em `vercel.json`), perto do banco (`sa-east-1`).
 
 ## shadcn/ui

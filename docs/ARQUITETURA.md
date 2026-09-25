@@ -5,9 +5,10 @@ da Boop. Reúne a análise do repositório, a arquitetura, o schema do Supabase,
 as dependências, a estrutura das telas, a infraestrutura e o plano de
 implementação.
 
-> Status: **V1 real em implantação**. O código já usa Supabase (Auth +
-> PostgreSQL com RLS) e dados reais; falta concluir a infraestrutura
-> (projeto no Supabase, Vercel e domínio). Como rodar: [README](../README.md).
+> Status: **V1 real em produção** em <https://boop-admin.vercel.app>
+> (Supabase + Vercel). O domínio `admin.deumboop.com.br` já está no projeto e
+> passa a funcionar quando os registros DNS forem criados no Registro.br
+> (seção 12). Como rodar: [README](../README.md).
 
 ---
 
@@ -366,7 +367,7 @@ branco sobre fundo off-white.
 Scaffold, domínio, layout, as quatro telas com dados em memória, estados de
 loading/vazio/erro e responsivo. Aprovada visualmente.
 
-### Etapa 2 — V1 real (em andamento)
+### Etapa 2 — V1 real ✅
 
 1. Refinamentos de identidade: logo oficial, cor da marca nos detalhes,
    Poppins nos títulos; "Minhas" como padrão e progresso do plano em
@@ -381,16 +382,32 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ### Próximos passos
 
-1. Criar a `main` a partir desta branch e defini-la como branch padrão no
+1. Criar os registros DNS de `admin.deumboop.com.br` no Registro.br
+   (seção 12).
+2. Desligar o cadastro público no Supabase (Authentication → Sign In /
+   Providers → "Allow new users to sign up"). O RLS já impede qualquer
+   acesso de contas sem perfil; isso fecha também a criação de contas.
+3. Cada pessoa troca a senha temporária.
+4. Criar a `main` a partir desta branch e defini-la como branch padrão no
    GitHub e de produção na Vercel.
-2. Cada pessoa troca a senha temporária.
 
 ## 12. Infraestrutura e variáveis de ambiente
 
+| Peça        | Onde                                                                 |
+| ----------- | -------------------------------------------------------------------- |
+| Banco/Auth  | Supabase, organização "Boop", projeto `boop-admin` (`zqugfixszhfoochvaaol`), região `sa-east-1` |
+| Hospedagem  | Vercel, projeto `boop-admin` (só este repositório), funções em `gru1` |
+| Produção    | branch `claude/nifty-cray-02c7u5` → <https://boop-admin.vercel.app> |
+| Domínio     | `admin.deumboop.com.br` (DNS da zona `deumboop.com.br` no Registro.br) |
+
+- As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da
+  conta na Vercel abre). O domínio próprio é público, e o app exige login.
+- O projeto do site (`boop`, com `deumboop.com.br` e `www`) não foi alterado.
+
 | Variável                               | Tipo   | Onde                          |
 | -------------------------------------- | ------ | ----------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | CONFIG | Vercel (Production e Preview) e `.env.local` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | CONFIG | Vercel (Production e Preview) e `.env.local` |
+| `NEXT_PUBLIC_SUPABASE_URL`             | CONFIG | Vercel (Production, Preview e Development) e `.env.local` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | CONFIG | Vercel (Production, Preview e Development) e `.env.local` |
 
 - **CONFIG**: valores públicos por natureza. A chave publicável
   (`sb_publishable_…`) pode estar no navegador; quem protege os dados é o RLS.

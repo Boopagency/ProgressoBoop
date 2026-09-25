@@ -1,6 +1,6 @@
 # Boop Admin
 
-Cockpit interno da Boop, em `admin.deumboop.com.br`. Serve para ver em poucos
+Cockpit interno da Boop, em <https://admin.deumboop.com.br>. Serve para ver em poucos
 segundos o que está atrasado, o que precisa acontecer hoje e na semana, quem é
 responsável por cada coisa e quanto do plano atual já foi concluído.
 

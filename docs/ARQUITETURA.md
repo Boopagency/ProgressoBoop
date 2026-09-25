@@ -5,10 +5,8 @@ da Boop. Reúne a análise do repositório, a arquitetura, o schema do Supabase,
 as dependências, a estrutura das telas, a infraestrutura e o plano de
 implementação.
 
-> Status: **V1 real em produção** em <https://boop-admin.vercel.app>
-> (Supabase + Vercel). O domínio `admin.deumboop.com.br` já está no projeto e
-> passa a funcionar quando os registros DNS forem criados no Registro.br
-> (seção 12). Como rodar: [README](../README.md).
+> Status: **V1 real em produção** em <https://admin.deumboop.com.br>
+> (Supabase + Vercel). Como rodar: [README](../README.md).
 
 ---
 
@@ -382,13 +380,11 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ### Próximos passos
 
-1. Criar os registros DNS de `admin.deumboop.com.br` no Registro.br
-   (seção 12).
-2. Desligar o cadastro público no Supabase (Authentication → Sign In /
+1. Desligar o cadastro público no Supabase (Authentication → Sign In /
    Providers → "Allow new users to sign up"). O RLS já impede qualquer
    acesso de contas sem perfil; isso fecha também a criação de contas.
-3. Cada pessoa troca a senha temporária.
-4. Definir a `main` (já criada) como branch padrão no GitHub (Settings →
+2. Cada pessoa troca a senha temporária.
+3. Definir a `main` (já criada) como branch padrão no GitHub (Settings →
    General → Default branch) e como branch de produção na Vercel
    (`boop-admin` → Settings → Git → Production Branch).
 
@@ -398,8 +394,8 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | ----------- | -------------------------------------------------------------------- |
 | Banco/Auth  | Supabase, organização "Boop", projeto `boop-admin` (`zqugfixszhfoochvaaol`), região `sa-east-1` |
 | Hospedagem  | Vercel, projeto `boop-admin` (só este repositório), funções em `gru1` |
-| Produção    | branch `claude/nifty-cray-02c7u5` (até trocar para `main`) → <https://boop-admin.vercel.app> |
-| Domínio     | `admin.deumboop.com.br` (DNS da zona `deumboop.com.br` no Registro.br) |
+| Produção    | branch `claude/nifty-cray-02c7u5` (até trocar para `main`) → <https://admin.deumboop.com.br> e <https://boop-admin.vercel.app> |
+| Domínio     | `admin.deumboop.com.br`: CNAME e TXT `_vercel` na zona `deumboop.com.br` (Registro.br) |
 
 - As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da
   conta na Vercel abre). O domínio próprio é público, e o app exige login.

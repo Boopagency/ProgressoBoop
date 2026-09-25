@@ -116,7 +116,7 @@ Server Component (page.tsx)
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
 `plans`. O SQL completo está em
-[`supabase/migrations/20260925180000_initial_schema.sql`](../supabase/migrations/20260925180000_initial_schema.sql).
+[`supabase/migrations/20260925162330_initial_schema.sql`](../supabase/migrations/20260925162330_initial_schema.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

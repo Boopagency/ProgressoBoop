@@ -1,12 +1,20 @@
 import {
   addDaysToKey,
   daysBetween,
+  formatWeekdayLong,
   isWithin,
   toDateKey,
   toTimeLabel,
   type DateRange,
 } from "@/lib/dates"
 import type { CalendarEvent, DateKey } from "@/lib/types"
+
+/** "toda segunda-feira às 07:00" · "todo sábado" (dia inteiro). */
+export function weeklyRecurrenceLabel(event: Pick<CalendarEvent, "start_at" | "all_day">): string {
+  const weekday = formatWeekdayLong(toDateKey(event.start_at))
+  const article = weekday === "sábado" || weekday === "domingo" ? "todo" : "toda"
+  return `${article} ${weekday}${event.all_day ? "" : ` às ${toTimeLabel(event.start_at)}`}`
+}
 
 /** Uma ocorrência concreta de um evento (recorrente ou não) num dia. */
 export interface Occurrence {

@@ -1,8 +1,8 @@
 import { ArrowUp } from "lucide-react"
 
-import { describeDue, type DueTone } from "@/lib/dates"
+import { describeDue, formatShortDate, toDateKey, type DueTone } from "@/lib/dates"
 import { TASK_STATUS_LABEL } from "@/lib/labels"
-import type { DateKey, TaskStatus } from "@/lib/types"
+import type { DateKey, Task, TaskStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const DUE_TONE_CLASS: Record<DueTone, string> = {
@@ -17,27 +17,45 @@ const DUE_TONE_CLASS: Record<DueTone, string> = {
 export function DueLabel({
   due,
   today,
-  muted = false,
   className,
 }: {
   due: DateKey | null
   today: DateKey
-  /** Tarefa concluída: prazo sem destaque. */
-  muted?: boolean
   className?: string
 }) {
   const { label, tone } = describeDue(due, today)
   return (
     <span
-      className={cn(
-        "text-[13px] whitespace-nowrap tabular-nums",
-        muted ? "text-subtle-foreground" : DUE_TONE_CLASS[tone],
-        className
-      )}
+      className={cn("text-[13px] whitespace-nowrap tabular-nums", DUE_TONE_CLASS[tone], className)}
     >
       {label}
     </span>
   )
+}
+
+/** Prazo da tarefa aberta, ou "Concluída 24/09" quando já foi feita. */
+export function TaskDateLabel({
+  task,
+  today,
+  className,
+}: {
+  task: Pick<Task, "status" | "due_date" | "completed_at">
+  today: DateKey
+  className?: string
+}) {
+  if (task.status === "done" && task.completed_at) {
+    return (
+      <span
+        className={cn(
+          "text-[13px] whitespace-nowrap text-subtle-foreground tabular-nums",
+          className
+        )}
+      >
+        Concluída {formatShortDate(toDateKey(task.completed_at), today)}
+      </span>
+    )
+  }
+  return <DueLabel due={task.due_date} today={today} className={className} />
 }
 
 const STATUS_DOT: Record<TaskStatus, string> = {

@@ -172,6 +172,11 @@ export function formatWeekdayShort(key: DateKey): string {
   return fmt(key, "EEEEEE")
 }
 
+/** "segunda-feira", "sábado" */
+export function formatWeekdayLong(key: DateKey): string {
+  return fmt(key, "EEEE")
+}
+
 /** "25 de setembro" */
 export function formatDayMonth(key: DateKey): string {
   return fmt(key, "d 'de' MMMM")

@@ -53,7 +53,7 @@ export function TaskRow({
           <span className="flex min-w-0 items-center gap-2">
             <span
               className={cn(
-                "truncate text-sm leading-5 font-medium text-foreground transition-colors",
+                "line-clamp-2 text-sm leading-5 font-medium break-words text-foreground transition-colors sm:line-clamp-1",
                 done && "text-muted-foreground line-through decoration-muted-foreground/50"
               )}
             >

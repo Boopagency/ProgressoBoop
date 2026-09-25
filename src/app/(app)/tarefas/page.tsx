@@ -1,9 +1,18 @@
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import type { Metadata } from "next"
 
-export default function TasksPage() {
+import { getTasks } from "@/features/tasks/queries"
+import { TasksProvider } from "@/features/tasks/tasks-provider"
+import { TasksView } from "@/features/tasks/tasks-view"
+import { todayKey } from "@/lib/dates"
+
+export const metadata: Metadata = { title: "Tarefas" }
+
+export default async function TasksPage() {
+  const tasks = await getTasks()
+
   return (
-    <PageContainer>
-      <PageHeader title="Tarefas" description="Em construção." />
-    </PageContainer>
+    <TasksProvider tasks={tasks} today={todayKey()}>
+      <TasksView />
+    </TasksProvider>
   )
 }

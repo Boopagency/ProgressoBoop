@@ -4,8 +4,10 @@ Documento de referência da primeira versão do Boop Admin, a ferramenta interna
 da Boop. Reúne a análise do repositório, a arquitetura, o schema proposto para
 o Supabase, as dependências, a estrutura das telas e o plano de implementação.
 
-> Status: **Etapa 1 (protótipo visual com dados mockados)**. O Supabase ainda
-> não está conectado. O schema abaixo é uma proposta para aprovação.
+> Status: **Etapa 1 concluída (protótipo visual com dados mockados)**. As
+> quatro telas funcionam com dados em memória e login simulado. O Supabase
+> ainda não está conectado, e o schema abaixo é uma proposta para aprovação.
+> Como rodar: [README](../README.md).
 
 ---
 
@@ -54,7 +56,9 @@ src/
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
 │   ├── ui/                     # shadcn/ui (código gerado)
-│   └── layout/                 # sidebar, menu do usuário, cabeçalho de página
+│   ├── layout/                 # sidebar, menu do usuário, cabeçalho de página
+│   └── *.tsx                   # peças visuais genéricas: date-picker, stat-grid,
+│                               # segmented-control, progress-meter
 ├── features/
 │   ├── auth/                   # sessão, login/logout
 │   ├── workspace/              # equipe, clientes, planos (dados de referência)
@@ -62,8 +66,9 @@ src/
 │   ├── today/                  # blocos da tela Hoje
 │   ├── calendar/               # semana/mês, recorrência, eventos
 │   └── weekly/                 # tela Segunda e decisões da semana
-├── lib/                        # utilitários compartilhados (datas, rótulos, tipos, cn)
-├── server/                     # mock em memória (somente etapa 1)
+├── hooks/                      # use-mobile (shadcn)
+├── lib/                        # datas (fuso de SP), rótulos, tipos, cn()
+├── server/mock/                # "banco" em memória (somente etapa 1)
 └── proxy.ts                    # proteção de rotas (no Next 16, substitui o middleware)
 ```
 
@@ -125,6 +130,10 @@ Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
    cliente.
 7. **Área, cliente e prazo** são opcionais no banco. O formulário rápido pede
    prazo, mas não bloqueia.
+8. **Eventos chegam ao servidor como data + horário de São Paulo** (ex.:
+   `2026-09-28` + `07:00`) e o servidor converte para `timestamptz`,
+   calculando o deslocamento real do fuso. Assim a conversão fica certa mesmo
+   se o horário de verão voltar.
 
 ### 5.2 SQL
 
@@ -279,7 +288,7 @@ create policy "equipe acessa" on public.tasks
 | `tw-animate-css`                             | animações discretas (Sheet, Dialog, Popover) |
 | `lucide-react`                               | ícones                                       |
 | `date-fns`                                   | datas em pt-BR                               |
-| `react-day-picker`                           | base do componente Calendar (seletor de data) |
+| `react-day-picker` (v9)                      | base do componente Calendar (seletor de data); fixado na v9, a versão para a qual o Calendar do shadcn foi escrito (é a que o próprio shadcn usa) |
 | `sonner`                                     | toasts discretos                             |
 | `@supabase/supabase-js`, `@supabase/ssr`     | **etapa 2**: banco e autenticação            |
 
@@ -304,6 +313,9 @@ branco sobre fundo off-white.
   dias restantes). Só barra, percentual e contagem.
 - Seções em lista: **Atrasadas**, **Hoje**, **Esta semana**. Cada linha mostra
   checkbox, título, área, cliente, responsáveis e prazo.
+- Coluna lateral com **Próximos compromissos** (7 dias). É um bloco pequeno,
+  adicionado para responder "o que precisa acontecer nesta semana" sem ir ao
+  calendário. Dá para remover se não fizer sentido.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, que pode ser
   editado sem sair da tela.
 
@@ -316,7 +328,10 @@ branco sobre fundo off-white.
 - Linha no estilo de lista de tarefas: checkbox, título, área/cliente, status,
   responsáveis e prazo.
 - "Nova tarefa" abre um Dialog: título → responsável → prazo → salvar. Área,
-  cliente, prioridade e descrição são opcionais.
+  cliente, prioridade e descrição são opcionais. Atalho: tecla **N** em
+  qualquer tela.
+- Os filtros ficam na URL (`/tarefas?pessoa=…&prazo=week`), então dá para
+  compartilhar uma visão.
 
 ### Calendário (`/calendario`)
 
@@ -325,7 +340,10 @@ branco sobre fundo off-white.
   discreta por tipo.
 - Eventos recorrentes são expandidos para o período visível. Primeiro evento:
   **Reunião semanal da Boop**, toda segunda às 07:00.
-- Clicar num item abre os detalhes no Sheet lateral.
+- Clicar num item abre os detalhes no Sheet lateral. Tarefas podem ser
+  concluídas direto na visão semana.
+- Criar, editar e excluir eventos (tipo, data, horário ou dia inteiro,
+  repetição semanal, cliente, descrição).
 
 ### Segunda (`/segunda`)
 
@@ -334,7 +352,8 @@ branco sobre fundo off-white.
   e progresso da semana.
 - Uma seção por pessoa (Jabez, Renatha, Léo), com concluídas, atrasadas e
   desta semana.
-- **Decisões da semana**: lista simples. Dá para adicionar e remover.
+- **Decisões da semana**: lista simples. Dá para adicionar e remover. As
+  decisões da semana anterior aparecem logo abaixo, só para consulta.
 
 ## 8. Componentes principais
 
@@ -347,12 +366,12 @@ branco sobre fundo off-white.
 | `TaskSheet`          | detalhes e edição da tarefa no Sheet lateral                   |
 | `NewTaskDialog`      | criação rápida (título, responsáveis, prazo) + campos opcionais |
 | `TasksProvider`      | estado otimista das tarefas da tela + Sheet aberto             |
-| `SummaryStats`       | os quatro indicadores do topo                                  |
-| `ProgressBlock`      | barra + percentual + "X de Y"                                  |
-| `AssigneeAvatars`    | avatares empilhados / "Todos"                                  |
+| `StatGrid`           | indicadores discretos (Hoje e Segunda)                         |
+| `ProgressMeter`      | barra + percentual + "X de Y"                                  |
+| `AssigneePicker`     | escolha de responsáveis (uma ou mais pessoas, "Todos")          |
 | `DueLabel`           | prazo relativo ("hoje", "amanhã", "venceu 24/09")              |
 | `WeekView` / `MonthView` | calendário sem bibliotecas extras (CSS grid + date-fns)    |
-| `DecisionsList`      | decisões da semana                                             |
+| `WeeklyDecisions`    | decisões da semana                                             |
 
 ## 9. Definições de negócio
 
@@ -401,10 +420,17 @@ branco sobre fundo off-white.
    `gru1`, para reduzir latência.
 9. **Tema escuro:** fora da v1. Os tokens de cor já estão centralizados, o que
    facilita adicionar depois.
+10. **Layout responsivo por container query.** A linha de tarefa e o
+    calendário se adaptam à largura do próprio bloco, não à da tela. Por
+    isso a mesma linha funciona na lista larga de Tarefas e nas colunas
+    estreitas da Segunda.
+11. **Estado na URL quando é uma "visão"** (filtros de Tarefas, semana/mês e
+    data do Calendário). Preferências pessoais simples, como Todas/Minhas na
+    tela Hoje e a sidebar recolhida, ficam em cookie.
 
 ## 11. Plano de implementação
 
-### Etapa 1 — protótipo visual (esta entrega)
+### Etapa 1 — protótipo visual (esta entrega) ✅
 
 1. Scaffold: Next 16, TypeScript estrito, Tailwind v4, ESLint, shadcn/ui,
    tokens visuais e fonte.

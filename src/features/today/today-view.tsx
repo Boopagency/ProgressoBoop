@@ -5,6 +5,7 @@ import { useState } from "react"
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { ProgressMeter } from "@/components/progress-meter"
 import { SegmentedControl } from "@/components/segmented-control"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   currentPlan,
   dayContext,
@@ -87,14 +88,17 @@ export function TodayView({
         Desktop: listas à esquerda; progresso e agenda na coluna da direita.
       */}
       <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section
+        <Card
+          role="region"
           aria-labelledby="progress-title"
-          className="rounded-xl border p-5 lg:col-start-2 lg:row-start-1"
+          className="lg:col-start-2 lg:row-start-1"
         >
-          <h2 id="progress-title" className="text-sm font-semibold text-foreground">
-            Progresso
-          </h2>
-          <div className="mt-4 space-y-6">
+          <CardHeader>
+            <CardTitle id="progress-title" role="heading" aria-level={2}>
+              Progresso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <ProgressMeter
               label="Semana"
               done={week.done}
@@ -111,8 +115,8 @@ export function TodayView({
                 hint={`Até ${formatShortDate(plan.ends_on)} · ${remainingDaysLabel(daysBetween(today, plan.ends_on))}`}
               />
             ) : null}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
         <div className="min-w-0 space-y-9 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <TaskSection

@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { SESSION_COOKIE } from "@/features/auth/constants"
@@ -28,11 +28,12 @@ export async function signIn(_previous: SignInState, formData: FormData): Promis
     return { error: "E-mail ou senha incorretos.", email }
   }
 
-  const store = await cookies()
+  const [store, requestHeaders] = await Promise.all([cookies(), headers()])
   store.set(SESSION_COOKIE, user.id, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Secure só em HTTPS (Vercel); em http://localhost alguns navegadores descartariam o cookie.
+    secure: requestHeaders.get("x-forwarded-proto") === "https",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   })

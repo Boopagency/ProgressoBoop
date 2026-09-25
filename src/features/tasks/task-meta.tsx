@@ -1,5 +1,6 @@
 import { ArrowUp } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { describeDue, formatShortDate, toDateKey, type DueTone } from "@/lib/dates"
 import { TASK_STATUS_LABEL } from "@/lib/labels"
 import type { DateKey, Task, TaskStatus } from "@/lib/types"
@@ -76,15 +77,16 @@ export function StatusDot({ status, className }: { status: TaskStatus; className
 /** Selo discreto para tarefas em andamento. */
 export function DoingPill({ className }: { className?: string }) {
   return (
-    <span
+    <Badge
+      variant="outline"
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] leading-4 font-medium text-amber-800 ring-1 ring-amber-600/15 ring-inset",
+        "gap-1.5 border-amber-600/15 bg-amber-50 px-2 text-[11px] leading-4 text-amber-800",
         className
       )}
     >
       <StatusDot status="doing" className="size-1.5" />
       {TASK_STATUS_LABEL.doing}
-    </span>
+    </Badge>
   )
 }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { isDone } from "@/features/tasks/logic"
 import { TaskRow } from "@/features/tasks/task-row"
@@ -21,8 +22,8 @@ export function PersonColumn({
   const titleId = `pessoa-${profile.id}`
 
   return (
-    <section aria-labelledby={titleId} className="flex min-w-0 flex-col rounded-xl border">
-      <header className="border-b px-4 pt-4 pb-3.5">
+    <Card role="region" aria-labelledby={titleId} className="min-w-0 gap-0 py-0">
+      <CardHeader className="block border-b px-4 pt-4 pb-3.5 [.border-b]:pb-3.5">
         <div className="flex items-center gap-3">
           <PersonAvatar
             name={profile.full_name}
@@ -49,9 +50,9 @@ export function PersonColumn({
         <p className="mt-2 text-xs text-muted-foreground tabular-nums">
           {review.progress.done} de {review.progress.total} com prazo nesta semana concluídas
         </p>
-      </header>
+      </CardHeader>
 
-      <div className="space-y-5 px-4 pt-4 pb-3">
+      <CardContent className="space-y-5 px-4 pt-4 pb-3">
         <ReviewList
           title="Concluídas na semana anterior"
           tasks={review.completedLastWeek}
@@ -71,8 +72,8 @@ export function PersonColumn({
           count={openCount(review.thisWeek)}
           emptyText="Nada previsto."
         />
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
 

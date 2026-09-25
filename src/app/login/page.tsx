@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { BoopMark } from "@/components/layout/boop-mark"
+import { Card } from "@/components/ui/card"
 import { LoginForm } from "@/features/auth/login-form"
 import { getSessionUser } from "@/features/auth/session"
 
@@ -20,9 +21,9 @@ export default async function LoginPage() {
             <p className="text-sm text-muted-foreground">Acesso restrito à equipe da Boop.</p>
           </div>
         </div>
-        <div className="rounded-xl border bg-card p-6 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+        <Card className="p-6 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
           <LoginForm />
-        </div>
+        </Card>
       </div>
     </main>
   )

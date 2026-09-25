@@ -2,6 +2,7 @@
 
 import { Plus } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EventItem, TaskItem } from "@/features/calendar/calendar-items"
 import { isWeekend, type DayItems } from "@/features/calendar/logic"
@@ -89,9 +90,7 @@ export function WeekView({
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                   {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
                   {day === today ? (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
-                      Hoje
-                    </span>
+                    <Badge className="px-2 text-[11px]">Hoje</Badge>
                   ) : null}
                 </h3>
                 <Button

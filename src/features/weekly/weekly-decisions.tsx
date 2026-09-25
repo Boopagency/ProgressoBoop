@@ -5,6 +5,7 @@ import { useOptimistic, useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { firstName } from "@/features/tasks/logic"
 import { addDecision, deleteDecision } from "@/features/weekly/actions"
@@ -75,13 +76,15 @@ export function WeeklyDecisions({
   }
 
   return (
-    <section aria-labelledby="decisoes" className="rounded-xl border">
-      <div className="flex items-center gap-2 border-b px-5 py-4">
-        <h2 id="decisoes" className="text-sm font-semibold text-foreground">
+    <Card role="region" aria-labelledby="decisoes" className="gap-0 py-0">
+      <CardHeader className="flex items-center gap-2 border-b py-4 [.border-b]:pb-4">
+        <CardTitle id="decisoes" role="heading" aria-level={2}>
           Decisões da semana
-        </h2>
-        <span className="text-[13px] text-muted-foreground tabular-nums">{current.length}</span>
-      </div>
+        </CardTitle>
+        <span className="text-[13px] leading-none text-muted-foreground tabular-nums">
+          {current.length}
+        </span>
+      </CardHeader>
 
       {current.length === 0 ? (
         <p className="px-5 py-4 text-sm text-muted-foreground">
@@ -148,6 +151,6 @@ export function WeeklyDecisions({
           </ul>
         </div>
       ) : null}
-    </section>
+    </Card>
   )
 }

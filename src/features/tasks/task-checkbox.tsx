@@ -11,7 +11,7 @@ export function TaskCheckbox({
   className,
   size = "default",
   ...props
-}: ComponentProps<typeof CheckboxPrimitive.Root> & { size?: "default" | "lg" }) {
+}: ComponentProps<typeof CheckboxPrimitive.Root> & { size?: "sm" | "default" | "lg" }) {
   return (
     <CheckboxPrimitive.Root
       data-slot="task-checkbox"
@@ -20,13 +20,16 @@ export function TaskCheckbox({
         "hover:border-muted-foreground/70 focus-visible:ring-[3px] focus-visible:ring-ring/40",
         "data-[state=checked]:border-success data-[state=checked]:bg-success",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        size === "lg" ? "size-5" : "size-[18px]",
+        size === "lg" ? "size-5" : size === "sm" ? "size-3.5 border-[1.25px]" : "size-[18px]",
         className
       )}
       {...props}
     >
       <CheckboxPrimitive.Indicator className="grid place-content-center animate-in duration-150 zoom-in-75">
-        <CheckIcon className={size === "lg" ? "size-3.5" : "size-3"} strokeWidth={3} />
+        <CheckIcon
+          className={size === "lg" ? "size-3.5" : size === "sm" ? "size-2.5" : "size-3"}
+          strokeWidth={3}
+        />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

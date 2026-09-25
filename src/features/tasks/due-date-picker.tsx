@@ -1,29 +1,18 @@
 "use client"
 
-import { ptBR } from "date-fns/locale"
-import { useState, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DatePicker } from "@/components/date-picker"
 import { DueLabel } from "@/features/tasks/task-meta"
-import {
-  addDaysToKey,
-  formatDateKey,
-  nextWeekdayKey,
-  parseDateKey,
-  WEEK_STARTS_ON,
-} from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
-/** Prazo: atalhos (hoje, amanhã, sexta, próxima segunda) + calendário. */
+/** Prazo da tarefa: mostra "Hoje", "Amanhã", "Venceu 24/09"… e permite remover. */
 export function DueDatePicker({
   value,
   onChange,
   today,
   className,
-  align = "start",
+  align,
   icon,
   placeholder = "Prazo",
 }: {
@@ -35,80 +24,18 @@ export function DueDatePicker({
   icon?: ReactNode
   placeholder?: string
 }) {
-  const [open, setOpen] = useState(false)
-
-  const shortcuts: { label: string; value: DateKey }[] = [
-    { label: "Hoje", value: today },
-    { label: "Amanhã", value: addDaysToKey(today, 1) },
-    { label: "Sexta", value: nextWeekdayKey(today, 5) },
-    { label: "Próx. segunda", value: nextWeekdayKey(today, 1) },
-  ]
-
-  function choose(next: DateKey | null) {
-    onChange(next)
-    setOpen(false)
-  }
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "inline-flex items-center gap-2 rounded-md text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[state=open]:bg-accent",
-            className
-          )}
-        >
-          {icon}
-          {value ? (
-            <DueLabel due={value} today={today} className="text-sm" />
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align={align} className="w-auto p-0">
-        <div className="grid grid-cols-2 gap-1 border-b p-2">
-          {shortcuts.map((shortcut) => (
-            <Button
-              key={shortcut.label}
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start font-normal",
-                value === shortcut.value && "bg-accent font-medium"
-              )}
-              onClick={() => choose(shortcut.value)}
-            >
-              {shortcut.label}
-            </Button>
-          ))}
-        </div>
-        <Calendar
-          mode="single"
-          locale={ptBR}
-          weekStartsOn={WEEK_STARTS_ON}
-          selected={value ? parseDateKey(value) : undefined}
-          defaultMonth={parseDateKey(value ?? today)}
-          onSelect={(date) => {
-            if (date) choose(formatDateKey(date))
-          }}
-        />
-        {value ? (
-          <div className="border-t p-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full font-normal text-muted-foreground"
-              onClick={() => choose(null)}
-            >
-              Remover prazo
-            </Button>
-          </div>
-        ) : null}
-      </PopoverContent>
-    </Popover>
+    <DatePicker
+      value={value}
+      onChange={onChange}
+      today={today}
+      placeholder={placeholder}
+      clearLabel="Remover prazo"
+      aria-label="Prazo"
+      renderValue={(due) => <DueLabel due={due} today={today} className="text-sm" />}
+      className={className}
+      align={align}
+      icon={icon}
+    />
   )
 }

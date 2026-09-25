@@ -62,6 +62,25 @@ export function toTimeLabel(instant: Date | Timestamp): string {
   return zonedParts(toDate(instant)).time
 }
 
+/**
+ * Instante (UTC) de uma data e horário de parede em São Paulo.
+ * Calcula o deslocamento real do fuso, então continua certo se o horário de
+ * verão voltar.
+ */
+export function zonedTimeToInstant(date: DateKey, time: string): Timestamp {
+  const wanted = Date.parse(`${date}T${time}:00Z`)
+  let instant = wanted + 3 * 60 * 60 * 1000 // primeira estimativa: UTC−3
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const parts = zonedParts(new Date(instant))
+    instant += wanted - Date.parse(`${parts.date}T${parts.time}:00Z`)
+  }
+  return new Date(instant).toISOString()
+}
+
+export function isTimeLabel(value: unknown): value is string {
+  return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+}
+
 export function todayKey(now: Date = new Date()): DateKey {
   return toDateKey(now)
 }
@@ -120,6 +139,12 @@ export function monthRangeOf(key: DateKey): DateRange {
   }
 }
 
+/** Semanas completas (segunda a domingo) que cobrem o mês da data. */
+export function monthGridRangeOf(key: DateKey): DateRange {
+  const month = monthRangeOf(key)
+  return { start: weekRangeOf(month.start).start, end: weekRangeOf(month.end).end }
+}
+
 export function addMonthsToKey(key: DateKey, months: number): DateKey {
   return formatDateKey(addMonths(parseDateKey(key), months))
 }
@@ -167,9 +192,12 @@ export function formatShortDate(key: DateKey, referenceKey?: DateKey): string {
   return fmt(key, sameYear ? "dd/MM" : "dd/MM/yyyy")
 }
 
-/** "sex" */
+// O locale pt-BR do date-fns abrevia sábado como "sab"; o correto é "sáb".
+const WEEKDAY_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"] as const
+
+/** "sex", "sáb" */
 export function formatWeekdayShort(key: DateKey): string {
-  return fmt(key, "EEEEEE")
+  return WEEKDAY_SHORT[parseDateKey(key).getDay()] ?? fmt(key, "EEEEEE")
 }
 
 /** "segunda-feira", "sábado" */

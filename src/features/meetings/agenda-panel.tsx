@@ -14,7 +14,7 @@ import {
   type AgendaTask,
   type TaskLists,
 } from "@/features/meetings/logic"
-import { firstName } from "@/features/tasks/logic"
+import { assigneesLabel, firstName } from "@/features/tasks/logic"
 import { TaskCheckbox } from "@/features/tasks/task-checkbox"
 import { DoingPill, StatusDot, TaskDateLabel } from "@/features/tasks/task-meta"
 import { TaskRow } from "@/features/tasks/task-row"
@@ -28,7 +28,7 @@ import {
   toDateKey,
   toTimeLabel,
 } from "@/lib/dates"
-import { TASK_STATUS_LABEL } from "@/lib/labels"
+import { TASK_AREA_LABEL, TASK_STATUS_LABEL } from "@/lib/labels"
 import type { DateKey, Task, Timestamp } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -227,12 +227,20 @@ export function TasksAgendaCard({
   const { agenda } = source
 
   const lists: TaskLists<AgendaTask>[] = agenda.client ? [agenda.client] : agenda.people
+  // Uma tarefa de duas pessoas aparece nas duas listas, mas conta uma vez só.
+  const unique = (pick: (list: TaskLists<AgendaTask>) => AgendaTask[], onlyOpen: boolean) =>
+    new Set(
+      lists.flatMap((list) =>
+        pick(list)
+          .filter((task) => !onlyOpen || task.status !== "done")
+          .map((task) => task.id)
+      )
+    ).size
   const totals = {
-    overdue: lists.reduce((sum, list) => sum + openCount(list.overdue), 0),
-    upcoming: lists.reduce((sum, list) => sum + openCount(list.upcoming), 0),
+    overdue: unique((list) => list.overdue, true),
+    upcoming: unique((list) => list.upcoming, true),
+    completed: unique((list) => list.completed, false),
   }
-  // Uma tarefa de duas pessoas conta uma vez só nas concluídas.
-  const completedIds = new Set(lists.flatMap((list) => list.completed.map((task) => task.id)))
 
   return (
     <section aria-labelledby="tarefas-pauta-titulo" className="overflow-hidden rounded-xl border bg-card">
@@ -248,7 +256,7 @@ export function TasksAgendaCard({
             {totals.upcoming} até {formatShortDate(agenda.until, agenda.reference)}
           </span>
           <span>
-            {completedIds.size} {completedIds.size === 1 ? "concluída" : "concluídas"} desde{" "}
+            {totals.completed} {totals.completed === 1 ? "concluída" : "concluídas"} desde{" "}
             {formatShortDate(agenda.since, agenda.reference)}
           </span>
         </p>
@@ -378,52 +386,64 @@ function TaskGroups({
   )
 }
 
-/** Linha de tarefa como estava ao encerrar (só leitura; abre a tarefa se ela ainda existe). */
+/**
+ * Linha de tarefa como estava ao encerrar, no mesmo desenho da TaskRow (só
+ * leitura; abre a tarefa se ela ainda existe).
+ */
 function FrozenTaskRow({ task, showAssignees }: { task: AgendaTask; showAssignees: boolean }) {
   const { tasks, today, openTask } = useTasks()
-  const { profiles } = useWorkspace()
+  const { profiles, clientById } = useWorkspace()
   const exists = tasks.some((candidate) => candidate.id === task.id)
   const done = task.status === "done"
-  const names = profiles
-    .filter((profile) => task.assignee_ids.includes(profile.id))
-    .map((profile) => firstName(profile.full_name))
+  const meta = [
+    task.area ? TASK_AREA_LABEL[task.area] : null,
+    task.client_id ? (clientById.get(task.client_id)?.name ?? null) : null,
+    showAssignees ? assigneesLabel(task.assignee_ids, profiles) : null,
+  ].filter((part): part is string => Boolean(part))
 
   const content = (
     <>
       <span
         aria-hidden="true"
         className={cn(
-          "mt-[3px] grid size-[14px] shrink-0 place-content-center rounded-full border-[1.25px]",
+          "mt-[1px] grid size-[18px] shrink-0 place-content-center rounded-full border-[1.5px]",
           done ? "border-success bg-success text-white" : "border-muted-foreground/35"
         )}
       >
-        {done ? <Check className="size-2.5" strokeWidth={3} /> : null}
+        {done ? <Check className="size-3" strokeWidth={3} /> : null}
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
-          <span
-            className={cn(
-              "line-clamp-2 text-sm leading-5 text-foreground",
-              done && "text-muted-foreground line-through decoration-muted-foreground/50"
-            )}
-          >
-            {task.title}
+      <span className="flex min-w-0 flex-1 items-start gap-4">
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-center gap-2">
+            <span
+              className={cn(
+                "line-clamp-2 text-sm leading-5 font-medium break-words text-foreground @lg:line-clamp-1",
+                done && "text-muted-foreground line-through decoration-muted-foreground/50"
+              )}
+            >
+              {task.title}
+            </span>
+            {task.status === "doing" ? <DoingPill /> : null}
           </span>
-          {task.status === "doing" ? <DoingPill /> : null}
+          <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[13px] leading-5 text-muted-foreground">
+            {meta.map((part, index) => (
+              <span key={part} className="flex items-center gap-1.5">
+                {index > 0 ? <span aria-hidden="true" className="text-subtle-foreground">·</span> : null}
+                <span className="truncate">{part}</span>
+              </span>
+            ))}
+            <span className="flex items-center gap-1.5 @lg:hidden">
+              {meta.length > 0 ? <span aria-hidden="true" className="text-subtle-foreground">·</span> : null}
+              <TaskDateLabel task={task} today={today} />
+            </span>
+          </span>
         </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted-foreground">
-          {showAssignees && names.length > 0 ? (
-            <>
-              <span>{names.join(", ")}</span>
-              <span aria-hidden="true" className="text-subtle-foreground">·</span>
-            </>
-          ) : null}
-          <TaskDateLabel task={task} today={today} />
-        </span>
+        <TaskDateLabel task={task} today={today} className="hidden pt-px leading-5 @lg:block" />
       </span>
     </>
   )
 
+  const rowClass = "@container flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left"
   return (
     <div role="listitem">
       {exists ? (
@@ -431,12 +451,12 @@ function FrozenTaskRow({ task, showAssignees }: { task: AgendaTask; showAssignee
           type="button"
           onClick={() => openTask(task.id)}
           aria-label={`${task.title} (${TASK_STATUS_LABEL[task.status]})`}
-          className="flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/70"
+          className={cn(rowClass, "transition-colors hover:bg-muted/70")}
         >
           {content}
         </button>
       ) : (
-        <div className="flex items-start gap-3 px-3 py-2">{content}</div>
+        <div className={rowClass}>{content}</div>
       )}
     </div>
   )

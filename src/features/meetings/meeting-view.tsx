@@ -105,7 +105,6 @@ export function MeetingView({
           }),
         }
   const hasTaskAgenda = kind !== "internal"
-  const before = !closed && date >= today
 
   return (
     <PageContainer className="max-w-[1320px]">
@@ -125,28 +124,33 @@ export function MeetingView({
       {/*
         Desktop: pauta e transcrição à esquerda; combinados e resumo fixos à
         direita (dá para anotar enquanto percorre a pauta).
-        Celular: antes da reunião a pauta vem primeiro; depois, os combinados.
+        Celular: uma coluna só (as colunas viram "contents" e cada cartão tem
+        a sua ordem). Aberta: assuntos, combinados e a pauta. Encerrada:
+        combinados e resumo primeiro.
       */}
-      <div className="mt-8 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className={cn("min-w-0 space-y-6", before ? "order-1" : "order-2 xl:order-1")}>
-          <TopicsCard api={api} />
+      <div className="mt-8 flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+        <div className="contents xl:block xl:min-w-0 xl:space-y-6">
+          <div className={cn("min-w-0", closed ? "order-3" : "order-1")}>
+            <TopicsCard api={api} closed={closed} />
+          </div>
           {hasTaskAgenda ? (
-            <>
+            <div className="order-4 min-w-0 space-y-6">
               {!source.live ? <FrozenNote frozenAt={source.frozenAt} /> : null}
               <PreviousAgreementsCard source={source} />
               <TasksAgendaCard source={source} clientName={clientName} />
-            </>
+            </div>
           ) : null}
-          <TranscriptCard meetingId={record.id} initial={transcript} />
+          <div className="order-6 min-w-0">
+            <TranscriptCard meetingId={record.id} initial={transcript} />
+          </div>
         </div>
-        <div
-          className={cn(
-            "min-w-0 space-y-6 xl:sticky xl:top-6",
-            before ? "order-2" : "order-1 xl:order-2"
-          )}
-        >
-          <AgreementsCard api={api} />
-          <SummaryCard meetingId={record.id} initial={record.summary} />
+        <div className="contents xl:sticky xl:top-6 xl:block xl:min-w-0 xl:space-y-6">
+          <div className={cn("min-w-0", closed ? "order-1" : "order-2")}>
+            <AgreementsCard api={api} />
+          </div>
+          <div className={cn("min-w-0", closed ? "order-2" : "order-5")}>
+            <SummaryCard meetingId={record.id} initial={record.summary} />
+          </div>
         </div>
       </div>
     </PageContainer>
@@ -251,7 +255,7 @@ function MeetingHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        {record.status === "scheduled" ? (
+        {record.status === "scheduled" && date > today ? null : record.status === "scheduled" ? (
           <Button
             disabled={isPending}
             onClick={() =>
@@ -284,6 +288,16 @@ function MeetingHeader({
               <CalendarCog />
               Editar data, horário ou nome
             </DropdownMenuItem>
+            {record.status === "scheduled" && date > today ? (
+              <DropdownMenuItem
+                onSelect={() =>
+                  changeStatus("done", "Reunião encerrada", "A pauta ficou guardada no histórico.")
+                }
+              >
+                <CheckCheck />
+                Encerrar agora
+              </DropdownMenuItem>
+            ) : null}
             {record.status === "scheduled" ? (
               <DropdownMenuItem onSelect={() => changeStatus("canceled", "Reunião marcada como cancelada")}>
                 <Ban />

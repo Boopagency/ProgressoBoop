@@ -9,6 +9,7 @@ import { PageContainer, PageHeader, SectionTitle } from "@/components/layout/pag
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
+import { WEEKLY } from "@/features/calendar/recurrence"
 import { addItemToOccurrence } from "@/features/meetings/actions"
 import {
   agreementStatus,
@@ -31,7 +32,7 @@ import { MeetingLink } from "@/features/meetings/open-meeting"
 import { ITEM_MAX } from "@/features/meetings/validation"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
-import { formatLongDate, formatMonthYear, formatWeekdayShort, parseDateKey } from "@/lib/dates"
+import { formatMonthYear, formatWeekdayShort, parseDateKey } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import type { CalendarEvent, DateKey, MeetingItem, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -132,8 +133,17 @@ export function MeetingsView({
   const upcoming = overview.upcoming.filter(matchesKind)
   const history = overview.history.filter(matchesKind)
   const next = searching ? null : nextMeeting({ upcoming, history })
+  // Reunião semanal aparece uma vez só (a próxima); as outras semanas só se
+  // já tiverem registro (um assunto adicionado com antecedência, por exemplo).
+  const seenSeries = new Set(next?.event.recurrence_rule === WEEKLY ? [next.event.id] : [])
   const visibleUpcoming = (searching ? upcoming.filter((entry) => matchOf(entry) !== null) : upcoming).filter(
-    (entry) => entry !== next
+    (entry) => {
+      if (entry === next) return false
+      if (entry.event.recurrence_rule !== WEEKLY) return true
+      const seen = seenSeries.has(entry.event.id)
+      seenSeries.add(entry.event.id)
+      return !seen || entry.record !== null
+    }
   )
   const visibleHistory = searching ? history.filter((entry) => matchOf(entry) !== null) : history
   const months = groupByMonth(visibleHistory)
@@ -187,7 +197,7 @@ export function MeetingsView({
               setDraft(event.target.value)
               if (event.target.value === "" && query) search("")
             }}
-            placeholder="Buscar em títulos, combinados e transcrições"
+            placeholder="Buscar em reuniões e transcrições"
             aria-label="Buscar reuniões"
             className="h-9 w-full rounded-lg border border-input bg-background pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
           />
@@ -380,7 +390,9 @@ function MeetingRow({
             <span className="mt-1 line-clamp-1 text-[13px] text-foreground/80">{match}</span>
           ) : null}
         </span>
-        <EntryStateBadge state={state} className="hidden sm:inline-flex" />
+        {state === "upcoming" ? null : (
+          <EntryStateBadge state={state} className="hidden sm:inline-flex" />
+        )}
       </MeetingLink>
     </li>
   )
@@ -440,7 +452,9 @@ function NextMeetingCard({
   }
 
   const facts = [
-    `${topics} ${topics === 1 ? "assunto" : "assuntos"} na pauta`,
+    topics === 0
+      ? "Nenhum assunto na pauta ainda"
+      : `${topics} ${topics === 1 ? "assunto" : "assuntos"} na pauta`,
     openAgreements > 0
       ? `${openAgreements} ${openAgreements === 1 ? "combinado anterior em aberto" : "combinados anteriores em aberto"}`
       : null,
@@ -467,8 +481,7 @@ function NextMeetingCard({
           </h2>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
-              {entry.date === today || entry.date > today ? dayLabel(entry.date, today) : formatLongDate(entry.date)} ·{" "}
-              <span className="tabular-nums">{timeLabel(entry)}</span>
+              {dayLabel(entry.date, today)} · <span className="tabular-nums">{timeLabel(entry)}</span>
             </span>
             <MeetingKindBadge kind={kind} clientName={clientName} />
           </p>

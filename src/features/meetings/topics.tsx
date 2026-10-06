@@ -12,10 +12,9 @@ import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { cn } from "@/lib/utils"
 
 /** Assuntos: o que a equipe quer levar para a reunião. Marca-se como discutido. */
-export function TopicsCard({ api }: { api: MeetingItemsApi }) {
+export function TopicsCard({ api, closed = false }: { api: MeetingItemsApi; closed?: boolean }) {
   const { profileById } = useWorkspace()
   const [draft, setDraft] = useState("")
-  const pendingCount = api.topics.filter((topic) => !topic.done).length
 
   function submit() {
     const content = draft.trim()
@@ -30,8 +29,10 @@ export function TopicsCard({ api }: { api: MeetingItemsApi }) {
         <h2 id="assuntos-titulo" className="text-sm font-semibold text-foreground">
           Assuntos
         </h2>
-        <span className="text-[13px] text-muted-foreground tabular-nums">{pendingCount}</span>
-        <span className="ml-auto text-xs text-subtle-foreground">Qualquer pessoa pode adicionar</span>
+        <span className="text-[13px] text-muted-foreground tabular-nums">{api.topics.length}</span>
+        {closed ? null : (
+          <span className="ml-auto text-xs text-subtle-foreground">Qualquer pessoa pode adicionar</span>
+        )}
       </header>
 
       {api.topics.length > 0 ? (
@@ -78,28 +79,33 @@ export function TopicsCard({ api }: { api: MeetingItemsApi }) {
         </ul>
       ) : null}
 
-      <form
-        className={cn("flex items-center gap-2 px-4 py-3", api.topics.length > 0 && "border-t")}
-        onSubmit={(event) => {
-          event.preventDefault()
-          submit()
-        }}
-      >
-        <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          maxLength={ITEM_MAX}
-          placeholder={api.topics.length > 0 ? "Outro assunto…" : "Adicionar um assunto à pauta…"}
-          aria-label="Novo assunto"
-          className="h-8 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-subtle-foreground"
-        />
-        {draft.trim() ? (
-          <Button type="submit" size="sm" variant="outline" className="h-7 shadow-none">
-            Adicionar
-          </Button>
-        ) : null}
-      </form>
+      {closed && api.topics.length === 0 ? (
+        <p className="px-4 py-3 text-[13px] text-muted-foreground">Nenhum assunto foi levado.</p>
+      ) : null}
+      {closed ? null : (
+        <form
+          className={cn("flex items-center gap-2 px-4 py-3", api.topics.length > 0 && "border-t")}
+          onSubmit={(event) => {
+            event.preventDefault()
+            submit()
+          }}
+        >
+          <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <input
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            maxLength={ITEM_MAX}
+            placeholder={api.topics.length > 0 ? "Outro assunto…" : "Adicionar um assunto à pauta…"}
+            aria-label="Novo assunto"
+            className="h-8 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-subtle-foreground"
+          />
+          {draft.trim() ? (
+            <Button type="submit" size="sm" variant="outline" className="h-7 shadow-none">
+              Adicionar
+            </Button>
+          ) : null}
+        </form>
+      )}
     </section>
   )
 }

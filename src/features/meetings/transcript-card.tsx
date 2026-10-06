@@ -1,6 +1,15 @@
 "use client"
 
-import { ChevronDown, ChevronUp, ClipboardCopy, FileText, Pencil, Search, X } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronUp,
+  ClipboardCopy,
+  ClipboardPaste,
+  FileText,
+  Pencil,
+  Search,
+  X,
+} from "lucide-react"
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -17,13 +26,14 @@ const SPEAKER = /^(\s*(?:\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*)?[A-Za-zÀ-ÿ][\w À-
 const COLLAPSED_LINES = 14
 
 /**
- * Transcrição colada da reunião. Fica recolhida, com busca (sem acento) que
- * destaca e navega pelos trechos encontrados.
+ * Transcrição colada da reunião. Sem texto, é só um convite discreto; com
+ * texto, fica recolhida, com busca (sem acento) que destaca e navega pelos
+ * trechos encontrados.
  */
 export function TranscriptCard({ meetingId, initial }: { meetingId: string; initial: string | null }) {
   const [text, setText] = useState(initial ?? "")
   const [draft, setDraft] = useState(initial ?? "")
-  const [editing, setEditing] = useState(!initial)
+  const [editing, setEditing] = useState(false)
   const [isSaving, startSaving] = useTransition()
 
   useUnsavedWarning(editing && draft.trim() !== text.trim())
@@ -38,7 +48,7 @@ export function TranscriptCard({ meetingId, initial }: { meetingId: string; init
       }
       setText(next)
       setDraft(next)
-      setEditing(next === "")
+      setEditing(false)
       toast.success(next ? "Transcrição salva" : "Transcrição removida")
     })
   }
@@ -86,10 +96,20 @@ export function TranscriptCard({ meetingId, initial }: { meetingId: string; init
         ) : null}
       </header>
 
-      {editing ? (
+      {!text && !editing ? (
+        <div className="flex flex-col items-start gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[13px] leading-5 text-muted-foreground">
+            Depois da reunião, cole aqui o texto da transcrição. Ele fica guardado e entra na busca.
+          </p>
+          <Button variant="outline" size="sm" className="shrink-0 shadow-none" onClick={() => setEditing(true)}>
+            <ClipboardPaste />
+            Colar transcrição
+          </Button>
+        </div>
+      ) : editing ? (
         <div className="p-4">
           <textarea
-            autoFocus={Boolean(text)}
+            autoFocus
             value={draft}
             maxLength={TRANSCRIPT_MAX}
             onChange={(event) => setDraft(event.target.value)}
@@ -105,18 +125,16 @@ export function TranscriptCard({ meetingId, initial }: { meetingId: string; init
                 : "Funciona com o texto de qualquer ferramenta de transcrição."}
             </p>
             <div className="flex gap-2">
-              {text ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setDraft(text)
-                    setEditing(false)
-                  }}
-                >
-                  Cancelar
-                </Button>
-              ) : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDraft(text)
+                  setEditing(false)
+                }}
+              >
+                Cancelar
+              </Button>
               <Button
                 size="sm"
                 onClick={save}

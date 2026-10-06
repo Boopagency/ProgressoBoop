@@ -57,6 +57,12 @@ app **não usa** chave secreta nem `service_role`.
   destaque, histórico por mês e busca. Cada reunião tem assuntos, combinados
   (viram tarefa num clique), pauta automática, resumo e transcrição com
   busca. `/segunda` redireciona para cá.
+- **Processos** (`/processos`): a documentação interna (processos,
+  checklists, políticas e guias) por área e por cliente, com busca no texto,
+  modelos e sugestões. Cada documento tem editor de blocos (estilo Notion,
+  salva sozinho e avisa se outra pessoa salvou no meio), imagens privadas,
+  responsável, revisão periódica, histórico de versões com restauração e
+  "Gerar tarefas" a partir do checklist.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, editável ali mesmo.
 - **Nova tarefa** pelo botão ou pela tecla <kbd>N</kbd>. Título, responsável e
   prazo bastam; o resto é opcional. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> salva.
@@ -70,7 +76,11 @@ app **não usa** chave secreta nem `service_role`.
   `src/lib/supabase/database.types.ts` (`npx supabase gen types typescript`).
 - Dados iniciais reais: `supabase/seed.sql` (perfis, clientes, o plano, as 25
   tarefas e a reunião semanal). Pode rodar de novo sem duplicar.
-- Migrations aplicadas: `initial_schema` (base) e `meetings` (reuniões).
+- Migrations aplicadas: `initial_schema` (base), `meetings` (reuniões),
+  `docs`, `docs_content_stamp` e `docs_restore_version` (processos).
+- Imagens dos processos: bucket privado `docs` do Storage (criado pela
+  migration `docs`), servidas pelo app em `/api/arquivos/…` só para quem está
+  logado.
 
 ### Contas
 
@@ -93,7 +103,7 @@ src/
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
 │   └── layout/       sidebar, cabeçalho, menu do usuário, marca
-├── features/         auth, workspace, tasks, today, calendar, meetings
+├── features/         auth, workspace, tasks, today, calendar, meetings, docs
 │                     (cada uma com queries, actions, lógica e componentes)
 ├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
 │   └── supabase/     clientes do Supabase e tipos do banco

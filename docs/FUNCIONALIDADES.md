@@ -1,7 +1,7 @@
 # Boop Admin — o que o portal tem hoje
 
-Retrato da V1 em produção em <https://admin.deumboop.com.br> (setembro de
-2026). Serve para entender o que existe, como cada parte funciona e o que dá
+Retrato do portal em produção em <https://admin.deumboop.com.br> (outubro
+de 2026). Serve para entender o que existe, como cada parte funciona e o que dá
 para otimizar. Os detalhes técnicos estão em [ARQUITETURA.md](ARQUITETURA.md).
 
 Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
@@ -17,7 +17,7 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   cadastro. Uma conta nova só pode ser criada pelo Supabase (seção 4).
 - **Sessão:** fica salva no navegador, então não é preciso entrar toda vez.
   "Sair" desconecta só aquele navegador.
-- **Menu lateral:** Hoje, Tarefas, Calendário e Reuniões. No rodapé ficam a
+- **Menu lateral:** Hoje, Tarefas, Calendário, Reuniões e Processos. No rodapé ficam a
   pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no topo ou
   com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo botão do topo.
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
@@ -186,7 +186,70 @@ segunda, 07:00).
 - No celular: antes de encerrar aparecem assuntos, combinados e pauta;
   depois, combinados e resumo primeiro.
 
-### 2.9 Comportamentos gerais
+### 2.9 Processos (`/processos`)
+
+A documentação interna da Boop, no lugar do Notion: processos (passo a
+passo), checklists, políticas (regras combinadas) e guias.
+
+- **Comece por aqui:** os documentos fixados, em destaque no topo.
+- **Lista por área** (Comercial, Financeiro, Operação, Marca, Tecnologia,
+  Clientes e Sem área), com tipo, status (Rascunho, Em vigor ou Revisar),
+  cliente, responsável e quando o texto foi editado.
+- **Filtros** na lateral (no celular, numa fileira no topo): Todos, Para
+  revisar, Rascunhos, cada área e cada cliente que tenha documentos.
+- **Busca** no título, no "para que serve" e no texto, sem acento, com o
+  trecho encontrado em destaque.
+- **Novo documento:** título e um modelo (Processo passo a passo, Checklist,
+  Política, Guia, Onboarding de cliente ou Em branco), área e cliente. Começa
+  como rascunho.
+- **Sugestões para documentar:** dez documentos com estrutura pronta
+  (Como funciona a Boop, Rotina da weekly, Onboarding de cliente, Aprovação
+  de conteúdo, Relatório mensal, Proposta comercial, Faturamento e cobrança,
+  Tom de voz, Acessos e ferramentas, Prazos e retrabalho). Com a biblioteca
+  vazia, elas são a tela inicial; depois ficam no fim da lista, só as que
+  ainda não existem.
+
+### 2.10 Página do processo (`/processos/…`)
+
+- **Título** e **para que serve** (uma frase que aparece na lista), editáveis
+  ali mesmo.
+- **Editor de blocos**, no estilo do Notion: digite "/" para inserir títulos,
+  listas, checklist, tabela, citação, código, separador ou imagem.
+  Selecionar um texto mostra a barra de formatação (negrito, cor, link,
+  alinhamento). Os blocos podem ser arrastados pela alça à esquerda.
+- **Salva sozinho** pouco depois de parar de digitar ("Salvando…" → "Salvo"
+  no topo); Ctrl/⌘ + S salva na hora. Fechar a aba com algo não salvo pede
+  confirmação.
+- **Duas pessoas editando ao mesmo tempo:** se alguém salvou enquanto você
+  editava, nada é sobrescrito em silêncio. Aparece um aviso dizendo quem
+  salvou e quando, com duas opções: salvar as suas alterações por cima (a
+  versão da outra pessoa fica no histórico) ou descartar as suas e carregar a
+  da outra pessoa.
+- **Imagens:** colar, arrastar ou "/imagem". Ficam guardadas de forma
+  privada: o endereço só abre para quem está logado. Fotos grandes são
+  reduzidas antes de enviar (limite de 5 MB).
+- **Detalhes:** tipo, status, área, cliente (ou nenhum, quando vale para
+  todos), responsável e revisão periódica (todo mês, a cada 3 ou 6 meses,
+  uma vez por ano ou sem revisão). **Revisado hoje** registra a revisão e o
+  documento volta a "Em vigor". Quando a revisão vence, um aviso aparece no
+  topo do documento e ele entra em "Para revisar". No celular os detalhes
+  começam fechados, numa linha de resumo.
+- **Neste documento:** índice das seções (telas grandes); clicar leva até a
+  seção.
+- **Gerar tarefas:** os itens do checklist viram tarefas, com o mesmo
+  responsável, prazo e cliente para todas (dá para ajustar cada uma depois).
+  Vêm marcados os itens ainda não feitos no documento. As tarefas aparecem em
+  **Tarefas geradas**, com o progresso, e cada tarefa mostra o processo de
+  origem. O documento continua como modelo: dá para gerar de novo para o
+  próximo cliente.
+- **Histórico:** o portal guarda uma versão a cada meia hora de edição e
+  sempre que outra pessoa edita. Dá para ver cada versão e **restaurar**; o
+  texto atual vai para o histórico, então restaurar pode ser desfeito.
+- **Menu (⋯):** fixar em "Comece por aqui", histórico de versões, duplicar
+  (a cópia começa como rascunho), copiar link e excluir (apaga também o
+  histórico e as imagens; as tarefas geradas continuam).
+
+### 2.11 Comportamentos gerais
 
 - **Concluir uma tarefa:**
   - contadores e barras atualizam na hora;
@@ -222,6 +285,8 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Pauta da weekly: concluídas | concluídas desde a reunião anterior (ou nos 7 dias antes) |
 | Pauta com cliente | tarefas daquele cliente; "próximas" cobre pelo menos duas semanas |
 | Combinado em aberto | se virou tarefa, a tarefa não está concluída; senão, não foi marcado como cumprido |
+| Processo para revisar | status "Revisar", ou "Em vigor" com a revisão vencida (última revisão + período) |
+| Versão de um processo | guardada a cada 30 minutos de edição da mesma pessoa, sempre que outra pessoa edita e sempre que uma versão é restaurada |
 | Ordem das listas | prazo mais próximo primeiro; no empate, prioridade alta primeiro e depois a mais antiga |
 
 ## 4. Dados e o que dá para editar
@@ -235,6 +300,7 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Tarefas | as 25 do plano | criar, editar, concluir, excluir | — |
 | Eventos | a reunião semanal | criar, editar, excluir | — |
 | Reuniões | registros, assuntos, combinados, resumo e transcrição | tudo | — |
+| Processos | documentos, versões e imagens | tudo (versões: ver e restaurar) | — |
 
 Áreas (Comercial, Financeiro, Operação, Marca, Tecnologia, Clientes), status
 (A fazer, Fazendo, Feito) e prioridades (Alta, Normal, Baixa) são fixos. Para
@@ -248,6 +314,8 @@ mudá-los é preciso alterar o código e o banco.
 | Ctrl/⌘ + Enter | salva a nova tarefa |
 | Ctrl/⌘ + B | recolhe ou abre o menu lateral |
 | Enter no título (detalhes) | salva o título |
+| / (no editor de processos) | menu de blocos: título, lista, checklist, tabela, imagem… |
+| Ctrl/⌘ + S (no editor de processos) | salva na hora |
 
 Links de Tarefas com filtros e do Calendário em uma semana ou mês específicos
 podem ser salvos nos favoritos.
@@ -275,7 +343,11 @@ podem ser salvos nos favoritos.
   segunda de feriado.
 - Na visão Mês, clicar no dia não cria evento.
 - Eventos não têm participantes, link de reunião nem local.
-- A busca existe só nas Reuniões (a busca geral entra na Fase 4).
+- A busca existe nas Reuniões e nos Processos, cada uma na sua tela (a busca
+  geral entra na Fase 4).
+- Processos: duas pessoas não editam juntas em tempo real (como no Google
+  Docs); quem salva por último decide, com o aviso de conflito. Comentários e
+  menções nos documentos ainda não existem.
 - A tarefa tem só a data do prazo, sem horário.
 - Não há lembretes nem avisos (e-mail ou WhatsApp).
 - Não há histórico de alterações (quem mudou o quê).
@@ -340,6 +412,8 @@ são uma sugestão para começar.
 | Regras (grupos, progresso, pauta) | `src/features/tasks/logic.ts`, `src/features/meetings/logic.ts` |
 | Calendário | `src/features/calendar/` |
 | Reuniões | `src/features/meetings/`, `src/app/(app)/reunioes/` |
+| Processos (lista, editor, modelos, versões) | `src/features/docs/`, `src/app/(app)/processos/`, `src/app/api/arquivos/` |
+| Modelos e sugestões de documentos | `src/features/docs/templates.ts` |
 | Login e sessão | `src/features/auth/`, `src/proxy.ts` |
 | Menu lateral e cabeçalhos | `src/components/layout/` |
 | Cores e fontes | `src/app/globals.css`, `src/app/layout.tsx` |

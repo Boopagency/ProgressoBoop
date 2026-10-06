@@ -489,11 +489,11 @@ function ConflictBanner({
           {mine ? "Descartar e carregar a outra" : `Descartar e ver a de ${name}`}
         </Button>
       </div>
-      {mine ? null : (
-        <p className="mt-2 pl-6 text-xs text-amber-900/80">
-          Salvando por cima, a versão de {name} continua no histórico.
-        </p>
-      )}
+      <p className="mt-2 pl-6 text-xs text-amber-900/80">
+        {mine
+          ? "Salvando por cima, o texto salvo na outra aba é substituído por este."
+          : `Salvando por cima, a versão de ${name} continua no histórico.`}
+      </p>
     </div>
   )
 }

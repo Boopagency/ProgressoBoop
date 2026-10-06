@@ -52,8 +52,11 @@ src/
 │   │   ├── loading.tsx / error.tsx
 │   │   ├── tarefas/            # "/tarefas"
 │   │   ├── calendario/         # "/calendario"
-│   │   └── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
+│   │   ├── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
+│   │   └── processos/          # "/processos" e "/processos/[id]"
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
+│   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
+│   │                           # para uma URL assinada e temporária do Storage)
 │   ├── login/                  # "/login" (sem "Criar conta")
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
@@ -68,8 +71,10 @@ src/
 │   ├── tasks/                  # lista, linha, Sheet, "Nova tarefa", filtros, lógica pura
 │   ├── today/                  # blocos da tela Hoje
 │   ├── calendar/               # semana/mês, recorrência, eventos
-│   └── meetings/               # reuniões: lista, pauta automática, assuntos,
+│   ├── meetings/               # reuniões: lista, pauta automática, assuntos,
 │                               # combinados, resumo e transcrição
+│   └── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
+│                               # versões, checklist → tarefas
 ├── hooks/                      # use-mobile (shadcn)
 ├── lib/
 │   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
@@ -109,16 +114,22 @@ Server Component (page.tsx)
   progresso na hora. Se o servidor falhar, a UI volta e aparece um toast.
 - **Sem cliente do Supabase no navegador.** Todo acesso ao banco passa pelo
   servidor (Server Components e Server Actions) com a sessão da pessoa, via
-  `@supabase/ssr` e cookies.
+  `@supabase/ssr` e cookies. Única exceção, sem acesso ao banco: o envio de
+  imagens dos processos vai do navegador direto ao Storage, numa URL de envio
+  assinada que o servidor gera (com a sessão) para um caminho só.
 
 ## 5. Schema do Supabase
 
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
-`plans`. Depois vieram as reuniões (`meetings` e `meeting_items`). O SQL está
-em `supabase/migrations/`, uma migration por etapa:
-[`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql) e
-[`meetings`](../supabase/migrations/20261006141627_meetings.sql).
+`plans`. Depois vieram as reuniões (`meetings` e `meeting_items`) e os
+processos (`docs` e `doc_versions`). O SQL está em `supabase/migrations/`, uma
+migration por etapa:
+[`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
+[`meetings`](../supabase/migrations/20261006141627_meetings.sql),
+[`docs`](../supabase/migrations/20261006163448_docs.sql),
+[`docs_content_stamp`](../supabase/migrations/20261006165216_docs_content_stamp.sql) e
+[`docs_restore_version`](../supabase/migrations/20261006165704_docs_restore_version.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -131,14 +142,19 @@ em `supabase/migrations/`, uma migration por etapa:
 | `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`. Sem uso desde as Reuniões; sai numa migration de limpeza |
 | `meetings`         | `id`, `event_id`, `occurs_on`, `status`, `summary`, `transcript`, `transcript_length` (gerada), `agenda` (pauta congelada, jsonb), `closed_at`, `closed_by`, `created_by`, `created_at`, `updated_at`, `search` (tsvector gerado) |
 | `meeting_items`    | `id`, `meeting_id`, `kind` (assunto ou combinado), `content`, `owner_id`, `due_date`, `done`, `task_id`, `created_by`, `created_at` |
+| `docs`             | `id`, `title`, `kind`, `status`, `area`, `client_id`, `owner_id`, `summary` ("para que serve"), `content` (blocos do editor, jsonb), `content_text` (texto puro), `review_every_months`, `reviewed_on`, `next_review_on` (gerada), `pinned`, `created_by`, `updated_by`, `created_at`, `updated_at`, `content_updated_at`, `content_updated_by`, `search` (tsvector gerado) |
+| `doc_versions`     | `id`, `doc_id`, `title`, `content`, `saved_by`, `saved_at` (quem deixou o texto assim, e quando), `created_at` |
 
-`tasks` ganhou `meeting_id`: a reunião em que a tarefa nasceu.
+`tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu) e `doc_id` (o
+processo de cujo checklist ela saiu). Imagens dos processos ficam no bucket
+privado `docs` do Storage (até 5 MB; PNG, JPG, WebP e GIF).
 
 Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `normal`, `high`), `task_area` (`commercial`, `finance`, `operations`,
 `brand`, `technology`, `clients`), `event_type` (`meeting`, `internal`,
-`delivery`), `meeting_status` (`scheduled`, `done`, `canceled`) e
-`meeting_item_kind` (`topic`, `agreement`).
+`delivery`), `meeting_status` (`scheduled`, `done`, `canceled`),
+`meeting_item_kind` (`topic`, `agreement`), `doc_kind` (`process`,
+`checklist`, `policy`, `guide`) e `doc_status` (`draft`, `active`, `review`).
 
 ### 5.1 Decisões sobre o schema
 
@@ -183,7 +199,30 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
     `closed_at`/`closed_by` são preenchidos pelo trigger `set_meeting_fields`.
 12. **Busca sem acento.** `private.unaccent_text()` (extensão `unaccent` com
     dicionário fixo, por isso imutável) alimenta a coluna gerada `search` com
-    o resumo e a transcrição; o app busca com `websearch` em português.
+    o resumo e a transcrição; o app busca com `websearch` em português. Nos
+    processos, o título pesa mais que o "para que serve", que pesa mais que o
+    texto.
+13. **Processo = blocos + texto puro.** O conteúdo é o JSON de blocos do
+    editor (BlockNote), guardado como veio; o servidor tira dele o texto puro
+    (`content_text`), que alimenta a busca e os trechos. Os modelos e as
+    sugestões são blocos prontos, em `features/docs/templates.ts`.
+14. **Versões pelo banco.** O trigger `set_doc_fields` guarda o estado
+    anterior em `doc_versions` quando o título ou o texto mudam: sempre que
+    quem edita é outra pessoa, e no máximo uma vez a cada 30 minutos para
+    quem segue editando. Restaurar (`restore_doc_version`) guarda o texto
+    atual sempre, então dá para desfazer. Ninguém grava versões direto.
+15. **Conflito de edição.** O editor salva sozinho, levando o carimbo
+    (`content_updated_at`) do texto que a pessoa tinha. Se outra pessoa salvou
+    no meio, o servidor não sobrescreve: a tela mostra quem salvou e deixa
+    escolher entre manter as suas alterações (a outra versão fica no
+    histórico) ou carregar a outra. O carimbo só muda com o texto, então
+    trocar status ou responsável não gera falso alarme.
+16. **Imagens privadas.** O documento guarda um endereço estável do app
+    (`/api/arquivos/<processo>/<arquivo>`), que confere a sessão e redireciona
+    para uma URL assinada de uma hora. O envio vai direto ao Storage (URL de
+    envio assinada), sem passar pelo limite de 1 MB das Server Actions; fotos
+    grandes são reduzidas no navegador antes. Excluir o processo apaga as
+    imagens dele.
 
 ### 5.2 Segurança (RLS)
 
@@ -202,6 +241,9 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `tasks`, `events`  | ver, criar (sempre como autor: `created_by = auth.uid()`), editar e excluir |
 | `weekly_decisions` | ver, registrar (como autor) e excluir                         |
 | `meetings`, `meeting_items` | ver, criar (como autor), editar e excluir            |
+| `docs`             | ver, criar (como autor), editar e excluir                     |
+| `doc_versions`     | só ver (quem grava é o banco, pelo trigger)                   |
+| Storage, bucket `docs` | ver, enviar e apagar imagens                              |
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
@@ -237,14 +279,18 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `react-day-picker` (v9)                      | base do componente Calendar (seletor de data); fixado na v9, a versão para a qual o Calendar do shadcn foi escrito (é a que o próprio shadcn usa) |
 | `sonner`                                     | toasts discretos                             |
 | `@supabase/supabase-js`, `@supabase/ssr`     | banco e autenticação (sessão em cookies)     |
+| `@blocknote/core`, `@blocknote/react`, `@blocknote/shadcn` | editor de blocos dos Processos (estilo Notion; licença MPL-2.0, código aberto). Carregado só na página do documento |
 
 Sem biblioteca de estado global, de formulário, de calendário completo, de
-gráficos ou de validação. O volume de dados e as regras não justificam.
+gráficos ou de validação. O volume de dados e as regras não justificam. O
+editor de documentos é a exceção que vale o peso: escrever um editor de
+blocos (títulos, listas, checklists, tabelas, imagens, arrastar) do zero não
+faria sentido.
 
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
-Tarefas, Calendário, Reuniões; usuário e sair no rodapé) e conteúdo num painel
+Tarefas, Calendário, Reuniões, Processos; usuário e sair no rodapé) e conteúdo num painel
 branco sobre fundo off-white.
 
 ### Hoje (`/hoje`)
@@ -325,6 +371,35 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - **Encerrar** guarda a pauta como estava; dá para reabrir, cancelar ou
   excluir o registro. Setas levam à reunião anterior e à próxima da série.
 
+### Processos (`/processos`)
+
+A documentação interna da Boop: processos, checklists, políticas e guias.
+
+- **Comece por aqui**: os documentos fixados (ex.: "Como funciona a Boop").
+- Lista **por área**, com tipo, status, cliente, responsável e quando foi
+  editado. Filtros: Todos, **Para revisar** (marcados ou com a revisão
+  vencida), Rascunhos, cada área e cada cliente.
+- **Busca** no título, no "para que serve" e no texto, sem acento, com o
+  trecho encontrado destacado.
+- **Novo documento** com modelo (processo passo a passo, checklist, política,
+  guia, onboarding de cliente ou em branco), área e cliente.
+- **Sugestões para documentar**: dez documentos que toda agência precisa,
+  já com estrutura (com a biblioteca vazia, elas são a tela inicial).
+
+### Processo (`/processos/[id]`)
+
+- Título, "para que serve" e o **editor de blocos**: títulos, listas,
+  checklists, tabelas, citações, código e imagens (colar, arrastar ou pelo
+  menu "/"). Salva sozinho; Ctrl/⌘ + S salva na hora.
+- **Detalhes**: tipo, status, área, cliente, responsável e revisão periódica
+  (a cada 1, 3, 6 ou 12 meses), com **Revisado hoje**. Quando a revisão
+  vence, um aviso aparece no topo.
+- **Neste documento** (índice das seções), **Tarefas geradas** e
+  **Histórico** (ver cada versão e restaurar).
+- **Gerar tarefas**: os itens do checklist viram tarefas (mesmo responsável,
+  prazo e cliente), ligadas ao processo.
+- Menu: fixar em "Comece por aqui", duplicar, copiar link e excluir.
+
 ## 8. Componentes principais
 
 | Componente           | Papel                                                          |
@@ -345,6 +420,10 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 | `AgreementsCard` / `TopicsCard` | combinados e assuntos, com mudanças otimistas         |
 | `TasksAgendaCard`    | pauta automática (por pessoa ou do cliente), ao vivo ou guardada |
 | `TranscriptCard`     | transcrição recolhida, com busca e destaque                    |
+| `DocsView` / `DocView` | biblioteca de processos e página do documento                 |
+| `DocEditor`          | editor de blocos (BlockNote) com salvamento automático e conflito |
+| `VersionsSheet`      | histórico de versões com visualização e restauração            |
+| `GenerateTasksDialog` | itens do checklist → tarefas                                 |
 
 ## 9. Definições de negócio
 
@@ -367,6 +446,8 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
   da reunião anterior da série (ou dos 7 dias anteriores).
 - **Combinado em aberto:** o que virou tarefa segue o status da tarefa; o
   resto, o próprio "feito".
+- **Processo para revisar:** status "Revisar", ou "Em vigor" com a próxima
+  revisão (última revisão + período) vencida.
 
 ## 10. Decisões técnicas importantes
 
@@ -434,9 +515,10 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 1. **Reuniões** ✅: weekly e reuniões com clientes, pauta automática,
    assuntos, combinados que viram tarefa, resumo e transcrição com busca.
    Visita diária ao banco para o Supabase gratuito não pausar.
-2. **Processos**: documentação interna (editor no estilo do Notion, modelos,
-   dono, revisão periódica, versões, busca), organizada por área e por
-   cliente; checklists viram tarefas.
+2. **Processos** ✅: documentação interna com editor de blocos, modelos e
+   sugestões, responsável, revisão periódica, versões com restauração, busca
+   no texto, imagens privadas; organizada por área e por cliente; checklists
+   viram tarefas.
 3. **Clientes**: cadastro completo dos ativos, semáforo de saúde e revisão
    mensal (checklist, notas, próximos passos que viram tarefas).
 4. **Unificação**: busca geral (Ctrl/⌘ + K), tela Hoje como painel do dia

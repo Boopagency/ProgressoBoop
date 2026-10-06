@@ -8,11 +8,15 @@ import { updateSession } from "@/lib/supabase/proxy"
  * servidor, em requireUser, em cada página, query e action. Quem já está
  * logado e abre /login é redirecionado pela própria página, que confere o
  * perfil (redirecionar aqui criaria um loop para contas sem perfil).
+ *
+ * Rotas públicas: o login e a visita diária ao banco (cron da Vercel).
  */
+const PUBLIC_PATHS = new Set(["/login", "/api/keepalive"])
+
 export async function proxy(request: NextRequest) {
   const { response, isAuthenticated } = await updateSession(request)
 
-  if (!isAuthenticated && request.nextUrl.pathname !== "/login") {
+  if (!isAuthenticated && !PUBLIC_PATHS.has(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.search = ""

@@ -106,6 +106,10 @@ publica em <https://admin.deumboop.com.br> (e em <https://boop-admin.vercel.app>
 as outras branches geram só prévias. As funções rodam
 em São Paulo (`gru1`, em `vercel.json`), perto do banco (`sa-east-1`).
 
+Duas vezes por dia (08:00 e 20:00 em Brasília) um cron da Vercel abre
+`/api/keepalive`, que faz consultas leves ao banco. É o que impede o Supabase
+gratuito de pausar o projeto por falta de uso.
+
 ## shadcn/ui
 
 Os componentes ficam em `src/components/ui`. Para adicionar outros:

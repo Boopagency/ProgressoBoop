@@ -390,10 +390,15 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | Hospedagem  | Vercel, projeto `boop-admin` (só este repositório), funções em `gru1` |
 | Produção    | branch `main` → <https://admin.deumboop.com.br> e <https://boop-admin.vercel.app> |
 | Domínio     | `admin.deumboop.com.br`: CNAME e TXT `_vercel` na zona `deumboop.com.br` (Registro.br) |
+| Visita diária | cron da Vercel (`vercel.json`) abre `/api/keepalive` às 08:00 e às 20:00 (Brasília) |
 
 - As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da
   conta na Vercel abre). O domínio próprio é público, e o app exige login.
 - O projeto do site (`boop`, com `deumboop.com.br` e `www`) não foi alterado.
+- O Supabase gratuito pausa o projeto depois de 7 dias com pouca atividade.
+  A visita diária faz quatro consultas sem sessão (o RLS devolve zero
+  linhas, mas o banco conta o uso). A rota é pública porque não expõe nada
+  além do que a chave publicável já permite.
 
 | Variável                               | Tipo   | Onde                          |
 | -------------------------------------- | ------ | ----------------------------- |

@@ -252,8 +252,8 @@ podem ser salvos nos favoritos.
   devolve no máximo 1.000 linhas por consulta. Antes de chegar a 1.000
   tarefas, será preciso arquivar ou paginar.
 - **Plano gratuito do Supabase:**
-  - o projeto é pausado depois de 7 dias sem uso (com uso diário, isso não
-    acontece);
+  - o projeto é pausado depois de 7 dias com pouco uso. Para evitar isso,
+    um cron da Vercel visita o banco duas vezes por dia (`/api/keepalive`);
   - não há restauração para um ponto no tempo.
 - Os testes automáticos usados na entrega não estão no repositório.
 

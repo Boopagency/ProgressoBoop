@@ -53,8 +53,10 @@ app **não usa** chave secreta nem `service_role`.
   com a lista agrupada por prazo. Os filtros ficam na URL.
 - **Calendário** (`/calendario`): semana e mês, com tarefas, reuniões, eventos
   internos, entregas e a reunião semanal recorrente (segunda, 07:00).
-- **Segunda** (`/segunda`): pauta da reunião semanal, uma coluna por pessoa e
-  as decisões da semana.
+- **Reuniões** (`/reunioes`): weekly e reuniões com clientes. A próxima em
+  destaque, histórico por mês e busca. Cada reunião tem assuntos, combinados
+  (viram tarefa num clique), pauta automática, resumo e transcrição com
+  busca. `/segunda` redireciona para cá.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, editável ali mesmo.
 - **Nova tarefa** pelo botão ou pela tecla <kbd>N</kbd>. Título, responsável e
   prazo bastam; o resto é opcional. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> salva.
@@ -68,6 +70,7 @@ app **não usa** chave secreta nem `service_role`.
   `src/lib/supabase/database.types.ts` (`npx supabase gen types typescript`).
 - Dados iniciais reais: `supabase/seed.sql` (perfis, clientes, o plano, as 25
   tarefas e a reunião semanal). Pode rodar de novo sem duplicar.
+- Migrations aplicadas: `initial_schema` (base) e `meetings` (reuniões).
 
 ### Contas
 
@@ -90,7 +93,7 @@ src/
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
 │   └── layout/       sidebar, cabeçalho, menu do usuário, marca
-├── features/         auth, workspace, tasks, today, calendar, weekly
+├── features/         auth, workspace, tasks, today, calendar, meetings
 │                     (cada uma com queries, actions, lógica e componentes)
 ├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
 │   └── supabase/     clientes do Supabase e tipos do banco

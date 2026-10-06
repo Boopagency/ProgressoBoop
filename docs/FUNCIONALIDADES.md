@@ -17,7 +17,7 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   cadastro. Uma conta nova só pode ser criada pelo Supabase (seção 4).
 - **Sessão:** fica salva no navegador, então não é preciso entrar toda vez.
   "Sair" desconecta só aquele navegador.
-- **Menu lateral:** Hoje, Tarefas, Calendário e Segunda. No rodapé ficam a
+- **Menu lateral:** Hoje, Tarefas, Calendário e Reuniões. No rodapé ficam a
   pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no topo ou
   com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo botão do topo.
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
@@ -140,22 +140,53 @@ ali mesmo e salvo na hora.
 - **Já cadastrada:** a Reunião semanal da Boop, toda segunda às 07:00, sem
   horário de término, a partir de 28/09.
 
-### 2.7 Segunda (`/segunda`, a reunião semanal)
+### 2.7 Reuniões (`/reunioes`)
 
-- **Cabeçalho:** "Weekly", o período da semana e "Reunião toda segunda-feira
-  às 07:00".
-- **Quatro indicadores:** Concluídas na semana anterior, Atrasadas, Vencem
-  nesta semana e Progresso da semana.
-- **Por pessoa** (Jabez, Renatha e Léo): o progresso da semana de cada um e as
-  listas Concluídas na semana anterior, Atrasadas e Desta semana. Uma tarefa
-  com várias pessoas aparece na coluna de cada uma.
-- **Decisões da semana:**
-  - adicionar um texto curto, que aparece com o autor e o horário;
-  - remover uma decisão;
-  - as decisões da semana anterior aparecem abaixo, só para consulta.
-- Tarefas concluídas durante a reunião ficam riscadas no lugar.
+Substitui a antiga tela Segunda (`/segunda` leva para cá). Cada reunião é um
+evento do tipo "Reunião" no Calendário (a weekly é o evento semanal de
+segunda, 07:00).
 
-### 2.8 Comportamentos gerais
+- **Próxima reunião em destaque:** quando, tipo (Weekly, cliente ou
+  interna), assuntos já na pauta e combinados anteriores em aberto. Tem um
+  campo "Algo para discutir?" que adiciona um assunto sem abrir a reunião.
+- **Depois dessa:** as próximas (a weekly aparece uma vez só).
+- **Histórico por mês:** cada reunião com horário, combinados (e quantos
+  seguem em aberto), se tem transcrição e a situação: Encerrada, Em aberto
+  (passou e ninguém encerrou), Cancelada ou Sem registro (passou e ninguém
+  abriu; dá para registrar depois).
+- **Filtro** Todas, Weekly, Clientes ou Internas e **busca** em títulos,
+  assuntos, combinados, resumos e transcrições (sem acento: "orcamento" acha
+  "orçamento").
+- **Nova reunião:** nome, data, horário, repetição e cliente. Cria o evento no
+  Calendário e já abre a página da reunião.
+
+### 2.8 Página da reunião (`/reunioes/…`)
+
+- **Assuntos:** o que cada um quer discutir. Qualquer pessoa adiciona antes da
+  reunião; durante, marca como discutido.
+- **Combinados:** o que ficou decidido, com responsável (uma pessoa ou
+  "Equipe") e prazo. **Virar tarefa** cria a tarefa num clique, com o mesmo
+  texto, responsável, prazo e cliente; depois disso o combinado mostra o
+  status da tarefa, e a tarefa mostra a reunião de origem.
+- **Pauta automática:**
+  - combinados anteriores da série: todos da última reunião e os mais antigos
+    que seguem em aberto (dá para marcar como cumpridos ali);
+  - na weekly: progresso do plano e, por pessoa, atrasadas, até domingo e
+    concluídas desde a última weekly (dá para concluir tarefas durante a
+    reunião);
+  - com cliente: as tarefas daquele cliente.
+- **Resumo:** texto livre que salva sozinho.
+- **Transcrição:** cole o texto de qualquer ferramenta de transcrição. Fica
+  recolhida, com nomes de quem fala em destaque, busca que destaca e navega
+  pelos trechos, e botões Copiar e Editar.
+- **Encerrar reunião** (a partir do dia dela): guarda a pauta como estava,
+  para o histórico. Também dá para reabrir, marcar como cancelada, editar
+  data/horário/nome e excluir o registro.
+- Setas no topo levam à reunião anterior e à próxima da mesma série.
+- No celular: antes de encerrar aparecem assuntos, combinados e pauta;
+  depois, combinados e resumo primeiro.
+
+### 2.9 Comportamentos gerais
 
 - **Concluir uma tarefa:**
   - contadores e barras atualizam na hora;
@@ -186,8 +217,11 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Plano atual | o plano cujo período inclui hoje; se houver dois, o que termina antes |
 | Minhas | tarefas em que a pessoa logada é uma das responsáveis |
 | "Todos" | tarefa com as três pessoas como responsáveis |
-| Concluídas na semana anterior | concluídas entre a segunda e o domingo da semana passada |
-| Vencem nesta semana (Segunda) | abertas, com prazo de hoje até domingo |
+| Pauta da weekly: atrasadas | abertas, com prazo antes de hoje |
+| Pauta da weekly: até domingo | abertas, com prazo de hoje até o domingo da semana da reunião |
+| Pauta da weekly: concluídas | concluídas desde a reunião anterior (ou nos 7 dias antes) |
+| Pauta com cliente | tarefas daquele cliente; "próximas" cobre pelo menos duas semanas |
+| Combinado em aberto | se virou tarefa, a tarefa não está concluída; senão, não foi marcado como cumprido |
 | Ordem das listas | prazo mais próximo primeiro; no empate, prioridade alta primeiro e depois a mais antiga |
 
 ## 4. Dados e o que dá para editar
@@ -200,7 +234,7 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Planos | Estruturação da Boop até 31/10 (25/09 a 31/10) | ligar ou desligar uma tarefa do plano | criar o próximo plano, mudar as datas |
 | Tarefas | as 25 do plano | criar, editar, concluir, excluir | — |
 | Eventos | a reunião semanal | criar, editar, excluir | — |
-| Decisões | nenhuma | registrar e remover (semana atual) | editar o texto |
+| Reuniões | registros, assuntos, combinados, resumo e transcrição | tudo | — |
 
 Áreas (Comercial, Financeiro, Operação, Marca, Tecnologia, Clientes), status
 (A fazer, Fazendo, Feito) e prioridades (Alta, Normal, Baixa) são fixos. Para
@@ -241,9 +275,7 @@ podem ser salvos nos favoritos.
   segunda de feriado.
 - Na visão Mês, clicar no dia não cria evento.
 - Eventos não têm participantes, link de reunião nem local.
-- Decisões não podem ser editadas, e só aparecem as da semana atual e as da
-  anterior.
-- Não há busca por texto.
+- A busca existe só nas Reuniões (a busca geral entra na Fase 4).
 - A tarefa tem só a data do prazo, sem horário.
 - Não há lembretes nem avisos (e-mail ou WhatsApp).
 - Não há histórico de alterações (quem mudou o quê).
@@ -272,7 +304,7 @@ são uma sugestão para começar.
 | 3 ★ | Tela "Trocar senha" no menu do usuário | tirar as senhas temporárias sem depender do banco |
 | 4 | Criar evento clicando no dia, na visão Mês | menos cliques |
 | 5 | Busca por título em Tarefas | achar tarefas rápido quando a lista crescer |
-| 6 | Editar decisões | corrigir o texto sem apagar e registrar de novo |
+| 6 | ~~Editar decisões~~ | feito: as decisões viraram combinados das Reuniões, editáveis |
 | 7 | Definir o término da reunião semanal | já dá para fazer hoje: Calendário → a reunião → Editar |
 | 8 | Ativar a proteção contra senhas vazadas no Supabase | aviso do verificador de segurança (confirmar se o plano gratuito permite) |
 
@@ -305,9 +337,9 @@ são uma sugestão para começar.
 | Tela Hoje | `src/features/today/`, `src/app/(app)/hoje/page.tsx` |
 | Tarefas (lista, filtros, linha) | `src/features/tasks/tasks-view.tsx`, `filters.ts`, `task-row.tsx` |
 | Detalhes e nova tarefa | `src/features/tasks/task-sheet.tsx`, `new-task-dialog.tsx` |
-| Regras (grupos, progresso, Segunda) | `src/features/tasks/logic.ts`, `src/features/weekly/logic.ts` |
+| Regras (grupos, progresso, pauta) | `src/features/tasks/logic.ts`, `src/features/meetings/logic.ts` |
 | Calendário | `src/features/calendar/` |
-| Segunda | `src/features/weekly/` |
+| Reuniões | `src/features/meetings/`, `src/app/(app)/reunioes/` |
 | Login e sessão | `src/features/auth/`, `src/proxy.ts` |
 | Menu lateral e cabeçalhos | `src/components/layout/` |
 | Cores e fontes | `src/app/globals.css`, `src/app/layout.tsx` |

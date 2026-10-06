@@ -52,7 +52,8 @@ src/
 │   │   ├── loading.tsx / error.tsx
 │   │   ├── tarefas/            # "/tarefas"
 │   │   ├── calendario/         # "/calendario"
-│   │   └── segunda/            # "/segunda"
+│   │   └── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
+│   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
 │   ├── login/                  # "/login" (sem "Criar conta")
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
@@ -67,7 +68,8 @@ src/
 │   ├── tasks/                  # lista, linha, Sheet, "Nova tarefa", filtros, lógica pura
 │   ├── today/                  # blocos da tela Hoje
 │   ├── calendar/               # semana/mês, recorrência, eventos
-│   └── weekly/                 # tela Segunda e decisões da semana
+│   └── meetings/               # reuniões: lista, pauta automática, assuntos,
+│                               # combinados, resumo e transcrição
 ├── hooks/                      # use-mobile (shadcn)
 ├── lib/
 │   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
@@ -113,8 +115,10 @@ Server Component (page.tsx)
 
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
-`plans`. O SQL completo está em
-[`supabase/migrations/20260925162330_initial_schema.sql`](../supabase/migrations/20260925162330_initial_schema.sql).
+`plans`. Depois vieram as reuniões (`meetings` e `meeting_items`). O SQL está
+em `supabase/migrations/`, uma migration por etapa:
+[`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql) e
+[`meetings`](../supabase/migrations/20261006141627_meetings.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -124,12 +128,17 @@ Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
 | `tasks`            | `id`, `title`, `description`, `client_id`, `plan_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` |
 | `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
 | `events`           | `id`, `title`, `description`, `event_type`, `start_at`, `end_at`, `all_day`, `recurrence_rule`, `client_id`, `created_by`, `created_at` |
-| `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`         |
+| `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`. Sem uso desde as Reuniões; sai numa migration de limpeza |
+| `meetings`         | `id`, `event_id`, `occurs_on`, `status`, `summary`, `transcript`, `transcript_length` (gerada), `agenda` (pauta congelada, jsonb), `closed_at`, `closed_by`, `created_by`, `created_at`, `updated_at`, `search` (tsvector gerado) |
+| `meeting_items`    | `id`, `meeting_id`, `kind` (assunto ou combinado), `content`, `owner_id`, `due_date`, `done`, `task_id`, `created_by`, `created_at` |
+
+`tasks` ganhou `meeting_id`: a reunião em que a tarefa nasceu.
 
 Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `normal`, `high`), `task_area` (`commercial`, `finance`, `operations`,
-`brand`, `technology`, `clients`) e `event_type` (`meeting`, `internal`,
-`delivery`).
+`brand`, `technology`, `clients`), `event_type` (`meeting`, `internal`,
+`delivery`), `meeting_status` (`scheduled`, `done`, `canceled`) e
+`meeting_item_kind` (`topic`, `agreement`).
 
 ### 5.1 Decisões sobre o schema
 
@@ -161,6 +170,20 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
    se o horário de verão voltar.
 9. **Ordem da equipe** (Jabez, Renatha, Léo) = ordem de `profiles.created_at`.
    Sem coluna extra.
+10. **Reunião = evento + registro.** A agenda continua no Calendário: uma
+    reunião é um evento do tipo `meeting`, único ou semanal. O registro
+    (`meetings`) guarda o que aconteceu numa ocorrência e nasce quando alguém
+    abre a reunião (ou adiciona um assunto antes dela), com chave única
+    `(event_id, occurs_on)`. Em eventos únicos, o trigger `sync_meeting_dates`
+    leva o registro junto quando a reunião é remarcada. Excluir o evento apaga
+    os registros (o Calendário avisa antes).
+11. **Pauta congelada.** Ao encerrar, o app guarda em `meetings.agenda` a pauta
+    como estava (tarefas por pessoa ou do cliente, combinados anteriores).
+    O histórico mostra o que foi discutido, mesmo que as tarefas mudem depois.
+    `closed_at`/`closed_by` são preenchidos pelo trigger `set_meeting_fields`.
+12. **Busca sem acento.** `private.unaccent_text()` (extensão `unaccent` com
+    dicionário fixo, por isso imutável) alimenta a coluna gerada `search` com
+    o resumo e a transcrição; o app busca com `websearch` em português.
 
 ### 5.2 Segurança (RLS)
 
@@ -178,6 +201,7 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `clients`, `plans`, `task_assignees` | ver, criar, editar e excluir                  |
 | `tasks`, `events`  | ver, criar (sempre como autor: `created_by = auth.uid()`), editar e excluir |
 | `weekly_decisions` | ver, registrar (como autor) e excluir                         |
+| `meetings`, `meeting_items` | ver, criar (como autor), editar e excluir            |
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
@@ -220,7 +244,7 @@ gráficos ou de validação. O volume de dados e as regras não justificam.
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
-Tarefas, Calendário, Segunda; usuário e sair no rodapé) e conteúdo num painel
+Tarefas, Calendário, Reuniões; usuário e sair no rodapé) e conteúdo num painel
 branco sobre fundo off-white.
 
 ### Hoje (`/hoje`)
@@ -241,7 +265,7 @@ branco sobre fundo off-white.
   checkbox, título, área, cliente, responsáveis e prazo.
 - Coluna lateral com **Próximos compromissos** (7 dias). É um bloco pequeno,
   adicionado para responder "o que precisa acontecer nesta semana" sem ir ao
-  calendário. Dá para remover se não fizer sentido.
+  calendário. Clicar numa reunião abre a pauta dela.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, que pode ser
   editado sem sair da tela.
 
@@ -270,16 +294,36 @@ branco sobre fundo off-white.
   concluídas direto na visão semana.
 - Criar, editar e excluir eventos (tipo, data, horário ou dia inteiro,
   repetição semanal, cliente, descrição).
+- Reuniões têm o botão **Abrir reunião** (pauta, combinados e transcrição).
 
-### Segunda (`/segunda`)
+### Reuniões (`/reunioes`)
 
-- Cabeçalho "Weekly" + período da semana atual.
-- Visão geral: concluídas na semana anterior, atrasadas, vencem nesta semana
-  e progresso da semana.
-- Uma seção por pessoa (Jabez, Renatha, Léo), com concluídas, atrasadas e
-  desta semana.
-- **Decisões da semana**: lista simples. Dá para adicionar e remover. As
-  decisões da semana anterior aparecem logo abaixo, só para consulta.
+Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
+
+- **Próxima reunião** em destaque: quando, tipo (Weekly, cliente ou interna),
+  quantos assuntos já estão na pauta e combinados anteriores em aberto. Dá
+  para adicionar um assunto ali mesmo, sem abrir a reunião.
+- **Próximas** (a weekly aparece uma vez só) e **histórico por mês**, com
+  combinados (e quantos seguem em aberto), transcrição e situação
+  (encerrada, em aberto, cancelada, sem registro).
+- Filtro por tipo e **busca** em títulos, assuntos, combinados, resumos e
+  transcrições (sem acento).
+- **Nova reunião** cria o evento no Calendário e abre a página dela.
+
+### Reunião (`/reunioes/[id]`)
+
+- **Assuntos**: o que a equipe quer discutir; qualquer pessoa adiciona antes.
+- **Combinados**: o que ficou decidido, com responsável (ou "Equipe") e prazo.
+  **Virar tarefa** cria a tarefa num clique (responsável, prazo e cliente da
+  reunião) e o combinado passa a seguir o status dela.
+- **Pauta automática**: combinados anteriores da série (da última reunião e
+  os que seguem em aberto) e tarefas: na weekly, por pessoa (atrasadas, até
+  domingo e concluídas desde a última), com o progresso do plano; com
+  cliente, as tarefas daquele cliente.
+- **Resumo** (salva sozinho) e **transcrição** colada, com busca que destaca
+  e navega pelos trechos.
+- **Encerrar** guarda a pauta como estava; dá para reabrir, cancelar ou
+  excluir o registro. Setas levam à reunião anterior e à próxima da série.
 
 ## 8. Componentes principais
 
@@ -292,12 +336,15 @@ branco sobre fundo off-white.
 | `TaskSheet`          | detalhes e edição da tarefa no Sheet lateral                   |
 | `NewTaskDialog`      | criação rápida (título, responsáveis, prazo) + campos opcionais |
 | `TasksProvider`      | estado otimista das tarefas da tela + Sheet aberto             |
-| `StatGrid`           | indicadores discretos (Hoje e Segunda)                         |
+| `StatGrid`           | indicadores discretos (tela Hoje)                              |
 | `ProgressMeter`      | barra + percentual + "X de Y"                                  |
 | `AssigneePicker`     | escolha de responsáveis (uma ou mais pessoas, "Todos")          |
 | `DueLabel`           | prazo relativo ("hoje", "amanhã", "venceu 24/09")              |
 | `WeekView` / `MonthView` | calendário sem bibliotecas extras (CSS grid + date-fns)    |
-| `WeeklyDecisions`    | decisões da semana                                             |
+| `MeetingsView` / `MeetingView` | lista de reuniões e página da reunião                 |
+| `AgreementsCard` / `TopicsCard` | combinados e assuntos, com mudanças otimistas         |
+| `TasksAgendaCard`    | pauta automática (por pessoa ou do cliente), ao vivo ou guardada |
+| `TranscriptCard`     | transcrição recolhida, com busca e destaque                    |
 
 ## 9. Definições de negócio
 
@@ -314,8 +361,12 @@ branco sobre fundo off-white.
   estão concluídas.
 - **Progresso do plano:** entre as tarefas do plano atual, quantas estão
   concluídas. O plano atual é o que contém a data de hoje.
-- **Segunda:** "concluídas na semana anterior" usa `completed_at`. "Vencem
-  nesta semana" são as abertas com prazo de hoje até domingo.
+- **Pauta da reunião:** "atrasadas" são as abertas com prazo antes de hoje;
+  "até domingo" vai de hoje até o domingo da semana da reunião (com cliente,
+  pelo menos duas semanas); "concluídas desde" conta `completed_at` a partir
+  da reunião anterior da série (ou dos 7 dias anteriores).
+- **Combinado em aberto:** o que virou tarefa segue o status da tarefa; o
+  resto, o próprio "feito".
 
 ## 10. Decisões técnicas importantes
 
@@ -352,8 +403,8 @@ branco sobre fundo off-white.
    facilita adicionar depois.
 10. **Layout responsivo por container query.** A linha de tarefa e o
     calendário se adaptam à largura do próprio bloco, não à da tela. Por
-    isso a mesma linha funciona na lista larga de Tarefas e nas colunas
-    estreitas da Segunda.
+    isso a mesma linha funciona na lista larga de Tarefas e na pauta das
+    Reuniões.
 11. **Estado na URL quando é uma "visão"** (filtros de Tarefas, semana/mês e
     data do Calendário). Preferências pessoais simples, como Todas/Minhas na
     tela Hoje e a sidebar recolhida, ficam em cookie.
@@ -377,6 +428,19 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    Server Actions no banco; mock removido; tipos gerados do banco.
 4. Vercel: projeto `boop-admin` ligado só a este repositório, variáveis de
    ambiente, deploy de produção e domínio `admin.deumboop.com.br`.
+
+### Etapa 3 — sair do Notion: tudo num lugar só (em andamento)
+
+1. **Reuniões** ✅: weekly e reuniões com clientes, pauta automática,
+   assuntos, combinados que viram tarefa, resumo e transcrição com busca.
+   Visita diária ao banco para o Supabase gratuito não pausar.
+2. **Processos**: documentação interna (editor no estilo do Notion, modelos,
+   dono, revisão periódica, versões, busca), organizada por área e por
+   cliente; checklists viram tarefas.
+3. **Clientes**: cadastro completo dos ativos, semáforo de saúde e revisão
+   mensal (checklist, notas, próximos passos que viram tarefas).
+4. **Unificação**: busca geral (Ctrl/⌘ + K), tela Hoje como painel do dia
+   (reunião, combinados, revisões e processos pendentes) e acabamento.
 
 ### Próximos passos
 

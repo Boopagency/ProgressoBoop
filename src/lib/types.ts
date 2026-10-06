@@ -18,6 +18,9 @@ export type RecurrenceRule = "FREQ=WEEKLY"
 export type MeetingStatus = "scheduled" | "done" | "canceled"
 /** Assunto (pauta trazida pela equipe) ou combinado (o que ficou decidido). */
 export type MeetingItemKind = "topic" | "agreement"
+export type DocKind = "process" | "checklist" | "policy" | "guide"
+/** Rascunho, Em vigor ou Revisar. */
+export type DocStatus = "draft" | "active" | "review"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -59,6 +62,8 @@ export interface Task {
   completed_at: Timestamp | null
   /** Reunião em que a tarefa nasceu (combinado que virou tarefa). */
   meeting_id: string | null
+  /** Processo em que a tarefa nasceu (item de checklist que virou tarefa). */
+  doc_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp
@@ -110,6 +115,44 @@ export interface MeetingItem {
   task_id: string | null
   created_by: string
   created_at: Timestamp
+}
+
+/** Processo, checklist, política ou guia (sem o conteúdo, para as listas). */
+export interface DocSummary {
+  id: string
+  title: string
+  kind: DocKind
+  status: DocStatus
+  area: TaskArea | null
+  client_id: string | null
+  owner_id: string | null
+  /** "Para que serve", em uma frase. */
+  summary: string | null
+  review_every_months: number | null
+  reviewed_on: DateKey | null
+  next_review_on: DateKey | null
+  pinned: boolean
+  created_by: string
+  updated_by: string | null
+  created_at: Timestamp
+  updated_at: Timestamp
+  /** Última mudança no conteúdo (só o texto; status e propriedades não contam). */
+  content_updated_at: Timestamp
+  content_updated_by: string | null
+}
+
+/** Documento completo: blocos do editor (BlockNote) em JSON. */
+export interface Doc extends DocSummary {
+  content: unknown[]
+}
+
+export interface DocVersion {
+  id: string
+  doc_id: string
+  title: string
+  /** Quem deixou o documento assim, e quando. */
+  saved_by: string | null
+  saved_at: Timestamp
 }
 
 /** Usuário autenticado (perfil + e-mail da conta). */

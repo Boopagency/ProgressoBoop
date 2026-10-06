@@ -341,6 +341,18 @@ function TaskDetails({ task }: { task: Task }) {
             </Link>
           </p>
         ) : null}
+        {task.doc_id ? (
+          <p>
+            Nasceu do checklist de um processo ·{" "}
+            <Link
+              href={`/processos/${task.doc_id}`}
+              className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+            >
+              ver processo
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

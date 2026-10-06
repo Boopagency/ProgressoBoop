@@ -35,6 +35,159 @@ export type Database = {
         }
         Relationships: []
       }
+      doc_versions: {
+        Row: {
+          content: Json
+          created_at: string
+          doc_id: string
+          id: string
+          saved_at: string
+          saved_by: string | null
+          title: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          doc_id: string
+          id?: string
+          saved_at: string
+          saved_by?: string | null
+          title: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          doc_id?: string
+          id?: string
+          saved_at?: string
+          saved_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_versions_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "docs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doc_versions_saved_by_fkey"
+            columns: ["saved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      docs: {
+        Row: {
+          area: Database["public"]["Enums"]["task_area"] | null
+          client_id: string | null
+          content: Json
+          content_text: string
+          content_updated_at: string
+          content_updated_by: string | null
+          created_at: string
+          created_by: string
+          id: string
+          kind: Database["public"]["Enums"]["doc_kind"]
+          next_review_on: string | null
+          owner_id: string | null
+          pinned: boolean
+          review_every_months: number | null
+          reviewed_on: string | null
+          search: unknown
+          status: Database["public"]["Enums"]["doc_status"]
+          summary: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          client_id?: string | null
+          content?: Json
+          content_text?: string
+          content_updated_at?: string
+          content_updated_by?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["doc_kind"]
+          next_review_on?: string | null
+          owner_id?: string | null
+          pinned?: boolean
+          review_every_months?: number | null
+          reviewed_on?: string | null
+          search?: unknown
+          status?: Database["public"]["Enums"]["doc_status"]
+          summary?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          client_id?: string | null
+          content?: Json
+          content_text?: string
+          content_updated_at?: string
+          content_updated_by?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["doc_kind"]
+          next_review_on?: string | null
+          owner_id?: string | null
+          pinned?: boolean
+          review_every_months?: number | null
+          reviewed_on?: string | null
+          search?: unknown
+          status?: Database["public"]["Enums"]["doc_status"]
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "docs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docs_content_updated_by_fkey"
+            columns: ["content_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docs_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean
@@ -319,6 +472,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          doc_id: string | null
           due_date: string | null
           id: string
           meeting_id: string | null
@@ -335,6 +489,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          doc_id?: string | null
           due_date?: string | null
           id?: string
           meeting_id?: string | null
@@ -351,6 +506,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          doc_id?: string | null
           due_date?: string | null
           id?: string
           meeting_id?: string | null
@@ -373,6 +529,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "docs"
             referencedColumns: ["id"]
           },
           {
@@ -428,9 +591,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      restore_doc_version: {
+        Args: { version_id: string; version_text: string }
+        Returns: string
+      }
     }
     Enums: {
+      doc_kind: "process" | "checklist" | "policy" | "guide"
+      doc_status: "draft" | "active" | "review"
       event_type: "meeting" | "internal" | "delivery"
       meeting_item_kind: "topic" | "agreement"
       meeting_status: "scheduled" | "done" | "canceled"
@@ -570,6 +738,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      doc_kind: ["process", "checklist", "policy", "guide"],
+      doc_status: ["draft", "active", "review"],
       event_type: ["meeting", "internal", "delivery"],
       meeting_item_kind: ["topic", "agreement"],
       meeting_status: ["scheduled", "done", "canceled"],

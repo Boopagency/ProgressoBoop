@@ -1,4 +1,6 @@
 import type {
+  DocKind,
+  DocStatus,
   EventType,
   MeetingStatus,
   TaskArea,
@@ -50,6 +52,29 @@ export const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = {
   scheduled: "Agendada",
   done: "Encerrada",
   canceled: "Cancelada",
+}
+
+export const DOC_KINDS = ["process", "checklist", "policy", "guide"] as const satisfies readonly DocKind[]
+export const DOC_KIND_LABEL: Record<DocKind, string> = {
+  process: "Processo",
+  checklist: "Checklist",
+  policy: "Política",
+  guide: "Guia",
+}
+
+export const DOC_STATUSES = ["draft", "active", "review"] as const satisfies readonly DocStatus[]
+export const DOC_STATUS_LABEL: Record<DocStatus, string> = {
+  draft: "Rascunho",
+  active: "Em vigor",
+  review: "Revisar",
+}
+
+export function isDocKind(value: unknown): value is DocKind {
+  return DOC_KINDS.includes(value as DocKind)
+}
+
+export function isDocStatus(value: unknown): value is DocStatus {
+  return DOC_STATUSES.includes(value as DocStatus)
 }
 
 export function isTaskStatus(value: unknown): value is TaskStatus {

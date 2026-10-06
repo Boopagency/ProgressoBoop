@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Componentes do editor dos Processos (BlockNote) usam classes do Tailwind. */
+@source "../../node_modules/@blocknote/shadcn/dist";
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -143,3 +146,81 @@
     color: var(--brand-navy);
   }
 }
+
+/*
+ * Editor dos Processos (BlockNote, variante shadcn): fonte, cores e escala de
+ * títulos do app. Em telas médias e grandes o texto fica alinhado ao título
+ * da página e o menu do bloco (arrastar / +) aparece na margem esquerda.
+ */
+/* .bn-root.boop-editor: precisa vencer as variáveis que o BlockNote define em .bn-root. */
+.bn-root.boop-editor {
+  --bn-font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --bn-colors-editor-text: var(--foreground);
+  --bn-colors-editor-background: transparent;
+  --bn-colors-side-menu: var(--subtle-foreground);
+  --bn-colors-border: var(--border);
+  --bn-colors-hovered-background: var(--accent);
+  --bn-colors-menu-background: var(--popover);
+  --bn-colors-menu-text: var(--popover-foreground);
+  --bn-colors-tooltip-background: var(--brand-navy);
+  --bn-colors-tooltip-text: var(--brand-paper);
+}
+
+.boop-editor .bn-editor {
+  padding-inline: 0;
+  background-color: transparent;
+  font-family: var(--bn-font-family);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+@media (min-width: 768px) {
+  .boop-editor:not(.boop-editor-preview) {
+    margin-left: -48px;
+  }
+
+  .boop-editor:not(.boop-editor-preview) .bn-editor {
+    padding-left: 48px;
+  }
+}
+
+.boop-editor .bn-block-outer {
+  scroll-margin-top: 4.5rem;
+}
+
+.boop-editor .bn-block-content[data-content-type="heading"] {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.boop-editor .bn-block-outer:not([data-prev-type]) > .bn-block > .bn-block-content[data-content-type="heading"] {
+  font-weight: 600;
+}
+
+.boop-editor [data-content-type="heading"][data-level="1"] {
+  --level: 1.6em;
+}
+
+.boop-editor [data-content-type="heading"][data-level="2"] {
+  --level: 1.3em;
+}
+
+.boop-editor [data-content-type="heading"][data-level="3"] {
+  --level: 1.1em;
+}
+
+.boop-editor .bn-editor a {
+  color: var(--brand-ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--brand-ink) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+.boop-editor [data-file-block] .bn-visual-media {
+  border-radius: var(--radius);
+}
+
+.boop-editor .bn-block-content[data-content-type="checkListItem"] > div > input {
+  accent-color: var(--brand-navy);
+}
+

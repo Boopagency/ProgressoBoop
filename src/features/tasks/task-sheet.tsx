@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowUpRight,
   Building2,
   CalendarDays,
   CircleDashed,
@@ -11,6 +12,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react"
+import Link from "next/link"
 import { useState, type ReactNode } from "react"
 
 import {
@@ -325,6 +327,18 @@ function TaskDetails({ task }: { task: Task }) {
           <p>
             Concluída em {formatShortDate(toDateKey(task.completed_at))} às{" "}
             {toTimeLabel(task.completed_at)}
+          </p>
+        ) : null}
+        {task.meeting_id ? (
+          <p>
+            Nasceu de um combinado de reunião ·{" "}
+            <Link
+              href={`/reunioes/${task.meeting_id}`}
+              className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+            >
+              ver reunião
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
           </p>
         ) : null}
       </div>

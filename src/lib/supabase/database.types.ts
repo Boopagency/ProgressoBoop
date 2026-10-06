@@ -92,6 +92,147 @@ export type Database = {
           },
         ]
       }
+      meeting_items: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          done: boolean
+          due_date: string | null
+          id: string
+          kind: Database["public"]["Enums"]["meeting_item_kind"]
+          meeting_id: string
+          owner_id: string | null
+          task_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["meeting_item_kind"]
+          meeting_id: string
+          owner_id?: string | null
+          task_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["meeting_item_kind"]
+          meeting_id?: string
+          owner_id?: string | null
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          agenda: Json | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string
+          event_id: string
+          id: string
+          occurs_on: string
+          search: unknown
+          status: Database["public"]["Enums"]["meeting_status"]
+          summary: string | null
+          transcript: string | null
+          transcript_length: number | null
+          updated_at: string
+        }
+        Insert: {
+          agenda?: Json | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string
+          event_id: string
+          id?: string
+          occurs_on: string
+          search?: unknown
+          status?: Database["public"]["Enums"]["meeting_status"]
+          summary?: string | null
+          transcript?: string | null
+          transcript_length?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agenda?: Json | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string
+          event_id?: string
+          id?: string
+          occurs_on?: string
+          search?: unknown
+          status?: Database["public"]["Enums"]["meeting_status"]
+          summary?: string | null
+          transcript?: string | null
+          transcript_length?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           created_at: string
@@ -180,6 +321,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          meeting_id: string | null
           plan_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           status: Database["public"]["Enums"]["task_status"]
@@ -195,6 +337,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          meeting_id?: string | null
           plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
@@ -210,6 +353,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          meeting_id?: string | null
           plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
@@ -229,6 +373,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
           {
@@ -281,6 +432,8 @@ export type Database = {
     }
     Enums: {
       event_type: "meeting" | "internal" | "delivery"
+      meeting_item_kind: "topic" | "agreement"
+      meeting_status: "scheduled" | "done" | "canceled"
       task_area:
         | "commercial"
         | "finance"
@@ -418,6 +571,8 @@ export const Constants = {
   public: {
     Enums: {
       event_type: ["meeting", "internal", "delivery"],
+      meeting_item_kind: ["topic", "agreement"],
+      meeting_status: ["scheduled", "done", "canceled"],
       task_area: [
         "commercial",
         "finance",

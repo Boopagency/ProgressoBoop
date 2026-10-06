@@ -1,6 +1,7 @@
 "use client"
 
 import { Building2, CalendarDays } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { startTransition, useId, useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -21,6 +22,7 @@ import {
 import { createEvent, updateEvent } from "@/features/calendar/actions"
 import { WEEKLY, weeklyRecurrenceLabel } from "@/features/calendar/recurrence"
 import type { EventInput } from "@/features/calendar/validation"
+import { scheduleMeeting } from "@/features/meetings/actions"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import {
   capitalize,
@@ -41,6 +43,11 @@ export interface EventDialogState {
   event?: CalendarEvent
   /** Data sugerida ao criar. */
   date?: DateKey
+  /**
+   * "meeting": nova reunião (tipo fixo). Ao criar, abre a página da reunião
+   * para já montar a pauta.
+   */
+  mode?: "event" | "meeting"
   key: number
 }
 
@@ -62,13 +69,16 @@ export function EventDialog({
         showCloseButton={false}
         className="top-[8%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[12%] sm:max-w-[540px]"
       >
-        <DialogTitle className="sr-only">{state.event ? "Editar evento" : "Novo evento"}</DialogTitle>
+        <DialogTitle className="sr-only">
+          {state.event ? "Editar evento" : state.mode === "meeting" ? "Nova reunião" : "Novo evento"}
+        </DialogTitle>
         <DialogDescription className="sr-only">
           Título, tipo, data e horário do evento.
         </DialogDescription>
         <EventForm
           key={state.key}
           event={state.event}
+          meeting={state.mode === "meeting" && !state.event}
           initialDate={state.date ?? today}
           today={today}
           onDone={() => onOpenChange(false)}
@@ -80,16 +90,19 @@ export function EventDialog({
 
 function EventForm({
   event,
+  meeting,
   initialDate,
   today,
   onDone,
 }: {
   event?: CalendarEvent
+  meeting: boolean
   initialDate: DateKey
   today: DateKey
   onDone: () => void
 }) {
   const { clients } = useWorkspace()
+  const router = useRouter()
   const ids = useId()
   const timed = event ? !event.all_day : true
   const [title, setTitle] = useState(event?.title ?? "")
@@ -125,6 +138,19 @@ function EventForm({
       client_id: clientId,
     }
     startSaving(async () => {
+      if (meeting) {
+        const result = await scheduleMeeting(input)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        startTransition(() => {
+          onDone()
+          router.push(`/reunioes/${result.data.id}`)
+        })
+        toast.success("Reunião criada", { description: title.trim() })
+        return
+      }
       const result = event ? await updateEvent(event.id, input) : await createEvent(input)
       if (!result.ok) {
         setError(result.error)
@@ -157,7 +183,7 @@ function EventForm({
       <div className="space-y-5 px-5 pt-5 pb-5">
         <div>
           <p className="mb-3 text-xs font-medium text-muted-foreground">
-            {event ? "Editar evento" : "Novo evento"}
+            {event ? "Editar evento" : meeting ? "Nova reunião" : "Novo evento"}
           </p>
           <input
             autoFocus
@@ -166,19 +192,21 @@ function EventForm({
               setTitle(changeEvent.target.value)
               if (error) setError(null)
             }}
-            placeholder="Nome do evento"
+            placeholder={meeting ? "Nome da reunião (ex.: Reunião Velmont)" : "Nome do evento"}
             aria-label="Título"
             maxLength={200}
             className="w-full bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none placeholder:font-normal placeholder:text-subtle-foreground"
           />
         </div>
 
-        <SegmentedControl
-          aria-label="Tipo"
-          value={type}
-          onValueChange={setType}
-          options={TYPE_OPTIONS}
-        />
+        {meeting ? null : (
+          <SegmentedControl
+            aria-label="Tipo"
+            value={type}
+            onValueChange={setType}
+            options={TYPE_OPTIONS}
+          />
+        )}
 
         <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 text-sm">
           <span className="text-[13px] text-muted-foreground">{weekly ? "A partir de" : "Data"}</span>
@@ -289,7 +317,7 @@ function EventForm({
             Cancelar
           </Button>
           <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? "Salvando…" : event ? "Salvar" : "Criar evento"}
+            {isPending ? "Salvando…" : event ? "Salvar" : meeting ? "Criar reunião" : "Criar evento"}
           </Button>
         </div>
       </div>

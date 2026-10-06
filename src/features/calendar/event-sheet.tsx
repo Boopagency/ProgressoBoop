@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowRight,
   Building2,
   CalendarDays,
   Clock,
@@ -21,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,20 +32,30 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { EventTypeDot } from "@/features/calendar/event-type"
 import { WEEKLY, weeklyRecurrenceLabel, type Occurrence } from "@/features/calendar/recurrence"
+import { isMeetingEvent, recordFor } from "@/features/meetings/logic"
+import { EntryStateBadge, entryState } from "@/features/meetings/meeting-meta"
+import { MeetingLink } from "@/features/meetings/open-meeting"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { capitalize, formatLongDate } from "@/lib/dates"
 import { EVENT_TYPE_LABEL } from "@/lib/labels"
+import type { DateKey, MeetingRecord } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 /** Detalhes de um evento (ou de uma ocorrência de evento recorrente). */
 export function EventSheet({
   occurrence,
+  records,
+  today,
   open,
   onOpenChange,
   onEdit,
   onDelete,
 }: {
   occurrence: Occurrence | null
+  /** Registros de reunião, para mostrar a situação e avisar ao excluir. */
+  records: MeetingRecord[]
+  today: DateKey
   open: boolean
   onOpenChange: (open: boolean) => void
   onEdit: (occurrence: Occurrence) => void
@@ -54,7 +65,13 @@ export function EventSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-[440px]">
         {occurrence ? (
-          <EventDetails occurrence={occurrence} onEdit={onEdit} onDelete={onDelete} />
+          <EventDetails
+            occurrence={occurrence}
+            records={records}
+            today={today}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ) : null}
       </SheetContent>
     </Sheet>
@@ -63,16 +80,23 @@ export function EventSheet({
 
 function EventDetails({
   occurrence,
+  records,
+  today,
   onEdit,
   onDelete,
 }: {
   occurrence: Occurrence
+  records: MeetingRecord[]
+  today: DateKey
   onEdit: (occurrence: Occurrence) => void
   onDelete: (occurrence: Occurrence) => void
 }) {
   const { profileById, clientById } = useWorkspace()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { event } = occurrence
+  const isMeeting = isMeetingEvent(event)
+  const record = isMeeting ? recordFor(records, event, occurrence.date) : null
+  const recordCount = isMeeting ? records.filter((candidate) => candidate.event_id === event.id).length : 0
   const client = event.client_id ? clientById.get(event.client_id) : undefined
   const creator = profileById.get(event.created_by)
   const time = occurrence.startTime
@@ -135,6 +159,22 @@ function EventDetails({
             </DetailRow>
           ) : null}
         </dl>
+        {isMeeting ? (
+          <div className="mt-6 rounded-lg border bg-muted/30 px-4 py-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-[13px] font-medium text-foreground">Pauta e combinados</h3>
+              <EntryStateBadge
+                state={entryState(
+                  { key: "", event, date: occurrence.date, startTime: null, endTime: null, record },
+                  today
+                )}
+              />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Assuntos, combinados, resumo e transcrição ficam na página da reunião.
+            </p>
+          </div>
+        ) : null}
         {event.description ? (
           <div className="mt-6 border-t pt-5">
             <h3 className="text-[13px] font-medium text-foreground">Descrição</h3>
@@ -149,10 +189,23 @@ function EventDetails({
         <p className="text-xs text-muted-foreground">
           Criado por {creator ? firstName(creator.full_name) : "alguém da equipe"}
         </p>
-        <Button variant="outline" size="sm" onClick={() => onEdit(occurrence)}>
-          <Pencil />
-          Editar
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(occurrence)}>
+            <Pencil />
+            Editar
+          </Button>
+          {isMeeting ? (
+            <MeetingLink
+              meetingId={record?.id ?? null}
+              eventId={event.id}
+              date={occurrence.date}
+              className={cn(buttonVariants({ size: "sm" }))}
+            >
+              Abrir reunião
+              <ArrowRight />
+            </MeetingLink>
+          ) : null}
+        </div>
       </div>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
@@ -165,6 +218,11 @@ function EventDetails({
               {event.recurrence_rule
                 ? `“${event.title}” é recorrente. A série inteira será removida do calendário.`
                 : `“${event.title}” será removido do calendário.`}
+              {recordCount > 0
+                ? recordCount === 1
+                  ? " O registro da reunião (assuntos, combinados, resumo e transcrição) também será apagado."
+                  : ` Os ${recordCount} registros de reunião (assuntos, combinados, resumos e transcrições) também serão apagados.`
+                : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

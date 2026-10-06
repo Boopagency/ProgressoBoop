@@ -1,4 +1,10 @@
-import type { EventType, TaskArea, TaskPriority, TaskStatus } from "@/lib/types"
+import type {
+  EventType,
+  MeetingStatus,
+  TaskArea,
+  TaskPriority,
+  TaskStatus,
+} from "@/lib/types"
 
 /** Códigos em inglês (banco) → rótulos em português (interface). */
 
@@ -38,6 +44,12 @@ export const EVENT_TYPE_LABEL: Record<EventType, string> = {
   meeting: "Reunião",
   internal: "Evento interno",
   delivery: "Entrega",
+}
+
+export const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = {
+  scheduled: "Agendada",
+  done: "Encerrada",
+  canceled: "Cancelada",
 }
 
 export function isTaskStatus(value: unknown): value is TaskStatus {

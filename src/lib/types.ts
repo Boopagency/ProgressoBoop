@@ -15,6 +15,9 @@ export type TaskArea =
 export type EventType = "meeting" | "internal" | "delivery"
 /** Regra de recorrência no formato RFC 5545. Nesta versão, só semanal. */
 export type RecurrenceRule = "FREQ=WEEKLY"
+export type MeetingStatus = "scheduled" | "done" | "canceled"
+/** Assunto (pauta trazida pela equipe) ou combinado (o que ficou decidido). */
+export type MeetingItemKind = "topic" | "agreement"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -54,6 +57,8 @@ export interface Task {
   priority: TaskPriority
   due_date: DateKey | null
   completed_at: Timestamp | null
+  /** Reunião em que a tarefa nasceu (combinado que virou tarefa). */
+  meeting_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp
@@ -73,11 +78,36 @@ export interface CalendarEvent {
   created_at: Timestamp
 }
 
-export interface WeeklyDecision {
+/**
+ * Registro de uma reunião: uma ocorrência de um evento do tipo "meeting".
+ * Título, horário e cliente vêm do evento.
+ */
+export interface MeetingRecord {
   id: string
+  event_id: string
+  /** Dia da ocorrência (em São Paulo). */
+  occurs_on: DateKey
+  status: MeetingStatus
+  summary: string | null
+  /** Tamanho da transcrição em caracteres (0 = sem transcrição). */
+  transcript_length: number
+  closed_at: Timestamp | null
+  closed_by: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+export interface MeetingItem {
+  id: string
+  meeting_id: string
+  kind: MeetingItemKind
   content: string
-  /** Sempre uma segunda-feira. */
-  week_start: DateKey
+  owner_id: string | null
+  due_date: DateKey | null
+  /** Assunto discutido, ou combinado cumprido quando não virou tarefa. */
+  done: boolean
+  task_id: string | null
   created_by: string
   created_at: Timestamp
 }

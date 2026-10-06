@@ -10,7 +10,7 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Hoje", href: "/hoje", icon: Sun },
   { title: "Tarefas", href: "/tarefas", icon: ListTodo },
   { title: "Calendário", href: "/calendario", icon: CalendarDays },
-  { title: "Segunda", href: "/segunda", icon: Presentation },
+  { title: "Reuniões", href: "/reunioes", icon: Presentation },
 ]
 
 export function isActivePath(pathname: string, href: string): boolean {

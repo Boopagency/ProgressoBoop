@@ -1,9 +1,11 @@
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { EventTypeDot } from "@/features/calendar/event-type"
-import { expandEvents } from "@/features/calendar/recurrence"
+import { expandEvents, type Occurrence } from "@/features/calendar/recurrence"
+import { isMeetingEvent } from "@/features/meetings/logic"
+import { MeetingLink } from "@/features/meetings/open-meeting"
 import { addDaysToKey, capitalize, formatShortDate, formatWeekdayShort } from "@/lib/dates"
 import type { CalendarEvent, DateKey } from "@/lib/types"
 
@@ -13,7 +15,24 @@ function dayLabel(date: DateKey, today: DateKey): string {
   return `${capitalize(formatWeekdayShort(date))}, ${formatShortDate(date)}`
 }
 
-/** Próximos compromissos (7 dias) na lateral da tela Hoje. */
+function AgendaItem({ item, today }: { item: Occurrence; today: DateKey }) {
+  return (
+    <>
+      <EventTypeDot type={item.event.event_type} className="mt-1.5" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-medium text-foreground">
+          {item.event.title}
+        </span>
+        <span className="block text-xs text-muted-foreground tabular-nums">
+          {dayLabel(item.date, today)}
+          {item.startTime ? ` · ${item.startTime}` : " · dia inteiro"}
+        </span>
+      </span>
+    </>
+  )
+}
+
+/** Próximos compromissos (7 dias) na lateral da tela Hoje. Reuniões abrem a pauta. */
 export function Agenda({
   events,
   today,
@@ -39,19 +58,28 @@ export function Agenda({
         {upcoming.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum compromisso nos próximos 7 dias.</p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="-mx-2 space-y-1">
             {upcoming.map((item) => (
-              <li key={item.key} className="flex gap-3">
-                <EventTypeDot type={item.event.event_type} className="mt-1.5" />
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-medium text-foreground">
-                    {item.event.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {dayLabel(item.date, today)}
-                    {item.startTime ? ` · ${item.startTime}` : " · dia inteiro"}
-                  </p>
-                </div>
+              <li key={item.key}>
+                {isMeetingEvent(item.event) ? (
+                  <MeetingLink
+                    meetingId={null}
+                    eventId={item.event.id}
+                    date={item.date}
+                    aria-label={`Abrir a pauta de ${item.event.title}, ${dayLabel(item.date, today)}`}
+                    className="group/agenda flex w-full gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70"
+                  >
+                    <AgendaItem item={item} today={today} />
+                    <ChevronRight
+                      className="mt-1 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/agenda:opacity-100"
+                      aria-hidden="true"
+                    />
+                  </MeetingLink>
+                ) : (
+                  <div className="flex gap-3 px-2 py-1.5">
+                    <AgendaItem item={item} today={today} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

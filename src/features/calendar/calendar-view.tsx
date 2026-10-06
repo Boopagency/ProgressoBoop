@@ -32,7 +32,7 @@ import {
   type DateRange,
 } from "@/lib/dates"
 import { EVENT_TYPE_LABEL, EVENT_TYPES } from "@/lib/labels"
-import type { CalendarEvent, DateKey } from "@/lib/types"
+import type { CalendarEvent, DateKey, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const VIEW_OPTIONS = [
@@ -46,7 +46,14 @@ function periodLabel(view: View, anchor: DateKey, range: DateRange): string {
   return sameYear ? `${formatRange(range)} de ${range.end.slice(0, 4)}` : formatRange(range)
 }
 
-export function CalendarView({ events }: { events: CalendarEvent[] }) {
+export function CalendarView({
+  events,
+  meetingRecords,
+}: {
+  events: CalendarEvent[]
+  /** Registros de reunião (situação no Sheet e aviso ao excluir). */
+  meetingRecords: MeetingRecord[]
+}) {
   const { tasks, today } = useTasks()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -190,6 +197,8 @@ export function CalendarView({ events }: { events: CalendarEvent[] }) {
 
       <EventSheet
         occurrence={selectedOccurrence}
+        records={meetingRecords}
+        today={today}
         open={Boolean(selected?.open && selectedOccurrence)}
         onOpenChange={(open) => setSelected((current) => (current ? { ...current, open } : current))}
         onEdit={editEvent}

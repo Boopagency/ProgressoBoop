@@ -57,6 +57,11 @@ app **não usa** chave secreta nem `service_role`.
   destaque, histórico por mês e busca. Cada reunião tem assuntos, combinados
   (viram tarefa num clique), pauta automática, resumo e transcrição com
   busca. `/segunda` redireciona para cá.
+- **Clientes** (`/clientes`): cadastro completo no portal e saúde de cada
+  cliente (Saudável, Atenção, Em risco). Cada cliente tem uma revisão
+  mensal (checklist, notas, próximos passos que viram tarefas, histórico) e
+  uma página que reúne tarefas, reuniões e processos. As revisões por fazer
+  aparecem na tela Hoje e na weekly.
 - **Processos** (`/processos`): a documentação interna (processos,
   checklists, políticas e guias) por área e por cliente, com busca no texto,
   modelos e sugestões. Cada documento tem editor de blocos (estilo Notion,
@@ -77,7 +82,8 @@ app **não usa** chave secreta nem `service_role`.
 - Dados iniciais reais: `supabase/seed.sql` (perfis, clientes, o plano, as 25
   tarefas e a reunião semanal). Pode rodar de novo sem duplicar.
 - Migrations aplicadas: `initial_schema` (base), `meetings` (reuniões),
-  `docs`, `docs_content_stamp` e `docs_restore_version` (processos).
+  `docs`, `docs_content_stamp` e `docs_restore_version` (processos) e
+  `clients_reviews` (clientes e revisões mensais).
 - Imagens dos processos: bucket privado `docs` do Storage (criado pela
   migration `docs`), servidas pelo app em `/api/arquivos/…` só para quem está
   logado.
@@ -103,7 +109,7 @@ src/
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
 │   └── layout/       sidebar, cabeçalho, menu do usuário, marca
-├── features/         auth, workspace, tasks, today, calendar, meetings, docs
+├── features/         auth, workspace, tasks, today, calendar, meetings, docs, clients
 │                     (cada uma com queries, actions, lógica e componentes)
 ├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
 │   └── supabase/     clientes do Supabase e tipos do banco

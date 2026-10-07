@@ -17,7 +17,7 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   cadastro. Uma conta nova só pode ser criada pelo Supabase (seção 4).
 - **Sessão:** fica salva no navegador, então não é preciso entrar toda vez.
   "Sair" desconecta só aquele navegador.
-- **Menu lateral:** Hoje, Tarefas, Calendário, Reuniões e Processos. No rodapé ficam a
+- **Menu lateral:** Hoje, Tarefas, Calendário, Reuniões, Clientes e Processos. No rodapé ficam a
   pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no topo ou
   com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo botão do topo.
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
@@ -186,7 +186,47 @@ segunda, 07:00).
 - No celular: antes de encerrar aparecem assuntos, combinados e pauta;
   depois, combinados e resumo primeiro.
 
-### 2.9 Processos (`/processos`)
+### 2.9 Clientes (`/clientes`)
+
+- **Revisões do mês** no topo: quantas já foram feitas, quantas faltam e
+  quantas estão atrasadas.
+- **Um cartão por cliente ativo:** saúde (Saudável, Atenção, Em risco ou Sem
+  avaliação), responsável, frentes de trabalho, situação da revisão do mês
+  (Feita, Em andamento, "Até 10/10" ou Atrasada), tarefas abertas e
+  atrasadas e o próximo compromisso no Calendário. Clicar abre o cliente.
+- **Inativos** ficam recolhidos no fim.
+- **Novo cliente:** nome (só ele é obrigatório), responsável da Boop,
+  frentes (sugestões como Social media e Tráfego pago, ou escritas à mão),
+  cliente desde (mês e ano), contato (nome, e-mail, telefone/WhatsApp),
+  revisão mensal (ligada ou não, e o dia do mês em que vence) e
+  observações.
+
+### 2.10 Página do cliente (`/clientes/…`)
+
+- **Revisão do mês:**
+  - **Como está o cliente?** Saudável, Atenção ou Em risco (clicar de novo
+    desmarca). A saúde da revisão mais recente vira o selo do cliente.
+  - **Checklist** de sete itens: entregas, resultados, relatório, retorno do
+    cliente, financeiro, próximo mês e acessos.
+  - **Notas da revisão**, que salvam sozinhas.
+  - **Próximos passos:** cada um vira uma tarefa do cliente, com
+    responsável e prazo, e aparece também em Tarefas.
+  - **Concluir revisão** (registra quem e quando) e **Reabrir**.
+  - Setas no topo levam aos meses anteriores (dá para registrar um mês que
+    passou).
+- **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
+  recolhidas; **Tarefa** no topo cria uma já com o cliente.
+- **Reuniões** com o cliente (próximas e recentes) e **Nova reunião**, que já
+  vem com o cliente escolhido.
+- Na lateral: **Sobre o cliente** (contato com link de e-mail e de
+  WhatsApp), **Saúde mês a mês** (seis meses; clicar abre aquela revisão) e
+  **Processos do cliente** (com "Novo").
+- **Editar** muda o cadastro. No menu: desativar/reativar e excluir (apaga o
+  cadastro e as revisões; tarefas, eventos e processos continuam, sem o
+  cliente).
+- A Boop (projetos internos) está cadastrada sem revisão mensal.
+
+### 2.11 Processos (`/processos`)
 
 A documentação interna da Boop, no lugar do Notion: processos (passo a
 passo), checklists, políticas (regras combinadas) e guias.
@@ -209,7 +249,7 @@ passo), checklists, políticas (regras combinadas) e guias.
   vazia, elas são a tela inicial; depois ficam no fim da lista, só as que
   ainda não existem.
 
-### 2.10 Página do processo (`/processos/…`)
+### 2.12 Página do processo (`/processos/…`)
 
 - **Título** e **para que serve** (uma frase que aparece na lista), editáveis
   ali mesmo.
@@ -249,7 +289,18 @@ passo), checklists, políticas (regras combinadas) e guias.
   (a cópia começa como rascunho), copiar link e excluir (apaga também o
   histórico e as imagens; as tarefas geradas continuam).
 
-### 2.11 Comportamentos gerais
+### 2.13 Revisões na tela Hoje e na weekly
+
+- **Hoje:** "Revisões de clientes" lista as revisões do mês por fazer
+  (atrasadas primeiro), com o responsável. Some quando está tudo em dia.
+- **Weekly:** enquanto a reunião está aberta, o quadro "Clientes" mostra,
+  para cada cliente com revisão mensal, a saúde, a revisão do mês e as
+  tarefas abertas e atrasadas. É sempre o estado do momento (não fica
+  guardado ao encerrar).
+- Numa reunião com cliente, o selo com o nome do cliente leva para a página
+  dele.
+
+### 2.14 Comportamentos gerais
 
 - **Concluir uma tarefa:**
   - contadores e barras atualizam na hora;
@@ -286,6 +337,8 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Pauta com cliente | tarefas daquele cliente; "próximas" cobre pelo menos duas semanas |
 | Combinado em aberto | se virou tarefa, a tarefa não está concluída; senão, não foi marcado como cumprido |
 | Processo para revisar | status "Revisar", ou "Em vigor" com a revisão vencida (última revisão + período) |
+| Revisão do cliente (situação) | uma por mês por cliente ativo com revisão mensal; vence no dia escolhido no cadastro (padrão 10). Feita = concluída; Em andamento = começada; "Até dd/mm" = não começada e no prazo; Atrasada = não concluída depois do vencimento |
+| Saúde do cliente | a da revisão mais recente que tem saúde marcada; sem nenhuma, "Sem avaliação" |
 | Versão de um processo | guardada a cada 30 minutos de edição da mesma pessoa, sempre que outra pessoa edita e sempre que uma versão é restaurada |
 | Ordem das listas | prazo mais próximo primeiro; no empate, prioridade alta primeiro e depois a mais antiga |
 
@@ -295,7 +348,8 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | --- | --- | --- | --- |
 | Pessoas | Jabez, Renatha e Léo | — | criar conta, nome, papel, foto |
 | Senhas | temporárias | — | trocar |
-| Clientes | Hertmann, Velmont, Hapuck Scents, Boop | escolher em tarefas e eventos | criar, renomear, desativar |
+| Clientes | Hertmann, Velmont, Hapuck Scents, Boop | criar, editar (responsável, frentes, contato, revisão), desativar, excluir | — |
+| Revisões de clientes | uma por cliente e mês | tudo | — |
 | Planos | Estruturação da Boop até 31/10 (25/09 a 31/10) | ligar ou desligar uma tarefa do plano | criar o próximo plano, mudar as datas |
 | Tarefas | as 25 do plano | criar, editar, concluir, excluir | — |
 | Eventos | a reunião semanal | criar, editar, excluir | — |
@@ -335,7 +389,8 @@ podem ser salvos nos favoritos.
 
 - Não há tela para trocar a senha nem "Esqueci minha senha", e o envio de
   e-mails do Supabase não está configurado.
-- Clientes, planos e pessoas só podem ser cadastrados pelo banco.
+- Planos e pessoas só podem ser cadastrados pelo banco (clientes já têm
+  cadastro no portal).
 - A tarefa nova não entra no plano automaticamente (2.5).
 - Tarefas abre em "Todas", enquanto Hoje abre em "Minhas".
 - Não há atualização em tempo real (2.8).
@@ -413,6 +468,7 @@ são uma sugestão para começar.
 | Calendário | `src/features/calendar/` |
 | Reuniões | `src/features/meetings/`, `src/app/(app)/reunioes/` |
 | Processos (lista, editor, modelos, versões) | `src/features/docs/`, `src/app/(app)/processos/`, `src/app/api/arquivos/` |
+| Clientes e revisões (checklist padrão, frentes sugeridas) | `src/features/clients/` (`logic.ts`), `src/app/(app)/clientes/` |
 | Modelos e sugestões de documentos | `src/features/docs/templates.ts` |
 | Login e sessão | `src/features/auth/`, `src/proxy.ts` |
 | Menu lateral e cabeçalhos | `src/components/layout/` |

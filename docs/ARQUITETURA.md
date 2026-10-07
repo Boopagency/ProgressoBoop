@@ -53,6 +53,7 @@ src/
 │   │   ├── tarefas/            # "/tarefas"
 │   │   ├── calendario/         # "/calendario"
 │   │   ├── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
+│   │   ├── clientes/           # "/clientes" e "/clientes/[id]" (?mes=aaaa-mm)
 │   │   └── processos/          # "/processos" e "/processos/[id]"
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
@@ -73,8 +74,10 @@ src/
 │   ├── calendar/               # semana/mês, recorrência, eventos
 │   ├── meetings/               # reuniões: lista, pauta automática, assuntos,
 │                               # combinados, resumo e transcrição
-│   └── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
-│                               # versões, checklist → tarefas
+│   ├── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
+│   │                           # versões, checklist → tarefas
+│   └── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
+│                               # da tela Hoje e da weekly
 ├── hooks/                      # use-mobile (shadcn)
 ├── lib/
 │   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
@@ -123,18 +126,20 @@ Server Component (page.tsx)
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
 `plans`. Depois vieram as reuniões (`meetings` e `meeting_items`) e os
-processos (`docs` e `doc_versions`). O SQL está em `supabase/migrations/`, uma
-migration por etapa:
+processos (`docs` e `doc_versions`) e as revisões de clientes
+(`client_reviews`). O SQL está em `supabase/migrations/`, uma migration por
+etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
 [`docs_content_stamp`](../supabase/migrations/20261006165216_docs_content_stamp.sql) e
-[`docs_restore_version`](../supabase/migrations/20261006165704_docs_restore_version.sql).
+[`docs_restore_version`](../supabase/migrations/20261006165704_docs_restore_version.sql) e
+[`clients_reviews`](../supabase/migrations/20261006173103_clients_reviews.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `profiles`         | `id` (= `auth.users.id`), `full_name`, `avatar_url`, `role`, `created_at`          |
-| `clients`          | `id`, `name` (único), `active`, `created_at`                                       |
+| `clients`          | `id`, `name` (único), `active`, `owner_id` (responsável da Boop), `services` (frentes), `since`, `contact_name`, `contact_email`, `contact_phone`, `notes`, `review_day` (dia do mês em que a revisão vence; vazio = sem revisão mensal), `created_at`, `updated_at` |
 | `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`                                 |
 | `tasks`            | `id`, `title`, `description`, `client_id`, `plan_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` |
 | `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
@@ -144,9 +149,11 @@ migration por etapa:
 | `meeting_items`    | `id`, `meeting_id`, `kind` (assunto ou combinado), `content`, `owner_id`, `due_date`, `done`, `task_id`, `created_by`, `created_at` |
 | `docs`             | `id`, `title`, `kind`, `status`, `area`, `client_id`, `owner_id`, `summary` ("para que serve"), `content` (blocos do editor, jsonb), `content_text` (texto puro), `review_every_months`, `reviewed_on`, `next_review_on` (gerada), `pinned`, `created_by`, `updated_by`, `created_at`, `updated_at`, `content_updated_at`, `content_updated_by`, `search` (tsvector gerado) |
 | `doc_versions`     | `id`, `doc_id`, `title`, `content`, `saved_by`, `saved_at` (quem deixou o texto assim, e quando), `created_at` |
+| `client_reviews`   | `id`, `client_id`, `period` (mês, sempre dia 1; uma por cliente e mês), `health`, `checklist` (jsonb), `notes`, `done`, `done_at`, `done_by`, `created_by`, `created_at`, `updated_at` |
 
-`tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu) e `doc_id` (o
-processo de cujo checklist ela saiu). Imagens dos processos ficam no bucket
+`tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
+processo de cujo checklist ela saiu) e `client_review_id` (a revisão mensal
+de cliente em que ela virou próximo passo). Imagens dos processos ficam no bucket
 privado `docs` do Storage (até 5 MB; PNG, JPG, WebP e GIF).
 
 Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
@@ -154,7 +161,8 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `brand`, `technology`, `clients`), `event_type` (`meeting`, `internal`,
 `delivery`), `meeting_status` (`scheduled`, `done`, `canceled`),
 `meeting_item_kind` (`topic`, `agreement`), `doc_kind` (`process`,
-`checklist`, `policy`, `guide`) e `doc_status` (`draft`, `active`, `review`).
+`checklist`, `policy`, `guide`), `doc_status` (`draft`, `active`, `review`) e
+`client_health` (`healthy`, `attention`, `at_risk`).
 
 ### 5.1 Decisões sobre o schema
 
@@ -223,6 +231,17 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
     envio assinada), sem passar pelo limite de 1 MB das Server Actions; fotos
     grandes são reduzidas no navegador antes. Excluir o processo apaga as
     imagens dele.
+17. **Revisão mensal = uma linha por cliente e mês.** `client_reviews` tem
+    chave única `(client_id, period)` e nasce na primeira mudança (saúde,
+    item do checklist, nota ou próximo passo), com o checklist padrão
+    copiado (`features/clients/logic.ts`): o histórico guarda o checklist
+    como foi usado, mesmo que o padrão mude. O trigger
+    `set_client_review_fields` registra quem concluiu e quando e não deixa
+    trocar cliente, mês nem autor numa edição. A saúde atual do cliente é a
+    da revisão mais recente com saúde marcada; não há coluna duplicada.
+18. **Vencimento configurável por cliente** (`review_day`, padrão dia 10;
+    vazio = sem revisão, como a Boop). A tela Hoje e a weekly mostram as
+    revisões do mês por fazer, atrasadas primeiro.
 
 ### 5.2 Segurança (RLS)
 
@@ -243,6 +262,7 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `meetings`, `meeting_items` | ver, criar (como autor), editar e excluir            |
 | `docs`             | ver, criar (como autor), editar e excluir                     |
 | `doc_versions`     | só ver (quem grava é o banco, pelo trigger)                   |
+| `client_reviews`   | ver, criar (como autor), editar e excluir                     |
 | Storage, bucket `docs` | ver, enviar e apagar imagens                              |
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
@@ -290,7 +310,7 @@ faria sentido.
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
-Tarefas, Calendário, Reuniões, Processos; usuário e sair no rodapé) e conteúdo num painel
+Tarefas, Calendário, Reuniões, Clientes, Processos; usuário e sair no rodapé) e conteúdo num painel
 branco sobre fundo off-white.
 
 ### Hoje (`/hoje`)
@@ -371,6 +391,29 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - **Encerrar** guarda a pauta como estava; dá para reabrir, cancelar ou
   excluir o registro. Setas levam à reunião anterior e à próxima da série.
 
+### Clientes (`/clientes`)
+
+- **Revisões do mês**: quantas foram feitas, quantas faltam e quantas estão
+  atrasadas.
+- Um cartão por cliente ativo: saúde (Saudável, Atenção, Em risco ou sem
+  avaliação), responsável, frentes, situação da revisão do mês, tarefas
+  abertas e atrasadas e o próximo compromisso no Calendário. Inativos
+  recolhidos no fim.
+- **Novo cliente**: nome, responsável, frentes (sugestões ou livres), cliente
+  desde, contato, revisão mensal (e o dia em que vence) e observações.
+
+### Cliente (`/clientes/[id]`)
+
+- **Revisão do mês** (setas para os meses anteriores): saúde, checklist,
+  notas que salvam sozinhas, **próximos passos** que viram tarefas do
+  cliente, **Concluir** e **Reabrir**.
+- **Tarefas** do cliente por prazo (e as concluídas nos últimos 30 dias) e
+  **Reuniões** (próximas e recentes, com "Nova reunião" já com o cliente).
+- Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
+  WhatsApp, observações), **Saúde mês a mês** (seis meses) e **Processos do
+  cliente**.
+- Menu: nova reunião, novo processo do cliente, desativar/reativar e excluir.
+
 ### Processos (`/processos`)
 
 A documentação interna da Boop: processos, checklists, políticas e guias.
@@ -424,6 +467,9 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 | `DocEditor`          | editor de blocos (BlockNote) com salvamento automático e conflito |
 | `VersionsSheet`      | histórico de versões com visualização e restauração            |
 | `GenerateTasksDialog` | itens do checklist → tarefas                                 |
+| `ClientsView` / `ClientView` | lista de clientes e página do cliente                   |
+| `ReviewCard`         | revisão mensal: saúde, checklist, notas, próximos passos       |
+| `ReviewsDueCard` / `ClientsPulseCard` | revisões por fazer (Hoje) e clientes na weekly |
 
 ## 9. Definições de negócio
 
@@ -448,6 +494,11 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   resto, o próprio "feito".
 - **Processo para revisar:** status "Revisar", ou "Em vigor" com a próxima
   revisão (última revisão + período) vencida.
+- **Revisão do cliente:** uma por mês para cada cliente ativo com revisão
+  mensal. Vence no `review_day` do mês. Situação: feita (concluída), em
+  andamento (começada), pendente (não começada, ainda no prazo) ou atrasada
+  (não concluída depois do vencimento).
+- **Saúde do cliente:** a da revisão mais recente que tem saúde marcada.
 
 ## 10. Decisões técnicas importantes
 
@@ -519,8 +570,10 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    sugestões, responsável, revisão periódica, versões com restauração, busca
    no texto, imagens privadas; organizada por área e por cliente; checklists
    viram tarefas.
-3. **Clientes**: cadastro completo dos ativos, semáforo de saúde e revisão
-   mensal (checklist, notas, próximos passos que viram tarefas).
+3. **Clientes** ✅: cadastro completo no portal, semáforo de saúde, revisão
+   mensal (checklist, notas, próximos passos que viram tarefas, histórico),
+   página do cliente reunindo tarefas, reuniões e processos; revisões por
+   fazer na tela Hoje e na weekly.
 4. **Unificação**: busca geral (Ctrl/⌘ + K), tela Hoje como painel do dia
    (reunião, combinados, revisões e processos pendentes) e acabamento.
 

@@ -20,8 +20,9 @@ on conflict (id) do nothing;
 
 -- Clientes -----------------------------------------------------------------------
 
-insert into public.clients (name)
-values ('Hertmann'), ('Velmont'), ('Hapuck Scents'), ('Boop')
+-- A Boop (projetos internos) não passa por revisão mensal (review_day null).
+insert into public.clients (name, review_day)
+values ('Hertmann', 10), ('Velmont', 10), ('Hapuck Scents', 10), ('Boop', null)
 on conflict (name) do nothing;
 
 -- Plano atual ----------------------------------------------------------------------

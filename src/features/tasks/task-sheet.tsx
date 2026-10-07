@@ -341,6 +341,18 @@ function TaskDetails({ task }: { task: Task }) {
             </Link>
           </p>
         ) : null}
+        {task.client_review_id && task.client_id ? (
+          <p>
+            Nasceu de uma revisão mensal do cliente ·{" "}
+            <Link
+              href={`/clientes/${task.client_id}`}
+              className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+            >
+              ver cliente
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
+          </p>
+        ) : null}
         {task.doc_id ? (
           <p>
             Nasceu do checklist de um processo ·{" "}

@@ -1,4 +1,5 @@
 import type {
+  ClientHealth,
   DocKind,
   DocStatus,
   EventType,
@@ -67,6 +68,17 @@ export const DOC_STATUS_LABEL: Record<DocStatus, string> = {
   draft: "Rascunho",
   active: "Em vigor",
   review: "Revisar",
+}
+
+export const CLIENT_HEALTHS = ["healthy", "attention", "at_risk"] as const satisfies readonly ClientHealth[]
+export const CLIENT_HEALTH_LABEL: Record<ClientHealth, string> = {
+  healthy: "Saudável",
+  attention: "Atenção",
+  at_risk: "Em risco",
+}
+
+export function isClientHealth(value: unknown): value is ClientHealth {
+  return CLIENT_HEALTHS.includes(value as ClientHealth)
 }
 
 export function isDocKind(value: unknown): value is DocKind {

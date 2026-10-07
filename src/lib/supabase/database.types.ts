@@ -14,26 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_reviews: {
+        Row: {
+          checklist: Json
+          client_id: string
+          created_at: string
+          created_by: string
+          done: boolean
+          done_at: string | null
+          done_by: string | null
+          health: Database["public"]["Enums"]["client_health"] | null
+          id: string
+          notes: string | null
+          period: string
+          updated_at: string
+        }
+        Insert: {
+          checklist?: Json
+          client_id: string
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          health?: Database["public"]["Enums"]["client_health"] | null
+          id?: string
+          notes?: string | null
+          period: string
+          updated_at?: string
+        }
+        Update: {
+          checklist?: Json
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          health?: Database["public"]["Enums"]["client_health"] | null
+          id?: string
+          notes?: string | null
+          period?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_reviews_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_reviews_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           active: boolean
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           id: string
           name: string
+          notes: string | null
+          owner_id: string | null
+          review_day: number | null
+          services: string[]
+          since: string | null
+          updated_at: string
         }
         Insert: {
           active?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           id?: string
           name: string
+          notes?: string | null
+          owner_id?: string | null
+          review_day?: number | null
+          services?: string[]
+          since?: string | null
+          updated_at?: string
         }
         Update: {
           active?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           id?: string
           name?: string
+          notes?: string | null
+          owner_id?: string | null
+          review_day?: number | null
+          services?: string[]
+          since?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       doc_versions: {
         Row: {
@@ -468,6 +570,7 @@ export type Database = {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
           client_id: string | null
+          client_review_id: string | null
           completed_at: string | null
           created_at: string
           created_by: string
@@ -485,6 +588,7 @@ export type Database = {
         Insert: {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
+          client_review_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -502,6 +606,7 @@ export type Database = {
         Update: {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
+          client_review_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -522,6 +627,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_client_review_id_fkey"
+            columns: ["client_review_id"]
+            isOneToOne: false
+            referencedRelation: "client_reviews"
             referencedColumns: ["id"]
           },
           {
@@ -597,6 +709,7 @@ export type Database = {
       }
     }
     Enums: {
+      client_health: "healthy" | "attention" | "at_risk"
       doc_kind: "process" | "checklist" | "policy" | "guide"
       doc_status: "draft" | "active" | "review"
       event_type: "meeting" | "internal" | "delivery"
@@ -738,6 +851,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      client_health: ["healthy", "attention", "at_risk"],
       doc_kind: ["process", "checklist", "policy", "guide"],
       doc_status: ["draft", "active", "review"],
       event_type: ["meeting", "internal", "delivery"],

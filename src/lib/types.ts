@@ -21,6 +21,8 @@ export type MeetingItemKind = "topic" | "agreement"
 export type DocKind = "process" | "checklist" | "policy" | "guide"
 /** Rascunho, Em vigor ou Revisar. */
 export type DocStatus = "draft" | "active" | "review"
+/** Semáforo do cliente: Saudável, Atenção ou Em risco. */
+export type ClientHealth = "healthy" | "attention" | "at_risk"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -38,6 +40,46 @@ export interface Client {
   id: string
   name: string
   active: boolean
+}
+
+/** Cadastro completo do cliente (tela Clientes). */
+export interface ClientDetail extends Client {
+  /** Responsável da Boop pelo cliente. */
+  owner_id: string | null
+  /** Frentes de trabalho (ex.: "Social media", "Tráfego pago"). */
+  services: string[]
+  since: DateKey | null
+  contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  notes: string | null
+  /** Dia do mês em que a revisão vence; null = sem revisão mensal. */
+  review_day: number | null
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+export interface ReviewCheckItem {
+  key: string
+  label: string
+  done: boolean
+}
+
+/** Revisão mensal de um cliente. */
+export interface ClientReview {
+  id: string
+  client_id: string
+  /** Mês de referência (dia 1). */
+  period: DateKey
+  health: ClientHealth | null
+  checklist: ReviewCheckItem[]
+  notes: string | null
+  done: boolean
+  done_at: Timestamp | null
+  done_by: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
 export interface Plan {
@@ -64,6 +106,8 @@ export interface Task {
   meeting_id: string | null
   /** Processo em que a tarefa nasceu (item de checklist que virou tarefa). */
   doc_id: string | null
+  /** Revisão mensal de cliente em que a tarefa nasceu (próximo passo). */
+  client_review_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp

@@ -48,6 +48,8 @@ export interface EventDialogState {
    * para já montar a pauta.
    */
   mode?: "event" | "meeting"
+  /** Cliente sugerido ao criar (ex.: "Nova reunião" na página do cliente). */
+  clientId?: string
   key: number
 }
 
@@ -80,6 +82,7 @@ export function EventDialog({
           event={state.event}
           meeting={state.mode === "meeting" && !state.event}
           initialDate={state.date ?? today}
+          initialClientId={state.clientId ?? null}
           today={today}
           onDone={() => onOpenChange(false)}
         />
@@ -92,12 +95,14 @@ function EventForm({
   event,
   meeting,
   initialDate,
+  initialClientId,
   today,
   onDone,
 }: {
   event?: CalendarEvent
   meeting: boolean
   initialDate: DateKey
+  initialClientId: string | null
   today: DateKey
   onDone: () => void
 }) {
@@ -114,7 +119,7 @@ function EventForm({
     event?.end_at && timed ? toTimeLabel(event.end_at) : event ? "" : "10:00"
   )
   const [weekly, setWeekly] = useState(event?.recurrence_rule === WEEKLY)
-  const [clientId, setClientId] = useState<string | null>(event?.client_id ?? null)
+  const [clientId, setClientId] = useState<string | null>(event?.client_id ?? initialClientId)
   const [description, setDescription] = useState(event?.description ?? "")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startSaving] = useTransition()

@@ -5,8 +5,10 @@ da Boop. Reúne a análise do repositório, a arquitetura, o schema do Supabase,
 as dependências, a estrutura das telas, a infraestrutura e o plano de
 implementação.
 
-> Status: **V1 real em produção** em <https://admin.deumboop.com.br>
-> (Supabase + Vercel). Como rodar: [README](../README.md).
+> Status: **em produção** em <https://admin.deumboop.com.br> (Supabase +
+> Vercel), com a operação (etapas 1–4) e a gestão (etapa 5: financeiro
+> gerencial, comercial, indicadores, metas e relatórios). Como rodar:
+> [README](../README.md). O que cada tela faz: [FUNCIONALIDADES](FUNCIONALIDADES.md).
 
 ---
 
@@ -59,7 +61,15 @@ src/
 │   │   ├── comunicacoes/       # "/comunicacoes" (?cliente=…)
 │   │   ├── decisoes/           # "/decisoes"
 │   │   ├── processos/          # "/processos" e "/processos/[id]"
-│   │   └── financeiro/         # "/financeiro" (?mes=aaaa-mm)
+│   │   ├── financeiro/         # "/financeiro" (?mes=aaaa-mm) e as abas dre/, projecao/,
+│   │   │                       # contratos/, lancamentos/, fechamento/, parametros/
+│   │   ├── comercial/          # "/comercial" (funil de vendas; ?negocio=<id>)
+│   │   ├── indicadores/        # "/indicadores" (?periodo=&ref=&comparar=&area=)
+│   │   ├── metas/              # "/metas" (OKRs)
+│   │   └── relatorios/         # "/relatorios" (montar relatório ou Excel)
+│   ├── relatorio/              # "/relatorio": relatório para apresentar/imprimir (fora
+│   │                           # do layout com sidebar, exige sessão)
+│   ├── api/relatorios/excel/   # o .xlsx gerado no servidor (com a sessão da pessoa)
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
 │   │                           # para uma URL assinada e temporária do Storage)
@@ -69,8 +79,10 @@ src/
 ├── components/
 │   ├── ui/                     # shadcn/ui (código gerado)
 │   ├── layout/                 # sidebar, menu do usuário, cabeçalho de página
+│   ├── charts/                 # gráficos sem biblioteca: colunas, linhas, sparkline,
+│   │                           # barras horizontais (tooltip, teclado, legenda)
 │   └── *.tsx                   # peças visuais genéricas: date-picker, stat-grid,
-│                               # segmented-control, progress-meter, panel-card
+│                               # segmented-control, progress-meter, panel-card, kpi-tile
 ├── features/
 │   ├── auth/                   # sessão, login/logout
 │   ├── workspace/              # equipe, clientes, projetos, visões salvas (referência)
@@ -82,7 +94,13 @@ src/
 │   ├── decisions/              # decisões: registro, lista, cartões de reunião,
 │   │                           # cliente e projeto
 │   ├── communications/         # comunicações com clientes (pedido → tarefa)
-│   ├── finance/                # receitas e despesas, recorrências, atrasados
+│   ├── finance/                # receitas e despesas, recorrências, atrasados e a gestão
+│   │                           # (management.ts: DRE, MRR, projeção, divisão do resultado,
+│   │                           # receita necessária, inadimplência, fechamento)
+│   ├── deals/                  # comercial: negócios, funil, conversão em cliente
+│   ├── metrics/                # catálogo de indicadores (KPIs), períodos e painéis
+│   ├── goals/                  # metas (OKRs) com progresso pelos indicadores
+│   ├── reports/                # relatório para apresentar e as abas do Excel
 │   ├── today/                  # tela Hoje: indicadores, progresso e os quadros que vêm
 │   │                           # das outras áreas (reunião, combinados, processos)
 │   ├── calendar/               # semana/mês, recorrência, eventos
@@ -97,7 +115,8 @@ src/
 │                               # diálogo de criar da tela)
 ├── lib/
 │   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
-│   └── *.ts                    # datas (fuso de SP), rótulos, tipos, cn()
+│   ├── xlsx.ts                 # gerador de .xlsx (SpreadsheetML + zip), sem dependência
+│   └── *.ts                    # datas (fuso de SP), rótulos, tipos, formatos, cn()
 └── proxy.ts                    # sessão + proteção de rotas (no Next 16, substitui o middleware)
 
 supabase/
@@ -144,9 +163,10 @@ Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
 `plans`. Depois vieram as reuniões (`meetings` e `meeting_items`), os
 processos (`docs` e `doc_versions`), as revisões de clientes
-(`client_reviews`) e a operação (`projects`, `saved_views`, `decisions`,
-`communications`, `finance_recurrences`, `finance_entries` e `activity`). O
-SQL está em `supabase/migrations/`, uma migration por etapa:
+(`client_reviews`), a operação (`projects`, `saved_views`, `decisions`,
+`communications`, `finance_recurrences`, `finance_entries` e `activity`) e a
+gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
+`key_results`). O SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
@@ -155,8 +175,12 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 [`clients_reviews`](../supabase/migrations/20261006173103_clients_reviews.sql),
 [`projects`](../supabase/migrations/20261007144307_projects.sql),
 [`decisions_communications_finance`](../supabase/migrations/20261007144345_decisions_communications_finance.sql),
-[`activity`](../supabase/migrations/20261007144504_activity.sql) e
-[`finance_occurrence_activity`](../supabase/migrations/20261007162915_finance_occurrence_activity.sql).
+[`activity`](../supabase/migrations/20261007144504_activity.sql),
+[`finance_occurrence_activity`](../supabase/migrations/20261007162915_finance_occurrence_activity.sql),
+[`finance_management`](../supabase/migrations/20261007174116_finance_management.sql),
+[`commercial`](../supabase/migrations/20261007174202_commercial.sql),
+[`goals`](../supabase/migrations/20261007174228_goals.sql) e
+[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -176,8 +200,13 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 | `saved_views`      | `id`, `page` (por ora só `tasks`), `name`, `query` (filtros e modo, como na URL), `created_by`, `created_at` |
 | `decisions`        | `id`, `title`, `context` (o porquê), `decided_on`, `status` (em vigor ou revogada), `area`, `client_id`, `project_id`, `meeting_id`, `created_by`, `created_at`, `updated_at` |
 | `communications`   | `id`, `client_id` (obrigatório), `project_id`, `kind`, `channel`, `summary`, `details`, `occurred_on`, `created_by`, `created_at`, `updated_at` |
-| `finance_recurrences` | `id`, `kind` (receita ou despesa), `description`, `amount_cents`, `day_of_month`, `category`, `client_id`, `project_id`, `starts_on` e `ends_on` (meses, dia 1), `notes`, `created_by`, `created_at`, `updated_at` |
-| `finance_entries`  | `id`, `kind`, `description`, `amount_cents`, `due_on`, `paid_on`, `skipped`, `category`, `client_id`, `project_id`, `recurrence_id` + `period` (o mês de uma recorrência; único por recorrência e mês), `notes`, `created_by`, `created_at`, `updated_at` |
+| `finance_recurrences` | `id`, `kind` (receita ou despesa), `account` (categoria gerencial), `description`, `amount_cents`, `day_of_month`, `category` (subcategoria livre; em receitas de cliente, a frente), `client_id`, `project_id`, `starts_on` e `ends_on` (meses, dia 1), `notes`, `created_by`, `created_at`, `updated_at` |
+| `finance_entries`  | `id`, `kind`, `account`, `description`, `amount_cents` (valor bruto), `fee_cents` (taxa do gateway), `due_on`, `paid_on`, `skipped`, `category`, `client_id`, `project_id`, `recurrence_id` + `period` (o mês de uma recorrência; único por recorrência e mês), `notes`, `created_by`, `created_at`, `updated_at` |
+| `finance_settings` | uma linha só: `tax_rate_bps` (alíquota, 600 = 6%), `tax_rate_confirmed`, `reserve_months` (caixa mínimo em meses de custo fixo), `reserve_share_bps` e `reinvest_share_bps` (divisão do resultado), `partners`, `owner_draw_target_cents` (alvo de pró-labore por sócio), `opening_balance_cents` + `opening_on` (saldo no início do controle), `contract_alert_days`, `updated_by`, `updated_at` |
+| `finance_closings` | `period` (mês fechado), `ledger_balance_cents` (saldo pelos lançamentos), `bank_balance_cents` (saldo do extrato), `notes`, `closed_by`, `closed_at` |
+| `deals`            | `id`, `title`, `client_id` (cliente da casa ou o criado ao ganhar), `company`, `contact_name`, `contact_email`, `contact_phone`, `source` (origem), `service` (frente), `stage`, `reached_stage` (etapa mais avançada, pelo trigger), `owner_id`, `recurring_cents`, `one_time_cents`, `term_months`, `probability`, `opened_on`, `expected_close_on`, `proposal_sent_on`, `closed_on`, `lost_reason`, `project_id` e `recurrence_id` (o que nasceu do ganho), `notes`, `created_by`, `created_at`, `updated_at` |
+| `objectives`       | `id`, `title`, `description`, `area`, `owner_id`, `starts_on`, `ends_on`, `created_by`, `created_at`, `updated_at` |
+| `key_results`      | `id`, `objective_id`, `title`, `metric` (indicador do catálogo; vazio = manual), `client_id` (recorte), `unit`, `target_value`, `baseline_value`, `manual_value`, `position`, `created_by`, `created_at`, `updated_at` |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
@@ -197,8 +226,16 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 (`planned`, `active`, `paused`, `done`, `canceled`), `decision_status`
 (`active`, `revoked`), `communication_kind` (`update`, `request`, `approval`,
 `feedback`, `other`), `communication_channel` (`whatsapp`, `email`, `call`,
-`meeting`, `other`), `finance_kind` (`income`, `expense`) e `activity_action`
-(`created`, `updated`, `deleted`, `comment`).
+`meeting`, `other`), `finance_kind` (`income`, `expense`), `activity_action`
+(`created`, `updated`, `deleted`, `comment`), `finance_account`
+(`client_revenue`, `other_revenue`, `owner_contribution`, `direct_cost`,
+`fixed_cost`, `other_expense`, `tax`, `owner_draw`, `reinvestment`),
+`deal_stage` (`lead`, `contact`, `proposal`, `negotiation`, `won`, `lost`) e
+`lead_source` (`referral`, `instagram`, `website`, `google`, `linkedin`,
+`whatsapp`, `outbound`, `event`, `existing_client`, `other`).
+
+Função exposta: `public.win_deal(...)` (`security invoker`, só para
+`authenticated`), que ganha um negócio numa transação (item 30).
 
 ### 5.1 Decisões sobre o schema
 
@@ -334,6 +371,61 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
     vencimento só daquele mês). Mudar a recorrência vale para os meses ainda
     não gravados; apagá-la mantém os meses gravados. O item pertence ao mês
     do vencimento. É o mesmo padrão das revisões de clientes (item 17).
+27. **Categoria gerencial (`account`) no próprio lançamento.** Cada lançamento
+    e recorrência diz onde entra no DRE, com as categorias da planilha
+    "Financeiro - Boop": receita de cliente, outras receitas, aporte de sócio
+    (só caixa), custo direto de cliente, custo fixo, outras despesas, imposto
+    pago (DAS), pró-labore e reinvestimento. É um enum (`finance_account`)
+    com `check` que amarra entradas às contas de entrada; quem não informa
+    recebe uma conta padrão pelo trigger (compatível com a versão anterior).
+    `category` continua livre, como subcategoria (nas receitas de cliente, a
+    frente: Social media, Site, Tráfego). Recebimentos pelo gateway guardam a
+    taxa em `fee_cents`; o valor do lançamento é sempre o bruto.
+28. **DRE no regime de caixa, calculado e nunca gravado.** Como na planilha:
+    mês passado = o que foi recebido e pago nele; mês atual = realizado + o
+    que ainda vence nele; meses futuros = contratos, custos fixos e
+    lançamentos agendados. O imposto do DRE é provisão pela alíquota (o DAS
+    pago fica fora do resultado); as taxas são as lançadas ou, no previsto, a
+    taxa média dos últimos 12 meses. Pró-labore, aportes e reinvestimentos
+    ficam fora do resultado (são o destino dele). Tudo em
+    `features/finance/management.ts`: nenhum DRE, MRR ou margem fica gravado.
+29. **Premissas numa linha só (`finance_settings`).** Alíquota (e se já foi
+    confirmada com o contador), caixa mínimo em meses de custo fixo, divisão
+    do resultado, sócios, alvo de pró-labore e saldo inicial; os valores
+    iniciais são os da aba PARÂMETROS. A divisão segue a planilha: resultado
+    negativo não se divide (sai do caixa); com o caixa abaixo do mínimo, tudo
+    vai para o caixa; depois, caixa / reinvestimento / pró-labore (o resto).
+30. **Fechamento do mês trava o realizado.** `finance_closings` guarda o
+    saldo pelos lançamentos e o do extrato. O trigger `check_finance_lock`
+    não deixa mudar valor, taxa, data de pagamento, conta, tipo ou "pular",
+    nem excluir, lançamentos pagos num mês fechado (descrição, observação e
+    vínculos podem mudar). O app fecha só meses que já acabaram, em ordem, a
+    partir do primeiro mês do controle; reabrir (apagar o fechamento) só o
+    último.
+31. **Comercial sem copiar dados.** `deals` é o funil (lead → contato →
+    proposta → negociação → ganho ou perdido). O trigger mantém
+    `reached_stage` (o funil conta cada negócio pela etapa mais longe que
+    alcançou; o perdido guarda onde parou), `proposal_sent_on` e `closed_on`.
+    Ganhar é a função `win_deal`, numa transação e com o RLS de quem está
+    logado: liga ou cria o cliente, cria o contrato (receita recorrente do
+    cliente, do mês de início até o fim do prazo), a entrada pontual e o
+    projeto, e grava os vínculos no negócio. Daí em diante o faturamento
+    vem do financeiro, não do negócio.
+32. **Indicadores são funções, não tabelas.** `features/metrics/catalog.ts`
+    define cada KPI: valor num intervalo de datas, unidade, se subir é bom,
+    a fórmula em português e as linhas de origem (o detalhamento). Painéis,
+    comparação de períodos, tendência de 12 meses, metas, relatório e Excel
+    usam o mesmo catálogo, então um número não diverge entre telas.
+33. **Metas (OKRs) apontam para indicadores.** `key_results.metric` guarda a
+    chave do catálogo e o progresso é calculado na hora, no período do
+    objetivo (só o realizado). Resultado manual fica para o que o sistema não
+    mede (ex.: NPS). Sem histórico paralelo de valores: o histórico é o dos
+    próprios dados.
+34. **Excel gerado no servidor, sem biblioteca.** `lib/xlsx.ts` escreve o
+    SpreadsheetML e o zip, com o formato de moeda da planilha da Boop e
+    fórmulas que já levam o valor calculado (margens, resultado, totais e o
+    imposto pela alíquota da aba Premissas, que pode ser editada). A rota
+    confere a sessão e lê os dados com o RLS da pessoa.
 
 ### 5.2 Segurança (RLS)
 
@@ -356,8 +448,15 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `doc_versions`     | só ver (quem grava é o banco, pelo trigger)                   |
 | `client_reviews`   | ver, criar (como autor), editar e excluir                     |
 | `projects`, `saved_views`, `decisions`, `communications`, `finance_recurrences`, `finance_entries` | ver, criar (como autor), editar e excluir |
+| `finance_settings` | ver e editar (a linha única já existe; ninguém cria nem apaga) |
+| `finance_closings` | ver, fechar o mês (como autor) e reabrir                      |
+| `deals`, `objectives`, `key_results` | ver, criar (como autor), editar e excluir    |
 | `activity`         | ver; criar só comentários (como autor); editar e apagar só os próprios comentários. O resto é gravado pelo banco |
 | Storage, bucket `docs` | ver, enviar e apagar imagens                              |
+
+- `win_deal` é `security invoker`: roda com as permissões de quem chamou,
+  então as políticas acima valem para tudo o que ela cria. Anônimos não
+  podem executá-la.
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
@@ -397,18 +496,22 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `@blocknote/core`, `@blocknote/react`, `@blocknote/shadcn` | editor de blocos dos Processos (estilo Notion; licença MPL-2.0, código aberto). Carregado só na página do documento |
 
 Sem biblioteca de estado global, de formulário, de calendário completo, de
-gráficos ou de validação. O volume de dados e as regras não justificam. O
-editor de documentos é a exceção que vale o peso: escrever um editor de
-blocos (títulos, listas, checklists, tabelas, imagens, arrastar) do zero não
-faria sentido.
+gráficos, de planilhas ou de validação. O volume de dados e as regras não
+justificam: os gráficos (`components/charts`) e o gerador de Excel
+(`lib/xlsx.ts`) são pequenos e feitos para estas telas. O editor de
+documentos é a exceção que vale o peso: escrever um editor de blocos
+(títulos, listas, checklists, tabelas, imagens, arrastar) do zero não faria
+sentido.
 
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
 Tarefas e as visões salvas, Projetos, Calendário, Reuniões; **Relacionamento**:
-Clientes, Comunicações; **Gestão**: Decisões, Processos, Financeiro; usuário e
-sair no rodapé) e conteúdo num painel branco sobre fundo off-white. No topo de
-todas, **Buscar…** (Ctrl/⌘ + K) abre a busca geral.
+Comercial, Clientes, Comunicações; **Gestão**: Indicadores, Metas,
+Financeiro, Relatórios, Decisões, Processos; usuário e sair no rodapé) e
+conteúdo num painel branco sobre fundo off-white. No topo de todas,
+**Buscar…** (Ctrl/⌘ + K) abre a busca geral. A exceção é `/relatorio`, a
+página limpa do relatório para apresentar ou imprimir.
 
 ### Hoje (`/hoje`)
 
@@ -438,6 +541,9 @@ todas, **Buscar…** (Ctrl/⌘ + K) abre a busca geral.
   - **Financeiro em atraso**: quanto há a receber e a pagar vencido, com
     link para o Financeiro;
   - **Processos para revisar** (no Minhas, os da pessoa e os sem responsável);
+  - **Gestão**: mês a fechar, contratos terminando, queda prevista do MRR,
+    caixa negativo na projeção e negócios com previsão de fechamento até
+    daqui a 3 dias (ou já passada);
   - **Próximos compromissos** (7 dias). Clicar numa reunião abre a pauta dela.
   Quadro sem nada para mostrar não aparece.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, que pode ser
@@ -552,9 +658,10 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
   concluídas nos últimos 30 dias), **Comunicações** e **Reuniões** (próximas
   e recentes, com "Nova reunião" já com o cliente).
 - Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
-  WhatsApp, observações), **Financeiro** (fee mensal, em atraso, recebido no
-  ano), **Saúde mês a mês** (seis meses), **Decisões** e **Processos do
-  cliente**.
+  WhatsApp, observações), **Financeiro** (mensalidade, margem do contrato,
+  fim do contrato, em atraso, recebido no ano e o link para os lançamentos
+  do cliente), **Negócios** (upsell e renovação no funil), **Saúde mês a
+  mês** (seis meses), **Decisões** e **Processos do cliente**.
 - Menu: nova reunião, novo processo do cliente, desativar/reativar e excluir.
 
 ### Comunicações (`/comunicacoes`)
@@ -610,33 +717,120 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 
 ### Financeiro (`/financeiro`)
 
-- Um mês por vez (setas; `?mes=aaaa-mm`): **Recebido** e **Pago** (com o
-  previsto), **Resultado do mês** e quanto entra e sai **todo mês**.
-- **Em atraso** (no mês atual): o que venceu e não foi recebido ou pago, de
-  qualquer mês (recorrências: últimos 12 meses).
-- **Receitas** e **Despesas** do mês; o checkbox marca como recebido/pago
-  com a data de hoje. Cada linha mostra vencimento, cliente, projeto e
-  categoria.
-- Lateral: **Últimos 6 meses** (entrou, saiu, saldo) e **Todo mês** (as
-  recorrências: fees, ferramentas, impostos).
-- **Novo lançamento**: receita ou despesa, descrição, valor, vencimento,
-  cliente, projeto, categoria, já recebido/pago e **repetir todo mês** (vira
-  recorrência). Num mês de recorrência dá para mudar só aquele mês, pular o
-  mês ou editar a recorrência inteira.
+A lógica da planilha "Financeiro - Boop" em abas, com o mesmo cabeçalho e o
+botão **Novo lançamento** em todas.
+
+- **Mês** (`/financeiro?mes=aaaa-mm`): receita bruta (recebido e a
+  receber), custos e despesas, resultado e saldo em conta; **Em atraso**;
+  **Receitas** e **Despesas** do mês (o checkbox marca recebido/pago com a
+  data de hoje; ao receber, o toast oferece informar a taxa do gateway);
+  **Resultado do mês** (mini-DRE, cada linha leva aos lançamentos), **Divisão
+  do resultado** (caixa, reinvestimento e pró-labore por sócio, caixa
+  acumulado em relação ao mínimo) e **Atenção** (alertas).
+- **DRE** (`/financeiro/dre`, `?ano=`): período (últimos meses, ano),
+  indicadores do período, gráficos de receita (recebido × previsto) e de
+  resultado, e a tabela mês a mês com a situação de cada mês (fechado,
+  realizado, parcial, previsto). Cada valor abre os lançamentos que o
+  formam. Botão **Excel**.
+- **Projeção** (`/financeiro/projecao`): 12 meses à frente pelos contratos,
+  custos fixos e lançamentos agendados; MRR (6 meses para trás e 12 para a
+  frente), caixa acumulado com a linha do mínimo, **receita necessária**
+  para o alvo de pró-labore e a tabela mês a mês com a divisão do resultado.
+- **Contratos e custos** (`/financeiro/contratos`): MRR, clientes com
+  contrato, concentração no maior cliente, custos fixos; **margem por
+  cliente** (MRR − imposto − taxa − custos diretos) e as recorrências por
+  categoria, com fim do contrato e parcelas restantes.
+- **Lançamentos** (`/financeiro/lancamentos`): o extrato com filtros na URL
+  (`mes`, `de`/`ate`, `conta`, `cliente`, `situacao`, `tipo`,
+  `conferencia`), busca e os totais (bruto, taxas, líquido). É o destino de
+  todo "ver de onde vem" do financeiro.
+- **Fechamento** (`/financeiro/fechamento`): o mês a fechar com os passos
+  (vencimentos resolvidos, lançamentos conferidos, saldo do extrato) e os
+  meses fechados (reabrir o último).
+- **Parâmetros** (`/financeiro/parametros`): as premissas e o que o sistema
+  calcula (taxa média do gateway, custos fixos, caixa mínimo).
+- **Novo lançamento**: receita ou despesa, descrição, **categoria
+  gerencial** (com a explicação de onde entra no DRE), valor bruto,
+  vencimento, cliente (obrigatório em receita de cliente), projeto,
+  subcategoria (ou frente), já recebido/pago (com a taxa do gateway), e
+  **repetir todo mês** (contrato ou custo fixo, com fim ou número de
+  parcelas). Num mês de recorrência dá para mudar só aquele mês, pular o mês
+  ou editar a recorrência inteira.
+
+### Comercial (`/comercial`)
+
+- Indicadores do funil: em aberto (quantidade, mensal e valor), valor
+  ponderado, ganhos no mês e taxa de ganho (90 dias, com o ciclo de venda).
+- **Quadro** (Lead, Contato, Proposta, Negociação e a coluna dos fechados
+  nos últimos 30 dias, com Ganho e Perdido; arrastar muda a etapa) e
+  **Lista**; busca e filtro por responsável.
+- **Negócio**: título, empresa ou cliente da casa, contato, origem, frente,
+  valor mensal e pontual, prazo do contrato, etapa, chance de fechar (padrão
+  da etapa), responsável, chegada, previsão de fechamento, observação,
+  histórico e comentários. **Perder** pede o motivo; **Reabrir** volta ao
+  funil.
+- **Ganhar** (soltar em Ganho ou o botão): confirma o cliente (existente ou
+  novo), o início, o dia de vencimento e a duração do contrato, a data da
+  entrada pontual e o projeto; a função `win_deal` cria tudo de uma vez e o
+  negócio passa a apontar para o que criou.
+
+### Indicadores (`/indicadores`)
+
+- Período (mês, trimestre ou ano, com setas) e comparação (período
+  anterior ou mesmo período do ano passado), tudo na URL.
+- Áreas: **Visão geral**, **Financeiro**, **Comercial** e **Operacional**.
+  Cada indicador mostra o valor, a variação (verde ou vermelho conforme
+  subir ser bom ou ruim) e a tendência de 12 meses.
+- Clicar num indicador abre o **detalhe**: valor, comparação, a fórmula, o
+  gráfico de 12 meses (no mês atual, realizado e previsto) e as linhas de
+  origem, com o link para os dados (lançamentos, negócios, tarefas,
+  projetos).
+- Gráficos por área: faturamento e resultado por mês, MRR, receita por
+  cliente, contas a receber em atraso por idade, funil do período, origem
+  dos leads, leads e ganhos por mês, fechamentos previstos, tarefas
+  concluídas por mês, tarefas abertas por pessoa e projetos atrasados.
+- **Pede atenção**: os alertas do financeiro. Atalhos para o relatório e o
+  Excel do mesmo período.
+
+### Metas (`/metas`)
+
+- Objetivos com período (este mês, trimestre, próximo trimestre, ano ou
+  datas livres), área, responsável e descrição; filtro Em andamento,
+  Próximas, Encerradas e Todas.
+- Resultados-chave ligados a um **indicador** (progresso automático, com
+  recorte por cliente quando faz sentido) ou **manuais** (alguém atualiza o
+  valor). Meta, base opcional e **sugestões de meta** pelos dados (ritmo dos
+  últimos 3 meses, +20%, receita necessária para o MRR).
+- Cada resultado mostra atual × meta, a barra com a marca do esperado para
+  hoje, a situação (no ritmo, atenção, atrasada, atingida, não atingida) e,
+  no financeiro, a previsão para o fim do período.
+- Sem objetivos, a tela oferece começar pela meta de MRR da planilha.
+
+### Relatórios (`/relatorios`) e relatório (`/relatorio`)
+
+- Escolha o período (mês, trimestre ou ano), a comparação, o recorte (toda
+  a Boop ou um cliente) e as seções: indicadores, DRE, projeção, contratos,
+  lançamentos, comercial, operação e metas.
+- **Ver relatório** abre `/relatorio` numa página limpa (A4 deitado na
+  impressão, sem quebrar blocos), para apresentar ou salvar em PDF.
+- **Baixar Excel** gera o `.xlsx` (`/api/relatorios/excel`) com uma aba por
+  seção, fórmulas (margens, resultado, totais, imposto pela premissa
+  editável) e uma aba "Sobre" explicando os números.
 
 ### Busca geral (Ctrl/⌘ + K)
 
 - Abre em qualquer tela, pelo atalho ou pelo botão **Buscar…** do topo (no
   celular, a lupa). No editor de processos, Ctrl/⌘ + K continua criando link.
 - Sem texto: **Ações** (nova tarefa, projeto, reunião, documento, cliente,
-  registrar comunicação, registrar decisão, novo lançamento), as **visões
-  salvas** e **Ir para** (as telas).
+  registrar comunicação, registrar decisão, novo lançamento, novo negócio,
+  novo objetivo), as **visões salvas** e **Ir para** (as telas).
 - A partir de 2 letras, sem acento: **Tarefas** (título e descrição; abertas
   primeiro), **Projetos**, **Reuniões** (título, cliente, assuntos,
   combinados, resumo e transcrição; das próximas, uma por série),
   **Decisões**, **Comunicações**, **Processos** (título, "para que serve" e,
-  a partir de 3 letras, o texto), **Clientes** (nome) e **Financeiro**
-  (descrição). Até seis resultados por grupo.
+  a partir de 3 letras, o texto), **Clientes** (nome), **Negócios** (título,
+  empresa e contato; abre o negócio em `/comercial?negocio=<id>`) e
+  **Financeiro** (descrição). Até seis resultados por grupo.
 - ↑ ↓ navegam, Enter abre, Esc fecha.
 - Links usados pela busca: `/tarefas?tarefa=<id>` abre o Sheet da tarefa;
   as telas com `?novo=<marca>` abrem o diálogo de criar; `/decisoes?q=` e
@@ -680,6 +874,15 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 | `CommunicationsView` / `CommunicationsCard` / `CommunicationDialog` | comunicações: tela, cartão (cliente, projeto), registro e "Virar tarefa" |
 | `FinanceView` / `FinanceRows` / `FinanceDialog` | financeiro do mês, linhas com recebido/pago otimista, lançamento e recorrência |
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
+| `FinanceShell`       | cabeçalho e abas do Financeiro; o diálogo de lançamento compartilhado (`useFinanceDialog`) |
+| `DreView` / `ProjectionView` / `ContractsView` / `LedgerView` / `ClosingView` / `SettingsView` | as abas do Financeiro |
+| `DealsView` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: quadro e lista, negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
+| `MetricsView`        | Indicadores: período, comparação, áreas, KPIs, gráficos e o detalhe de cada número |
+| `GoalsView` / `ObjectiveDialog` / `KeyResultDialog` | metas (OKRs) com progresso automático e sugestões de meta |
+| `ReportBuilder` / `ReportView` | montar o relatório (período, recorte, seções) e a página para apresentar |
+| `ManagementCard`     | quadro "Gestão" da tela Hoje                                   |
+| `KpiTile`            | indicador: valor, variação colorida pelo sentido bom, tendência e alerta |
+| `ColumnChart` / `LineChart` / `Sparkline` / `BarList` | gráficos em HTML/SVG, com tooltip, teclado (setas), legenda e clique para o detalhe |
 | `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
 
 ## 9. Definições de negócio
@@ -723,6 +926,51 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   andamento (começada), pendente (não começada, ainda no prazo) ou atrasada
   (não concluída depois do vencimento).
 - **Saúde do cliente:** a da revisão mais recente que tem saúde marcada.
+
+Gestão (dinheiro em centavos; o sinal vem da linha):
+
+- **Receita bruta (faturamento):** receitas de cliente + outras receitas, no
+  regime de caixa (data de recebimento; no mês atual e nos futuros, também o
+  que vence). Aporte de sócio não é receita.
+- **DRE:** receita bruta − imposto (alíquota × receita) − taxas do gateway −
+  custos diretos = **margem de contribuição**; − custos fixos − outras
+  despesas = **resultado**. Margem líquida = resultado ÷ receita.
+- **Situação do mês no DRE:** fechado (conferido com o extrato), realizado
+  (mês passado), parcial (mês atual) ou previsto (futuro).
+- **MRR:** soma das receitas recorrentes de clientes que valem no mês.
+  **Clientes com contrato:** os que têm alguma. **Ticket médio:** MRR ÷
+  clientes. **MRR novo/perdido:** contratos que começaram ou terminaram.
+- **Margem por cliente:** MRR − imposto − taxa média − custos diretos
+  recorrentes do cliente.
+- **Saldo em conta:** saldo inicial + entradas − saídas − taxas pagas, até o
+  dia. **Caixa mínimo:** meses de custo fixo × custos fixos do mês.
+- **Divisão do resultado:** resultado negativo → sai do caixa; caixa abaixo
+  do mínimo → tudo para o caixa; senão caixa %, reinvestimento % e o resto
+  para o pró-labore, dividido pelos sócios.
+- **Receita necessária:** (sócios × alvo de pró-labore ÷ % do pró-labore +
+  custos fixos) ÷ (1 − imposto − taxa média − custo direto % da carteira).
+- **A receber em atraso:** receitas vencidas e não recebidas (por idade:
+  até 30, 31–60, 61–90, mais de 90 dias). **Inadimplência:** do que venceu
+  no período, quanto segue sem pagamento.
+- **Projeção:** 12 meses pelos contratos (até o fim de cada um), custos
+  fixos e lançamentos agendados, com a mesma divisão do resultado.
+- **Valor do contrato (negócio):** pontual + mensal × meses (sem prazo, 12).
+  **Ponderado:** valor × chance de fechar (padrão por etapa: lead 10%,
+  contato 20%, proposta 40%, negociação 60%).
+- **Funil do período:** negócios que chegaram no período, contados pela
+  etapa mais longe que alcançaram. **Taxa de ganho:** ganhos ÷ (ganhos +
+  perdidos) fechados no período. **Conversão de leads:** dos que chegaram no
+  período, quantos já foram ganhos. **Ciclo de venda:** dias da chegada ao
+  ganho.
+- **Período dos indicadores:** mês, trimestre ou ano; o período em andamento
+  soma o realizado e o que vence até o fim dele. Comparação com o período
+  anterior ou com o mesmo período do ano passado.
+- **Progresso de um resultado-chave:** (atual − base) ÷ (meta − base). A base
+  padrão é zero para somas no período e o valor no começo do período para
+  saldos e proporções. O **esperado** é a fração do período que passou; a
+  situação é "no ritmo" até 10 pontos abaixo dele, "atenção" até 30 e
+  "atrasada" além disso. O progresso do objetivo é a média dos resultados
+  (cada um limitado a 100%).
 
 ## 10. Decisões técnicas importantes
 
@@ -785,6 +1033,21 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 16. **Quadro com arrastar e soltar nativo** (HTML, sem biblioteca). Soltar em
     Feito conclui a tarefa pelo mesmo caminho do checkbox (com "Desfazer").
     Onde arrastar não funciona (alguns celulares), o status muda pelo Sheet.
+17. **Todo número leva à origem.** Cada indicador tem as linhas que o formam
+    e um link para a tela de dados com os filtros certos (`/financeiro/
+    lancamentos?mes=…&conta=…`, `/comercial?negocio=…`, `/tarefas?…`). Nas
+    tabelas e gráficos do financeiro, clicar num valor abre os lançamentos.
+18. **Gráficos acessíveis e sóbrios.** Paleta validada para contraste
+    (azul principal, azul claro para o previsto, laranja para a segunda
+    série), um eixo só, colunas finas, linha tracejada só para referência
+    (caixa mínimo), legenda quando há duas séries, tooltip, navegação pelas
+    setas e tabela equivalente onde o valor exato importa. Eixos em "R$ X
+    mil" formatados à mão para o servidor e o navegador mostrarem o mesmo
+    texto.
+19. **Relatório = os mesmos componentes, numa página limpa.** `/relatorio`
+    fica fora do layout com sidebar, usa o mesmo catálogo e os mesmos
+    gráficos (versões prontas, sem funções vindas do servidor) e tem CSS de
+    impressão (A4 deitado, sem quebrar blocos no meio).
 
 ## 11. Plano de implementação
 
@@ -843,10 +1106,33 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    na tela Hoje.
 7. Busca geral e menu lateral com tudo isso.
 
+### Etapa 5 — gestão ✅
+
+1. **Financeiro gerencial** com a lógica da planilha "Financeiro - Boop":
+   categorias gerenciais, taxa do gateway, DRE mês a mês, projeção de 12
+   meses, divisão do resultado, receita necessária, contratos e margem por
+   cliente, extrato filtrável, fechamento do mês e parâmetros.
+2. **Comercial**: funil (lead → ganho/perdido), quadro e lista, origem,
+   valor mensal e pontual, chance, motivo de perda; ganhar cria cliente,
+   contrato e projeto.
+3. **Indicadores**: financeiro, comercial e operacional por mês, trimestre
+   ou ano, com comparação, tendência, gráficos e detalhamento até a origem.
+4. **Metas (OKRs)** com resultados-chave ligados aos indicadores e progresso
+   automático.
+5. **Relatórios**: Excel com fórmulas e relatório para apresentar,
+   escolhendo período, recorte e seções.
+6. Integrações: quadro "Gestão" na tela Hoje, financeiro e negócios na
+   página do cliente, busca e ações rápidas para negócios e metas.
+
 ### Próximos passos
 
 1. Cada pessoa troca a senha temporária.
-2. Limpeza: uma migration nova que apaga `plans`, `tasks.plan_id` (já
+2. Confirmar com o contador a alíquota (6% é premissa da planilha) e marcar
+   "Confirmada" em Parâmetros.
+3. Se quiserem o histórico da planilha no sistema: importar os lançamentos
+   de setembro e outubro (contratos, custos e recebimentos) em vez de
+   recriá-los à mão.
+4. Limpeza: uma migration nova que apaga `plans`, `tasks.plan_id` (já
    copiados para `projects` e `tasks.project_id`) e `weekly_decisions` (vazia
    e sem uso), seguida da regeneração dos tipos. O Supabase pede confirmação
    para apagar tabela e coluna, e a ferramenta usada no desenvolvimento não
@@ -884,7 +1170,8 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ## 13. Fora do escopo (por enquanto)
 
-CRM e pipeline comercial, chat, portal do cliente, emissão de nota fiscal,
-conciliação bancária e fluxo de caixa projetado, aprovações formais,
-dashboards avançados, IA, notificações, automações, integrações (WhatsApp,
-e-mail, banco), permissões por cargo, metas e relatórios.
+Chat, portal do cliente, emissão de nota fiscal, conciliação bancária
+automática (o fechamento confere o saldo com o extrato à mão), aprovações
+formais, IA, notificações, automações, integrações (WhatsApp, e-mail, banco,
+gateway de pagamento), permissões por cargo, várias moedas e importação de
+planilhas pela interface.

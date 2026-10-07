@@ -2,8 +2,10 @@
 
 Cockpit interno da Boop, em <https://admin.deumboop.com.br>. Serve para ver em poucos
 segundos o que está atrasado, o que precisa acontecer hoje e na semana, quem é
-responsável por cada coisa e como andam os projetos, e para guardar num lugar
-só o que a Boop combina, decide, fala com os clientes e recebe ou paga.
+responsável por cada coisa e como andam os projetos; para guardar num lugar
+só o que a Boop combina, decide, fala com os clientes e recebe ou paga; e
+para gerir a empresa pelos números (faturamento, MRR, margem, caixa, funil e
+metas), todos calculados a partir desses registros.
 
 Next.js 16 + TypeScript + Supabase (Auth, PostgreSQL com RLS) + Tailwind v4 +
 shadcn/ui, publicado na Vercel. Arquitetura, schema, políticas de segurança e
@@ -51,7 +53,9 @@ app **não usa** chave secreta nem `service_role`.
   31/10" em destaque) e da semana, seções Atrasadas / Hoje / Esta semana,
   combinados das reuniões em aberto e, na lateral, a próxima reunião (com
   "Algo para discutir?"), as revisões de clientes por fazer, o financeiro em
-  atraso, os processos para revisar e os próximos compromissos. Abre em
+  atraso, os processos para revisar, o quadro **Gestão** (mês a fechar,
+  contratos terminando, queda do MRR, negócios para dar retorno) e os
+  próximos compromissos. Abre em
   "Minhas"; a alternância Minhas / Todas fica salva no navegador.
 - **Tarefas** (`/tarefas`): filtros por pessoa, status, projeto, cliente,
   área e prazo, em **Lista** (por prazo), **Tabela** (ordenável) ou
@@ -86,14 +90,31 @@ app **não usa** chave secreta nem `service_role`.
   salva sozinho e avisa se outra pessoa salvou no meio), imagens privadas,
   responsável, revisão periódica, histórico de versões com restauração e
   "Gerar tarefas" a partir do checklist.
-- **Financeiro** (`/financeiro`): receitas e despesas do mês, fees e
-  assinaturas que se repetem, o que está em atraso, resultado do mês e
-  últimos seis meses. Marcar como recebido/pago é um clique.
+- **Comercial** (`/comercial`): o funil de vendas (lead, contato, proposta,
+  negociação, ganho ou perdido) em quadro ou lista, com origem, valor mensal
+  e pontual, chance de fechar e motivo de perda. **Ganhar** cria o cliente,
+  o contrato no financeiro, a entrada e o projeto de uma vez.
+- **Indicadores** (`/indicadores`): os KPIs financeiros, comerciais e
+  operacionais por mês, trimestre ou ano, comparados com o período anterior
+  ou com o ano passado, com tendência de 12 meses, gráficos e o detalhe de
+  onde vem cada número.
+- **Metas** (`/metas`): objetivos e resultados-chave (OKRs) ligados aos
+  indicadores, com progresso automático, ritmo esperado e sugestões de meta
+  pelos dados.
+- **Financeiro** (`/financeiro`): a planilha "Financeiro - Boop" no portal.
+  Abas **Mês** (receitas, despesas, atrasados, resultado e divisão),
+  **DRE** mês a mês, **Projeção** de 12 meses com receita necessária,
+  **Contratos e custos** (margem por cliente), **Lançamentos** (extrato com
+  filtros), **Fechamento** do mês e **Parâmetros** (alíquota, caixa mínimo,
+  divisão do resultado, pró-labore).
+- **Relatórios** (`/relatorios`): escolha período, recorte (toda a Boop ou um
+  cliente) e seções, e baixe o **Excel** (com fórmulas) ou abra o relatório
+  para apresentar e salvar em PDF.
 - **Busca geral** em qualquer tela: <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd>
   ou "Buscar…" no topo. Acha tarefas, projetos, reuniões (inclusive resumos e
   transcrições), decisões, comunicações, processos (o texto inteiro),
-  clientes e lançamentos, sem acento, e tem ações rápidas para criar
-  qualquer coisa.
+  clientes, negócios e lançamentos, sem acento, e tem ações rápidas para
+  criar qualquer coisa.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, editável ali
   mesmo, com o **histórico** (quem mudou o quê) e os comentários.
 - **Nova tarefa** pelo botão ou pela tecla <kbd>N</kbd>. Título, responsável e
@@ -113,7 +134,10 @@ app **não usa** chave secreta nem `service_role`.
   `docs`, `docs_content_stamp` e `docs_restore_version` (processos),
   `clients_reviews` (clientes e revisões mensais), `projects` (projetos e
   visões salvas; o plano virou projeto), `decisions_communications_finance`,
-  `activity` (histórico e comentários) e `finance_occurrence_activity`.
+  `activity` (histórico e comentários), `finance_occurrence_activity`,
+  `finance_management` (categorias gerenciais, taxa do gateway, parâmetros
+  e fechamento do mês), `commercial` (negócios), `goals` (metas) e
+  `win_deal` (ganhar um negócio numa transação).
 - Pendente: uma migration de limpeza que apaga `plans`, `tasks.plan_id` e
   `weekly_decisions`, que não são mais usados pelo app (veja
   [ARQUITETURA.md](docs/ARQUITETURA.md#próximos-passos)).
@@ -138,15 +162,18 @@ app **não usa** chave secreta nem `service_role`.
 
 ```
 src/
-├── app/              rotas (App Router): (app)/ = área logada, login/
+├── app/              rotas (App Router): (app)/ = área logada, login/, relatorio/ (página
+│                     para apresentar), api/relatorios/excel (download do .xlsx)
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
+│   ├── charts/       gráficos (colunas, linhas, sparkline, barras), sem biblioteca
 │   └── layout/       sidebar, cabeçalho, menu do usuário, marca
 ├── features/         auth, workspace, tasks, views, projects, today, calendar, meetings,
 │                     docs, clients, communications, decisions, finance, activity,
-│                     search (cada uma com queries, actions, lógica e componentes)
+│                     search, deals, metrics, goals, reports (cada uma com queries,
+│                     actions, lógica e componentes)
 ├── hooks/            use-mobile, use-url-trigger
-├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
+├── lib/              datas (fuso de São Paulo), rótulos, tipos, formatos, gerador de .xlsx
 │   └── supabase/     clientes do Supabase e tipos do banco
 └── proxy.ts          sessão e proteção de rotas (no Next 16, substitui o middleware)
 supabase/             migrations e seed

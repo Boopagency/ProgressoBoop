@@ -12,21 +12,24 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
 
 - **Para que serve:** mostrar em poucos segundos o que está atrasado, o que
   vence hoje e na semana, quem é responsável por cada coisa e como andam os
-  projetos; e guardar num lugar só o que a Boop combinou, decidiu, falou com
-  os clientes e recebeu ou pagou.
+  projetos; guardar num lugar só o que a Boop combinou, decidiu, falou com
+  os clientes e recebeu ou pagou; e gerir a empresa pelos números
+  (faturamento, MRR, margem, caixa, funil de vendas e metas), todos
+  calculados a partir desses registros.
 - **Quem entra:** Jabez, Renatha e Léo, com e-mail e senha. Não existe
   cadastro. Uma conta nova só pode ser criada pelo Supabase (seção 4).
 - **Sessão:** fica salva no navegador, então não é preciso entrar toda vez.
   "Sair" desconecta só aquele navegador.
 - **Menu lateral:** Hoje, Tarefas (com as visões salvas logo abaixo),
-  Projetos, Calendário e Reuniões; em **Relacionamento**, Clientes e
-  Comunicações; em **Gestão**, Decisões, Processos e Financeiro. No rodapé
+  Projetos, Calendário e Reuniões; em **Relacionamento**, Comercial,
+  Clientes e Comunicações; em **Gestão**, Indicadores, Metas, Financeiro,
+  Relatórios, Decisões e Processos. No rodapé
   ficam a pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no
   topo ou com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo
   botão do topo.
 - **Busca geral:** "Buscar…" no topo de qualquer tela, ou Ctrl/⌘+K, acha
-  tarefas, projetos, reuniões, decisões, comunicações, processos, clientes e
-  lançamentos e cria qualquer coisa (2.14).
+  tarefas, projetos, reuniões, decisões, comunicações, processos, clientes,
+  negócios e lançamentos e cria qualquer coisa (2.14).
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
   só em detalhes: barras de progresso, item ativo do menu, dia de hoje, foco e
   pontos indicadores. O logo é o oficial (o "olhar") e os títulos usam Poppins.
@@ -80,6 +83,9 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
     link para o Financeiro (2.20);
   - **Processos para revisar:** os marcados para revisar ou com a revisão
     vencida (até 5, com "Ver todos");
+  - **Gestão:** o mês a fechar, contratos terminando, queda prevista do MRR,
+    caixa negativo na projeção e negócios com fechamento previsto para os
+    próximos 3 dias (ou já passado), cada um com link;
   - **Próximos compromissos:** eventos dos próximos 7 dias (até 5), com link
     para o Calendário. Tarefas não entram nessa lista.
 - Quadro sem nada para mostrar não aparece.
@@ -91,8 +97,8 @@ cumprir um combinado e pôr um assunto na pauta da próxima reunião.
 **Regra importante:** os indicadores, as listas, a semana, os combinados e os
 processos seguem o filtro Minhas/Todas. No Minhas aparecem os combinados da
 pessoa e os da "Equipe", e os processos dela e os sem responsável. Os
-projetos em foco (além do "suas: X de Y"), as revisões de clientes e o
-financeiro não seguem o filtro.
+projetos em foco (além do "suas: X de Y"), as revisões de clientes, o
+financeiro e a gestão não seguem o filtro.
 
 ### 2.3 Tarefas (`/tarefas`)
 
@@ -274,10 +280,12 @@ segunda, 07:00).
 - **Reuniões** com o cliente (próximas e recentes) e **Nova reunião**, que já
   vem com o cliente escolhido.
 - Na lateral: **Sobre o cliente** (contato com link de e-mail e de
-  WhatsApp), **Financeiro** (fee mensal, o que está em atraso e o recebido no
-  ano, com **Lançar**), **Saúde mês a mês** (seis meses; clicar abre aquela
-  revisão), **Decisões** sobre o cliente e **Processos do cliente** (com
-  "Novo").
+  WhatsApp), **Financeiro** (mensalidade, margem do contrato, fim do
+  contrato, o que está em atraso e o recebido no ano, com **Lançar** e o
+  link para os lançamentos do cliente nos últimos 12 meses), **Negócios**
+  (upsell, renovação ou projeto novo no funil, com **Negócio**), **Saúde
+  mês a mês** (seis meses; clicar abre aquela revisão), **Decisões** sobre o
+  cliente e **Processos do cliente** (com "Novo").
 - **Editar** muda o cadastro. No menu: desativar/reativar e excluir (apaga o
   cadastro, as revisões e as comunicações; tarefas, projetos, eventos,
   decisões, lançamentos e processos continuam, sem o cliente).
@@ -364,8 +372,8 @@ passo), checklists, políticas (regras combinadas) e guias.
   link; ali, use o botão do topo.
 - **Sem digitar nada:** ações rápidas (Nova tarefa, Novo projeto, Nova
   reunião, Novo documento, Novo cliente, Registrar comunicação, Registrar
-  decisão, Novo lançamento), as visões salvas de Tarefas e atalhos para cada
-  tela. A ação leva à tela certa e já abre a janela de criar.
+  decisão, Novo lançamento, Novo negócio, Novo objetivo), as visões salvas de
+  Tarefas e atalhos para cada tela. A ação leva à tela certa e já abre a janela de criar.
 - **Digitando** (a partir de 2 letras, sem acento: "reuniao" acha "reunião"):
   - **Tarefas:** pelo título e pela descrição; as abertas vêm primeiro.
     Abrir leva a Tarefas com o painel da tarefa aberto;
@@ -378,6 +386,8 @@ passo), checklists, políticas (regras combinadas) e guias.
   - **Processos:** pelo título, pelo "para que serve" e, a partir de 3 letras,
     pelo texto inteiro, com o trecho encontrado;
   - **Clientes:** pelo nome (inativos aparecem marcados);
+  - **Negócios:** pelo título, pela empresa, pelo contato e pelo cliente;
+    abrir leva ao Comercial com o negócio aberto;
   - **Financeiro:** pela descrição dos lançamentos e recorrências.
 - Mostra até 6 resultados de cada tipo. ↑ ↓ escolhem, Enter abre, Esc fecha.
 
@@ -480,49 +490,162 @@ uma ação com dono e prazo), a decisão é uma regra que passa a valer.
 
 ### 2.20 Financeiro (`/financeiro`)
 
-O básico para a Boop saber o que entrou, o que saiu e o que está atrasado,
-sem planilha.
+A planilha "Financeiro - Boop" dentro do portal: as mesmas categorias,
+contas e premissas, sem ninguém preencher totais à mão. Sete abas, todas com
+o botão **Novo lançamento**.
 
-- **Um mês por vez** (setas e "Este mês"):
-  - **Recebido** e **Pago**, com barra e "de R$ X previstos";
-  - **Resultado do mês** (recebido − pago) e o previsto;
-  - **Recorrente:** quanto entra por mês em fees e sai em despesas fixas.
-- **Em atraso** (no mês atual): tudo o que venceu e não foi recebido ou pago,
-  de qualquer mês, com o total a receber e a pagar.
-- **Receitas** e **Despesas** do mês. O checkbox marca como recebido/pago
-  com a data de hoje (desmarcar desfaz). Cada linha mostra o vencimento
-  ("Vence 10/10", "Venceu há 4 dias"), o cliente, o projeto e a categoria; o
-  ícone ⟳ indica que se repete todo mês.
-- **Últimos 6 meses:** entrou, saiu e saldo de cada mês (clicar abre o mês).
-- **Todo mês:** as recorrências (fees, ferramentas, impostos), com valor e
-  dia.
-- **Novo lançamento:** receita ou despesa, descrição, valor, vencimento,
-  cliente, projeto, categoria (sugestões: Fee mensal, Projeto, Extra;
-  Ferramentas, Impostos, Freelancer, Pró-labore, Contabilidade…), "já
-  recebido/pago", observação e **Repetir todo mês** (vira recorrência, a
-  partir do mês do vencimento).
+- **Mês** (setas e "Este mês"):
+  - indicadores: **Receita bruta** (recebido e a receber), **Custos e
+    despesas**, **Resultado** (com a margem) e **Saldo em conta** hoje;
+  - **Em atraso** (no mês atual): o que venceu e não foi recebido ou pago,
+    de qualquer mês;
+  - **Receitas** e **Despesas** do mês. O checkbox marca recebido/pago com a
+    data de hoje (desmarcar desfaz); ao receber, o aviso oferece **Informar
+    taxa** do gateway. Cada linha mostra vencimento, cliente, projeto,
+    categoria e subcategoria; ⟳ indica que se repete todo mês;
+  - **Resultado do mês:** o DRE do mês (receita, imposto, taxas, custos
+    diretos, margem de contribuição, custos fixos, outras despesas,
+    resultado) e o que fica fora dele (aportes, DAS pago, pró-labore,
+    reinvestimentos). Cada linha abre os lançamentos;
+  - **Divisão do resultado:** quanto vai para o caixa, para reinvestimento e
+    para o pró-labore de cada sócio, e o caixa acumulado em relação ao
+    mínimo;
+  - **Atenção:** mês a fechar, contratos terminando, queda do MRR, caixa
+    negativo previsto, lançamentos a conferir e a alíquota a confirmar.
+- **DRE:** os últimos meses ou um ano inteiro; receita bruta, resultado,
+  margem de contribuição e resultado médio do período; gráficos de receita
+  (recebido × previsto) e de resultado; a tabela mês a mês com a situação de
+  cada mês (Fechado, Realizado, Parcial, Previsto) e os percentuais. Clicar
+  num valor abre os lançamentos. **Excel** baixa a mesma tabela com
+  fórmulas.
+- **Projeção:** os próximos 12 meses pelos contratos (até o fim de cada
+  um), custos fixos e lançamentos agendados: MRR (6 meses para trás e 12
+  para a frente), **caixa acumulado** com a linha do mínimo, **receita
+  necessária** para o alvo de pró-labore (quanto falta sobre o MRR) e a
+  tabela mês a mês com resultado, divisão e caixa.
+- **Contratos e custos:** MRR, clientes com contrato (ticket médio),
+  concentração no maior cliente, custos fixos por mês; **margem por
+  cliente** (como a aba CLIENTES da planilha) com o fim do contrato; e as
+  recorrências por categoria (contratos, custos fixos, custos diretos…),
+  com parcelas e valor restantes; as encerradas ficam recolhidas.
+- **Lançamentos:** o extrato completo, com filtros (mês ou intervalo,
+  categoria, cliente, situação: pago, em aberto, atrasado, pulado; receita
+  ou despesa; "a conferir"), busca e totais (bruto, taxas, líquido). Todos
+  os "ver de onde vem" do sistema caem aqui, já filtrados.
+- **Fechamento:** o mês a fechar com três passos (vencimentos resolvidos,
+  lançamentos conferidos, saldo do extrato informado). Fechar trava os
+  pagamentos daquele mês; o último mês fechado pode ser reaberto.
+- **Parâmetros:** alíquota (e "confirmada com o contador"), caixa mínimo em
+  meses de custo fixo, sócios, divisão do resultado, alvo de pró-labore,
+  primeiro mês do controle, saldo inicial e aviso de fim de contrato; ao
+  lado, o que o sistema calcula (taxa média do gateway, custos fixos, caixa
+  mínimo).
+- **Novo lançamento:** receita ou despesa, descrição, **categoria** (receita
+  de cliente, outras receitas, aporte de sócio, custo direto de cliente,
+  custo fixo, outras despesas, imposto, pró-labore, reinvestimento — com a
+  explicação de onde entra), valor bruto, vencimento, cliente (obrigatório
+  em receita de cliente), projeto, subcategoria (ou frente), já
+  recebido/pago (com a **taxa do gateway**), observação e **Repetir todo
+  mês** (contrato ou custo fixo, com fim ou número de parcelas).
 - **Abrir um mês de recorrência:** as mudanças valem só para aquele mês
-  (valor, vencimento, recebido); **Pular este mês** (ex.: cliente de férias)
-  e **Editar a recorrência** (descrição, valor por mês, dia do vencimento,
-  categoria, cliente, projeto e "até quando"), que vale para os meses ainda
-  não registrados. Excluir a recorrência mantém os meses já registrados.
-- No **cliente** aparecem o fee mensal, o que está em atraso e o recebido no
-  ano; no **projeto**, receita, custos e resultado; na tela **Hoje**, o
-  aviso de financeiro em atraso.
+  (valor, vencimento, recebido); **Pular este mês** e **Editar a
+  recorrência**, que vale para os meses ainda não registrados.
+- No **cliente** aparecem mensalidade, margem e fim do contrato; no
+  **projeto**, receita, custos e resultado; na tela **Hoje**, o financeiro
+  em atraso e o quadro Gestão.
 
 ### 2.21 Histórico e comentários
 
 - O banco registra sozinho quem criou, mudou ou excluiu tarefas, projetos,
-  decisões, comunicações e lançamentos, e o quê mudou ("mudou o prazo de
-  04/10 para 06/10", "atribuiu a Léo", "deu baixa em 06/10").
+  decisões, comunicações, lançamentos e negócios, e o quê mudou ("mudou o
+  prazo de 04/10 para 06/10", "atribuiu a Léo", "deu baixa em 06/10",
+  "moveu para Negociação", "ganhou o negócio").
 - Mudanças seguidas da mesma pessoa no mesmo item viram uma linha só; voltar
   ao valor original apaga o registro.
 - O histórico aparece no painel da tarefa e na página do projeto (com as
   mudanças das tarefas, decisões, comunicações e lançamentos do projeto).
-- **Comentários** nas tarefas e nos projetos: Ctrl/⌘ + Enter envia; cada
+- O negócio tem o próprio histórico, com comentários.
+- **Comentários** nas tarefas, nos projetos e nos negócios: Ctrl/⌘ + Enter envia; cada
   pessoa edita e apaga só os seus. O resto do histórico não pode ser
   alterado.
 - O histórico começa em 07/10/2026: o que mudou antes disso não aparece.
+
+### 2.22 Comercial (`/comercial`)
+
+O funil de vendas, do lead ao cliente.
+
+- Indicadores: **em aberto** (negócios, valor mensal e total), **valor
+  ponderado** (pela chance de fechar), **ganhos no mês** e **taxa de
+  ganho** dos últimos 90 dias (com o ciclo de venda).
+- **Quadro:** Lead, Contato, Proposta, Negociação e a coluna dos fechados
+  nos últimos 30 dias (Ganho e Perdido). Arrastar muda a etapa; soltar em
+  Perdido pede o motivo; soltar em Ganho abre o **Ganhar**. **Lista:**
+  todos, com filtro de situação. Busca e filtro por responsável.
+- **Negócio:** título, empresa (lead novo) ou cliente da casa, contato
+  (nome, e-mail, telefone), origem (indicação, Instagram, site, Google,
+  LinkedIn, WhatsApp, prospecção ativa, evento, cliente da casa, outra), frente,
+  **valor mensal** e **pontual**, prazo do contrato, etapa, chance de fechar
+  (padrão da etapa), responsável, chegada, previsão de fechamento,
+  observação, histórico e comentários.
+- **Ganhar:** confirma o cliente (existente ou novo, com o contato do
+  negócio), o começo, o dia do vencimento e a duração do contrato, a data
+  da entrada pontual e o nome do projeto. Num clique o portal cria o
+  cliente, o contrato no financeiro, a entrada e o projeto, e o negócio
+  passa a apontar para eles.
+- **Perder** pede o motivo (preço, escolheu outra agência, sem orçamento
+  agora, parou de responder, adiou o projeto, fora do nosso perfil, ou um
+  texto livre); **Reabrir** devolve ao funil.
+
+### 2.23 Indicadores (`/indicadores`)
+
+Todos os números da Boop num lugar, calculados dos dados do portal.
+
+- **Período:** mês, trimestre ou ano, com setas; **comparar com** o período
+  anterior ou o mesmo período do ano passado. Fica no endereço, então dá
+  para salvar ou mandar o link.
+- **Áreas:** Visão geral, Financeiro (faturamento, MRR, clientes, ticket,
+  MRR novo e perdido, custos, resultado, margens, a receber em atraso,
+  inadimplência, saldo, caixa em meses, falta para a receita necessária),
+  Comercial (leads, propostas, ganhos, taxa de ganho, conversão, MRR e valor
+  vendidos, ticket de venda, ciclo, funil ponderado) e Operacional (tarefas
+  concluídas, entregas no prazo, atrasadas, projetos ativos, atrasados e
+  concluídos, revisões feitas, clientes em risco).
+- Cada indicador mostra o valor, a variação (verde quando melhora, vermelho
+  quando piora) e a linha dos últimos 12 meses. **Clicar** abre o detalhe:
+  a fórmula, o gráfico de 12 meses, as linhas que formam o número e
+  **Abrir os dados de origem**.
+- Gráficos de cada área (faturamento e resultado por mês, MRR, receita por
+  cliente, atrasados por idade, funil, origem dos leads, leads e ganhos,
+  fechamentos previstos, tarefas por mês e por pessoa, projetos atrasados)
+  e **Pede atenção**.
+- Atalhos para o relatório e o Excel do mesmo período.
+
+### 2.24 Metas (`/metas`)
+
+- **Objetivos** com período (este mês, este trimestre, próximo trimestre,
+  este ano ou datas livres), área, responsável e descrição. Filtro: Em
+  andamento, Próximas, Encerradas, Todas.
+- **Resultados-chave:** escolha um indicador do sistema (o progresso se
+  atualiza sozinho; alguns aceitam recorte por cliente) ou um valor manual
+  (ex.: NPS, atualizado à mão). Meta, base opcional e **sugestões**: manter
+  o ritmo dos últimos 3 meses, +20%, e para o MRR a receita necessária.
+- Cada resultado mostra o atual e a meta, a barra com a marca do
+  **esperado para hoje**, a situação (No ritmo, Atenção, Atrasada,
+  Atingida, Não atingida) e, nos financeiros, a previsão para o fim.
+- Sem nenhum objetivo, a tela oferece **Começar pela meta de MRR da
+  planilha** (R$ 5.000 de MRR).
+
+### 2.25 Relatórios (`/relatorios`)
+
+- Escolha o **período** (mês, trimestre ou ano), a **comparação**, o
+  **recorte** (toda a Boop ou um cliente) e o que entra: indicadores, DRE,
+  projeção e divisão do resultado, contratos e margem por cliente,
+  lançamentos, comercial, operação e metas.
+- **Ver relatório:** uma página limpa para apresentar ou salvar em PDF
+  (**Imprimir ou salvar em PDF** já ajusta para A4 deitado).
+- **Baixar Excel:** uma aba por seção, com as fórmulas da planilha
+  (margens, resultado, totais), as premissas editáveis (mudar a alíquota
+  recalcula o DRE) e uma aba "Sobre" com o que cada número significa.
 
 ## 3. Regras: como os números são calculados
 
@@ -545,7 +668,30 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Mês de um lançamento | o mês do vencimento |
 | Em atraso (financeiro) | venceu antes de hoje, sem data de recebimento/pagamento e não pulado; recorrências contam até 12 meses para trás |
 | Previsto do mês | tudo o que vence no mês, menos os meses pulados |
-| Resultado do mês | recebido − pago no mês (e o previsto, com tudo o que vence) |
+| Receita bruta (faturamento) | receitas de cliente + outras receitas, pela data em que entraram; no mês atual e nos futuros, também o que vence. Aporte de sócio não conta |
+| Resultado (DRE) | receita bruta − imposto (alíquota × receita) − taxas do gateway − custos diretos (= margem de contribuição) − custos fixos − outras despesas. DAS pago, pró-labore, aportes e reinvestimentos ficam fora |
+| Situação do mês no DRE | Fechado (conferido com o extrato), Realizado (mês passado), Parcial (mês atual: realizado + o que ainda vence), Previsto (futuro: contratos, custos fixos e o que já está lançado) |
+| Taxas no DRE | as lançadas; no previsto, a taxa média do gateway dos últimos 12 meses |
+| MRR | soma das receitas de cliente que se repetem e valem no mês (mensalidade = MRR do cliente) |
+| Margem por cliente | MRR − imposto − taxa média − custos diretos recorrentes do cliente |
+| Saldo em conta | saldo inicial + tudo o que entrou − tudo o que saiu (com as taxas), desde o primeiro mês do controle |
+| Caixa mínimo | meses de custo fixo (Parâmetros) × custos fixos do mês |
+| Divisão do resultado | negativo: nada é dividido e sai do caixa; caixa abaixo do mínimo: tudo para o caixa; depois: caixa %, reinvestimento % e o resto em pró-labore, igual entre os sócios |
+| Receita necessária | (sócios × alvo de pró-labore ÷ % do pró-labore + custos fixos) ÷ (1 − imposto − taxa − custo direto %) |
+| A receber em atraso | receitas vencidas e não recebidas; por idade: até 30, 31–60, 61–90 e mais de 90 dias |
+| Inadimplência | do que venceu no período, quanto segue sem pagamento hoje |
+| Fechamento | só meses que já acabaram, em ordem; trava valor, taxa, data de pagamento, categoria e exclusão dos pagos naquele mês |
+| Valor do negócio | pontual + mensal × meses do contrato (sem prazo: 12) |
+| Chance padrão por etapa | Lead 10%, Contato 20%, Proposta 40%, Negociação 60% |
+| Valor ponderado | valor do negócio × chance de fechar |
+| Taxa de ganho | ganhos ÷ (ganhos + perdidos) fechados no período |
+| Conversão de leads | dos leads que chegaram no período, quantos já foram ganhos |
+| Ciclo de venda | média de dias entre a chegada do lead e o ganho |
+| Funil | negócios que chegaram no período, contados pela etapa mais longe que alcançaram (um perdido na proposta conta como proposta) |
+| Período dos indicadores | mês, trimestre ou ano; o período em andamento soma o realizado e o que vence até o fim dele |
+| Variação | em relação ao período anterior ou ao mesmo período do ano passado; verde quando melhora, vermelho quando piora (em custos e atrasos, cair é melhorar) |
+| Progresso de um resultado-chave | (atual − base) ÷ (meta − base); base padrão: zero para somas no período, o valor do começo do período para saldos e proporções |
+| Situação da meta | comparada ao esperado (fração do período que passou): No ritmo até 10 pontos abaixo, Atenção até 30, Atrasada além disso; Atingida ao chegar a 100% |
 | Fee mensal do cliente | soma das receitas que se repetem e estão ativas no mês |
 | Recorrência no dia 31 | vence no último dia dos meses mais curtos |
 | Histórico | mudanças da mesma pessoa no mesmo item se juntam: até 2 minutos depois de criar entram na criação; edições com menos de 10 minutos entre si viram uma linha |
@@ -577,6 +723,11 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Decisões | as que a equipe registrar | tudo (inclusive revogar) | — |
 | Comunicações | as que a equipe registrar | tudo (inclusive virar tarefa) | — |
 | Financeiro | lançamentos e recorrências que a equipe registrar | tudo | — |
+| Parâmetros do financeiro | os da planilha (alíquota 6% a confirmar, caixa mínimo de 3 meses, 20% caixa, 10% reinvestimento, 3 sócios, alvo de R$ 5.000) | editar em Financeiro → Parâmetros | — |
+| Fechamentos | os meses que a equipe fechar | fechar e reabrir o último | — |
+| Negócios | os que a equipe registrar | tudo (inclusive ganhar e perder) | — |
+| Metas | os objetivos e resultados-chave que a equipe criar | tudo | — |
+| Indicadores | calculados dos dados (nada é digitado) | — | criar um indicador novo (código: `src/features/metrics/catalog.ts`) |
 | Histórico | gravado pelo banco desde 07/10/2026 | comentar, editar e apagar os próprios comentários | — |
 | Eventos | a reunião semanal | criar, editar, excluir | — |
 | Reuniões | registros, assuntos, combinados, resumo e transcrição | tudo | — |
@@ -600,8 +751,9 @@ mudá-los é preciso alterar o código e o banco.
 | Ctrl/⌘ + S (no editor de processos) | salva na hora |
 
 Links de Tarefas com filtros e modo, do Calendário em uma semana ou mês
-específicos e do Financeiro num mês podem ser salvos nos favoritos (ou, em
-Tarefas, como visão salva).
+específicos, do Financeiro (mês, DRE, lançamentos filtrados) e dos
+Indicadores num período podem ser salvos nos favoritos (ou, em Tarefas,
+como visão salva).
 
 ## 6. Infraestrutura e segurança (resumo)
 
@@ -627,9 +779,15 @@ Tarefas, como visão salva).
   status também muda pelo painel da tarefa.
 - Comentários não têm menção (@pessoa) nem aviso para quem foi citado.
   Decisões ainda não têm comentários na interface (o banco já aceita).
-- Financeiro básico: não emite nota fiscal, não concilia com o banco, não
-  projeta fluxo de caixa e não tem parcelamento automático (cada parcela é um
-  lançamento). Valores sempre em reais.
+- Financeiro: não emite nota fiscal nem concilia sozinho com o banco (o
+  fechamento compara o saldo do extrato informado à mão). O DRE é no regime
+  de caixa, como a planilha (não por competência). Valores sempre em reais.
+- O financeiro começa no primeiro mês do controle (Parâmetros); os meses da
+  planilha só aparecem no portal se forem lançados ou importados.
+- Indicadores novos só pelo código (o catálogo é fixo); metas manuais são
+  atualizadas à mão.
+- O Excel não leva gráficos (os números e as fórmulas, sim); os gráficos
+  estão no relatório para apresentar.
 - Visões salvas só existem na tela Tarefas.
 - Não há atualização em tempo real (2.15).
 - A recorrência é só semanal e sempre da série inteira: não dá para pular uma
@@ -694,8 +852,11 @@ são uma sugestão para começar.
 | 17 | ~~Histórico de alterações por tarefa~~ | feito: Atividade na tarefa e no projeto (2.21) |
 | 18 | Relatório de fechamento do projeto | revisão de 26/10: o que foi feito e os atrasos por pessoa e área |
 | 21 ★ | Menções nos comentários (@Léo) com aviso | o comentário chega a quem precisa agir |
-| 22 | Financeiro por cliente ao longo do ano (receita e margem) | saber quais clientes dão resultado |
-| 23 | Exportar o financeiro do mês (CSV) para a contabilidade | menos retrabalho no fechamento |
+| 22 | ~~Financeiro por cliente ao longo do ano (receita e margem)~~ | feito: margem por cliente (Contratos e custos), recorte por cliente nos relatórios e indicadores |
+| 23 | ~~Exportar o financeiro do mês para a contabilidade~~ | feito: Excel por período, com lançamentos, DRE e premissas |
+| 24 | Importar a planilha "Financeiro - Boop" (setembro e outubro) | histórico completo no DRE e nos indicadores desde o começo |
+| 25 | Integração com o Asaas (recebimentos e taxas automáticos) | sem baixa manual; a taxa entra sozinha |
+| 26 | Aviso semanal por e-mail com os indicadores e as metas | a gestão chega sem abrir o portal |
 | 19 | Arquivamento ou paginação de tarefas antigas | manter o portal rápido e abaixo do limite de 1.000 linhas |
 | 20 | Tema escuro | conforto de uso à noite |
 
@@ -712,6 +873,12 @@ são uma sugestão para começar.
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
 | Comunicações | `src/features/communications/`, `src/app/(app)/comunicacoes/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
+| Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |
+| Comercial (funil, negócios, ganhar) | `src/features/deals/` (`logic.ts` regras), função `win_deal` em `supabase/migrations/20261007212513_win_deal.sql` |
+| Indicadores (catálogo, períodos, painéis) | `src/features/metrics/` (`catalog.ts` cada KPI e sua fórmula) |
+| Metas (OKRs) | `src/features/goals/` (`logic.ts` progresso e sugestões) |
+| Relatório e Excel | `src/features/reports/`, `src/lib/xlsx.ts`, `src/app/api/relatorios/excel/route.ts`, `src/app/relatorio/` |
+| Gráficos | `src/components/charts/`, `src/components/kpi-tile.tsx` |
 | Detalhes e nova tarefa | `src/features/tasks/task-sheet.tsx`, `new-task-dialog.tsx` |
 | Regras (grupos, progresso, pauta) | `src/features/tasks/logic.ts`, `src/features/meetings/logic.ts` |
 | Calendário | `src/features/calendar/` |

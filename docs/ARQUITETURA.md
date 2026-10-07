@@ -47,14 +47,19 @@ features.
 src/
 ├── app/
 │   ├── (app)/                  # área autenticada (layout com sidebar)
-│   │   ├── layout.tsx          # sidebar + dados de referência (equipe, clientes, planos)
+│   │   ├── layout.tsx          # sidebar + dados de referência (equipe, clientes,
+│   │   │                       # projetos, visões salvas)
 │   │   ├── hoje/               # "/hoje" (a raiz "/" redireciona para cá)
 │   │   ├── loading.tsx / error.tsx
-│   │   ├── tarefas/            # "/tarefas"
+│   │   ├── tarefas/            # "/tarefas" (?ver=tabela|quadro e os filtros)
+│   │   ├── projetos/           # "/projetos" e "/projetos/[id]"
 │   │   ├── calendario/         # "/calendario"
 │   │   ├── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
 │   │   ├── clientes/           # "/clientes" e "/clientes/[id]" (?mes=aaaa-mm)
-│   │   └── processos/          # "/processos" e "/processos/[id]"
+│   │   ├── comunicacoes/       # "/comunicacoes" (?cliente=…)
+│   │   ├── decisoes/           # "/decisoes"
+│   │   ├── processos/          # "/processos" e "/processos/[id]"
+│   │   └── financeiro/         # "/financeiro" (?mes=aaaa-mm)
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
 │   │                           # para uma URL assinada e temporária do Storage)
@@ -65,11 +70,19 @@ src/
 │   ├── ui/                     # shadcn/ui (código gerado)
 │   ├── layout/                 # sidebar, menu do usuário, cabeçalho de página
 │   └── *.tsx                   # peças visuais genéricas: date-picker, stat-grid,
-│                               # segmented-control, progress-meter
+│                               # segmented-control, progress-meter, panel-card
 ├── features/
 │   ├── auth/                   # sessão, login/logout
-│   ├── workspace/              # equipe, clientes, planos (dados de referência)
-│   ├── tasks/                  # lista, linha, Sheet, "Nova tarefa", filtros, lógica pura
+│   ├── workspace/              # equipe, clientes, projetos, visões salvas (referência)
+│   ├── tasks/                  # lista, tabela, quadro, linha, Sheet, "Nova tarefa",
+│   │                           # filtros, lógica pura
+│   ├── projects/               # projetos: lista, página, modelos de tarefas, progresso
+│   ├── views/                  # visões salvas da tela Tarefas
+│   ├── activity/               # histórico (quem mudou o quê) e comentários
+│   ├── decisions/              # decisões: registro, lista, cartões de reunião,
+│   │                           # cliente e projeto
+│   ├── communications/         # comunicações com clientes (pedido → tarefa)
+│   ├── finance/                # receitas e despesas, recorrências, atrasados
 │   ├── today/                  # tela Hoje: indicadores, progresso e os quadros que vêm
 │   │                           # das outras áreas (reunião, combinados, processos)
 │   ├── calendar/               # semana/mês, recorrência, eventos
@@ -89,7 +102,8 @@ src/
 
 supabase/
 ├── migrations/                 # schema, trigger e RLS (fonte da verdade do banco)
-└── seed.sql                    # dados reais: equipe, clientes, plano, 25 tarefas, reunião
+└── seed.sql                    # dados reais: equipe, clientes, projeto interno, 25 tarefas,
+                                # reunião
 public/brand/                   # marca oficial da Boop (SVG do site)
 ```
 
@@ -128,23 +142,28 @@ Server Component (page.tsx)
 
 Tabelas pedidas: `profiles`, `clients`, `tasks`, `events`, `weekly_decisions`.
 Duas adições com necessidade real, documentadas abaixo: `task_assignees` e
-`plans`. Depois vieram as reuniões (`meetings` e `meeting_items`) e os
-processos (`docs` e `doc_versions`) e as revisões de clientes
-(`client_reviews`). O SQL está em `supabase/migrations/`, uma migration por
-etapa:
+`plans`. Depois vieram as reuniões (`meetings` e `meeting_items`), os
+processos (`docs` e `doc_versions`), as revisões de clientes
+(`client_reviews`) e a operação (`projects`, `saved_views`, `decisions`,
+`communications`, `finance_recurrences`, `finance_entries` e `activity`). O
+SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
-[`docs_content_stamp`](../supabase/migrations/20261006165216_docs_content_stamp.sql) e
-[`docs_restore_version`](../supabase/migrations/20261006165704_docs_restore_version.sql) e
-[`clients_reviews`](../supabase/migrations/20261006173103_clients_reviews.sql).
+[`docs_content_stamp`](../supabase/migrations/20261006165216_docs_content_stamp.sql),
+[`docs_restore_version`](../supabase/migrations/20261006165704_docs_restore_version.sql),
+[`clients_reviews`](../supabase/migrations/20261006173103_clients_reviews.sql),
+[`projects`](../supabase/migrations/20261007144307_projects.sql),
+[`decisions_communications_finance`](../supabase/migrations/20261007144345_decisions_communications_finance.sql),
+[`activity`](../supabase/migrations/20261007144504_activity.sql) e
+[`finance_occurrence_activity`](../supabase/migrations/20261007162915_finance_occurrence_activity.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `profiles`         | `id` (= `auth.users.id`), `full_name`, `avatar_url`, `role`, `created_at`          |
 | `clients`          | `id`, `name` (único), `active`, `owner_id` (responsável da Boop), `services` (frentes), `since`, `contact_name`, `contact_email`, `contact_phone`, `notes`, `review_day` (dia do mês em que a revisão vence; vazio = sem revisão mensal), `created_at`, `updated_at` |
-| `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`                                 |
-| `tasks`            | `id`, `title`, `description`, `client_id`, `plan_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` |
+| `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`. **Obsoleta**: virou projeto (mesmo `id`); sai na migration de limpeza |
+| `tasks`            | `id`, `title`, `description`, `client_id`, `project_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` (e `plan_id`, obsoleta) |
 | `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
 | `events`           | `id`, `title`, `description`, `event_type`, `start_at`, `end_at`, `all_day`, `recurrence_rule`, `client_id`, `created_by`, `created_at` |
 | `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`. Sem uso desde as Reuniões; sai numa migration de limpeza |
@@ -153,19 +172,33 @@ etapa:
 | `docs`             | `id`, `title`, `kind`, `status`, `area`, `client_id`, `owner_id`, `summary` ("para que serve"), `content` (blocos do editor, jsonb), `content_text` (texto puro), `review_every_months`, `reviewed_on`, `next_review_on` (gerada), `pinned`, `created_by`, `updated_by`, `created_at`, `updated_at`, `content_updated_at`, `content_updated_by`, `search` (tsvector gerado) |
 | `doc_versions`     | `id`, `doc_id`, `title`, `content`, `saved_by`, `saved_at` (quem deixou o texto assim, e quando), `created_at` |
 | `client_reviews`   | `id`, `client_id`, `period` (mês, sempre dia 1; uma por cliente e mês), `health`, `checklist` (jsonb), `notes`, `done`, `done_at`, `done_by`, `created_by`, `created_at`, `updated_at` |
+| `projects`         | `id`, `name`, `client_id` (vazio = interno), `owner_id`, `status`, `template` (modelo usado), `description`, `starts_on`, `due_on`, `pinned` ("em foco"), `completed_at`, `created_by`, `created_at`, `updated_at` |
+| `saved_views`      | `id`, `page` (por ora só `tasks`), `name`, `query` (filtros e modo, como na URL), `created_by`, `created_at` |
+| `decisions`        | `id`, `title`, `context` (o porquê), `decided_on`, `status` (em vigor ou revogada), `area`, `client_id`, `project_id`, `meeting_id`, `created_by`, `created_at`, `updated_at` |
+| `communications`   | `id`, `client_id` (obrigatório), `project_id`, `kind`, `channel`, `summary`, `details`, `occurred_on`, `created_by`, `created_at`, `updated_at` |
+| `finance_recurrences` | `id`, `kind` (receita ou despesa), `description`, `amount_cents`, `day_of_month`, `category`, `client_id`, `project_id`, `starts_on` e `ends_on` (meses, dia 1), `notes`, `created_by`, `created_at`, `updated_at` |
+| `finance_entries`  | `id`, `kind`, `description`, `amount_cents`, `due_on`, `paid_on`, `skipped`, `category`, `client_id`, `project_id`, `recurrence_id` + `period` (o mês de uma recorrência; único por recorrência e mês), `notes`, `created_by`, `created_at`, `updated_at` |
+| `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
-processo de cujo checklist ela saiu) e `client_review_id` (a revisão mensal
-de cliente em que ela virou próximo passo). Imagens dos processos ficam no bucket
-privado `docs` do Storage (até 5 MB; PNG, JPG, WebP e GIF).
+processo de cujo checklist ela saiu), `client_review_id` (a revisão mensal
+de cliente em que ela virou próximo passo), `project_id` (o projeto) e
+`communication_id` (o pedido do cliente que ela atende). Imagens dos
+processos ficam no bucket privado `docs` do Storage (até 5 MB; PNG, JPG, WebP
+e GIF). Dinheiro é sempre inteiro em centavos (`bigint`), sem arredondamento.
 
 Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `normal`, `high`), `task_area` (`commercial`, `finance`, `operations`,
 `brand`, `technology`, `clients`), `event_type` (`meeting`, `internal`,
 `delivery`), `meeting_status` (`scheduled`, `done`, `canceled`),
 `meeting_item_kind` (`topic`, `agreement`), `doc_kind` (`process`,
-`checklist`, `policy`, `guide`), `doc_status` (`draft`, `active`, `review`) e
-`client_health` (`healthy`, `attention`, `at_risk`).
+`checklist`, `policy`, `guide`), `doc_status` (`draft`, `active`, `review`),
+`client_health` (`healthy`, `attention`, `at_risk`), `project_status`
+(`planned`, `active`, `paused`, `done`, `canceled`), `decision_status`
+(`active`, `revoked`), `communication_kind` (`update`, `request`, `approval`,
+`feedback`, `other`), `communication_channel` (`whatsapp`, `email`, `call`,
+`meeting`, `other`), `finance_kind` (`income`, `expense`) e `activity_action`
+(`created`, `updated`, `deleted`, `comment`).
 
 ### 5.1 Decisões sobre o schema
 
@@ -177,7 +210,8 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
    "Estruturação da Boop até 31/10". Para isso é preciso saber **quais**
    tarefas pertencem ao plano; filtrar por data misturaria tarefas avulsas de
    clientes com as do plano. Com `plans` + `tasks.plan_id`, o progresso sai de
-   uma contagem, e o próximo plano é só uma nova linha.
+   uma contagem, e o próximo plano é só uma nova linha. **Substituída pelos
+   projetos (item 19)**: o plano virou um projeto interno, "em foco".
 3. **`recurrence_rule`** no formato do padrão iCalendar (RFC 5545). Nesta
    versão só existe `FREQ=WEEKLY` (garantido por `check`): toda semana no
    mesmo dia e horário de `start_at`. `null` = evento único. Sem motor de
@@ -245,6 +279,61 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 18. **Vencimento configurável por cliente** (`review_day`, padrão dia 10;
     vazio = sem revisão, como a Boop). A tela Hoje e a weekly mostram as
     revisões do mês por fazer, atrasadas primeiro.
+19. **Projeto no lugar do plano, sem conceito paralelo.** `projects` cobre
+    entregas para clientes (site, identidade, implantação) e ciclos internos
+    ("Estruturação da Boop até 31/10"). O plano existente virou um projeto
+    interno com o mesmo `id`, fixado ("em foco"), e as tarefas dele ganharam
+    `project_id`. A tela Hoje e a weekly mostram os projetos em foco
+    (fixados e abertos). `plans` e `tasks.plan_id` ficam só até a migration
+    de limpeza; reuniões já encerradas guardam a pauta com o plano como
+    estava e continuam mostrando.
+20. **Modelos de projeto no código** (`features/projects/templates.ts`):
+    listas de tarefas com prazo relativo ao começo (site institucional,
+    identidade visual, social media, tráfego pago e plano interno). Um
+    projeto novo também pode repetir as tarefas de outro (na mesma distância
+    do começo) ou usar o checklist de um processo. As tarefas nascem com o
+    responsável do projeto (ou quem criou) e com o cliente. Sem tabela de
+    modelos: mudar um modelo é mudar o código, e o projeto guarda em
+    `template` qual usou.
+21. **Progresso do projeto = tarefas dele.** Sem campo de percentual:
+    concluídas sobre o total, atrasadas e próxima entrega. Concluir o
+    projeto preenche `completed_at` (trigger `set_project_fields`). Trocar o
+    cliente do projeto leva o cliente novo às tarefas que estavam com o
+    antigo ou sem cliente.
+22. **Visão salva = a URL da tela Tarefas.** `saved_views.query` guarda os
+    parâmetros (`pessoa`, `status`, `area`, `cliente`, `projeto`, `prazo`,
+    `ver`), então aplicar uma visão é só navegar. As visões são da equipe
+    (todos veem e editam) e aparecem também no menu lateral, abaixo de
+    Tarefas.
+23. **Histórico pelo banco.** Triggers (`log_*_activity`) gravam em
+    `activity` quem criou, mudou ou excluiu tarefas (e responsáveis),
+    projetos, decisões, comunicações e lançamentos, com
+    `{campo: [antes, depois]}`. Vale para qualquer caminho de escrita, sem
+    código no app. Para não virar ruído: mudanças da mesma pessoa no mesmo
+    item se juntam (até 2 minutos depois de criar, entram na criação;
+    edições seguidas em até 10 minutos viram uma linha "antes do primeiro →
+    depois do último"; voltar ao valor original apaga a linha), exclusões
+    em cascata (de um cliente ou projeto) não geram registros e o mês de
+    recorrência gravado na primeira mudança não aparece como "lançou".
+    Comentários são linhas `comment` (em tarefas, projetos e decisões); cada
+    pessoa edita e apaga só os seus, e ninguém altera o resto do histórico.
+24. **Decisão é entidade própria.** `decisions` guarda o que a Boop definiu e
+    por quê, com status (em vigor ou revogada) e ligações opcionais com
+    reunião, cliente e projeto. É diferente do combinado (`meeting_items`),
+    que é uma ação com dono e prazo. `weekly_decisions` (vazia) sai na
+    limpeza.
+25. **Comunicação sempre de um cliente.** `communications.client_id` é
+    obrigatório, e excluir o cliente apaga as comunicações dele. Um pedido
+    vira tarefa (`tasks.communication_id`), e a lista conta os pedidos que
+    ainda não viraram.
+26. **Financeiro: lançamentos + recorrências calculadas.** Avulsos (entrada
+    de projeto, extra, freelancer) são linhas em `finance_entries`. Fees e
+    assinaturas são `finance_recurrences`: cada mês é uma ocorrência que o
+    app calcula sem gravar e que só vira linha (`recurrence_id` + `period`,
+    únicos) na primeira mudança (recebido/pago, pular o mês, valor ou
+    vencimento só daquele mês). Mudar a recorrência vale para os meses ainda
+    não gravados; apagá-la mantém os meses gravados. O item pertence ao mês
+    do vencimento. É o mesmo padrão das revisões de clientes (item 17).
 
 ### 5.2 Segurança (RLS)
 
@@ -266,6 +355,8 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 | `docs`             | ver, criar (como autor), editar e excluir                     |
 | `doc_versions`     | só ver (quem grava é o banco, pelo trigger)                   |
 | `client_reviews`   | ver, criar (como autor), editar e excluir                     |
+| `projects`, `saved_views`, `decisions`, `communications`, `finance_recurrences`, `finance_entries` | ver, criar (como autor), editar e excluir |
+| `activity`         | ver; criar só comentários (como autor); editar e apagar só os próprios comentários. O resto é gravado pelo banco |
 | Storage, bucket `docs` | ver, enviar e apagar imagens                              |
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
@@ -278,8 +369,9 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
   sign up") nem botão "Criar conta". As três contas
   (`jabez@`, `renatha@` e `leo@deumboop.com.br`) foram criadas direto no
   Supabase Auth, com senha temporária.
-- `supabase/seed.sql` cria os perfis dessas contas, os clientes, o plano, as
-  25 tarefas e a reunião semanal. Pode rodar de novo sem duplicar nada.
+- `supabase/seed.sql` cria os perfis dessas contas, os clientes, o projeto
+  interno "Estruturação da Boop até 31/10", as 25 tarefas e a reunião
+  semanal. Pode rodar de novo sem duplicar nada.
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
@@ -313,9 +405,10 @@ faria sentido.
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
-Tarefas, Calendário, Reuniões, Clientes, Processos; usuário e sair no rodapé)
-e conteúdo num painel branco sobre fundo off-white. No topo de todas,
-**Buscar…** (Ctrl/⌘ + K) abre a busca geral.
+Tarefas e as visões salvas, Projetos, Calendário, Reuniões; **Relacionamento**:
+Clientes, Comunicações; **Gestão**: Decisões, Processos, Financeiro; usuário e
+sair no rodapé) e conteúdo num painel branco sobre fundo off-white. No topo de
+todas, **Buscar…** (Ctrl/⌘ + K) abre a busca geral.
 
 ### Hoje (`/hoje`)
 
@@ -326,11 +419,12 @@ e conteúdo num painel branco sobre fundo off-white. No topo de todas,
   salva no navegador.
 - Quatro indicadores discretos: atrasadas, para hoje, esta semana,
   concluídas na semana. Clicar leva à seção.
-- Progresso: o **plano atual** ("Estruturação da Boop até 31/10") é a
-  informação principal: percentual grande, barra, "X de 25 tarefas" e dias
-  restantes. Conta a equipe inteira; no filtro Minhas aparece também a parte
-  da pessoa ("suas: X de Y"). A **semana** vem abaixo, menor (tarefas com
-  prazo nesta semana: concluídas / total). Só barra, percentual e contagem.
+- Progresso: os **projetos em foco** (fixados, até quatro). O primeiro
+  ("Estruturação da Boop até 31/10") é a informação principal: percentual
+  grande, barra, "X de Y tarefas", dias restantes e atrasadas; os outros vêm
+  menores, com link para o projeto. Conta a equipe inteira; no filtro Minhas
+  aparece também a parte da pessoa ("suas: X de Y"). A **semana** vem abaixo,
+  menor (tarefas com prazo nesta semana: concluídas / total).
 - Seções em lista: **Atrasadas**, **Hoje**, **Esta semana**. Cada linha mostra
   checkbox, título, área, cliente, responsáveis e prazo.
 - **Combinados em aberto** das reuniões, os que não viraram tarefa (os que
@@ -341,6 +435,8 @@ e conteúdo num painel branco sobre fundo off-white. No topo de todas,
     campo "Algo para discutir?", que põe um assunto na pauta sem sair da tela;
   - **Revisões de clientes** do mês por fazer (todos os clientes, com o
     responsável);
+  - **Financeiro em atraso**: quanto há a receber e a pagar vencido, com
+    link para o Financeiro;
   - **Processos para revisar** (no Minhas, os da pessoa e os sem responsável);
   - **Próximos compromissos** (7 dias). Clicar numa reunião abre a pauta dela.
   Quadro sem nada para mostrar não aparece.
@@ -350,16 +446,47 @@ e conteúdo num painel branco sobre fundo off-white. No topo de todas,
 ### Tarefas (`/tarefas`)
 
 - Filtro de pessoa no topo: Todas · Minhas · Jabez · Renatha · Léo.
-- Filtros adicionais: status (padrão: abertas), área, cliente, prazo.
-- Lista agrupada: Atrasadas, Hoje, Esta semana, Depois, Sem prazo e
-  Concluídas (quando o filtro inclui concluídas).
-- Linha no estilo de lista de tarefas: checkbox, título, área/cliente, status,
-  responsáveis e prazo.
+- Filtros adicionais: status (padrão: abertas), projeto (ou "sem projeto"),
+  cliente, área e prazo.
+- Três modos: **Lista** (agrupada por prazo: Atrasadas, Hoje, Esta semana,
+  Depois, Sem prazo e Concluídas), **Tabela** (colunas ordenáveis: tarefa,
+  status, prazo, prioridade, projeto, cliente e área) e **Quadro** (A fazer,
+  Fazendo e Feito; arrastar muda o status; Feito mostra as concluídas dos
+  últimos 14 dias).
+- **Visões salvas**: os filtros e o modo atuais com um nome ("Velmont",
+  "Minhas atrasadas"), para a equipe toda; ficam no topo da tela e no menu
+  lateral.
 - "Nova tarefa" abre um Dialog: título → responsável → prazo → salvar. Área,
-  cliente, prioridade e descrição são opcionais. Atalho: tecla **N** em
-  qualquer tela.
-- Os filtros ficam na URL (`/tarefas?pessoa=…&prazo=week`), então dá para
-  compartilhar uma visão.
+  cliente, projeto, prioridade e descrição são opcionais. Atalho: tecla **N**
+  em qualquer tela.
+- Filtros e modo ficam na URL (`/tarefas?pessoa=…&prazo=week&ver=quadro`),
+  então dá para compartilhar uma visão.
+- O Sheet da tarefa ganhou **Projeto** (leva o cliente do projeto junto) e
+  **Atividade**: o histórico da tarefa e os comentários.
+
+### Projetos (`/projetos`)
+
+- Cartões por status (Em andamento, Planejados, Pausados; concluídos e
+  cancelados recolhidos), com cliente ou "Interno", prazo, progresso das
+  tarefas, atrasadas, responsável e próxima entrega. Filtros: Todos,
+  Clientes, Internos, Meus. O alfinete põe ou tira do foco.
+- **Novo projeto**: nome, cliente (ou interno), responsável, começo, prazo,
+  status, "em foco", descrição e as **tarefas iniciais**: em branco, um
+  modelo da Boop (site institucional, identidade visual, social media,
+  tráfego pago, plano interno), as tarefas de outro projeto ou o checklist de
+  um processo.
+
+### Projeto (`/projetos/[id]`)
+
+- Cabeçalho com status, foco, modelo, cliente, responsável e período;
+  menu para fixar, pausar, retomar, concluir, cancelar, criar um projeto a
+  partir deste e excluir (com ou sem as tarefas).
+- Progresso (percentual, tarefas, atrasadas, próxima entrega e prazo) e as
+  **Tarefas** do projeto em lista ou quadro.
+- **Atividade**: tudo o que mudou no projeto e nos itens dele, com
+  comentários.
+- Lateral: **Sobre o projeto**, **Decisões**, **Comunicações** (projetos de
+  cliente) e **Financeiro** (receita, custos e resultado do projeto).
 
 ### Calendário (`/calendario`)
 
@@ -396,8 +523,10 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
   reunião) e o combinado passa a seguir o status dela.
 - **Pauta automática**: combinados anteriores da série (da última reunião e
   os que seguem em aberto) e tarefas: na weekly, por pessoa (atrasadas, até
-  domingo e concluídas desde a última), com o progresso do plano; com
-  cliente, as tarefas daquele cliente.
+  domingo e concluídas desde a última), com o progresso dos projetos em
+  foco; com cliente, as tarefas daquele cliente.
+- **Decisões** da reunião (o que passa a valer), já ligadas a ela e ao
+  cliente.
 - **Resumo** (salva sozinho) e **transcrição** colada, com busca que destaca
   e navega pelos trechos.
 - **Encerrar** guarda a pauta como estava; dá para reabrir, cancelar ou
@@ -419,12 +548,36 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - **Revisão do mês** (setas para os meses anteriores): saúde, checklist,
   notas que salvam sozinhas, **próximos passos** que viram tarefas do
   cliente, **Concluir** e **Reabrir**.
-- **Tarefas** do cliente por prazo (e as concluídas nos últimos 30 dias) e
-  **Reuniões** (próximas e recentes, com "Nova reunião" já com o cliente).
+- **Projetos** do cliente (com "Novo"), **Tarefas** por prazo (e as
+  concluídas nos últimos 30 dias), **Comunicações** e **Reuniões** (próximas
+  e recentes, com "Nova reunião" já com o cliente).
 - Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
-  WhatsApp, observações), **Saúde mês a mês** (seis meses) e **Processos do
+  WhatsApp, observações), **Financeiro** (fee mensal, em atraso, recebido no
+  ano), **Saúde mês a mês** (seis meses), **Decisões** e **Processos do
   cliente**.
 - Menu: nova reunião, novo processo do cliente, desativar/reativar e excluir.
+
+### Comunicações (`/comunicacoes`)
+
+- O que foi falado com os clientes, do mais recente para o mais antigo
+  (Hoje, Ontem, Esta semana, Semana passada, meses): tipo (Pedido,
+  Aprovação, Feedback, Atualização, Outro), canal (WhatsApp, e-mail,
+  ligação, reunião), cliente, projeto e quem registrou.
+- Busca, filtro por cliente e por tipo. O cabeçalho conta os pedidos que
+  ainda não viraram tarefa.
+- **Registrar**: resumo, detalhes, cliente, projeto, canal e data. Um pedido
+  **vira tarefa** num clique (cliente e projeto junto, ligada à
+  comunicação).
+
+### Decisões (`/decisoes`)
+
+- O que a Boop definiu e por quê (preço mínimo, prazos, regras com
+  clientes, escolhas de projeto), por mês. Filtros: Em vigor (padrão),
+  Revogadas, Todas; área; cliente ou projeto; busca no título e no
+  contexto. Cada decisão mostra a data, a área, a reunião de origem, o
+  cliente, o projeto e quem registrou.
+- **Nova decisão**: título, contexto, data, área, cliente e projeto (na
+  reunião, já ligada a ela). Dá para revogar, voltar a valer e excluir.
 
 ### Processos (`/processos`)
 
@@ -455,21 +608,40 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   prazo e cliente), ligadas ao processo.
 - Menu: fixar em "Comece por aqui", duplicar, copiar link e excluir.
 
+### Financeiro (`/financeiro`)
+
+- Um mês por vez (setas; `?mes=aaaa-mm`): **Recebido** e **Pago** (com o
+  previsto), **Resultado do mês** e quanto entra e sai **todo mês**.
+- **Em atraso** (no mês atual): o que venceu e não foi recebido ou pago, de
+  qualquer mês (recorrências: últimos 12 meses).
+- **Receitas** e **Despesas** do mês; o checkbox marca como recebido/pago
+  com a data de hoje. Cada linha mostra vencimento, cliente, projeto e
+  categoria.
+- Lateral: **Últimos 6 meses** (entrou, saiu, saldo) e **Todo mês** (as
+  recorrências: fees, ferramentas, impostos).
+- **Novo lançamento**: receita ou despesa, descrição, valor, vencimento,
+  cliente, projeto, categoria, já recebido/pago e **repetir todo mês** (vira
+  recorrência). Num mês de recorrência dá para mudar só aquele mês, pular o
+  mês ou editar a recorrência inteira.
+
 ### Busca geral (Ctrl/⌘ + K)
 
 - Abre em qualquer tela, pelo atalho ou pelo botão **Buscar…** do topo (no
   celular, a lupa). No editor de processos, Ctrl/⌘ + K continua criando link.
-- Sem texto: **Ações** (nova tarefa, reunião, documento ou cliente) e **Ir
-  para** (as telas).
+- Sem texto: **Ações** (nova tarefa, projeto, reunião, documento, cliente,
+  registrar comunicação, registrar decisão, novo lançamento), as **visões
+  salvas** e **Ir para** (as telas).
 - A partir de 2 letras, sem acento: **Tarefas** (título e descrição; abertas
-  primeiro), **Reuniões** (título, cliente, assuntos, combinados, resumo e
-  transcrição; das próximas, uma por série), **Processos** (título, "para que
-  serve" e, a partir de 3 letras, o texto) e **Clientes** (nome). Até seis
-  resultados por grupo.
+  primeiro), **Projetos**, **Reuniões** (título, cliente, assuntos,
+  combinados, resumo e transcrição; das próximas, uma por série),
+  **Decisões**, **Comunicações**, **Processos** (título, "para que serve" e,
+  a partir de 3 letras, o texto), **Clientes** (nome) e **Financeiro**
+  (descrição). Até seis resultados por grupo.
 - ↑ ↓ navegam, Enter abre, Esc fecha.
 - Links usados pela busca: `/tarefas?tarefa=<id>` abre o Sheet da tarefa;
-  `/reunioes`, `/processos` e `/clientes` com `?novo=<marca>` abrem o diálogo
-  de criar. O parâmetro sai do endereço depois de usado.
+  as telas com `?novo=<marca>` abrem o diálogo de criar; `/decisoes?q=` e
+  `/comunicacoes?cliente=&q=` já abrem filtradas. O parâmetro de criar sai do
+  endereço depois de usado.
 
 ## 8. Componentes principais
 
@@ -500,6 +672,15 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 | `ReviewsDueCard` / `ClientsPulseCard` | revisões por fazer (Hoje) e clientes na weekly |
 | `NextMeetingCompact` / `OpenAgreements` / `DocsToReview` | quadros da tela Hoje: próxima reunião, combinados em aberto e processos para revisar |
 | `CommandPaletteProvider` / `SearchButton` | busca geral (Ctrl/⌘ + K) e o botão "Buscar…" do topo |
+| `TaskTable` / `TaskBoard` | modos Tabela (ordenável) e Quadro (arrastar muda o status) de Tarefas |
+| `SavedViewsBar`      | visões salvas da tela Tarefas (salvar, atualizar, renomear, excluir) |
+| `ProjectsView` / `ProjectView` / `ProjectDialog` | lista, página e criação de projetos (modelos, repetir, checklist) |
+| `ActivityFeed`       | histórico em frases ("mudou o prazo de 10/10 para 12/10") + comentários |
+| `DecisionsView` / `DecisionsCard` / `DecisionDialog` | decisões: tela, cartão (reunião, cliente, projeto) e registro |
+| `CommunicationsView` / `CommunicationsCard` / `CommunicationDialog` | comunicações: tela, cartão (cliente, projeto), registro e "Virar tarefa" |
+| `FinanceView` / `FinanceRows` / `FinanceDialog` | financeiro do mês, linhas com recebido/pago otimista, lançamento e recorrência |
+| `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
+| `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
 
 ## 9. Definições de negócio
 
@@ -514,8 +695,21 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   atual.
 - **Progresso da semana:** entre as tarefas com prazo nesta semana, quantas
   estão concluídas.
-- **Progresso do plano:** entre as tarefas do plano atual, quantas estão
-  concluídas. O plano atual é o que contém a data de hoje.
+- **Progresso do projeto:** entre as tarefas do projeto, quantas estão
+  concluídas (a equipe toda). **Próxima entrega:** o prazo mais próximo, de
+  hoje em diante, entre as tarefas abertas; as vencidas contam como
+  atrasadas. **Em foco:** projetos fixados e abertos (planejado, em
+  andamento ou pausado); em andamento primeiro e, dentro do status, o prazo
+  mais próximo.
+- **Financeiro:** um item é do mês do vencimento. Recebido/pago = tem data de
+  pagamento; **em atraso** = vencido antes de hoje, sem pagamento e não
+  pulado (recorrências: até 12 meses para trás). Previsto do mês = tudo o
+  que vence nele, menos os pulados. Resultado = recebido − pago. Fee mensal
+  do cliente = soma das receitas recorrentes ativas no mês. Recorrência com
+  dia 31 vence no último dia dos meses mais curtos.
+- **Pedido em aberto:** comunicação do tipo Pedido sem tarefa ligada.
+- **Histórico:** mudanças da mesma pessoa no mesmo item se juntam (2 minutos
+  depois de criar; 10 minutos entre edições).
 - **Pauta da reunião:** "atrasadas" são as abertas com prazo antes de hoje;
   "até domingo" vai de hoje até o domingo da semana da reunião (com cliente,
   pelo menos duas semanas); "concluídas desde" conta `completed_at` a partir
@@ -579,6 +773,18 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
     `?novo=<marca>`, e a própria tela abre o diálogo dela (uma vez por marca)
     e limpa o endereço (`useUrlTrigger`). Cada tela continua dona do seu
     diálogo; a busca não duplica formulários.
+14. **Um registro, vários lugares.** Decisões, comunicações e financeiro têm
+    uma tela própria e um cartão (`DecisionsCard`, `CommunicationsCard`,
+    `ClientFinanceCard`/`ProjectFinanceCard`) reaproveitado nas páginas de
+    reunião, cliente e projeto, com os vínculos já preenchidos. O mesmo
+    registro aparece onde importa, sem telas paralelas.
+15. **Financeiro calculado em funções puras.** Com o volume da Boop, a tela
+    busca lançamentos e recorrências e calcula meses, atrasados e totais em
+    `features/finance/logic.ts`; o banco guarda só o que alguém registrou.
+    Marcar como recebido/pago é otimista (`useOptimistic`).
+16. **Quadro com arrastar e soltar nativo** (HTML, sem biblioteca). Soltar em
+    Feito conclui a tarefa pelo mesmo caminho do checkbox (com "Desfazer").
+    Onde arrastar não funciona (alguns celulares), o status muda pelo Sheet.
 
 ## 11. Plano de implementação
 
@@ -618,13 +824,33 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    (próxima reunião, combinados em aberto, revisões de clientes e processos
    para revisar); links que abrem a tarefa ou o diálogo de criar.
 
+### Etapa 4 — operação real ✅
+
+1. **Projetos** no lugar do plano: de cliente ou internos, com status,
+   responsável, prazo, foco, progresso pelas tarefas e página própria.
+   **Modelos** (site, identidade, social media, tráfego pago, plano interno),
+   repetir outro projeto ou usar o checklist de um processo.
+2. **Tarefas** em Lista, Tabela e Quadro, filtro por projeto e **visões
+   salvas** da equipe (também no menu lateral).
+3. **Histórico** (quem mudou o quê, gravado pelo banco) e **comentários** nas
+   tarefas e nos projetos.
+4. **Decisões** como registro próprio (em vigor ou revogadas), nas reuniões,
+   clientes e projetos.
+5. **Comunicações** com clientes (pedidos, aprovações, retornos) que viram
+   tarefas.
+6. **Financeiro básico**: receitas e despesas, fees e assinaturas mensais,
+   atrasados, resultado do mês e histórico; resumo no cliente, no projeto e
+   na tela Hoje.
+7. Busca geral e menu lateral com tudo isso.
+
 ### Próximos passos
 
 1. Cada pessoa troca a senha temporária.
-2. Limpeza opcional: apagar a tabela `weekly_decisions` (vazia e sem uso)
-   numa migration nova e regenerar os tipos. O Supabase pede confirmação para
-   apagar tabela, e a ferramenta usada no desenvolvimento não conseguiu
-   confirmar; por isso ela continua no banco.
+2. Limpeza: uma migration nova que apaga `plans`, `tasks.plan_id` (já
+   copiados para `projects` e `tasks.project_id`) e `weekly_decisions` (vazia
+   e sem uso), seguida da regeneração dos tipos. O Supabase pede confirmação
+   para apagar tabela e coluna, e a ferramenta usada no desenvolvimento não
+   consegue confirmar; por isso continuam no banco, sem uso pelo app.
 
 ## 12. Infraestrutura e variáveis de ambiente
 
@@ -656,8 +882,9 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
   ficar só no servidor, como variável sensível, e nunca com prefixo
   `NEXT_PUBLIC_`.
 
-## 13. Fora do escopo (v1)
+## 13. Fora do escopo (por enquanto)
 
-CRM, pipeline, Kanban, chat, comentários, portal do cliente, uploads,
-financeiro, aprovações, dashboards avançados, IA, notificações, automações,
-integrações, documentos, permissões por cargo, metas avançadas e relatórios.
+CRM e pipeline comercial, chat, portal do cliente, emissão de nota fiscal,
+conciliação bancária e fluxo de caixa projetado, aprovações formais,
+dashboards avançados, IA, notificações, automações, integrações (WhatsApp,
+e-mail, banco), permissões por cargo, metas e relatórios.

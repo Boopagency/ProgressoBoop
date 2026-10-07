@@ -70,15 +70,18 @@ src/
 │   ├── auth/                   # sessão, login/logout
 │   ├── workspace/              # equipe, clientes, planos (dados de referência)
 │   ├── tasks/                  # lista, linha, Sheet, "Nova tarefa", filtros, lógica pura
-│   ├── today/                  # blocos da tela Hoje
+│   ├── today/                  # tela Hoje: indicadores, progresso e os quadros que vêm
+│   │                           # das outras áreas (reunião, combinados, processos)
 │   ├── calendar/               # semana/mês, recorrência, eventos
 │   ├── meetings/               # reuniões: lista, pauta automática, assuntos,
-│                               # combinados, resumo e transcrição
+│   │                           # combinados, resumo e transcrição
 │   ├── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
 │   │                           # versões, checklist → tarefas
-│   └── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
-│                               # da tela Hoje e da weekly
-├── hooks/                      # use-mobile (shadcn)
+│   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
+│   │                           # da tela Hoje e da weekly
+│   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
+├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
+│                               # diálogo de criar da tela)
 ├── lib/
 │   ├── supabase/               # clientes do Supabase (servidor e proxy), tipos do banco
 │   └── *.ts                    # datas (fuso de SP), rótulos, tipos, cn()
@@ -310,8 +313,9 @@ faria sentido.
 ## 7. Telas
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
-Tarefas, Calendário, Reuniões, Clientes, Processos; usuário e sair no rodapé) e conteúdo num painel
-branco sobre fundo off-white.
+Tarefas, Calendário, Reuniões, Clientes, Processos; usuário e sair no rodapé)
+e conteúdo num painel branco sobre fundo off-white. No topo de todas,
+**Buscar…** (Ctrl/⌘ + K) abre a busca geral.
 
 ### Hoje (`/hoje`)
 
@@ -329,9 +333,17 @@ branco sobre fundo off-white.
   prazo nesta semana: concluídas / total). Só barra, percentual e contagem.
 - Seções em lista: **Atrasadas**, **Hoje**, **Esta semana**. Cada linha mostra
   checkbox, título, área, cliente, responsáveis e prazo.
-- Coluna lateral com **Próximos compromissos** (7 dias). É um bloco pequeno,
-  adicionado para responder "o que precisa acontecer nesta semana" sem ir ao
-  calendário. Clicar numa reunião abre a pauta dela.
+- **Combinados em aberto** das reuniões, os que não viraram tarefa (os que
+  viraram já estão nas listas). No Minhas, os da pessoa e os da equipe. O
+  checkbox marca como cumprido.
+- Coluna lateral, o painel do dia:
+  - **Próxima reunião**: quando, tipo, quantos assuntos já estão na pauta e o
+    campo "Algo para discutir?", que põe um assunto na pauta sem sair da tela;
+  - **Revisões de clientes** do mês por fazer (todos os clientes, com o
+    responsável);
+  - **Processos para revisar** (no Minhas, os da pessoa e os sem responsável);
+  - **Próximos compromissos** (7 dias). Clicar numa reunião abre a pauta dela.
+  Quadro sem nada para mostrar não aparece.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, que pode ser
   editado sem sair da tela.
 
@@ -443,6 +455,22 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   prazo e cliente), ligadas ao processo.
 - Menu: fixar em "Comece por aqui", duplicar, copiar link e excluir.
 
+### Busca geral (Ctrl/⌘ + K)
+
+- Abre em qualquer tela, pelo atalho ou pelo botão **Buscar…** do topo (no
+  celular, a lupa). No editor de processos, Ctrl/⌘ + K continua criando link.
+- Sem texto: **Ações** (nova tarefa, reunião, documento ou cliente) e **Ir
+  para** (as telas).
+- A partir de 2 letras, sem acento: **Tarefas** (título e descrição; abertas
+  primeiro), **Reuniões** (título, cliente, assuntos, combinados, resumo e
+  transcrição; das próximas, uma por série), **Processos** (título, "para que
+  serve" e, a partir de 3 letras, o texto) e **Clientes** (nome). Até seis
+  resultados por grupo.
+- ↑ ↓ navegam, Enter abre, Esc fecha.
+- Links usados pela busca: `/tarefas?tarefa=<id>` abre o Sheet da tarefa;
+  `/reunioes`, `/processos` e `/clientes` com `?novo=<marca>` abrem o diálogo
+  de criar. O parâmetro sai do endereço depois de usado.
+
 ## 8. Componentes principais
 
 | Componente           | Papel                                                          |
@@ -470,6 +498,8 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 | `ClientsView` / `ClientView` | lista de clientes e página do cliente                   |
 | `ReviewCard`         | revisão mensal: saúde, checklist, notas, próximos passos       |
 | `ReviewsDueCard` / `ClientsPulseCard` | revisões por fazer (Hoje) e clientes na weekly |
+| `NextMeetingCompact` / `OpenAgreements` / `DocsToReview` | quadros da tela Hoje: próxima reunião, combinados em aberto e processos para revisar |
+| `CommandPaletteProvider` / `SearchButton` | busca geral (Ctrl/⌘ + K) e o botão "Buscar…" do topo |
 
 ## 9. Definições de negócio
 
@@ -540,6 +570,15 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
 11. **Estado na URL quando é uma "visão"** (filtros de Tarefas, semana/mês e
     data do Calendário). Preferências pessoais simples, como Todas/Minhas na
     tela Hoje e a sidebar recolhida, ficam em cookie.
+12. **Busca geral sem índice novo.** Com o volume da Boop, títulos e nomes são
+    filtrados no servidor (sem acento) a cada busca, e os textos longos
+    (processos, resumos e transcrições) usam a busca do Postgres que já
+    existia. É uma Server Action só (`searchEverything`), com a sessão da
+    pessoa e o RLS, chamada 220 ms depois da última tecla.
+13. **Criar pela busca com `?novo=`.** A busca leva à tela certa com
+    `?novo=<marca>`, e a própria tela abre o diálogo dela (uma vez por marca)
+    e limpa o endereço (`useUrlTrigger`). Cada tela continua dona do seu
+    diálogo; a busca não duplica formulários.
 
 ## 11. Plano de implementação
 
@@ -561,7 +600,7 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 4. Vercel: projeto `boop-admin` ligado só a este repositório, variáveis de
    ambiente, deploy de produção e domínio `admin.deumboop.com.br`.
 
-### Etapa 3 — sair do Notion: tudo num lugar só (em andamento)
+### Etapa 3 — sair do Notion: tudo num lugar só ✅
 
 1. **Reuniões** ✅: weekly e reuniões com clientes, pauta automática,
    assuntos, combinados que viram tarefa, resumo e transcrição com busca.
@@ -574,12 +613,18 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
    mensal (checklist, notas, próximos passos que viram tarefas, histórico),
    página do cliente reunindo tarefas, reuniões e processos; revisões por
    fazer na tela Hoje e na weekly.
-4. **Unificação**: busca geral (Ctrl/⌘ + K), tela Hoje como painel do dia
-   (reunião, combinados, revisões e processos pendentes) e acabamento.
+4. **Unificação** ✅: busca geral (Ctrl/⌘ + K) em tarefas, reuniões,
+   processos e clientes, com ações rápidas; tela Hoje como painel do dia
+   (próxima reunião, combinados em aberto, revisões de clientes e processos
+   para revisar); links que abrem a tarefa ou o diálogo de criar.
 
 ### Próximos passos
 
 1. Cada pessoa troca a senha temporária.
+2. Limpeza opcional: apagar a tabela `weekly_decisions` (vazia e sem uso)
+   numa migration nova e regenerar os tipos. O Supabase pede confirmação para
+   apagar tabela, e a ferramenta usada no desenvolvimento não conseguiu
+   confirmar; por isso ela continua no banco.
 
 ## 12. Infraestrutura e variáveis de ambiente
 

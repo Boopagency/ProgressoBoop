@@ -17,9 +17,12 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   cadastro. Uma conta nova só pode ser criada pelo Supabase (seção 4).
 - **Sessão:** fica salva no navegador, então não é preciso entrar toda vez.
   "Sair" desconecta só aquele navegador.
-- **Menu lateral:** Hoje, Tarefas, Calendário, Reuniões, Clientes e Processos. No rodapé ficam a
-  pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no topo ou
-  com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo botão do topo.
+- **Menu lateral:** Hoje, Tarefas, Calendário, Reuniões, Clientes e
+  Processos. No rodapé ficam a pessoa logada e o "Sair". O menu pode ser
+  recolhido pelo ícone no topo ou com Ctrl/⌘+B, e a escolha fica salva. No
+  celular ele abre pelo botão do topo.
+- **Busca geral:** "Buscar…" no topo de qualquer tela, ou Ctrl/⌘+K, acha
+  tarefas, reuniões, processos e clientes e cria qualquer coisa (2.14).
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
   só em detalhes: barras de progresso, item ativo do menu, dia de hoje, foco e
   pontos indicadores. O logo é o oficial (o "olhar") e os títulos usam Poppins.
@@ -58,14 +61,28 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
 - **Semana**, menor, abaixo do plano: tarefas com prazo nesta semana,
   concluídas sobre o total.
 - Listas **Atrasadas**, **Hoje** e **Esta semana**, só com tarefas abertas.
-- **Próximos compromissos:** eventos dos próximos 7 dias (até 5), com link
-  para o Calendário. Tarefas não entram nessa lista.
+- **Combinados em aberto:** os combinados das reuniões que ainda não viraram
+  tarefa (os que viraram já aparecem nas listas), com a reunião de origem e o
+  prazo. O checkbox marca como cumprido.
+- Na lateral, o painel do dia:
+  - **Próxima reunião:** quando, tipo, quantos assuntos já estão na pauta e o
+    campo "Algo para discutir?", que adiciona um assunto sem sair da tela.
+    "Abrir pauta" leva à reunião;
+  - **Revisões de clientes** do mês por fazer (2.13);
+  - **Processos para revisar:** os marcados para revisar ou com a revisão
+    vencida (até 5, com "Ver todos");
+  - **Próximos compromissos:** eventos dos próximos 7 dias (até 5), com link
+    para o Calendário. Tarefas não entram nessa lista.
+- Quadro sem nada para mostrar não aparece.
 
 **O que dá para fazer:** concluir uma tarefa pelo checkbox, abrir os detalhes
-com um clique e criar uma tarefa pelo botão "Nova tarefa" ou pela tecla N.
+com um clique, criar uma tarefa pelo botão "Nova tarefa" ou pela tecla N,
+cumprir um combinado e pôr um assunto na pauta da próxima reunião.
 
-**Regra importante:** os indicadores, as listas e a semana seguem o filtro
-Minhas/Todas. O progresso do plano não segue.
+**Regra importante:** os indicadores, as listas, a semana, os combinados e os
+processos seguem o filtro Minhas/Todas. No Minhas aparecem os combinados da
+pessoa e os da "Equipe", e os processos dela e os sem responsável. O progresso
+do plano e as revisões de clientes não seguem o filtro.
 
 ### 2.3 Tarefas (`/tarefas`)
 
@@ -300,7 +317,26 @@ passo), checklists, políticas (regras combinadas) e guias.
 - Numa reunião com cliente, o selo com o nome do cliente leva para a página
   dele.
 
-### 2.14 Comportamentos gerais
+### 2.14 Busca geral (Ctrl/⌘ + K)
+
+- Abre em qualquer tela pelo **Ctrl/⌘ + K** ou pelo botão **Buscar…** no topo
+  (no celular, a lupa). Dentro do editor de processos, Ctrl/⌘ + K cria um
+  link; ali, use o botão do topo.
+- **Sem digitar nada:** ações rápidas (Nova tarefa, Nova reunião, Novo
+  documento, Novo cliente) e atalhos para cada tela. A ação leva à tela certa
+  e já abre a janela de criar.
+- **Digitando** (a partir de 2 letras, sem acento: "reuniao" acha "reunião"):
+  - **Tarefas:** pelo título e pela descrição; as abertas vêm primeiro.
+    Abrir leva a Tarefas com o painel da tarefa aberto;
+  - **Reuniões:** pelo título, pelo cliente, pelos assuntos e combinados e
+    pelo resumo e pela transcrição. Das próximas aparece só a próxima de cada
+    série; as que já aconteceram aparecem da mais nova para a mais antiga;
+  - **Processos:** pelo título, pelo "para que serve" e, a partir de 3 letras,
+    pelo texto inteiro, com o trecho encontrado;
+  - **Clientes:** pelo nome (inativos aparecem marcados).
+- Mostra até 6 resultados de cada tipo. ↑ ↓ escolhem, Enter abre, Esc fecha.
+
+### 2.15 Comportamentos gerais
 
 - **Concluir uma tarefa:**
   - contadores e barras atualizam na hora;
@@ -364,6 +400,8 @@ mudá-los é preciso alterar o código e o banco.
 
 | Atalho | O que faz |
 | --- | --- |
+| Ctrl/⌘ + K | busca geral, em qualquer tela (no editor de processos, cria link) |
+| ↑ ↓ e Enter (na busca) | escolhe e abre o resultado |
 | N | nova tarefa, em qualquer tela |
 | Ctrl/⌘ + Enter | salva a nova tarefa |
 | Ctrl/⌘ + B | recolhe ou abre o menu lateral |
@@ -393,13 +431,13 @@ podem ser salvos nos favoritos.
   cadastro no portal).
 - A tarefa nova não entra no plano automaticamente (2.5).
 - Tarefas abre em "Todas", enquanto Hoje abre em "Minhas".
-- Não há atualização em tempo real (2.8).
+- Não há atualização em tempo real (2.15).
 - A recorrência é só semanal e sempre da série inteira: não dá para pular uma
   segunda de feriado.
 - Na visão Mês, clicar no dia não cria evento.
 - Eventos não têm participantes, link de reunião nem local.
-- A busca existe nas Reuniões e nos Processos, cada uma na sua tela (a busca
-  geral entra na Fase 4).
+- A busca geral não procura em eventos do Calendário que não são reuniões nem
+  no cadastro dos clientes além do nome (contato e observações ficam de fora).
 - Processos: duas pessoas não editam juntas em tempo real (como no Google
   Docs); quem salva por último decide, com o aviso de conflito. Comentários e
   menções nos documentos ainda não existem.
@@ -430,7 +468,7 @@ são uma sugestão para começar.
 | 2 ★ | "Nova tarefa" já ligada ao plano atual (opção marcada por padrão) | hoje a tarefa nova não conta no progresso do plano |
 | 3 ★ | Tela "Trocar senha" no menu do usuário | tirar as senhas temporárias sem depender do banco |
 | 4 | Criar evento clicando no dia, na visão Mês | menos cliques |
-| 5 | Busca por título em Tarefas | achar tarefas rápido quando a lista crescer |
+| 5 | ~~Busca por título em Tarefas~~ | feito: a busca geral (Ctrl/⌘ + K) acha tarefas pelo título e pela descrição |
 | 6 | ~~Editar decisões~~ | feito: as decisões viraram combinados das Reuniões, editáveis |
 | 7 | Definir o término da reunião semanal | já dá para fazer hoje: Calendário → a reunião → Editar |
 | 8 | Ativar a proteção contra senhas vazadas no Supabase | aviso do verificador de segurança (confirmar se o plano gratuito permite) |
@@ -439,7 +477,7 @@ são uma sugestão para começar.
 
 | # | Ideia | Por quê |
 | --- | --- | --- |
-| 9 ★ | Cadastro de clientes e de planos dentro do portal | criar o próximo plano (novembro) sem depender do banco |
+| 9 ★ | Cadastro de planos dentro do portal (clientes já têm) | criar o próximo plano (novembro) sem depender do banco |
 | 10 | Atualização em tempo real | ver o que os sócios mudam sem recarregar |
 | 11 | Pular uma ocorrência da recorrência; outras frequências | feriados, reuniões mensais |
 | 12 | Participantes e link de reunião (Meet) nos eventos | o evento vira convite útil |
@@ -461,7 +499,8 @@ são uma sugestão para começar.
 
 | Assunto | Arquivos |
 | --- | --- |
-| Tela Hoje | `src/features/today/`, `src/app/(app)/hoje/page.tsx` |
+| Tela Hoje (indicadores, quadros de reunião, combinados e processos) | `src/features/today/` (`dashboard-cards.tsx`), `src/app/(app)/hoje/page.tsx` |
+| Busca geral (Ctrl/⌘ + K) | `src/features/search/` (`actions.ts` busca, `command-palette.tsx` janela), `src/hooks/use-url-trigger.ts` (`?novo=`) |
 | Tarefas (lista, filtros, linha) | `src/features/tasks/tasks-view.tsx`, `filters.ts`, `task-row.tsx` |
 | Detalhes e nova tarefa | `src/features/tasks/task-sheet.tsx`, `new-task-dialog.tsx` |
 | Regras (grupos, progresso, pauta) | `src/features/tasks/logic.ts`, `src/features/meetings/logic.ts` |

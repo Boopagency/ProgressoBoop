@@ -45,10 +45,13 @@ app **não usa** chave secreta nem `service_role`.
 
 ## Telas
 
-- **Hoje** (`/hoje`, tela inicial): saudação, quatro indicadores, progresso do
-  plano "Estruturação da Boop até 31/10" em destaque e da semana, seções
-  Atrasadas / Hoje / Esta semana e próximos compromissos. Abre em "Minhas";
-  a alternância Minhas / Todas fica salva no navegador.
+- **Hoje** (`/hoje`, tela inicial): o painel do dia. Saudação, quatro
+  indicadores, progresso do plano "Estruturação da Boop até 31/10" em
+  destaque e da semana, seções Atrasadas / Hoje / Esta semana, combinados das
+  reuniões em aberto e, na lateral, a próxima reunião (com "Algo para
+  discutir?"), as revisões de clientes por fazer, os processos para revisar e
+  os próximos compromissos. Abre em "Minhas"; a alternância Minhas / Todas
+  fica salva no navegador.
 - **Tarefas** (`/tarefas`): filtros por pessoa, status, área, cliente e prazo,
   com a lista agrupada por prazo. Os filtros ficam na URL.
 - **Calendário** (`/calendario`): semana e mês, com tarefas, reuniões, eventos
@@ -68,6 +71,10 @@ app **não usa** chave secreta nem `service_role`.
   salva sozinho e avisa se outra pessoa salvou no meio), imagens privadas,
   responsável, revisão periódica, histórico de versões com restauração e
   "Gerar tarefas" a partir do checklist.
+- **Busca geral** em qualquer tela: <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd>
+  ou "Buscar…" no topo. Acha tarefas, reuniões (inclusive resumos e
+  transcrições), processos (o texto inteiro) e clientes, sem acento, e tem
+  ações rápidas para criar tarefa, reunião, documento ou cliente.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, editável ali mesmo.
 - **Nova tarefa** pelo botão ou pela tecla <kbd>N</kbd>. Título, responsável e
   prazo bastam; o resto é opcional. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> salva.
@@ -109,8 +116,9 @@ src/
 ├── components/
 │   ├── ui/           shadcn/ui (código gerado)
 │   └── layout/       sidebar, cabeçalho, menu do usuário, marca
-├── features/         auth, workspace, tasks, today, calendar, meetings, docs, clients
-│                     (cada uma com queries, actions, lógica e componentes)
+├── features/         auth, workspace, tasks, today, calendar, meetings, docs, clients,
+│                     search (cada uma com queries, actions, lógica e componentes)
+├── hooks/            use-mobile, use-url-trigger
 ├── lib/              datas (fuso de São Paulo), rótulos, tipos, utilitários
 │   └── supabase/     clientes do Supabase e tipos do banco
 └── proxy.ts          sessão e proteção de rotas (no Next 16, substitui o middleware)

@@ -22,6 +22,7 @@ import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useUrlTrigger } from "@/hooks/use-url-trigger"
 import { EVENT_TYPE_LABEL } from "@/lib/labels"
 import type { CalendarEvent, ClientDetail, ClientReview } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -39,6 +40,7 @@ export function ClientsView({
   const { today } = useTasks()
   const [dialog, setDialog] = useState<ClientDialogState>({ open: false, key: 0 })
   const [showInactive, setShowInactive] = useState(false)
+  useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1 })))
 
   const active = clients.filter((client) => client.active)
   const inactive = clients.filter((client) => !client.active)

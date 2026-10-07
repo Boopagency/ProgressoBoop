@@ -19,12 +19,20 @@ import { NewTaskButton } from "@/features/tasks/new-task-dialog"
 import { TaskSection } from "@/features/tasks/task-section"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { Agenda } from "@/features/today/agenda"
+import { DocsToReview, NextMeetingCompact, OpenAgreements } from "@/features/today/dashboard-cards"
 import { TODAY_SCOPE_COOKIE, type TodayScope } from "@/features/today/constants"
 import { ProgressCard } from "@/features/today/progress-card"
 import { SummaryStats } from "@/features/today/summary-stats"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatLongDate } from "@/lib/dates"
-import type { CalendarEvent, ClientDetail, ClientReview } from "@/lib/types"
+import type {
+  CalendarEvent,
+  ClientDetail,
+  ClientReview,
+  DocSummary,
+  MeetingItem,
+  MeetingRecord,
+} from "@/lib/types"
 
 const SCOPE_OPTIONS = [
   { value: "mine", label: "Minhas" },
@@ -36,12 +44,18 @@ export function TodayView({
   events,
   clients,
   reviews,
+  meetingRecords,
+  meetingItems,
+  docs,
   initialScope,
 }: {
   greeting: string
   events: CalendarEvent[]
   clients: ClientDetail[]
   reviews: ClientReview[]
+  meetingRecords: MeetingRecord[]
+  meetingItems: MeetingItem[]
+  docs: DocSummary[]
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
@@ -124,10 +138,18 @@ export function TodayView({
             tasks={groups.week}
             emptyText="Nada mais previsto até domingo."
           />
+          <OpenAgreements
+            items={meetingItems}
+            records={meetingRecords}
+            events={events}
+            scope={scope}
+          />
         </div>
 
         <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
+          <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
           <ReviewsDueCard clients={clients} reviews={reviews} />
+          <DocsToReview docs={docs} scope={scope} />
           <Agenda events={events} today={today} />
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   Repeat,
   Trash2,
 } from "lucide-react"
+import Link from "next/link"
 import { useState, type ReactNode } from "react"
 
 import {
@@ -155,7 +156,12 @@ function EventDetails({
           ) : null}
           {client ? (
             <DetailRow icon={<Building2 />} label="Cliente">
-              {client.name}
+              <Link
+                href={`/clientes/${client.id}`}
+                className="font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+              >
+                {client.name}
+              </Link>
             </DetailRow>
           ) : null}
         </dl>

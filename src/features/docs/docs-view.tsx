@@ -37,6 +37,7 @@ import { SUGGESTIONS } from "@/features/docs/templates"
 import { firstName } from "@/features/tasks/logic"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useUrlTrigger } from "@/hooks/use-url-trigger"
 import { DOC_KIND_LABEL, TASK_AREA_LABEL, TASK_AREAS } from "@/lib/labels"
 import { foldText } from "@/lib/text"
 import type { DateKey, DocSummary, TaskArea } from "@/lib/types"
@@ -127,6 +128,7 @@ export function DocsView({
   const [draft, setDraft] = useState(query)
   const [isSearching, startSearch] = useTransition()
   const [dialog, setDialog] = useState<NewDocDialogState>({ open: false, key: 0 })
+  useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1 })))
 
   function urlWith(next: { filter?: Filter; query?: string }) {
     const params = new URLSearchParams()

@@ -32,6 +32,7 @@ import { MeetingLink } from "@/features/meetings/open-meeting"
 import { ITEM_MAX } from "@/features/meetings/validation"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useUrlTrigger } from "@/hooks/use-url-trigger"
 import { formatMonthYear, formatWeekdayShort, parseDateKey } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import type { CalendarEvent, DateKey, MeetingItem, MeetingRecord } from "@/lib/types"
@@ -83,6 +84,7 @@ export function MeetingsView({
   const [draft, setDraft] = useState(query)
   const [isSearching, startSearch] = useTransition()
   const [dialog, setDialog] = useState<EventDialogState>({ open: false, key: 0, mode: "meeting" })
+  useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting" })))
 
   function urlWith(next: { kind?: KindFilter; query?: string }) {
     const params = new URLSearchParams()

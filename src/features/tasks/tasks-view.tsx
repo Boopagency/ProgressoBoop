@@ -2,7 +2,7 @@
 
 import { Building2, CalendarDays, CircleDashed, ListChecks, Tag } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
-import type { ReactNode } from "react"
+import { useEffect, useEffectEvent, type ReactNode } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
@@ -64,11 +64,24 @@ function countLabel(count: number, singular: string, plural: string): string {
 }
 
 export function TasksView() {
-  const { tasks, today, keepInPlace } = useTasks()
+  const { tasks, today, keepInPlace, openTask } = useTasks()
   const { currentUser, profiles, clients } = useWorkspace()
   const { openNewTask } = useNewTask()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
+  // ?tarefa=<id> (busca geral): abre o painel da tarefa e limpa a URL.
+  const taskParam = searchParams.get("tarefa")
+  const openFromUrl = useEffectEvent((id: string) => {
+    if (tasks.some((task) => task.id === id)) openTask(id)
+    const params = new URLSearchParams(window.location.search)
+    params.delete("tarefa")
+    const rest = params.toString()
+    window.history.replaceState(null, "", rest ? `${pathname}?${rest}` : pathname)
+  })
+  useEffect(() => {
+    if (taskParam) openFromUrl(taskParam)
+  }, [taskParam])
 
   // A URL é a fonte da verdade dos filtros; valores desconhecidos voltam ao padrão.
   const parsed = filtersFromSearchParams(Object.fromEntries(searchParams))

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { isActivePath, NAV_ITEMS } from "@/components/layout/nav-items"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SearchButton } from "@/features/search/command-palette"
 
 export function AppTopbar() {
   const pathname = usePathname()
@@ -20,6 +21,7 @@ export function AppTopbar() {
           {current.title}
         </span>
       ) : null}
+      <SearchButton className="ml-auto" />
     </header>
   )
 }

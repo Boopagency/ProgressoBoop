@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Bookmark,
   BookOpen,
   Building2,
   CalendarPlus,
@@ -8,11 +9,17 @@ import {
   Circle,
   CornerDownLeft,
   FilePlus2,
+  FolderKanban,
+  FolderPlus,
+  Gavel,
   ListTodo,
   Loader2,
+  MessageSquarePlus,
+  MessagesSquare,
   Plus,
   Presentation,
   Search,
+  Wallet,
   type LucideIcon,
 } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
@@ -101,7 +108,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         >
           <DialogTitle className="sr-only">Buscar no portal</DialogTitle>
           <DialogDescription className="sr-only">
-            Busque tarefas, reuniões, processos e clientes, ou escolha uma ação.
+            Busque tarefas, projetos, reuniões, decisões, processos, clientes, comunicações e lançamentos, ou escolha uma ação.
           </DialogDescription>
           <Palette key={state.key} onClose={() => setState((current) => ({ ...current, open: false }))} />
         </DialogContent>
@@ -148,7 +155,7 @@ function Palette({ onClose }: { onClose: () => void }) {
   const pathname = usePathname()
   const listId = useId()
   const { openNewTask } = useNewTask()
-  const { clientById } = useWorkspace()
+  const { clientById, savedViews } = useWorkspace()
   const { open: openMeeting } = useOpenMeeting()
   const [today] = useState(() => todayKey())
   const [query, setQuery] = useState("")
@@ -198,16 +205,30 @@ function Palette({ onClose }: { onClose: () => void }) {
     { id: "new-task", group: "Ações", label: "Nova tarefa", icon: Plus, run: () => { onClose(); openNewTask() } },
     { id: "new-meeting", group: "Ações", label: "Nova reunião", icon: CalendarPlus, run: () => go(`/reunioes?novo=${freshStamp()}`) },
     { id: "new-doc", group: "Ações", label: "Novo documento (processo, checklist, política ou guia)", icon: FilePlus2, run: () => go(`/processos?novo=${freshStamp()}`) },
+    { id: "new-project", group: "Ações", label: "Novo projeto", icon: FolderPlus, run: () => go(`/projetos?novo=${freshStamp()}`) },
     { id: "new-client", group: "Ações", label: "Novo cliente", icon: Building2, run: () => go(`/clientes?novo=${freshStamp()}`) },
+    { id: "new-communication", group: "Ações", label: "Registrar comunicação com cliente", icon: MessageSquarePlus, run: () => go(`/comunicacoes?novo=${freshStamp()}`) },
+    { id: "new-decision", group: "Ações", label: "Registrar decisão", icon: Gavel, run: () => go(`/decisoes?novo=${freshStamp()}`) },
+    { id: "new-finance", group: "Ações", label: "Novo lançamento (receita ou despesa)", icon: Wallet, run: () => go(`/financeiro?novo=${freshStamp()}`) },
   ]
-  const pages: Item[] = NAV_ITEMS.map((item) => ({
-    id: `page-${item.href}`,
-    group: "Ir para",
-    label: item.title,
-    detail: pathname === item.href ? "Você está aqui" : null,
-    icon: item.icon,
-    run: () => go(item.href),
-  }))
+  const pages: Item[] = [
+    ...NAV_ITEMS.map((item) => ({
+      id: `page-${item.href}`,
+      group: "Ir para",
+      label: item.title,
+      detail: pathname === item.href ? "Você está aqui" : null,
+      icon: item.icon,
+      run: () => go(item.href),
+    })),
+    ...savedViews.map((view) => ({
+      id: `view-${view.id}`,
+      group: "Ir para",
+      label: `Tarefas · ${view.name}`,
+      detail: "Visão salva",
+      icon: Bookmark,
+      run: () => go(view.query ? `/tarefas?${view.query}` : "/tarefas"),
+    })),
+  ]
 
   const trimmed = query.trim()
   const staticItems = trimmed ? [...actions, ...pages].filter((item) => includesText(item.label, trimmed)) : [...actions, ...pages]
@@ -259,6 +280,38 @@ function Palette({ onClose }: { onClose: () => void }) {
           icon: Building2,
           run: () => go(`/clientes/${client.id}`),
         })),
+        ...data.projects.map<Item>((project) => ({
+          id: `project-${project.id}`,
+          group: "Projetos",
+          label: project.name,
+          detail: project.detail,
+          icon: FolderKanban,
+          run: () => go(`/projetos/${project.id}`),
+        })),
+        ...data.decisions.map<Item>((decision) => ({
+          id: `decision-${decision.id}`,
+          group: "Decisões",
+          label: decision.title,
+          detail: decision.detail,
+          icon: Gavel,
+          run: () => go(`/decisoes?q=${encodeURIComponent(decision.title.slice(0, 80))}`),
+        })),
+        ...data.communications.map<Item>((item) => ({
+          id: `communication-${item.id}`,
+          group: "Comunicações",
+          label: item.summary,
+          detail: item.detail,
+          icon: MessagesSquare,
+          run: () => go(`/comunicacoes?cliente=${item.clientId}&q=${encodeURIComponent(item.summary.slice(0, 80))}`),
+        })),
+        ...data.finance.map<Item>((item) => ({
+          id: `finance-${item.key}`,
+          group: "Financeiro",
+          label: item.description,
+          detail: item.detail,
+          icon: Wallet,
+          run: () => go(item.href),
+        })),
       ]
     : []
   // Com busca, os resultados vêm antes das ações e telas.
@@ -301,7 +354,7 @@ function Palette({ onClose }: { onClose: () => void }) {
               activeItem?.run()
             }
           }}
-          placeholder="Buscar tarefas, reuniões, processos e clientes…"
+          placeholder="Buscar tarefas, projetos, clientes, decisões…"
           role="combobox"
           aria-expanded="true"
           aria-controls={listId}
@@ -368,7 +421,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         </span>
         <span className="ml-auto hidden items-center gap-1 sm:flex">
           <ListTodo className="size-3" aria-hidden="true" />
-          tarefas, reuniões, processos e clientes
+          tarefas, projetos, reuniões, decisões, clientes e mais
         </span>
       </div>
     </div>

@@ -2,21 +2,29 @@
 
 import { requireUser } from "@/features/auth/session"
 import { getEvents } from "@/features/calendar/queries"
+import { periodOf, periodParam } from "@/features/clients/logic"
 import { getClients } from "@/features/clients/queries"
+import { getCommunications } from "@/features/communications/queries"
+import { getDecisions } from "@/features/decisions/queries"
 import { matchesQuick } from "@/features/docs/logic"
 import { getDocs, searchDocs } from "@/features/docs/queries"
+import { getFinance } from "@/features/finance/queries"
+import { formatMoney } from "@/features/finance/money"
 import { meetingsOverview, type MeetingEntry } from "@/features/meetings/logic"
 import { getMeetingRecords, searchMeetingIds } from "@/features/meetings/queries"
 import { isDone } from "@/features/tasks/logic"
 import { getTasks } from "@/features/tasks/queries"
-import { todayKey } from "@/lib/dates"
+import { getWorkspace } from "@/features/workspace/queries"
+import { formatShortDate, todayKey } from "@/lib/dates"
+import { COMMUNICATION_KIND_LABEL, PROJECT_STATUS_LABEL } from "@/lib/labels"
 import { includesText } from "@/lib/text"
 import type { DateKey, TaskStatus } from "@/lib/types"
 
 /*
- * Busca geral (Ctrl/⌘ + K): tarefas, reuniões, processos e clientes. O volume
- * é pequeno, então títulos e nomes são filtrados aqui (sem acento); textos
- * longos (processos, resumos e transcrições) usam a busca do Postgres.
+ * Busca geral (Ctrl/⌘ + K): tarefas, projetos, reuniões, decisões,
+ * processos, clientes, comunicações e lançamentos. O volume é pequeno, então
+ * títulos e nomes são filtrados aqui (sem acento); textos longos (processos,
+ * resumos e transcrições) usam a busca do Postgres.
  */
 
 const QUERY_MAX = 120
@@ -33,9 +41,22 @@ export interface SearchResults {
   }[]
   docs: { id: string; title: string; detail: string | null }[]
   clients: { id: string; name: string; active: boolean }[]
+  projects: { id: string; name: string; detail: string }[]
+  decisions: { id: string; title: string; detail: string }[]
+  communications: { id: string; summary: string; clientId: string; detail: string }[]
+  finance: { key: string; description: string; href: string; detail: string }[]
 }
 
-const EMPTY: SearchResults = { tasks: [], meetings: [], docs: [], clients: [] }
+const EMPTY: SearchResults = {
+  tasks: [],
+  meetings: [],
+  docs: [],
+  clients: [],
+  projects: [],
+  decisions: [],
+  communications: [],
+  finance: [],
+}
 
 export async function searchEverything(rawQuery: string): Promise<SearchResults> {
   await requireUser()
@@ -44,15 +65,20 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
   // A busca textual do banco só vale a pena com algumas letras.
   const fullText = query.length >= 3
 
-  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits] = await Promise.all([
-    getTasks(),
-    getEvents(),
-    getMeetingRecords(),
-    getDocs(),
-    getClients(),
-    fullText ? searchDocs(query) : Promise.resolve([]),
-    fullText ? searchMeetingIds(query) : Promise.resolve(new Set<string>()),
-  ])
+  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits, workspace, decisions, communications, finance] =
+    await Promise.all([
+      getTasks(),
+      getEvents(),
+      getMeetingRecords(),
+      getDocs(),
+      getClients(),
+      fullText ? searchDocs(query) : Promise.resolve([]),
+      fullText ? searchMeetingIds(query) : Promise.resolve(new Set<string>()),
+      getWorkspace(),
+      getDecisions(),
+      getCommunications(),
+      getFinance(),
+    ])
   const today = todayKey()
   const clientName = new Map(clients.map((client) => [client.id, client.name]))
 
@@ -118,5 +144,74 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
     .slice(0, 5)
     .map(({ id, name, active }) => ({ id, name, active }))
 
-  return { tasks: taskResults, meetings: meetingResults, docs: docResults, clients: clientResults }
+  const projectResults = workspace.projects
+    .filter((project) => {
+      const client = project.client_id ? clientName.get(project.client_id) : undefined
+      return includesText(project.name, query) || (client ? includesText(client, query) : false)
+    })
+    .sort((a, b) => Number(b.status === "active") - Number(a.status === "active"))
+    .slice(0, 5)
+    .map((project) => ({
+      id: project.id,
+      name: project.name,
+      detail: [project.client_id ? clientName.get(project.client_id) : "Interno", PROJECT_STATUS_LABEL[project.status]]
+        .filter(Boolean)
+        .join(" · "),
+    }))
+
+  const decisionResults = decisions
+    .filter((decision) => includesText(decision.title, query) || (decision.context ? includesText(decision.context, query) : false))
+    .slice(0, 5)
+    .map((decision) => ({
+      id: decision.id,
+      title: decision.title,
+      detail: `${formatShortDate(decision.decided_on, today)}${decision.status === "revoked" ? " · revogada" : ""}`,
+    }))
+
+  const communicationResults = communications
+    .filter((item) => {
+      const client = clientName.get(item.client_id) ?? ""
+      return includesText(item.summary, query) || includesText(client, query) || (item.details ? includesText(item.details, query) : false)
+    })
+    .slice(0, 5)
+    .map((item) => ({
+      id: item.id,
+      summary: item.summary,
+      clientId: item.client_id,
+      detail: [COMMUNICATION_KIND_LABEL[item.kind], clientName.get(item.client_id), formatShortDate(item.occurred_on, today)]
+        .filter(Boolean)
+        .join(" · "),
+    }))
+
+  // Lançamentos: avulsos pelo vencimento; recorrências levam ao mês atual.
+  const financeResults: SearchResults["finance"] = [
+    ...finance.recurrences
+      .filter((recurrence) => includesText(recurrence.description, query))
+      .map((recurrence) => ({
+        key: `r-${recurrence.id}`,
+        description: recurrence.description,
+        href: "/financeiro",
+        detail: `${formatMoney(recurrence.amount_cents)} todo mês, dia ${recurrence.day_of_month}`,
+      })),
+    ...finance.entries
+      .filter((entry) => !entry.recurrence_id && includesText(entry.description, query))
+      .sort((a, b) => b.due_on.localeCompare(a.due_on))
+      .map((entry) => ({
+        key: entry.id,
+        description: entry.description,
+        href: `/financeiro?mes=${periodParam(periodOf(entry.due_on))}`,
+        detail: `${formatMoney(entry.amount_cents)} · ${entry.paid_on ? "quitado" : "vence"} ${formatShortDate(entry.paid_on ?? entry.due_on, today)}`,
+      })),
+  ].slice(0, 5)
+
+  return {
+    tasks: taskResults,
+    meetings: meetingResults,
+    docs: docResults,
+    clients: clientResults,
+    projects: projectResults,
+    decisions: decisionResults,
+    communications: communicationResults,
+    finance: financeResults,
+  }
 }

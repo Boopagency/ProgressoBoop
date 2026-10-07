@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
 import { ClientsPulseCard } from "@/features/clients/client-pulse"
+import { DecisionsCard } from "@/features/decisions/decisions-card"
 import { deleteMeeting, setMeetingStatus } from "@/features/meetings/actions"
 import { FrozenNote, PreviousAgreementsCard, TasksAgendaCard, type AgendaSource } from "@/features/meetings/agenda-panel"
 import { AgreementsCard } from "@/features/meetings/agreements"
@@ -55,7 +56,7 @@ import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatLongDate, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
-import type { ClientDetail, ClientReview, MeetingItem, MeetingRecord } from "@/lib/types"
+import type { ClientDetail, ClientReview, Decision, MeetingItem, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export interface MeetingViewProps {
@@ -71,6 +72,8 @@ export interface MeetingViewProps {
   /** Clientes e revisões, para o quadro de clientes da weekly. */
   clients: ClientDetail[]
   clientReviews: ClientReview[]
+  /** Decisões registradas nesta reunião. */
+  decisions: Decision[]
 }
 
 export function MeetingView({
@@ -83,9 +86,10 @@ export function MeetingView({
   siblings,
   clients,
   clientReviews,
+  decisions,
 }: MeetingViewProps) {
   const { tasks, today, keepInPlace } = useTasks()
-  const { currentUser, profiles, plans, clientById } = useWorkspace()
+  const { currentUser, profiles, projects, clientById } = useWorkspace()
   const { event, record, date } = entry
   const kind = meetingKind(event)
   const clientName = event.client_id ? (clientById.get(event.client_id)?.name ?? null) : null
@@ -104,7 +108,7 @@ export function MeetingView({
             today,
             tasks,
             profiles,
-            plans,
+            projects,
             previous,
             previousItems,
             keepInPlace,
@@ -156,6 +160,13 @@ export function MeetingView({
         <div className="contents xl:sticky xl:top-6 xl:block xl:min-w-0 xl:space-y-6">
           <div className={cn("min-w-0", closed ? "order-1" : "order-2")}>
             <AgreementsCard api={api} />
+          </div>
+          <div className={cn("min-w-0", closed ? "order-2" : "order-3")}>
+            <DecisionsCard
+              decisions={decisions}
+              defaults={{ meeting_id: record.id, client_id: event.client_id }}
+              emptyText="O que ficou definido (e passa a valer) nesta reunião. Ex.: preço mínimo, prazo padrão."
+            />
           </div>
           <div className={cn("min-w-0", closed ? "order-2" : "order-5")}>
             <SummaryCard meetingId={record.id} initial={record.summary} />

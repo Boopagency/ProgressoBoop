@@ -25,11 +25,14 @@ insert into public.clients (name, review_day)
 values ('Hertmann', 10), ('Velmont', 10), ('Hapuck Scents', 10), ('Boop', null)
 on conflict (name) do nothing;
 
--- Plano atual ----------------------------------------------------------------------
+-- Plano atual: projeto interno (sem cliente), em foco na tela Hoje ---------------------
 
-insert into public.plans (name, starts_on, ends_on)
-select 'Estruturação da Boop até 31/10', date '2026-09-25', date '2026-10-31'
-where not exists (select 1 from public.plans where name = 'Estruturação da Boop até 31/10');
+insert into public.projects (name, status, template, starts_on, due_on, pinned, owner_id, created_by)
+select 'Estruturação da Boop até 31/10', 'active', 'plan', date '2026-09-25', date '2026-10-31', true, p.id, p.id
+from public.profiles p
+join auth.users u on u.id = p.id
+where lower(u.email) = 'jabez@deumboop.com.br'
+  and not exists (select 1 from public.projects where name = 'Estruturação da Boop até 31/10');
 
 -- As 25 tarefas do plano -------------------------------------------------------------
 -- responsáveis: J = Jabez, R = Renatha, L = Léo (Todos = JRL)
@@ -76,10 +79,10 @@ insert into plan_seed values
   (24, 'Fechamento de outubro na planilha', 'L', '2026-10-31', 'finance', null),
   (25, 'Meta: 2 propostas enviadas, 1 contrato novo fechado', 'R', '2026-10-31', 'commercial', null);
 
-insert into public.tasks (title, due_date, area, client_id, plan_id, created_by, created_at)
+insert into public.tasks (title, due_date, area, client_id, project_id, created_by, created_at)
 select s.title, s.due, s.area, c.id, pl.id, jabez.id, now() + make_interval(secs => s.position)
 from plan_seed s
-cross join (select id from public.plans where name = 'Estruturação da Boop até 31/10') pl
+cross join (select id from public.projects where name = 'Estruturação da Boop até 31/10') pl
 cross join (
   select p.id from public.profiles p
   join auth.users u on u.id = p.id
@@ -87,14 +90,14 @@ cross join (
 ) jabez
 left join public.clients c on c.name = s.client
 where not exists (
-  select 1 from public.tasks t where t.plan_id = pl.id and t.title = s.title
+  select 1 from public.tasks t where t.project_id = pl.id and t.title = s.title
 );
 
 insert into public.task_assignees (task_id, profile_id)
 select t.id, p.id
 from plan_seed s
 join public.tasks t on t.title = s.title
-join public.plans pl on pl.id = t.plan_id and pl.name = 'Estruturação da Boop até 31/10'
+join public.projects pl on pl.id = t.project_id and pl.name = 'Estruturação da Boop até 31/10'
 join (values
   ('J', 'jabez@deumboop.com.br'),
   ('R', 'renatha@deumboop.com.br'),

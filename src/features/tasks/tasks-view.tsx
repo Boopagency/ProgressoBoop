@@ -1,6 +1,16 @@
 "use client"
 
-import { Building2, CalendarDays, CircleDashed, ListChecks, Tag } from "lucide-react"
+import {
+  Building2,
+  CalendarDays,
+  CircleDashed,
+  Columns3,
+  FolderKanban,
+  List,
+  ListChecks,
+  Table2,
+  Tag,
+} from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, type ReactNode } from "react"
 
@@ -14,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { filtersFromSearchParams, filtersToQuery } from "@/features/tasks/filters"
+import { compareProjects, isOpenProject } from "@/features/projects/logic"
+import { filtersFromSearchParams, filtersToQuery, viewModeFromSearchParams } from "@/features/tasks/filters"
 import {
   dayContext,
   DEFAULT_FILTERS,
@@ -28,10 +39,14 @@ import {
   type DueFilter,
   type StatusFilter,
   type TaskFilters,
+  type TaskViewMode,
 } from "@/features/tasks/logic"
 import { NewTaskButton, useNewTask } from "@/features/tasks/new-task-dialog"
+import { TaskBoard } from "@/features/tasks/task-board"
 import { TaskSection } from "@/features/tasks/task-section"
+import { TaskTable } from "@/features/tasks/task-table"
 import { useTasks } from "@/features/tasks/tasks-provider"
+import { SavedViewsBar } from "@/features/views/saved-views-bar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { TASK_AREA_LABEL, TASK_AREAS } from "@/lib/labels"
 import type { TaskArea } from "@/lib/types"
@@ -59,13 +74,19 @@ const AREA_OPTIONS: { value: TaskArea | "all"; label: string }[] = [
   ...TASK_AREAS.map((area) => ({ value: area, label: TASK_AREA_LABEL[area] })),
 ]
 
+const VIEW_OPTIONS: { value: TaskViewMode; label: string; icon: ReactNode }[] = [
+  { value: "list", label: "Lista", icon: <List /> },
+  { value: "table", label: "Tabela", icon: <Table2 /> },
+  { value: "board", label: "Quadro", icon: <Columns3 /> },
+]
+
 function countLabel(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`
 }
 
 export function TasksView() {
   const { tasks, today, keepInPlace, openTask } = useTasks()
-  const { currentUser, profiles, clients } = useWorkspace()
+  const { currentUser, profiles, clients, projects } = useWorkspace()
   const { openNewTask } = useNewTask()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -84,21 +105,29 @@ export function TasksView() {
   }, [taskParam])
 
   // A URL é a fonte da verdade dos filtros; valores desconhecidos voltam ao padrão.
-  const parsed = filtersFromSearchParams(Object.fromEntries(searchParams))
+  const params = Object.fromEntries(searchParams)
+  const parsed = filtersFromSearchParams(params)
+  const view = viewModeFromSearchParams(params)
   const filters: TaskFilters = {
     ...parsed,
     person:
       parsed.person === "mine" || profiles.some((profile) => profile.id === parsed.person)
         ? parsed.person
         : DEFAULT_FILTERS.person,
-    client: clients.some((client) => client.id === parsed.client)
-      ? parsed.client
-      : DEFAULT_FILTERS.client,
+    client: clients.some((client) => client.id === parsed.client) ? parsed.client : DEFAULT_FILTERS.client,
+    project:
+      parsed.project === "none" || projects.some((project) => project.id === parsed.project)
+        ? parsed.project
+        : DEFAULT_FILTERS.project,
+  }
+  const query = filtersToQuery(filters, view)
+
+  function navigate(next: string) {
+    window.history.replaceState(null, "", next ? `${pathname}?${next}` : pathname)
   }
 
-  function update(patch: Partial<TaskFilters>) {
-    const query = filtersToQuery({ ...filters, ...patch })
-    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname)
+  function update(patch: Partial<TaskFilters>, nextView: TaskViewMode = view) {
+    navigate(filtersToQuery({ ...filters, ...patch }, nextView))
   }
 
   function clearFilters() {
@@ -106,18 +135,25 @@ export function TasksView() {
       status: DEFAULT_FILTERS.status,
       area: DEFAULT_FILTERS.area,
       client: DEFAULT_FILTERS.client,
+      project: DEFAULT_FILTERS.project,
       due: DEFAULT_FILTERS.due,
     })
   }
 
   const ctx = dayContext(today)
-  const visible = filterTasks(tasks, filters, ctx, currentUser.id, keepInPlace)
+  // O quadro mostra todos os status (as colunas são o status).
+  const visible = filterTasks(tasks, filters, ctx, currentUser.id, keepInPlace, { ignoreStatus: view === "board" })
   const groups = groupTasks(visible, ctx, keepInPlace)
   const openCount = visible.filter((task) => !isDone(task)).length
   const overdueCount = groups.overdue.filter((task) => !isDone(task)).length
   const sections = TASK_GROUP_ORDER.filter((key) => groups[key].length > 0)
 
   const selectedPerson = profiles.find((profile) => profile.id === filters.person)
+  const selectedProject = projects.find((project) => project.id === filters.project)
+  const newTaskDefaults = {
+    ...(selectedPerson ? { assignee_ids: [selectedPerson.id] } : {}),
+    ...(selectedProject ? { project_id: selectedProject.id, client_id: selectedProject.client_id } : {}),
+  }
   const personOptions = [
     { value: "all", label: "Todas" },
     { value: "mine", label: "Minhas" },
@@ -127,6 +163,14 @@ export function TasksView() {
     { value: "all", label: "Todos os clientes" },
     ...clients.map((client) => ({ value: client.id, label: client.name })),
   ]
+  const projectOptions = [
+    { value: "all", label: "Todos os projetos" },
+    { value: "none", label: "Sem projeto" },
+    ...projects
+      .filter((project) => isOpenProject(project) || project.id === filters.project)
+      .sort(compareProjects)
+      .map((project) => ({ value: project.id, label: project.name })),
+  ]
 
   const summary = [
     countLabel(openCount, "aberta", "abertas"),
@@ -134,21 +178,17 @@ export function TasksView() {
   ]
     .filter(Boolean)
     .join(" · ")
+  const filtered = hasActiveFilters(filters) || filters.person !== DEFAULT_FILTERS.person
+  const isEmpty = view === "list" ? sections.length === 0 : visible.length === 0
 
   return (
-    <PageContainer className="max-w-[1240px]">
-      <PageHeader
-        title="Tarefas"
-        description={summary}
-        actions={
-          <NewTaskButton
-            defaults={selectedPerson ? { assignee_ids: [selectedPerson.id] } : undefined}
-          />
-        }
-      />
+    <PageContainer className="max-w-[1320px]">
+      <PageHeader title="Tarefas" description={summary} actions={<NewTaskButton defaults={newTaskDefaults} />} />
 
-      <div className="mt-7 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="-mx-4 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:px-0">
+      <SavedViewsBar query={query} onApply={navigate} className="mt-6" />
+
+      <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:px-0">
           <SegmentedControl
             aria-label="Pessoa"
             value={filters.person}
@@ -157,21 +197,23 @@ export function TasksView() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {view !== "board" ? (
+            <FilterSelect
+              ariaLabel="Status"
+              icon={<CircleDashed />}
+              value={filters.status}
+              defaultValue={DEFAULT_FILTERS.status}
+              options={STATUS_OPTIONS}
+              onChange={(status) => update({ status })}
+            />
+          ) : null}
           <FilterSelect
-            ariaLabel="Status"
-            icon={<CircleDashed />}
-            value={filters.status}
-            defaultValue={DEFAULT_FILTERS.status}
-            options={STATUS_OPTIONS}
-            onChange={(status) => update({ status })}
-          />
-          <FilterSelect
-            ariaLabel="Área"
-            icon={<Tag />}
-            value={filters.area}
-            defaultValue={DEFAULT_FILTERS.area}
-            options={AREA_OPTIONS}
-            onChange={(area) => update({ area })}
+            ariaLabel="Projeto"
+            icon={<FolderKanban />}
+            value={filters.project}
+            defaultValue={DEFAULT_FILTERS.project}
+            options={projectOptions}
+            onChange={(project) => update({ project })}
           />
           <FilterSelect
             ariaLabel="Cliente"
@@ -180,6 +222,14 @@ export function TasksView() {
             defaultValue={DEFAULT_FILTERS.client}
             options={clientOptions}
             onChange={(client) => update({ client })}
+          />
+          <FilterSelect
+            ariaLabel="Área"
+            icon={<Tag />}
+            value={filters.area}
+            defaultValue={DEFAULT_FILTERS.area}
+            options={AREA_OPTIONS}
+            onChange={(area) => update({ area })}
           />
           <FilterSelect
             ariaLabel="Prazo"
@@ -194,10 +244,21 @@ export function TasksView() {
               Limpar filtros
             </Button>
           ) : null}
+          <ViewSwitch value={view} onChange={(next) => update({}, next)} />
         </div>
       </div>
 
-      {sections.length > 0 ? (
+      {isEmpty ? (
+        <EmptyState
+          filtered={filtered}
+          onClear={() => update({ ...DEFAULT_FILTERS })}
+          onCreate={() => openNewTask(newTaskDefaults)}
+        />
+      ) : view === "table" ? (
+        <TaskTable tasks={visible} className="mt-6" />
+      ) : view === "board" ? (
+        <TaskBoard tasks={visible} className="mt-6" />
+      ) : (
         <div className="mt-8 space-y-9">
           {sections.map((key) => (
             <TaskSection
@@ -210,16 +271,35 @@ export function TasksView() {
             />
           ))}
         </div>
-      ) : (
-        <EmptyState
-          filtered={hasActiveFilters(filters) || filters.person !== DEFAULT_FILTERS.person}
-          onClear={() => update({ ...DEFAULT_FILTERS })}
-          onCreate={() =>
-            openNewTask(selectedPerson ? { assignee_ids: [selectedPerson.id] } : undefined)
-          }
-        />
       )}
     </PageContainer>
+  )
+}
+
+/** Lista, Tabela ou Quadro (ícones; o nome aparece para leitores de tela). */
+function ViewSwitch({ value, onChange }: { value: TaskViewMode; onChange: (view: TaskViewMode) => void }) {
+  return (
+    <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-lg bg-muted p-0.5 xl:ml-1">
+      {VIEW_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          title={option.label}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
+            value === option.value &&
+              "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+          )}
+        >
+          {option.icon}
+          <span className="hidden sm:inline">{option.label}</span>
+          <span className="sr-only sm:hidden">{option.label}</span>
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -251,14 +331,14 @@ function FilterSelect<T extends string>({
         size="sm"
         aria-label={ariaLabel}
         className={cn(
-          "h-8 gap-1.5 rounded-md px-2.5 text-[13px] shadow-none [&>svg:first-child]:size-3.5",
+          "h-8 max-w-[220px] gap-1.5 rounded-md px-2.5 text-[13px] shadow-none [&>svg:first-child]:size-3.5 [&_[data-slot=select-value]]:truncate",
           active && "border-foreground/20 bg-accent font-medium text-foreground"
         )}
       >
         {icon}
         <SelectValue />
       </SelectTrigger>
-      <SelectContent position="popper" align="start">
+      <SelectContent position="popper" align="start" className="max-h-80">
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

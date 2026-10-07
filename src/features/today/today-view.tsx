@@ -5,8 +5,9 @@ import { useState } from "react"
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { ReviewsDueCard } from "@/features/clients/client-pulse"
+import { FinanceAlertCard } from "@/features/finance/finance-cards"
+import { focusProjects, projectStats } from "@/features/projects/logic"
 import {
-  currentPlan,
   dayContext,
   dueWithin,
   firstName,
@@ -30,6 +31,8 @@ import type {
   ClientDetail,
   ClientReview,
   DocSummary,
+  FinanceEntry,
+  FinanceRecurrence,
   MeetingItem,
   MeetingRecord,
 } from "@/lib/types"
@@ -47,6 +50,7 @@ export function TodayView({
   meetingRecords,
   meetingItems,
   docs,
+  finance,
   initialScope,
 }: {
   greeting: string
@@ -56,10 +60,11 @@ export function TodayView({
   meetingRecords: MeetingRecord[]
   meetingItems: MeetingItem[]
   docs: DocSummary[]
+  finance: { entries: FinanceEntry[]; recurrences: FinanceRecurrence[] }
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
-  const { currentUser, plans } = useWorkspace()
+  const { currentUser, projects } = useWorkspace()
   const [scope, setScope] = useState<TodayScope>(initialScope)
 
   function changeScope(next: TodayScope) {
@@ -72,14 +77,17 @@ export function TodayView({
   const groups = groupTasks(visible, ctx, keepInPlace)
   const summary = summarize(visible, ctx)
   const week = progressOf(dueWithin(visible, ctx.week))
-  // O plano é da equipe: o percentual principal conta todas as tarefas dele.
-  const plan = currentPlan(plans, today)
-  const planTasks = plan ? tasks.filter((task) => task.plan_id === plan.id) : []
-  const planProgress = plan ? progressOf(planTasks) : null
-  const myPlanProgress =
-    plan && scope === "mine"
-      ? progressOf(planTasks.filter((task) => isAssignedTo(task, currentUser.id)))
-      : null
+  // Projetos em foco são da equipe: o percentual conta todas as tarefas deles.
+  const focus = focusProjects(projects)
+    .slice(0, 4)
+    .map((project) => ({
+      project,
+      stats: projectStats(project.id, tasks, today),
+      mine:
+        scope === "mine"
+          ? progressOf(tasks.filter((task) => task.project_id === project.id && isAssignedTo(task, currentUser.id)))
+          : null,
+    }))
 
   return (
     <PageContainer className="max-w-[1240px]">
@@ -107,9 +115,7 @@ export function TodayView({
       */}
       <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <ProgressCard
-          plan={plan}
-          planProgress={planProgress}
-          mine={myPlanProgress}
+          focus={focus}
           week={week}
           weekRange={ctx.week}
           today={today}
@@ -149,6 +155,7 @@ export function TodayView({
         <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
           <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
           <ReviewsDueCard clients={clients} reviews={reviews} />
+          <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
           <DocsToReview docs={docs} scope={scope} />
           <Agenda events={events} today={today} />
         </div>

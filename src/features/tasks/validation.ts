@@ -11,7 +11,7 @@ export interface TaskInput {
   due_date: DateKey | null
   area: TaskArea | null
   client_id: string | null
-  plan_id: string | null
+  project_id: string | null
   priority: TaskPriority
   status: TaskStatus
 }
@@ -36,7 +36,7 @@ function optionalId(value: unknown): string | null | undefined {
 /**
  * Valida o formato de uma alteração vinda do cliente. Server Actions recebem
  * dados de qualquer origem, então nada é confiado sem checagem. A existência
- * de pessoas, clientes e planos é garantida pelas chaves estrangeiras.
+ * de pessoas, clientes e projetos é garantida pelas chaves estrangeiras.
  */
 export function parseTaskPatch(raw: unknown): Parsed<TaskPatch> {
   if (!isRecord(raw)) return { ok: false, error: "Dados inválidos." }
@@ -86,10 +86,10 @@ export function parseTaskPatch(raw: unknown): Parsed<TaskPatch> {
     patch.client_id = clientId
   }
 
-  if ("plan_id" in raw) {
-    const planId = optionalId(raw.plan_id)
-    if (planId === undefined) return { ok: false, error: "Plano inválido." }
-    patch.plan_id = planId
+  if ("project_id" in raw) {
+    const projectId = optionalId(raw.project_id)
+    if (projectId === undefined) return { ok: false, error: "Projeto inválido." }
+    patch.project_id = projectId
   }
 
   if ("priority" in raw) {
@@ -121,7 +121,7 @@ export function parseTaskInput(raw: unknown): Parsed<TaskInput> {
       due_date: patch.due_date ?? null,
       area: patch.area ?? null,
       client_id: patch.client_id ?? null,
-      plan_id: patch.plan_id ?? null,
+      project_id: patch.project_id ?? null,
       priority: patch.priority ?? "normal",
       status: patch.status ?? "todo",
     },

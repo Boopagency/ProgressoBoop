@@ -45,11 +45,15 @@ import { ClientDialog, type ClientDialogState } from "@/features/clients/client-
 import { HealthBadge, HealthDot } from "@/features/clients/client-meta"
 import { currentHealth, healthHistory, monthName, periodParam } from "@/features/clients/logic"
 import { ReviewCard } from "@/features/clients/review-card"
+import { CommunicationsCard } from "@/features/communications/communications-card"
+import { DecisionsCard } from "@/features/decisions/decisions-card"
 import { DocKindTile, DocStatusBadge } from "@/features/docs/doc-meta"
 import { NewDocDialog, type NewDocDialogState } from "@/features/docs/new-doc-dialog"
 import { meetingsOverview, type MeetingEntry } from "@/features/meetings/logic"
 import { EntryStateBadge, dayLabel, entryState, timeLabel } from "@/features/meetings/meeting-meta"
+import { ClientFinanceCard } from "@/features/finance/finance-cards"
 import { MeetingLink } from "@/features/meetings/open-meeting"
+import { ClientProjectsCard } from "@/features/projects/client-projects-card"
 import { dayContext, firstName, groupTasks, TASK_GROUP_LABEL, type TaskGroupKey } from "@/features/tasks/logic"
 import { useNewTask } from "@/features/tasks/new-task-dialog"
 import { TaskRow } from "@/features/tasks/task-row"
@@ -58,7 +62,18 @@ import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { addDaysToKey, formatMonthYear, toDateKey } from "@/lib/dates"
 import { CLIENT_HEALTH_LABEL } from "@/lib/labels"
-import type { CalendarEvent, ClientDetail, ClientReview, DateKey, DocSummary, MeetingRecord } from "@/lib/types"
+import type {
+  CalendarEvent,
+  ClientDetail,
+  ClientReview,
+  Communication,
+  DateKey,
+  Decision,
+  DocSummary,
+  FinanceEntry,
+  FinanceRecurrence,
+  MeetingRecord,
+} from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export function ClientView({
@@ -68,6 +83,10 @@ export function ClientView({
   events,
   records,
   docs,
+  templateDocs,
+  communications,
+  decisions,
+  finance,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -75,7 +94,13 @@ export function ClientView({
   period: DateKey
   events: CalendarEvent[]
   records: MeetingRecord[]
+  /** Processos do cliente. */
   docs: DocSummary[]
+  /** Todos os processos (modelos de checklist para um projeto novo). */
+  templateDocs: DocSummary[]
+  communications: Communication[]
+  decisions: Decision[]
+  finance: { entries: FinanceEntry[]; recurrences: FinanceRecurrence[] }
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -212,14 +237,22 @@ export function ClientView({
       <div className="mt-8 flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-x-10">
         <div className="min-w-0 space-y-6">
           <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
+          <ClientProjectsCard clientId={client.id} docs={templateDocs} />
           <ClientTasksCard clientId={client.id} />
+          <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
           <ClientMeetingsCard client={client} events={events} records={records} onNew={() =>
             setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))
           } />
         </div>
-        <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6 xl:sticky xl:top-6">
+        <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
           <AboutCard client={client} />
+          <ClientFinanceCard clientId={client.id} entries={finance.entries} recurrences={finance.recurrences} today={today} />
           <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
+          <DecisionsCard
+            decisions={decisions}
+            defaults={{ client_id: client.id, area: "clients" }}
+            emptyText="Combinados de preço, escopo ou prazo com este cliente ficam aqui."
+          />
           <ClientDocsCard
             docs={docs}
             onNew={() =>
@@ -246,8 +279,9 @@ export function ClientView({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {client.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              O cadastro e as revisões mensais serão apagados. Tarefas, eventos e processos continuam, sem o
-              cliente. Para só tirar das listas, use “Desativar cliente”.
+              O cadastro, as revisões mensais e as comunicações serão apagados. Tarefas, projetos, eventos,
+              processos, decisões e lançamentos continuam, sem o cliente. Para só tirar das listas, use “Desativar
+              cliente”.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

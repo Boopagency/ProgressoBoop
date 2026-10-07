@@ -190,7 +190,7 @@ export async function setMeetingStatus(id: string, status: MeetingStatus): Promi
         now: now.toISOString(),
         tasks,
         profiles: workspace.profiles,
-        plans: workspace.plans,
+        projects: workspace.projects,
         previous: previousRecords(event, date, records, eventById),
         previousItems: items,
       })

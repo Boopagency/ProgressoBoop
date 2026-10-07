@@ -81,8 +81,8 @@ export async function setClientActive(id: string, active: boolean): Promise<Acti
 }
 
 /**
- * Exclui o cliente e as revisões dele. Tarefas, eventos e processos continuam,
- * sem o cliente.
+ * Exclui o cliente, as revisões e as comunicações dele. Tarefas, projetos,
+ * eventos, processos, decisões e lançamentos continuam, sem o cliente.
  */
 export async function deleteClient(id: string): Promise<ActionResult> {
   await requireUser()

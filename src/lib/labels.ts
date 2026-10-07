@@ -1,9 +1,14 @@
 import type {
   ClientHealth,
+  CommunicationChannel,
+  CommunicationKind,
+  DecisionStatus,
   DocKind,
   DocStatus,
   EventType,
+  FinanceKind,
   MeetingStatus,
+  ProjectStatus,
   TaskArea,
   TaskPriority,
   TaskStatus,
@@ -75,6 +80,63 @@ export const CLIENT_HEALTH_LABEL: Record<ClientHealth, string> = {
   healthy: "Saudável",
   attention: "Atenção",
   at_risk: "Em risco",
+}
+
+export const PROJECT_STATUSES = ["planned", "active", "paused", "done", "canceled"] as const satisfies readonly ProjectStatus[]
+export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+  planned: "Planejado",
+  active: "Em andamento",
+  paused: "Pausado",
+  done: "Concluído",
+  canceled: "Cancelado",
+}
+
+export const DECISION_STATUS_LABEL: Record<DecisionStatus, string> = {
+  active: "Em vigor",
+  revoked: "Revogada",
+}
+
+export const COMMUNICATION_KINDS = ["request", "approval", "feedback", "update", "other"] as const satisfies readonly CommunicationKind[]
+export const COMMUNICATION_KIND_LABEL: Record<CommunicationKind, string> = {
+  request: "Pedido",
+  approval: "Aprovação",
+  feedback: "Feedback",
+  update: "Atualização",
+  other: "Outro",
+}
+
+export const COMMUNICATION_CHANNELS = ["whatsapp", "email", "call", "meeting", "other"] as const satisfies readonly CommunicationChannel[]
+export const COMMUNICATION_CHANNEL_LABEL: Record<CommunicationChannel, string> = {
+  whatsapp: "WhatsApp",
+  email: "E-mail",
+  call: "Ligação",
+  meeting: "Reunião",
+  other: "Outro canal",
+}
+
+export const FINANCE_KIND_LABEL: Record<FinanceKind, string> = {
+  income: "Receita",
+  expense: "Despesa",
+}
+
+export function isProjectStatus(value: unknown): value is ProjectStatus {
+  return PROJECT_STATUSES.includes(value as ProjectStatus)
+}
+
+export function isDecisionStatus(value: unknown): value is DecisionStatus {
+  return value === "active" || value === "revoked"
+}
+
+export function isCommunicationKind(value: unknown): value is CommunicationKind {
+  return COMMUNICATION_KINDS.includes(value as CommunicationKind)
+}
+
+export function isCommunicationChannel(value: unknown): value is CommunicationChannel {
+  return COMMUNICATION_CHANNELS.includes(value as CommunicationChannel)
+}
+
+export function isFinanceKind(value: unknown): value is FinanceKind {
+  return value === "income" || value === "expense"
 }
 
 export function isClientHealth(value: unknown): value is ClientHealth {

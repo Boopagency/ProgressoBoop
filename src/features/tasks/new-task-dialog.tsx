@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ProjectSelect } from "@/features/projects/project-meta"
 import { createTask } from "@/features/tasks/actions"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
 import { DueDatePicker } from "@/features/tasks/due-date-picker"
@@ -44,7 +45,7 @@ import {
 import type { DateKey, TaskArea, TaskPriority } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-type NewTaskDefaults = Partial<Pick<TaskInput, "assignee_ids" | "due_date" | "area" | "client_id">>
+export type NewTaskDefaults = Partial<Pick<TaskInput, "assignee_ids" | "due_date" | "area" | "client_id" | "project_id">>
 
 interface NewTaskContextValue {
   openNewTask: (defaults?: NewTaskDefaults) => void
@@ -144,7 +145,7 @@ function NewTaskForm({
   defaults: NewTaskDefaults
   onDone: () => void
 }) {
-  const { currentUser, clients } = useWorkspace()
+  const { currentUser, clients, projectById } = useWorkspace()
   const [today] = useState<DateKey>(() => todayKey())
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -154,6 +155,7 @@ function NewTaskForm({
   const [dueDate, setDueDate] = useState<DateKey | null>(defaults.due_date ?? null)
   const [area, setArea] = useState<TaskArea | null>(defaults.area ?? null)
   const [clientId, setClientId] = useState<string | null>(defaults.client_id ?? null)
+  const [projectId, setProjectId] = useState<string | null>(defaults.project_id ?? null)
   const [priority, setPriority] = useState<TaskPriority>("normal")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startSaving] = useTransition()
@@ -173,7 +175,7 @@ function NewTaskForm({
         due_date: dueDate,
         area,
         client_id: clientId,
-        plan_id: null,
+        project_id: projectId,
         priority,
         status: "todo",
       })
@@ -281,6 +283,19 @@ function NewTaskForm({
               ))}
           </SelectContent>
         </Select>
+        <ProjectSelect
+          value={projectId}
+          clientId={clientId}
+          onChange={(next) => {
+            setProjectId(next)
+            // Projeto de cliente: a tarefa já vai com o cliente.
+            const project = next ? projectById.get(next) : undefined
+            if (project?.client_id && !clientId) setClientId(project.client_id)
+          }}
+          placeholder="Projeto"
+          showIcon
+          className={cn(CHIP, "max-w-[220px] gap-1.5 [&>svg:last-child]:hidden [&_[data-slot=select-value]]:truncate")}
+        />
         <Select
           value={priority}
           onValueChange={(value) => {

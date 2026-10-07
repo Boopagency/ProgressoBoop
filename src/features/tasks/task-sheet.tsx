@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react"
 import Link from "next/link"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 
 import {
   AlertDialog,
@@ -41,6 +41,9 @@ import {
 } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import { loadActivity } from "@/features/activity/actions"
+import { ActivityFeed } from "@/features/activity/activity-feed"
+import { ProjectSelect } from "@/features/projects/project-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
 import { DueDatePicker } from "@/features/tasks/due-date-picker"
 import { firstName } from "@/features/tasks/logic"
@@ -60,7 +63,7 @@ import {
   isTaskPriority,
   isTaskStatus,
 } from "@/lib/labels"
-import type { Task } from "@/lib/types"
+import type { ActivityEntry, Task } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 /** Valor usado nos Selects para "nenhum" (o Radix não aceita string vazia). */
@@ -89,13 +92,27 @@ export function TaskSheet({
 
 function TaskDetails({ task }: { task: Task }) {
   const { today, updateTask, toggleDone, deleteTask } = useTasks()
-  const { profileById, clients, plans, planById } = useWorkspace()
+  const { profileById, clients, projectById } = useWorkspace()
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? "")
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [activity, setActivity] = useState<ActivityEntry[] | null>(null)
+  const [activityVersion, setActivityVersion] = useState(0)
+
+  // Histórico e comentários: carrega ao abrir, quando a tarefa muda e depois
+  // de cada comentário.
+  useEffect(() => {
+    let current = true
+    void loadActivity("task", task.id).then((result) => {
+      if (current && result.ok) setActivity(result.data)
+    })
+    return () => {
+      current = false
+    }
+  }, [task.id, task.updated_at, activityVersion])
 
   const done = task.status === "done"
-  const plan = task.plan_id ? planById.get(task.plan_id) : undefined
+  const project = task.project_id ? projectById.get(task.project_id) : undefined
   const creator = profileById.get(task.created_by)
   const selectableClients = clients.filter(
     (client) => client.active || client.id === task.client_id
@@ -127,9 +144,17 @@ function TaskDetails({ task }: { task: Task }) {
       <SheetDescription className="sr-only">Detalhes e edição da tarefa.</SheetDescription>
 
       <div className="flex h-12 shrink-0 items-center gap-2 border-b pr-12 pl-5">
-        <span className="truncate text-xs text-muted-foreground">
-          {plan ? plan.name : "Tarefa"}
-        </span>
+        {project ? (
+          <Link
+            href={`/projetos/${project.id}`}
+            className="inline-flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            <FolderKanban className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{project.name}</span>
+          </Link>
+        ) : (
+          <span className="truncate text-xs text-muted-foreground">Tarefa</span>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -279,27 +304,21 @@ function TaskDetails({ task }: { task: Task }) {
             </Select>
           </Property>
 
-          <Property icon={<FolderKanban />} label="Plano">
-            <Select
-              value={task.plan_id ?? NONE}
-              onValueChange={(value) =>
-                updateTask(task.id, { plan_id: value === NONE ? null : value })
-              }
-            >
-              <SelectTrigger size="sm" className={PROPERTY_TRIGGER} aria-label="Plano">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" align="start">
-                <SelectItem value={NONE} className="text-muted-foreground">
-                  Nenhum
-                </SelectItem>
-                {plans.map((candidate) => (
-                  <SelectItem key={candidate.id} value={candidate.id}>
-                    {candidate.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Property icon={<FolderKanban />} label="Projeto">
+            <ProjectSelect
+              value={task.project_id}
+              clientId={task.client_id}
+              placeholder="Nenhum"
+              onChange={(projectId) => {
+                const next = projectId ? projectById.get(projectId) : undefined
+                // Projeto de cliente leva o cliente junto (se a tarefa ainda não tem).
+                updateTask(task.id, {
+                  project_id: projectId,
+                  ...(next?.client_id && !task.client_id ? { client_id: next.client_id } : {}),
+                })
+              }}
+              className={cn(PROPERTY_TRIGGER, "[&_[data-slot=select-value]]:truncate")}
+            />
           </Property>
         </dl>
 
@@ -316,6 +335,23 @@ function TaskDetails({ task }: { task: Task }) {
             className="mt-2 min-h-24 resize-none border-transparent bg-muted/50 shadow-none hover:bg-muted focus-visible:border-input focus-visible:bg-background"
           />
         </div>
+
+        <section aria-labelledby="task-activity" className="border-t px-5 pt-5 pb-6">
+          <h3 id="task-activity" className="mb-3 text-[13px] font-medium text-foreground">
+            Atividade
+          </h3>
+          {activity === null ? (
+            <p className="text-[13px] text-muted-foreground">Carregando…</p>
+          ) : (
+            <ActivityFeed
+              entries={activity}
+              target={{ type: "task", id: task.id }}
+              emptyText="Nenhuma mudança registrada ainda."
+              onChanged={() => setActivityVersion((current) => current + 1)}
+              limit={12}
+            />
+          )}
+        </section>
       </div>
 
       <div className="shrink-0 space-y-0.5 border-t px-5 py-3 text-xs text-muted-foreground">
@@ -361,6 +397,18 @@ function TaskDetails({ task }: { task: Task }) {
               className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
             >
               ver processo
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
+          </p>
+        ) : null}
+        {task.communication_id ? (
+          <p>
+            Nasceu de uma comunicação com o cliente ·{" "}
+            <Link
+              href={task.client_id ? `/comunicacoes?cliente=${task.client_id}` : "/comunicacoes"}
+              className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+            >
+              ver comunicações
               <ArrowUpRight className="size-3" aria-hidden="true" />
             </Link>
           </p>

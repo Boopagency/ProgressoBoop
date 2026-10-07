@@ -1,10 +1,11 @@
 import {
+  addDaysToKey,
   isWithin,
   toDateKey,
   weekRangeOf,
   type DateRange,
 } from "@/lib/dates"
-import type { DateKey, Plan, Profile, Task, TaskArea, TaskStatus } from "@/lib/types"
+import type { DateKey, Profile, Task, TaskArea, TaskStatus } from "@/lib/types"
 
 /**
  * Regras de negócio das tarefas: funções puras, sem React,
@@ -157,15 +158,6 @@ export function summarize(tasks: Task[], ctx: DayContext): TodaySummary {
   }
 }
 
-/** Plano que contém hoje (o que termina primeiro, se houver mais de um). */
-export function currentPlan(plans: Plan[], today: DateKey): Plan | null {
-  return (
-    plans
-      .filter((plan) => plan.starts_on <= today && today <= plan.ends_on)
-      .sort((a, b) => a.ends_on.localeCompare(b.ends_on))[0] ?? null
-  )
-}
-
 /* ------------------------------------------------------------------ */
 /* Filtros da tela Tarefas                                             */
 /* ------------------------------------------------------------------ */
@@ -175,11 +167,15 @@ export type PersonFilter = string
 export type StatusFilter = "open" | TaskStatus | "all"
 export type DueFilter = "any" | DueBucket
 
+/** "all", "none" (sem projeto) ou o id de um projeto. */
+export type ProjectFilter = string
+
 export interface TaskFilters {
   person: PersonFilter
   status: StatusFilter
   area: TaskArea | "all"
   client: string | "all"
+  project: ProjectFilter
   due: DueFilter
 }
 
@@ -188,14 +184,19 @@ export const DEFAULT_FILTERS: TaskFilters = {
   status: "open",
   area: "all",
   client: "all",
+  project: "all",
   due: "any",
 }
+
+/** Lista (por prazo), Tabela ou Quadro (por status). */
+export type TaskViewMode = "list" | "table" | "board"
 
 export function hasActiveFilters(filters: TaskFilters): boolean {
   return (
     filters.status !== DEFAULT_FILTERS.status ||
     filters.area !== DEFAULT_FILTERS.area ||
     filters.client !== DEFAULT_FILTERS.client ||
+    filters.project !== DEFAULT_FILTERS.project ||
     filters.due !== DEFAULT_FILTERS.due
   )
 }
@@ -211,16 +212,99 @@ export function filterTasks(
   filters: TaskFilters,
   ctx: DayContext,
   currentUserId: string,
-  keepInPlace: ReadonlySet<string> = new Set()
+  keepInPlace: ReadonlySet<string> = new Set(),
+  { ignoreStatus = false }: { ignoreStatus?: boolean } = {}
 ): Task[] {
   const personId = filters.person === "mine" ? currentUserId : filters.person
   return tasks.filter((task) => {
     if (personId !== "all" && !isAssignedTo(task, personId)) return false
-    if (!keepInPlace.has(task.id) && !matchesStatus(task, filters.status)) return false
+    if (!ignoreStatus && !keepInPlace.has(task.id) && !matchesStatus(task, filters.status)) return false
     if (filters.area !== "all" && task.area !== filters.area) return false
     if (filters.client !== "all" && task.client_id !== filters.client) return false
+    if (filters.project === "none" ? task.project_id !== null : filters.project !== "all" && task.project_id !== filters.project) {
+      return false
+    }
     if (filters.due !== "any" && dueBucket(task, ctx) !== filters.due) return false
     return true
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Quadro e tabela                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Concluídas que aparecem no quadro: as dos últimos 14 dias. */
+export const BOARD_DONE_DAYS = 14
+
+/** Colunas do quadro: A fazer, Fazendo e Feito (só as concluídas recentes). */
+export function boardColumns(
+  tasks: Task[],
+  today: DateKey,
+  keepInPlace: ReadonlySet<string> = new Set()
+): Record<TaskStatus, Task[]> {
+  const since = addDaysToKey(today, -BOARD_DONE_DAYS)
+  const columns: Record<TaskStatus, Task[]> = { todo: [], doing: [], done: [] }
+  for (const task of tasks) {
+    if (task.status === "done") {
+      const day = task.completed_at ? toDateKey(task.completed_at) : null
+      if (!keepInPlace.has(task.id) && (day === null || day < since)) continue
+    }
+    columns[task.status].push(task)
+  }
+  columns.todo.sort(compareTasks)
+  columns.doing.sort(compareTasks)
+  columns.done.sort(compareCompleted)
+  return columns
+}
+
+export type TaskSortKey = "title" | "status" | "due" | "priority" | "project" | "client" | "area"
+
+const STATUS_WEIGHT: Record<TaskStatus, number> = { doing: 0, todo: 1, done: 2 }
+
+/** Ordenação da tabela. Empates caem na ordem padrão (prazo, prioridade). */
+export function sortTasks(
+  tasks: Task[],
+  key: TaskSortKey,
+  direction: "asc" | "desc",
+  names: { project: (id: string | null) => string; client: (id: string | null) => string; area: (area: TaskArea | null) => string }
+): Task[] {
+  const factor = direction === "asc" ? 1 : -1
+  const text = (a: string, b: string) => {
+    if (!a && b) return 1
+    if (a && !b) return -1
+    return a.localeCompare(b, "pt-BR")
+  }
+  return [...tasks].sort((a, b) => {
+    let result = 0
+    switch (key) {
+      case "title":
+        result = factor * a.title.localeCompare(b.title, "pt-BR")
+        break
+      case "status":
+        result = factor * (STATUS_WEIGHT[a.status] - STATUS_WEIGHT[b.status])
+        break
+      case "priority":
+        result = factor * (PRIORITY_WEIGHT[a.priority] - PRIORITY_WEIGHT[b.priority])
+        break
+      case "due":
+        if (a.due_date !== b.due_date) {
+          // Sem prazo fica sempre no fim.
+          if (!a.due_date) return 1
+          if (!b.due_date) return -1
+          result = factor * (a.due_date < b.due_date ? -1 : 1)
+        }
+        break
+      case "project":
+        result = text(names.project(a.project_id), names.project(b.project_id)) * (names.project(a.project_id) && names.project(b.project_id) ? factor : 1)
+        break
+      case "client":
+        result = text(names.client(a.client_id), names.client(b.client_id)) * (names.client(a.client_id) && names.client(b.client_id) ? factor : 1)
+        break
+      case "area":
+        result = text(names.area(a.area), names.area(b.area)) * (names.area(a.area) && names.area(b.area) ? factor : 1)
+        break
+    }
+    return result !== 0 ? result : compareTasks(a, b)
   })
 }
 

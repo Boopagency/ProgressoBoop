@@ -1,6 +1,7 @@
 "use client"
 
 import { Check, ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { useOptimistic, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -11,6 +12,7 @@ import {
   openCount,
   type Agenda,
   type AgendaAgreement,
+  type AgendaProject,
   type AgendaTask,
   type TaskLists,
 } from "@/features/meetings/logic"
@@ -262,7 +264,9 @@ export function TasksAgendaCard({
         </p>
       </header>
 
-      {agenda.plan ? <PlanStrip plan={agenda.plan} /> : null}
+      {(agenda.projects ?? (agenda.plan ? [agenda.plan] : [])).map((project) => (
+        <ProjectStrip key={project.id} project={project} legacy={!agenda.projects} />
+      ))}
 
       {agenda.client ? (
         <div className="px-4 py-3">
@@ -317,20 +321,25 @@ export function TasksAgendaCard({
   )
 }
 
-function PlanStrip({ plan }: { plan: NonNullable<Agenda["plan"]> }) {
-  const percent = plan.total === 0 ? 0 : Math.round((plan.done / plan.total) * 100)
+/** Projeto em foco na weekly (ou o plano, nas pautas guardadas antes dos projetos). */
+function ProjectStrip({ project, legacy }: { project: AgendaProject; legacy: boolean }) {
+  const percent = project.total === 0 ? 0 : Math.round((project.done / project.total) * 100)
   return (
     <div className="border-b bg-muted/30 px-4 py-3">
       <div className="flex items-baseline justify-between gap-3">
         <p className="min-w-0 truncate text-[13px] text-muted-foreground">
-          Plano · <span className="text-foreground">{plan.name}</span>
+          {legacy ? "Plano" : "Em foco"} ·{" "}
+          <Link href={`/projetos/${project.id}`} className="text-foreground hover:text-brand-ink hover:underline">
+            {project.name}
+          </Link>
         </p>
         <p className="shrink-0 text-[13px] text-muted-foreground tabular-nums">
           <span className="font-display text-base font-semibold text-foreground">{percent}%</span> ·{" "}
-          {plan.done} de {plan.total}
+          {project.done} de {project.total}
+          {project.overdue ? <span className="text-overdue"> · {project.overdue} atrasada{project.overdue === 1 ? "" : "s"}</span> : null}
         </p>
       </div>
-      <Progress value={percent} aria-label={`Progresso do plano ${plan.name}`} className="mt-2 h-1.5" />
+      <Progress value={percent} aria-label={`Progresso de ${project.name}`} className="mt-2 h-1.5" />
     </div>
   )
 }

@@ -14,6 +14,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity: {
+        Row: {
+          action: Database["public"]["Enums"]["activity_action"]
+          actor_id: string | null
+          body: string | null
+          changes: Json
+          client_id: string | null
+          created_at: string
+          edited_at: string | null
+          entity_id: string
+          entity_title: string
+          entity_type: string
+          id: string
+          project_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["activity_action"]
+          actor_id?: string | null
+          body?: string | null
+          changes?: Json
+          client_id?: string | null
+          created_at?: string
+          edited_at?: string | null
+          entity_id: string
+          entity_title?: string
+          entity_type: string
+          id?: string
+          project_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["activity_action"]
+          actor_id?: string | null
+          body?: string | null
+          changes?: Json
+          client_id?: string | null
+          created_at?: string
+          edited_at?: string | null
+          entity_id?: string
+          entity_title?: string
+          entity_type?: string
+          id?: string
+          project_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_reviews: {
         Row: {
           checklist: Json
@@ -133,6 +200,144 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communications: {
+        Row: {
+          channel: Database["public"]["Enums"]["communication_channel"]
+          client_id: string
+          created_at: string
+          created_by: string
+          details: string | null
+          id: string
+          kind: Database["public"]["Enums"]["communication_kind"]
+          occurred_on: string
+          project_id: string | null
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["communication_channel"]
+          client_id: string
+          created_at?: string
+          created_by?: string
+          details?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["communication_kind"]
+          occurred_on?: string
+          project_id?: string | null
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["communication_channel"]
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          details?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["communication_kind"]
+          occurred_on?: string
+          project_id?: string | null
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decisions: {
+        Row: {
+          area: Database["public"]["Enums"]["task_area"] | null
+          client_id: string | null
+          context: string | null
+          created_at: string
+          created_by: string
+          decided_on: string
+          id: string
+          meeting_id: string | null
+          project_id: string | null
+          status: Database["public"]["Enums"]["decision_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          client_id?: string | null
+          context?: string | null
+          created_at?: string
+          created_by?: string
+          decided_on?: string
+          id?: string
+          meeting_id?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["decision_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          client_id?: string | null
+          context?: string | null
+          created_at?: string
+          created_by?: string
+          decided_on?: string
+          id?: string
+          meeting_id?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["decision_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decisions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -347,6 +552,165 @@ export type Database = {
           },
         ]
       }
+      finance_entries: {
+        Row: {
+          amount_cents: number
+          category: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string
+          description: string
+          due_on: string
+          id: string
+          kind: Database["public"]["Enums"]["finance_kind"]
+          notes: string | null
+          paid_on: string | null
+          period: string | null
+          project_id: string | null
+          recurrence_id: string | null
+          skipped: boolean
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          description: string
+          due_on: string
+          id?: string
+          kind: Database["public"]["Enums"]["finance_kind"]
+          notes?: string | null
+          paid_on?: string | null
+          period?: string | null
+          project_id?: string | null
+          recurrence_id?: string | null
+          skipped?: boolean
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          due_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["finance_kind"]
+          notes?: string | null
+          paid_on?: string | null
+          period?: string | null
+          project_id?: string | null
+          recurrence_id?: string | null
+          skipped?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_entries_recurrence_id_fkey"
+            columns: ["recurrence_id"]
+            isOneToOne: false
+            referencedRelation: "finance_recurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_recurrences: {
+        Row: {
+          amount_cents: number
+          category: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string
+          day_of_month: number
+          description: string
+          ends_on: string | null
+          id: string
+          kind: Database["public"]["Enums"]["finance_kind"]
+          notes: string | null
+          project_id: string | null
+          starts_on: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          day_of_month: number
+          description: string
+          ends_on?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["finance_kind"]
+          notes?: string | null
+          project_id?: string | null
+          starts_on: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          day_of_month?: number
+          description?: string
+          ends_on?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["finance_kind"]
+          notes?: string | null
+          project_id?: string | null
+          starts_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_recurrences_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_recurrences_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_recurrences_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_items: {
         Row: {
           content: string
@@ -536,6 +900,114 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          client_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_on: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          pinned: boolean
+          starts_on: string
+          status: Database["public"]["Enums"]["project_status"]
+          template: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_on?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          pinned?: boolean
+          starts_on: string
+          status?: Database["public"]["Enums"]["project_status"]
+          template?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_on?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          pinned?: boolean
+          starts_on?: string
+          status?: Database["public"]["Enums"]["project_status"]
+          template?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_views: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          page: string
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name: string
+          page?: string
+          query?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          page?: string
+          query?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_views_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_assignees: {
         Row: {
           profile_id: string
@@ -571,6 +1043,7 @@ export type Database = {
           area: Database["public"]["Enums"]["task_area"] | null
           client_id: string | null
           client_review_id: string | null
+          communication_id: string | null
           completed_at: string | null
           created_at: string
           created_by: string
@@ -581,6 +1054,7 @@ export type Database = {
           meeting_id: string | null
           plan_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
+          project_id: string | null
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
@@ -589,6 +1063,7 @@ export type Database = {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
           client_review_id?: string | null
+          communication_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -599,6 +1074,7 @@ export type Database = {
           meeting_id?: string | null
           plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
+          project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
@@ -607,6 +1083,7 @@ export type Database = {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
           client_review_id?: string | null
+          communication_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -617,6 +1094,7 @@ export type Database = {
           meeting_id?: string | null
           plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
+          project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
@@ -634,6 +1112,13 @@ export type Database = {
             columns: ["client_review_id"]
             isOneToOne: false
             referencedRelation: "client_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "communications"
             referencedColumns: ["id"]
           },
           {
@@ -662,6 +1147,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -709,12 +1201,23 @@ export type Database = {
       }
     }
     Enums: {
+      activity_action: "created" | "updated" | "deleted" | "comment"
       client_health: "healthy" | "attention" | "at_risk"
+      communication_channel: "whatsapp" | "email" | "call" | "meeting" | "other"
+      communication_kind:
+        | "update"
+        | "request"
+        | "approval"
+        | "feedback"
+        | "other"
+      decision_status: "active" | "revoked"
       doc_kind: "process" | "checklist" | "policy" | "guide"
       doc_status: "draft" | "active" | "review"
       event_type: "meeting" | "internal" | "delivery"
+      finance_kind: "income" | "expense"
       meeting_item_kind: "topic" | "agreement"
       meeting_status: "scheduled" | "done" | "canceled"
+      project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
         | "finance"
@@ -851,12 +1354,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_action: ["created", "updated", "deleted", "comment"],
       client_health: ["healthy", "attention", "at_risk"],
+      communication_channel: ["whatsapp", "email", "call", "meeting", "other"],
+      communication_kind: [
+        "update",
+        "request",
+        "approval",
+        "feedback",
+        "other",
+      ],
+      decision_status: ["active", "revoked"],
       doc_kind: ["process", "checklist", "policy", "guide"],
       doc_status: ["draft", "active", "review"],
       event_type: ["meeting", "internal", "delivery"],
+      finance_kind: ["income", "expense"],
       meeting_item_kind: ["topic", "agreement"],
       meeting_status: ["scheduled", "done", "canceled"],
+      project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [
         "commercial",
         "finance",

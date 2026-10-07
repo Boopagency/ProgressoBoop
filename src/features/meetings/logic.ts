@@ -1,10 +1,9 @@
 import { expandEvents, WEEKLY } from "@/features/calendar/recurrence"
+import { focusProjects, projectStats } from "@/features/projects/logic"
 import {
   compareCompleted,
   compareTasks,
-  currentPlan,
   isAssignedTo,
-  progressOf,
 } from "@/features/tasks/logic"
 import { addDaysToKey, daysBetween, isWithin, toDateKey, toTimeLabel, weekRangeOf } from "@/lib/dates"
 import type {
@@ -12,8 +11,8 @@ import type {
   DateKey,
   MeetingItem,
   MeetingRecord,
-  Plan,
   Profile,
+  Project,
   Task,
   TaskArea,
   TaskPriority,
@@ -312,13 +311,25 @@ export interface Agenda<T extends AgendaTask = AgendaTask> {
   until: DateKey
   /** Concluídas a partir deste dia (data da reunião anterior). */
   since: DateKey
-  plan: { id: string; name: string; done: number; total: number } | null
+  /** Pautas guardadas antes dos projetos: o plano do mês. */
+  plan: AgendaProject | null
+  /** Weekly: projetos em foco (os fixados na tela Hoje). Ausente em pautas antigas. */
+  projects?: AgendaProject[]
   /** Weekly: uma entrada por pessoa, na ordem da equipe. */
   people: ({ profile_id: string } & TaskLists<T>)[]
   /** Reunião com cliente: as tarefas daquele cliente. */
   client: TaskLists<T> | null
   /** Da reunião anterior (todos) e das mais antigas (só os em aberto). */
   agreements: AgendaAgreement[]
+}
+
+export interface AgendaProject {
+  id: string
+  name: string
+  done: number
+  total: number
+  /** Tarefas abertas com prazo vencido (ausente em pautas antigas). */
+  overdue?: number
 }
 
 export interface AgendaInput {
@@ -330,7 +341,7 @@ export interface AgendaInput {
   now?: Timestamp
   tasks: Task[]
   profiles: Profile[]
-  plans: Plan[]
+  projects: Project[]
   /** Reuniões anteriores da série (mais recente primeiro) e seus combinados. */
   previous: { record: MeetingRecord; date: DateKey }[]
   previousItems: MeetingItem[]
@@ -393,16 +404,15 @@ export function buildAgenda(input: AgendaInput): Agenda<Task> {
   )
   const range = { reference, until, since }
 
-  let plan: Agenda["plan"] = null
+  let projects: AgendaProject[] = []
   let people: Agenda<Task>["people"] = []
   let client: Agenda<Task>["client"] = null
 
   if (kind === "weekly") {
-    const current = currentPlan(input.plans, today)
-    if (current) {
-      const progress = progressOf(tasks.filter((task) => task.plan_id === current.id))
-      plan = { id: current.id, name: current.name, done: progress.done, total: progress.total }
-    }
+    projects = focusProjects(input.projects).map((project) => {
+      const stats = projectStats(project.id, tasks, today)
+      return { id: project.id, name: project.name, done: stats.done, total: stats.total, overdue: stats.overdue }
+    })
     people = input.profiles.map((profile) => ({
       profile_id: profile.id,
       ...taskLists(
@@ -465,7 +475,8 @@ export function buildAgenda(input: AgendaInput): Agenda<Task> {
     reference,
     until,
     since,
-    plan,
+    plan: null,
+    projects,
     people,
     client,
     agreements,

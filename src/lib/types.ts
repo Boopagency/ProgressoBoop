@@ -23,6 +23,18 @@ export type DocKind = "process" | "checklist" | "policy" | "guide"
 export type DocStatus = "draft" | "active" | "review"
 /** Semáforo do cliente: Saudável, Atenção ou Em risco. */
 export type ClientHealth = "healthy" | "attention" | "at_risk"
+/** Planejado, Em andamento, Pausado, Concluído ou Cancelado. */
+export type ProjectStatus = "planned" | "active" | "paused" | "done" | "canceled"
+/** Em vigor ou Revogada. */
+export type DecisionStatus = "active" | "revoked"
+/** Atualização, Pedido, Aprovação, Feedback ou Outro. */
+export type CommunicationKind = "update" | "request" | "approval" | "feedback" | "other"
+export type CommunicationChannel = "whatsapp" | "email" | "call" | "meeting" | "other"
+/** Receita ou despesa. */
+export type FinanceKind = "income" | "expense"
+export type ActivityAction = "created" | "updated" | "deleted" | "comment"
+/** Itens com histórico (e, os três primeiros, com comentários). */
+export type ActivityEntityType = "task" | "project" | "decision" | "communication" | "finance" | "recurrence"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -82,11 +94,37 @@ export interface ClientReview {
   updated_at: Timestamp
 }
 
-export interface Plan {
+/**
+ * Projeto: tarefas com começo, prazo, responsável e progresso. Sem cliente, é
+ * um projeto interno da Boop (os antigos planos, como "Estruturação da Boop").
+ */
+export interface Project {
   id: string
   name: string
+  client_id: string | null
+  owner_id: string | null
+  status: ProjectStatus
+  /** Modelo usado na criação (ex.: "site"). */
+  template: string | null
+  description: string | null
   starts_on: DateKey
-  ends_on: DateKey
+  due_on: DateKey | null
+  /** Em foco: aparece na tela Hoje e na pauta da weekly. */
+  pinned: boolean
+  completed_at: Timestamp | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Filtros da tela Tarefas com nome, da equipe toda. */
+export interface SavedView {
+  id: string
+  name: string
+  /** Parâmetros da URL (ex.: "pessoa=mine&prazo=overdue&ver=quadro"). */
+  query: string
+  created_by: string
+  created_at: Timestamp
 }
 
 export interface Task {
@@ -96,7 +134,7 @@ export interface Task {
   /** Vem de `task_assignees`. */
   assignee_ids: string[]
   client_id: string | null
-  plan_id: string | null
+  project_id: string | null
   area: TaskArea | null
   status: TaskStatus
   priority: TaskPriority
@@ -108,6 +146,8 @@ export interface Task {
   doc_id: string | null
   /** Revisão mensal de cliente em que a tarefa nasceu (próximo passo). */
   client_review_id: string | null
+  /** Comunicação com o cliente em que a tarefa nasceu (ex.: um pedido). */
+  communication_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp
@@ -197,6 +237,101 @@ export interface DocVersion {
   /** Quem deixou o documento assim, e quando. */
   saved_by: string | null
   saved_at: Timestamp
+}
+
+/** Decisão: o que ficou definido, por quê e de onde veio. */
+export interface Decision {
+  id: string
+  title: string
+  /** Por quê, alternativas descartadas, detalhes. */
+  context: string | null
+  decided_on: DateKey
+  status: DecisionStatus
+  area: TaskArea | null
+  client_id: string | null
+  project_id: string | null
+  /** Reunião em que foi decidida. */
+  meeting_id: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** O que foi falado com um cliente. */
+export interface Communication {
+  id: string
+  client_id: string
+  project_id: string | null
+  kind: CommunicationKind
+  channel: CommunicationChannel
+  summary: string
+  details: string | null
+  occurred_on: DateKey
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Lançamento de receita ou despesa (avulso ou um mês de uma recorrência). */
+export interface FinanceEntry {
+  id: string
+  kind: FinanceKind
+  description: string
+  /** Valor em centavos. */
+  amount_cents: number
+  due_on: DateKey
+  /** Recebido (receita) ou pago (despesa) neste dia. */
+  paid_on: DateKey | null
+  /** Mês de uma recorrência que não vale (ex.: sem cobrança). */
+  skipped: boolean
+  category: string | null
+  client_id: string | null
+  project_id: string | null
+  recurrence_id: string | null
+  /** Mês da recorrência (dia 1). */
+  period: DateKey | null
+  notes: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Receita ou despesa mensal (fee, assinatura). */
+export interface FinanceRecurrence {
+  id: string
+  kind: FinanceKind
+  description: string
+  amount_cents: number
+  /** Dia do vencimento; em meses mais curtos, o último dia. */
+  day_of_month: number
+  category: string | null
+  client_id: string | null
+  project_id: string | null
+  /** Primeiro e último mês (dia 1); sem fim = continua. */
+  starts_on: DateKey
+  ends_on: DateKey | null
+  notes: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Registro do histórico ou comentário. */
+export interface ActivityEntry {
+  id: string
+  entity_type: ActivityEntityType
+  entity_id: string
+  /** Título do item no momento (vale também para itens excluídos). */
+  entity_title: string
+  project_id: string | null
+  client_id: string | null
+  action: ActivityAction
+  /** Campos alterados: { campo: [antes, depois] }. */
+  changes: Record<string, [unknown, unknown]>
+  body: string | null
+  actor_id: string | null
+  created_at: Timestamp
+  edited_at: Timestamp | null
 }
 
 /** Usuário autenticado (perfil + e-mail da conta). */

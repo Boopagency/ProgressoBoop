@@ -13,7 +13,7 @@ export async function getTasks(): Promise<Task[]> {
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id, title, description, client_id, plan_id, meeting_id, doc_id, client_review_id, area, status, priority, due_date, completed_at, created_by, created_at, updated_at, task_assignees(profile_id)"
+      "id, title, description, client_id, project_id, meeting_id, doc_id, client_review_id, communication_id, area, status, priority, due_date, completed_at, created_by, created_at, updated_at, task_assignees(profile_id)"
     )
     .order("due_date", { nullsFirst: false })
     .order("created_at")

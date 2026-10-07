@@ -5,7 +5,10 @@ import { getEvents } from "@/features/calendar/queries"
 import { ClientView } from "@/features/clients/client-view"
 import { parsePeriodParam, periodOf } from "@/features/clients/logic"
 import { getClient, getClientReviews } from "@/features/clients/queries"
+import { getCommunications } from "@/features/communications/queries"
+import { getDecisions } from "@/features/decisions/queries"
 import { getDocs } from "@/features/docs/queries"
+import { getFinance } from "@/features/finance/queries"
 import { getMeetingRecords } from "@/features/meetings/queries"
 import { getTasks } from "@/features/tasks/queries"
 import { TasksProvider } from "@/features/tasks/tasks-provider"
@@ -23,13 +26,16 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
     getEvents(),
     getMeetingRecords(),
     getDocs(),
+    getCommunications(id),
+    getDecisions(),
+    getFinance(),
   ])
   if (!client) notFound()
 
@@ -49,6 +55,10 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
         events={events}
         records={records}
         docs={docs.filter((doc) => doc.client_id === client.id)}
+        templateDocs={docs}
+        communications={communications}
+        decisions={decisions.filter((decision) => decision.client_id === client.id)}
+        finance={finance}
       />
     </TasksProvider>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getEvents } from "@/features/calendar/queries"
+import { getClientReviews, getClients } from "@/features/clients/queries"
 import {
   meetingEntry,
   previousRecords,
@@ -21,11 +22,13 @@ export default async function MeetingPage(props: PageProps<"/reunioes/[id]">) {
   const { id } = await props.params
   if (!isUuid(id)) notFound()
 
-  const [detail, tasks, events, { records, items }] = await Promise.all([
+  const [detail, tasks, events, { records, items }, clients, clientReviews] = await Promise.all([
     getMeetingDetail(id),
     getTasks(),
     getEvents(),
     getMeetingRecords(),
+    getClients(),
+    getClientReviews(),
   ])
   const event = detail ? events.find((candidate) => candidate.id === detail.record.event_id) : undefined
   if (!detail || !event) notFound()
@@ -46,6 +49,8 @@ export default async function MeetingPage(props: PageProps<"/reunioes/[id]">) {
         previous={previous}
         previousItems={items.filter((item) => previousIds.has(item.meeting_id))}
         siblings={seriesSiblings(event, date, records, events)}
+        clients={clients}
+        clientReviews={clientReviews}
       />
     </TasksProvider>
   )

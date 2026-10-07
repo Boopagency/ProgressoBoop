@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
+import { ReviewsDueCard } from "@/features/clients/client-pulse"
 import {
   currentPlan,
   dayContext,
@@ -23,7 +24,7 @@ import { ProgressCard } from "@/features/today/progress-card"
 import { SummaryStats } from "@/features/today/summary-stats"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatLongDate } from "@/lib/dates"
-import type { CalendarEvent } from "@/lib/types"
+import type { CalendarEvent, ClientDetail, ClientReview } from "@/lib/types"
 
 const SCOPE_OPTIONS = [
   { value: "mine", label: "Minhas" },
@@ -33,10 +34,14 @@ const SCOPE_OPTIONS = [
 export function TodayView({
   greeting,
   events,
+  clients,
+  reviews,
   initialScope,
 }: {
   greeting: string
   events: CalendarEvent[]
+  clients: ClientDetail[]
+  reviews: ClientReview[]
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
@@ -121,7 +126,8 @@ export function TodayView({
           />
         </div>
 
-        <div className="lg:col-start-2 lg:row-start-2 lg:self-start">
+        <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
+          <ReviewsDueCard clients={clients} reviews={reviews} />
           <Agenda events={events} today={today} />
         </div>
       </div>

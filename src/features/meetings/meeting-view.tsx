@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
+import { ClientsPulseCard } from "@/features/clients/client-pulse"
 import { deleteMeeting, setMeetingStatus } from "@/features/meetings/actions"
 import { FrozenNote, PreviousAgreementsCard, TasksAgendaCard, type AgendaSource } from "@/features/meetings/agenda-panel"
 import { AgreementsCard } from "@/features/meetings/agreements"
@@ -54,7 +55,7 @@ import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatLongDate, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
-import type { MeetingItem, MeetingRecord } from "@/lib/types"
+import type { ClientDetail, ClientReview, MeetingItem, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export interface MeetingViewProps {
@@ -67,6 +68,9 @@ export interface MeetingViewProps {
   previousItems: MeetingItem[]
   /** Reunião anterior e próxima da mesma série, para navegar. */
   siblings: { previous: MeetingEntry | null; next: MeetingEntry | null }
+  /** Clientes e revisões, para o quadro de clientes da weekly. */
+  clients: ClientDetail[]
+  clientReviews: ClientReview[]
 }
 
 export function MeetingView({
@@ -77,6 +81,8 @@ export function MeetingView({
   previous,
   previousItems,
   siblings,
+  clients,
+  clientReviews,
 }: MeetingViewProps) {
   const { tasks, today, keepInPlace } = useTasks()
   const { currentUser, profiles, plans, clientById } = useWorkspace()
@@ -137,6 +143,9 @@ export function MeetingView({
             <div className="order-4 min-w-0 space-y-6">
               {!source.live ? <FrozenNote frozenAt={source.frozenAt} /> : null}
               <PreviousAgreementsCard source={source} />
+              {kind === "weekly" && source.live ? (
+                <ClientsPulseCard clients={clients} reviews={clientReviews} />
+              ) : null}
               <TasksAgendaCard source={source} clientName={clientName} />
             </div>
           ) : null}
@@ -236,7 +245,17 @@ function MeetingHeader({
     <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <MeetingKindBadge kind={kind} clientName={clientName} />
+          {kind === "client" && event.client_id ? (
+            <Link
+              href={`/clientes/${event.client_id}`}
+              aria-label={`Ver o cliente ${clientName ?? ""}`.trim()}
+              className="rounded-full outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <MeetingKindBadge kind={kind} clientName={clientName} />
+            </Link>
+          ) : (
+            <MeetingKindBadge kind={kind} clientName={clientName} />
+          )}
           <EntryStateBadge state={state} />
         </div>
         <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground sm:text-[28px] sm:leading-9">

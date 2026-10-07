@@ -9,6 +9,10 @@ import type { PostgrestError } from "@supabase/supabase-js"
 export function dbFailure(error: PostgrestError, message: string): { ok: false; error: string } {
   console.error(`[supabase] ${error.code ?? "?"}: ${error.message}`)
   if (error.code === "42501") return { ok: false, error: "Sem permissão para esta ação." }
+  // Trava do fechamento do mês (trigger check_finance_lock).
+  if (error.message === "closed_month") {
+    return { ok: false, error: "Esse mês já foi fechado. Para mudar valores ou datas de pagamento, reabra o mês em Financeiro → Fechamento." }
+  }
   return { ok: false, error: message }
 }
 

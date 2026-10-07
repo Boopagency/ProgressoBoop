@@ -59,6 +59,21 @@
   --overdue: oklch(0.56 0.19 27);
   --success: oklch(0.6 0.13 158);
   --warning: oklch(0.74 0.15 72);
+  /* Versões para texto (contraste ≥ 4,5:1 no branco): variação boa e atenção. */
+  --success-ink: oklch(0.5 0.11 158);
+  --warning-ink: oklch(0.55 0.12 70);
+
+  /*
+   * Gráficos (validados contra a superfície branca: contraste e daltonismo).
+   * chart-1: o ciano da marca um passo mais escuro (marcas com ≥ 3:1);
+   * chart-1-light: o mesmo tom mais claro para o previsto (escala ordinal);
+   * chart-2: segunda série, quando houver; chart-muted: contexto.
+   */
+  --chart-1: #0a9fd8;
+  --chart-1-light: #5fc0e8;
+  --chart-2: #e8743b;
+  --chart-muted: oklch(0.84 0.004 85);
+  --chart-grid: oklch(0.94 0.003 90);
 
   /* Sidebar (mesmo tom do fundo geral) */
   --sidebar: oklch(0.974 0.002 95);
@@ -110,6 +125,14 @@
   --color-overdue: var(--overdue);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-success-ink: var(--success-ink);
+  --color-warning-ink: var(--warning-ink);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-1-light: var(--chart-1-light);
+  --color-chart-2: var(--chart-2);
+  --color-chart-muted: var(--chart-muted);
+  --color-chart-grid: var(--chart-grid);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -224,3 +247,25 @@
   accent-color: var(--brand-navy);
 }
 
+
+/* Relatório para imprimir / salvar em PDF (/relatorio). */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+
+  .report-block,
+  .report-section > h2 {
+    break-inside: avoid;
+  }
+
+  .report-section {
+    break-before: auto;
+  }
+}

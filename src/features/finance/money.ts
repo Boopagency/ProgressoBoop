@@ -7,12 +7,33 @@ const compact = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "B
 
 /** 350000 → "R$ 3.500,00". */
 export function formatMoney(cents: number): string {
-  return currency.format(cents / 100).replace(/ /g, " ")
+  // `|| 0` evita o "-R$ 0,00" de um zero negativo (ex.: −0 de uma linha de custo vazia).
+  return currency.format((cents || 0) / 100).replace(/ /g, " ")
 }
 
 /** 350000 → "R$ 3.500" (sem centavos, para resumos). */
 export function formatMoneyShort(cents: number): string {
-  return compact.format(Math.round(cents / 100)).replace(/ /g, " ")
+  return compact.format(Math.round(cents / 100) || 0).replace(/ /g, " ")
+}
+
+/**
+ * 350000 → "R$ 3,5 mil"; 120000000 → "R$ 1,2 mi" (eixos de gráfico). Feito à
+ * mão: a notação compacta do Intl muda entre versões (servidor × navegador).
+ */
+export function formatMoneyAxis(cents: number): string {
+  const reais = cents / 100
+  const size = Math.abs(reais)
+  const sign = reais < 0 ? "-" : ""
+  const short = (value: number) => (Math.round(value * 10) / 10).toString().replace(".", ",")
+  if (size >= 1_000_000) return `${sign}R$ ${short(size / 1_000_000)} mi`
+  if (size >= 1_000) return `${sign}R$ ${short(size / 1_000)} mil`
+  return `${sign}R$ ${Math.round(size)}`
+}
+
+/** Diferença com sinal: "+R$ 700", "−R$ 1.200". */
+export function formatMoneyDelta(cents: number): string {
+  if (cents === 0) return formatMoneyShort(0)
+  return `${cents > 0 ? "+" : "−"}${formatMoneyShort(Math.abs(cents))}`
 }
 
 /**

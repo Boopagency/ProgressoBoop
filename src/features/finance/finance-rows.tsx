@@ -10,6 +10,7 @@ import { dueLabel, itemStatus, type FinanceItem } from "@/features/finance/logic
 import { formatMoney } from "@/features/finance/money"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatShortDate } from "@/lib/dates"
+import { FINANCE_ACCOUNT_LABEL } from "@/lib/labels"
 import type { DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -67,6 +68,11 @@ export function FinanceRows({
       else if (paidOn) {
         toast.success(item.kind === "income" ? "Recebimento registrado" : "Pagamento registrado", {
           description: `${item.description} · ${formatMoney(item.amount_cents)}`,
+          // Recebimento pelo gateway: a taxa entra pelo formulário.
+          action:
+            item.account === "client_revenue"
+              ? { label: "Informar taxa", onClick: () => onOpen({ ...item, paid_on: paidOn }) }
+              : undefined,
         })
       }
     })
@@ -84,7 +90,9 @@ export function FinanceRows({
         const status = itemStatus(item, today)
         const client = item.client_id && !hide.includes("client") ? clientById.get(item.client_id) : undefined
         const project = item.project_id && !hide.includes("project") ? projectById.get(item.project_id) : undefined
-        const meta = [client?.name, project?.name, item.category].filter(Boolean)
+        // A categoria aparece quando não é a óbvia (receita de cliente).
+        const account = item.account !== "client_revenue" ? FINANCE_ACCOUNT_LABEL[item.account] : null
+        const meta = [client?.name, project?.name, account, item.category].filter(Boolean)
         const when =
           status === "skipped"
             ? "Pulado"

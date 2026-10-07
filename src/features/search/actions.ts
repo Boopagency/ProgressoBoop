@@ -5,6 +5,7 @@ import { getEvents } from "@/features/calendar/queries"
 import { periodOf, periodParam } from "@/features/clients/logic"
 import { getClients } from "@/features/clients/queries"
 import { getCommunications } from "@/features/communications/queries"
+import { getDeals } from "@/features/deals/queries"
 import { getDecisions } from "@/features/decisions/queries"
 import { matchesQuick } from "@/features/docs/logic"
 import { getDocs, searchDocs } from "@/features/docs/queries"
@@ -16,13 +17,13 @@ import { isDone } from "@/features/tasks/logic"
 import { getTasks } from "@/features/tasks/queries"
 import { getWorkspace } from "@/features/workspace/queries"
 import { formatShortDate, todayKey } from "@/lib/dates"
-import { COMMUNICATION_KIND_LABEL, PROJECT_STATUS_LABEL } from "@/lib/labels"
+import { COMMUNICATION_KIND_LABEL, DEAL_STAGE_LABEL, PROJECT_STATUS_LABEL } from "@/lib/labels"
 import { includesText } from "@/lib/text"
 import type { DateKey, TaskStatus } from "@/lib/types"
 
 /*
  * Busca geral (Ctrl/⌘ + K): tarefas, projetos, reuniões, decisões,
- * processos, clientes, comunicações e lançamentos. O volume é pequeno, então
+ * processos, clientes, comunicações, lançamentos e negócios. O volume é pequeno, então
  * títulos e nomes são filtrados aqui (sem acento); textos longos (processos,
  * resumos e transcrições) usam a busca do Postgres.
  */
@@ -45,6 +46,7 @@ export interface SearchResults {
   decisions: { id: string; title: string; detail: string }[]
   communications: { id: string; summary: string; clientId: string; detail: string }[]
   finance: { key: string; description: string; href: string; detail: string }[]
+  deals: { id: string; title: string; detail: string }[]
 }
 
 const EMPTY: SearchResults = {
@@ -56,6 +58,7 @@ const EMPTY: SearchResults = {
   decisions: [],
   communications: [],
   finance: [],
+  deals: [],
 }
 
 export async function searchEverything(rawQuery: string): Promise<SearchResults> {
@@ -65,7 +68,7 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
   // A busca textual do banco só vale a pena com algumas letras.
   const fullText = query.length >= 3
 
-  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits, workspace, decisions, communications, finance] =
+  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits, workspace, decisions, communications, finance, deals] =
     await Promise.all([
       getTasks(),
       getEvents(),
@@ -78,6 +81,7 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
       getDecisions(),
       getCommunications(),
       getFinance(),
+      getDeals(),
     ])
   const today = todayKey()
   const clientName = new Map(clients.map((client) => [client.id, client.name]))
@@ -204,6 +208,20 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
       })),
   ].slice(0, 5)
 
+  const dealResults = deals
+    .filter((deal) => {
+      const client = deal.client_id ? (clientName.get(deal.client_id) ?? "") : ""
+      return includesText(`${deal.title} ${deal.company ?? ""} ${deal.contact_name ?? ""} ${client}`, query)
+    })
+    .slice(0, 5)
+    .map((deal) => ({
+      id: deal.id,
+      title: deal.title,
+      detail: [DEAL_STAGE_LABEL[deal.stage], deal.company ?? (deal.client_id ? clientName.get(deal.client_id) : null), deal.recurring_cents > 0 ? `${formatMoney(deal.recurring_cents)}/mês` : null]
+        .filter(Boolean)
+        .join(" · "),
+    }))
+
   return {
     tasks: taskResults,
     meetings: meetingResults,
@@ -213,5 +231,6 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
     decisions: decisionResults,
     communications: communicationResults,
     finance: financeResults,
+    deals: dealResults,
   }
 }

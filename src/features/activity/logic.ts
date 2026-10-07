@@ -3,12 +3,18 @@ import { firstName } from "@/features/tasks/logic"
 import { addDaysToKey, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
 import {
   COMMUNICATION_KIND_LABEL,
+  DEAL_STAGE_LABEL,
+  FINANCE_ACCOUNT_LABEL,
+  LEAD_SOURCE_LABEL,
   PROJECT_STATUS_LABEL,
   TASK_AREA_LABEL,
   TASK_PRIORITY_LABEL,
   TASK_STATUS_LABEL,
   isCommunicationKind,
+  isDealStage,
   isDecisionStatus,
+  isFinanceAccount,
+  isLeadSource,
   isProjectStatus,
   isTaskArea,
   isTaskPriority,
@@ -103,6 +109,13 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
       }
       return null
     }
+    case "stage": {
+      if (!isDealStage(after)) return null
+      if (after === "won") return "ganhou o negócio"
+      if (after === "lost") return "marcou o negócio como perdido"
+      if (before === "won" || before === "lost") return `reabriu o negócio em ${DEAL_STAGE_LABEL[after]}`
+      return `moveu para ${DEAL_STAGE_LABEL[after]}`
+    }
     case "title":
     case "name":
     case "summary":
@@ -137,6 +150,7 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
       return after ? `moveu para o projeto ${project ? quote(project.name) : ""}`.trim() : "tirou do projeto"
     }
     case "owner_id":
+      if (entry.entity_type === "deal") return after ? `passou o negócio para ${personName(after, names)}` : "deixou o negócio sem responsável"
       return after ? `passou a responsabilidade para ${personName(after, names)}` : "deixou o projeto sem responsável"
     case "assignees":
       return assigneeChange([before, after], names)
@@ -156,7 +170,23 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
     case "ends_on":
       return after ? `encerrou a recorrência em ${dateLabel(after, names)}` : "tirou o fim da recorrência"
     case "category":
-      return str(after) ? `mudou a categoria para ${str(after)}` : "tirou a categoria"
+      return str(after) ? `mudou a subcategoria para ${str(after)}` : "tirou a subcategoria"
+    case "account":
+      return isFinanceAccount(after) ? `mudou a categoria para ${FINANCE_ACCOUNT_LABEL[after]}` : null
+    case "fee_cents":
+      return typeof after === "number" && after > 0 ? `registrou a taxa de ${formatMoney(after)}` : "tirou a taxa"
+    case "recurring_cents":
+      return typeof after === "number" ? `mudou o valor mensal para ${formatMoney(after)}` : null
+    case "one_time_cents":
+      return typeof after === "number" ? `mudou o valor pontual para ${formatMoney(after)}` : null
+    case "term_months":
+      return typeof after === "number" ? `mudou a duração para ${after} ${after === 1 ? "mês" : "meses"}` : "tirou a duração"
+    case "expected_close_on":
+      return after ? `mudou a previsão de fechamento para ${dateLabel(after, names)}` : "tirou a previsão de fechamento"
+    case "source":
+      return isLeadSource(after) ? `mudou a origem para ${LEAD_SOURCE_LABEL[after]}` : null
+    case "lost_reason":
+      return str(after) ? `registrou o motivo: ${quote(str(after)!)}` : null
     default:
       return null
   }
@@ -169,6 +199,7 @@ const ENTITY_NOUN: Record<ActivityEntry["entity_type"], string> = {
   communication: "a comunicação",
   finance: "o lançamento",
   recurrence: "a recorrência",
+  deal: "o negócio",
 }
 
 const CREATED_VERB: Record<ActivityEntry["entity_type"], string> = {
@@ -178,6 +209,7 @@ const CREATED_VERB: Record<ActivityEntry["entity_type"], string> = {
   communication: "registrou a comunicação",
   finance: "lançou",
   recurrence: "criou a recorrência",
+  deal: "criou o negócio",
 }
 
 /**

@@ -6,6 +6,8 @@ import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { ReviewsDueCard } from "@/features/clients/client-pulse"
 import { FinanceAlertCard } from "@/features/finance/finance-cards"
+import type { FinanceData } from "@/features/finance/management"
+import { ManagementCard } from "@/features/today/management-card"
 import { focusProjects, projectStats } from "@/features/projects/logic"
 import {
   dayContext,
@@ -30,9 +32,8 @@ import type {
   CalendarEvent,
   ClientDetail,
   ClientReview,
+  Deal,
   DocSummary,
-  FinanceEntry,
-  FinanceRecurrence,
   MeetingItem,
   MeetingRecord,
 } from "@/lib/types"
@@ -51,6 +52,7 @@ export function TodayView({
   meetingItems,
   docs,
   finance,
+  deals,
   initialScope,
 }: {
   greeting: string
@@ -60,7 +62,8 @@ export function TodayView({
   meetingRecords: MeetingRecord[]
   meetingItems: MeetingItem[]
   docs: DocSummary[]
-  finance: { entries: FinanceEntry[]; recurrences: FinanceRecurrence[] }
+  finance: FinanceData
+  deals: Deal[]
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
@@ -156,6 +159,7 @@ export function TodayView({
           <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
           <ReviewsDueCard clients={clients} reviews={reviews} />
           <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
+          <ManagementCard finance={finance} deals={deals} today={today} />
           <DocsToReview docs={docs} scope={scope} />
           <Agenda events={events} today={today} />
         </div>

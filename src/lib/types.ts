@@ -32,9 +32,40 @@ export type CommunicationKind = "update" | "request" | "approval" | "feedback" |
 export type CommunicationChannel = "whatsapp" | "email" | "call" | "meeting" | "other"
 /** Receita ou despesa. */
 export type FinanceKind = "income" | "expense"
+/**
+ * Categoria gerencial (conta) de um lançamento: diz onde ele entra no DRE.
+ * Entradas: receita de cliente, outras receitas, aporte de sócio. Saídas:
+ * custo direto de cliente, custo fixo, outras despesas, imposto (DAS),
+ * pró-labore e reinvestimento.
+ */
+export type FinanceAccount =
+  | "client_revenue"
+  | "other_revenue"
+  | "owner_contribution"
+  | "direct_cost"
+  | "fixed_cost"
+  | "other_expense"
+  | "tax"
+  | "owner_draw"
+  | "reinvestment"
+/** Lead, Em contato, Proposta enviada, Negociação, Ganho ou Perdido. */
+export type DealStage = "lead" | "contact" | "proposal" | "negotiation" | "won" | "lost"
+export type LeadSource =
+  | "referral"
+  | "instagram"
+  | "website"
+  | "google"
+  | "linkedin"
+  | "whatsapp"
+  | "outbound"
+  | "event"
+  | "existing_client"
+  | "other"
+/** Unidade de um resultado-chave (dinheiro em centavos; percentual em pontos). */
+export type MetricUnit = "money" | "percent" | "count" | "number" | "days"
 export type ActivityAction = "created" | "updated" | "deleted" | "comment"
 /** Itens com histórico (e, os três primeiros, com comentários). */
-export type ActivityEntityType = "task" | "project" | "decision" | "communication" | "finance" | "recurrence"
+export type ActivityEntityType = "task" | "project" | "decision" | "communication" | "finance" | "recurrence" | "deal"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -276,14 +307,19 @@ export interface Communication {
 export interface FinanceEntry {
   id: string
   kind: FinanceKind
+  /** Categoria gerencial (onde entra no DRE). */
+  account: FinanceAccount
   description: string
-  /** Valor em centavos. */
+  /** Valor bruto em centavos. */
   amount_cents: number
+  /** Taxa do gateway (Asaas) em centavos. */
+  fee_cents: number
   due_on: DateKey
   /** Recebido (receita) ou pago (despesa) neste dia. */
   paid_on: DateKey | null
   /** Mês de uma recorrência que não vale (ex.: sem cobrança). */
   skipped: boolean
+  /** Frente (receitas) ou subcategoria (despesas), livre. */
   category: string | null
   client_id: string | null
   project_id: string | null
@@ -300,6 +336,7 @@ export interface FinanceEntry {
 export interface FinanceRecurrence {
   id: string
   kind: FinanceKind
+  account: FinanceAccount
   description: string
   amount_cents: number
   /** Dia do vencimento; em meses mais curtos, o último dia. */
@@ -311,6 +348,102 @@ export interface FinanceRecurrence {
   starts_on: DateKey
   ends_on: DateKey | null
   notes: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Premissas do financeiro (aba PARÂMETROS da planilha). Percentuais em pontos-base. */
+export interface FinanceSettings {
+  tax_rate_bps: number
+  tax_rate_confirmed: boolean
+  /** Caixa mínimo em meses de custo fixo. */
+  reserve_months: number
+  reserve_share_bps: number
+  reinvest_share_bps: number
+  partners: number
+  owner_draw_target_cents: number
+  opening_balance_cents: number
+  /** Mês (dia 1) a partir do qual o saldo em conta é contado. */
+  opening_on: DateKey
+  contract_alert_days: number
+  updated_by: string | null
+  updated_at: Timestamp
+}
+
+/** Mês fechado: conferido com o extrato. */
+export interface FinanceClosing {
+  period: DateKey
+  ledger_balance_cents: number
+  bank_balance_cents: number
+  notes: string | null
+  closed_by: string
+  closed_at: Timestamp
+}
+
+/** Negócio do funil comercial. */
+export interface Deal {
+  id: string
+  title: string
+  client_id: string | null
+  company: string | null
+  contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  source: LeadSource
+  service: string | null
+  stage: DealStage
+  /** Etapa mais avançada já alcançada (o funil conta por ela). */
+  reached_stage: DealStage
+  owner_id: string | null
+  /** Valor mensal (fee) em centavos. */
+  recurring_cents: number
+  /** Valor pontual (projeto, setup) em centavos. */
+  one_time_cents: number
+  /** Duração prevista do contrato em meses; null = sem prazo. */
+  term_months: number | null
+  /** Chance de fechar (%); null = a padrão da etapa. */
+  probability: number | null
+  opened_on: DateKey
+  expected_close_on: DateKey | null
+  proposal_sent_on: DateKey | null
+  closed_on: DateKey | null
+  lost_reason: string | null
+  project_id: string | null
+  recurrence_id: string | null
+  notes: string | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Objetivo (OKR) com período. */
+export interface Objective {
+  id: string
+  title: string
+  description: string | null
+  area: TaskArea | null
+  owner_id: string | null
+  starts_on: DateKey
+  ends_on: DateKey
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Resultado-chave: indicador do sistema (automático) ou valor manual. */
+export interface KeyResult {
+  id: string
+  objective_id: string
+  title: string
+  /** Chave do indicador no catálogo; null = manual. */
+  metric: string | null
+  client_id: string | null
+  unit: MetricUnit
+  target_value: number
+  baseline_value: number | null
+  manual_value: number | null
+  position: number
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp

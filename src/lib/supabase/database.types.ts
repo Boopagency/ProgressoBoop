@@ -268,6 +268,132 @@ export type Database = {
           },
         ]
       }
+      deals: {
+        Row: {
+          client_id: string | null
+          closed_on: string | null
+          company: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          expected_close_on: string | null
+          id: string
+          lost_reason: string | null
+          notes: string | null
+          one_time_cents: number
+          opened_on: string
+          owner_id: string | null
+          probability: number | null
+          project_id: string | null
+          proposal_sent_on: string | null
+          reached_stage: Database["public"]["Enums"]["deal_stage"]
+          recurrence_id: string | null
+          recurring_cents: number
+          service: string | null
+          source: Database["public"]["Enums"]["lead_source"]
+          stage: Database["public"]["Enums"]["deal_stage"]
+          term_months: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          closed_on?: string | null
+          company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          expected_close_on?: string | null
+          id?: string
+          lost_reason?: string | null
+          notes?: string | null
+          one_time_cents?: number
+          opened_on?: string
+          owner_id?: string | null
+          probability?: number | null
+          project_id?: string | null
+          proposal_sent_on?: string | null
+          reached_stage?: Database["public"]["Enums"]["deal_stage"]
+          recurrence_id?: string | null
+          recurring_cents?: number
+          service?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          term_months?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          closed_on?: string | null
+          company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          expected_close_on?: string | null
+          id?: string
+          lost_reason?: string | null
+          notes?: string | null
+          one_time_cents?: number
+          opened_on?: string
+          owner_id?: string | null
+          probability?: number | null
+          project_id?: string | null
+          proposal_sent_on?: string | null
+          reached_stage?: Database["public"]["Enums"]["deal_stage"]
+          recurrence_id?: string | null
+          recurring_cents?: number
+          service?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          term_months?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_recurrence_id_fkey"
+            columns: ["recurrence_id"]
+            isOneToOne: false
+            referencedRelation: "finance_recurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisions: {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
@@ -552,8 +678,44 @@ export type Database = {
           },
         ]
       }
+      finance_closings: {
+        Row: {
+          bank_balance_cents: number
+          closed_at: string
+          closed_by: string
+          ledger_balance_cents: number
+          notes: string | null
+          period: string
+        }
+        Insert: {
+          bank_balance_cents: number
+          closed_at?: string
+          closed_by?: string
+          ledger_balance_cents: number
+          notes?: string | null
+          period: string
+        }
+        Update: {
+          bank_balance_cents?: number
+          closed_at?: string
+          closed_by?: string
+          ledger_balance_cents?: number
+          notes?: string | null
+          period?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_closings_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_entries: {
         Row: {
+          account: Database["public"]["Enums"]["finance_account"]
           amount_cents: number
           category: string | null
           client_id: string | null
@@ -561,6 +723,7 @@ export type Database = {
           created_by: string
           description: string
           due_on: string
+          fee_cents: number
           id: string
           kind: Database["public"]["Enums"]["finance_kind"]
           notes: string | null
@@ -572,6 +735,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account: Database["public"]["Enums"]["finance_account"]
           amount_cents: number
           category?: string | null
           client_id?: string | null
@@ -579,6 +743,7 @@ export type Database = {
           created_by?: string
           description: string
           due_on: string
+          fee_cents?: number
           id?: string
           kind: Database["public"]["Enums"]["finance_kind"]
           notes?: string | null
@@ -590,6 +755,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account?: Database["public"]["Enums"]["finance_account"]
           amount_cents?: number
           category?: string | null
           client_id?: string | null
@@ -597,6 +763,7 @@ export type Database = {
           created_by?: string
           description?: string
           due_on?: string
+          fee_cents?: number
           id?: string
           kind?: Database["public"]["Enums"]["finance_kind"]
           notes?: string | null
@@ -640,6 +807,7 @@ export type Database = {
       }
       finance_recurrences: {
         Row: {
+          account: Database["public"]["Enums"]["finance_account"]
           amount_cents: number
           category: string | null
           client_id: string | null
@@ -656,6 +824,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account: Database["public"]["Enums"]["finance_account"]
           amount_cents: number
           category?: string | null
           client_id?: string | null
@@ -672,6 +841,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account?: Database["public"]["Enums"]["finance_account"]
           amount_cents?: number
           category?: string | null
           client_id?: string | null
@@ -707,6 +877,132 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_settings: {
+        Row: {
+          contract_alert_days: number
+          id: boolean
+          opening_balance_cents: number
+          opening_on: string
+          owner_draw_target_cents: number
+          partners: number
+          reinvest_share_bps: number
+          reserve_months: number
+          reserve_share_bps: number
+          tax_rate_bps: number
+          tax_rate_confirmed: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          contract_alert_days?: number
+          id?: boolean
+          opening_balance_cents?: number
+          opening_on?: string
+          owner_draw_target_cents?: number
+          partners?: number
+          reinvest_share_bps?: number
+          reserve_months?: number
+          reserve_share_bps?: number
+          tax_rate_bps?: number
+          tax_rate_confirmed?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          contract_alert_days?: number
+          id?: boolean
+          opening_balance_cents?: number
+          opening_on?: string
+          owner_draw_target_cents?: number
+          partners?: number
+          reinvest_share_bps?: number
+          reserve_months?: number
+          reserve_share_bps?: number
+          tax_rate_bps?: number
+          tax_rate_confirmed?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_results: {
+        Row: {
+          baseline_value: number | null
+          client_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          manual_value: number | null
+          metric: string | null
+          objective_id: string
+          position: number
+          target_value: number
+          title: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          baseline_value?: number | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          manual_value?: number | null
+          metric?: string | null
+          objective_id: string
+          position?: number
+          target_value: number
+          title: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          baseline_value?: number | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          manual_value?: number | null
+          metric?: string | null
+          objective_id?: string
+          position?: number
+          target_value?: number
+          title?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_results_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_results_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_results_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "objectives"
             referencedColumns: ["id"]
           },
         ]
@@ -848,6 +1144,60 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      objectives: {
+        Row: {
+          area: Database["public"]["Enums"]["task_area"] | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_on: string
+          id: string
+          owner_id: string | null
+          starts_on: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_on: string
+          id?: string
+          owner_id?: string | null
+          starts_on: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["task_area"] | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_on?: string
+          id?: string
+          owner_id?: string | null
+          starts_on?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objectives_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objectives_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1199,6 +1549,19 @@ export type Database = {
         Args: { version_id: string; version_text: string }
         Returns: string
       }
+      win_deal: {
+        Args: {
+          client_id?: string
+          client_name?: string
+          contract_day?: number
+          contract_months?: number
+          contract_starts_on?: string
+          deal_id: string
+          one_time_due_on?: string
+          project_name?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       activity_action: "created" | "updated" | "deleted" | "comment"
@@ -1210,11 +1573,39 @@ export type Database = {
         | "approval"
         | "feedback"
         | "other"
+      deal_stage:
+        | "lead"
+        | "contact"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
       decision_status: "active" | "revoked"
       doc_kind: "process" | "checklist" | "policy" | "guide"
       doc_status: "draft" | "active" | "review"
       event_type: "meeting" | "internal" | "delivery"
+      finance_account:
+        | "client_revenue"
+        | "other_revenue"
+        | "owner_contribution"
+        | "direct_cost"
+        | "fixed_cost"
+        | "other_expense"
+        | "tax"
+        | "owner_draw"
+        | "reinvestment"
       finance_kind: "income" | "expense"
+      lead_source:
+        | "referral"
+        | "instagram"
+        | "website"
+        | "google"
+        | "linkedin"
+        | "whatsapp"
+        | "outbound"
+        | "event"
+        | "existing_client"
+        | "other"
       meeting_item_kind: "topic" | "agreement"
       meeting_status: "scheduled" | "done" | "canceled"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
@@ -1364,11 +1755,35 @@ export const Constants = {
         "feedback",
         "other",
       ],
+      deal_stage: ["lead", "contact", "proposal", "negotiation", "won", "lost"],
       decision_status: ["active", "revoked"],
       doc_kind: ["process", "checklist", "policy", "guide"],
       doc_status: ["draft", "active", "review"],
       event_type: ["meeting", "internal", "delivery"],
+      finance_account: [
+        "client_revenue",
+        "other_revenue",
+        "owner_contribution",
+        "direct_cost",
+        "fixed_cost",
+        "other_expense",
+        "tax",
+        "owner_draw",
+        "reinvestment",
+      ],
       finance_kind: ["income", "expense"],
+      lead_source: [
+        "referral",
+        "instagram",
+        "website",
+        "google",
+        "linkedin",
+        "whatsapp",
+        "outbound",
+        "event",
+        "existing_client",
+        "other",
+      ],
       meeting_item_kind: ["topic", "agreement"],
       meeting_status: ["scheduled", "done", "canceled"],
       project_status: ["planned", "active", "paused", "done", "canceled"],

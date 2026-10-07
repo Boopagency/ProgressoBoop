@@ -16,7 +16,7 @@ import { isUuid } from "@/lib/utils"
  */
 
 const BODY_MAX = 5000
-const COMMENTABLE = ["task", "project", "decision"] as const
+const COMMENTABLE = ["task", "project", "decision", "deal"] as const
 type Commentable = (typeof COMMENTABLE)[number]
 
 function isCommentable(value: unknown): value is Commentable {
@@ -28,7 +28,7 @@ function cleanBody(raw: unknown): string | null {
   return body && body.length <= BODY_MAX ? body : null
 }
 
-/** Histórico e comentários de uma tarefa, projeto ou decisão (mais recente primeiro). */
+/** Histórico e comentários de uma tarefa, projeto, decisão ou negócio (mais recente primeiro). */
 export async function loadActivity(type: Commentable, id: string): Promise<ActionResult<ActivityEntry[]>> {
   await requireUser()
   if (!isCommentable(type) || !isUuid(id)) return { ok: false, error: "Item inválido." }

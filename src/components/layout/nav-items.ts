@@ -2,12 +2,16 @@ import {
   BookOpen,
   Building2,
   CalendarDays,
+  ChartColumn,
+  FileChartColumn,
   FolderKanban,
   Gavel,
+  Handshake,
   ListTodo,
   MessagesSquare,
   Presentation,
   Sun,
+  Target,
   Wallet,
   type LucideIcon,
 } from "lucide-react"
@@ -24,7 +28,7 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-/** Menu lateral: o dia a dia primeiro, depois clientes e a gestão da Boop. */
+/** Menu lateral: o dia a dia primeiro, depois clientes (e o funil) e a gestão da Boop. */
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: null,
@@ -39,6 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Relacionamento",
     items: [
+      { title: "Comercial", href: "/comercial", icon: Handshake },
       { title: "Clientes", href: "/clientes", icon: Building2 },
       { title: "Comunicações", href: "/comunicacoes", icon: MessagesSquare },
     ],
@@ -46,9 +51,12 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Gestão",
     items: [
+      { title: "Indicadores", href: "/indicadores", icon: ChartColumn },
+      { title: "Metas", href: "/metas", icon: Target },
+      { title: "Financeiro", href: "/financeiro", icon: Wallet },
+      { title: "Relatórios", href: "/relatorios", icon: FileChartColumn },
       { title: "Decisões", href: "/decisoes", icon: Gavel },
       { title: "Processos", href: "/processos", icon: BookOpen },
-      { title: "Financeiro", href: "/financeiro", icon: Wallet },
     ],
   },
 ]

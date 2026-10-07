@@ -1,6 +1,6 @@
-import { addPeriods, periodOf } from "@/features/clients/logic"
+import { addPeriods, periodOf, SERVICE_SUGGESTIONS } from "@/features/clients/logic"
 import { daysBetween, monthRangeOf } from "@/lib/dates"
-import type { DateKey, FinanceEntry, FinanceKind, FinanceRecurrence } from "@/lib/types"
+import type { DateKey, FinanceAccount, FinanceEntry, FinanceKind, FinanceRecurrence } from "@/lib/types"
 
 /*
  * Regras do financeiro: funções puras, sem React.
@@ -19,8 +19,11 @@ export interface FinanceItem {
   entry: FinanceEntry | null
   recurrence: FinanceRecurrence | null
   kind: FinanceKind
+  account: FinanceAccount
   description: string
   amount_cents: number
+  /** Taxa do gateway (só em lançamentos gravados). */
+  fee_cents: number
   due_on: DateKey
   paid_on: DateKey | null
   skipped: boolean
@@ -50,14 +53,16 @@ export function recurrenceActiveIn(recurrence: Pick<FinanceRecurrence, "starts_o
   return recurrence.starts_on <= period && (recurrence.ends_on === null || period <= recurrence.ends_on)
 }
 
-function fromEntry(entry: FinanceEntry, recurrences: Map<string, FinanceRecurrence>): FinanceItem {
+export function fromEntry(entry: FinanceEntry, recurrences: Map<string, FinanceRecurrence>): FinanceItem {
   return {
     key: entry.id,
     entry,
     recurrence: entry.recurrence_id ? (recurrences.get(entry.recurrence_id) ?? null) : null,
     kind: entry.kind,
+    account: entry.account,
     description: entry.description,
     amount_cents: entry.amount_cents,
+    fee_cents: entry.fee_cents,
     due_on: entry.due_on,
     paid_on: entry.paid_on,
     skipped: entry.skipped,
@@ -72,14 +77,16 @@ export function occurrenceKey(recurrenceId: string, period: DateKey): string {
   return `r:${recurrenceId}:${period}`
 }
 
-function fromRecurrence(recurrence: FinanceRecurrence, period: DateKey): FinanceItem {
+export function fromRecurrence(recurrence: FinanceRecurrence, period: DateKey): FinanceItem {
   return {
     key: occurrenceKey(recurrence.id, period),
     entry: null,
     recurrence,
     kind: recurrence.kind,
+    account: recurrence.account,
     description: recurrence.description,
     amount_cents: recurrence.amount_cents,
+    fee_cents: 0,
     due_on: occurrenceDue(recurrence, period),
     paid_on: null,
     skipped: false,
@@ -97,7 +104,7 @@ export function itemStatus(item: Pick<FinanceItem, "paid_on" | "skipped" | "due_
 }
 
 /** Ocorrências já gravadas, para não aparecerem duas vezes. */
-function materialized(entries: FinanceEntry[]): Set<string> {
+export function materialized(entries: FinanceEntry[]): Set<string> {
   return new Set(
     entries
       .filter((entry) => entry.recurrence_id && entry.period)
@@ -276,5 +283,23 @@ export function dueLabel(due: DateKey, today: DateKey): { label: string; late: b
   return { label: `Vence ${due.slice(8, 10)}/${due.slice(5, 7)}`, late: false }
 }
 
-export const INCOME_CATEGORIES = ["Fee mensal", "Projeto", "Extra"]
-export const EXPENSE_CATEGORIES = ["Ferramentas", "Impostos", "Freelancer", "Pró-labore", "Contabilidade", "Marketing", "Outros"]
+/**
+ * Sugestões para o campo livre ao lado da categoria: a frente (receitas de
+ * cliente) ou a subcategoria (o resto). Dá para escrever outras.
+ */
+export const CATEGORY_SUGGESTIONS: Record<FinanceAccount, readonly string[]> = {
+  client_revenue: SERVICE_SUGGESTIONS,
+  other_revenue: ["Palestra", "Curso", "Venda avulsa", "Rendimento", "Reembolso"],
+  owner_contribution: ["Aporte inicial", "Aporte para caixa"],
+  direct_cost: ["Freelancer", "Mídia paga", "Produção", "Hospedagem", "Ferramenta do cliente"],
+  fixed_cost: ["Ferramentas", "Contabilidade", "Equipamentos", "Internet e telefone", "Banco", "Espaço"],
+  other_expense: ["Marketing", "Eventos", "Cursos", "Viagem", "Material", "Outros"],
+  tax: ["DAS (Simples Nacional)", "ISS", "Outros impostos"],
+  owner_draw: ["Pró-labore", "Distribuição de lucros"],
+  reinvestment: ["Equipamentos", "Cursos", "Marketing", "Contratação"],
+}
+
+/** Nome do campo livre: "Frente" nas receitas de cliente, "Subcategoria" no resto. */
+export function categoryFieldLabel(account: FinanceAccount | null): string {
+  return account === "client_revenue" ? "Frente" : "Subcategoria"
+}

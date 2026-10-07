@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button"
 import { FinanceDialog, type FinanceDialogState } from "@/features/finance/finance-dialog"
 import { clientFinance, clientOverdue, overdueItems, projectItems, totalsOf, type FinanceItem } from "@/features/finance/logic"
 import { FinanceRows } from "@/features/finance/finance-rows"
+import { clientMargins, indexFinance, type FinanceData } from "@/features/finance/management"
 import { formatMoney } from "@/features/finance/money"
+import { addPeriods, periodOf } from "@/features/clients/logic"
+import { formatShortDate } from "@/lib/dates"
+import { formatPercent } from "@/lib/format"
 import type { DateKey, FinanceEntry, FinanceRecurrence, Project } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -42,20 +46,12 @@ function Line({ label, value, tone }: { label: string; value: string; tone?: "la
   )
 }
 
-/** Página do cliente: fee mensal, o que está em atraso e o que já entrou no ano. */
-export function ClientFinanceCard({
-  clientId,
-  entries,
-  recurrences,
-  today,
-}: {
-  clientId: string
-  entries: FinanceEntry[]
-  recurrences: FinanceRecurrence[]
-  today: DateKey
-}) {
+/** Página do cliente: mensalidade, margem, fim do contrato, atrasos e o que já entrou no ano. */
+export function ClientFinanceCard({ clientId, finance, today }: { clientId: string; finance: FinanceData; today: DateKey }) {
+  const { entries, recurrences } = finance
   const summary = clientFinance(clientId, entries, recurrences, today)
   const overdue = clientOverdue(clientId, entries, recurrences, today)
+  const margin = clientMargins(indexFinance(finance, today)).find((row) => row.clientId === clientId)
   const { openNew, openItem, element } = useFinanceDialog()
 
   return (
@@ -75,7 +71,21 @@ export function ClientFinanceCard({
       }
     >
       <dl className="space-y-2 px-4 py-3.5">
-        <Line label="Fee mensal" value={summary.monthlyIncome > 0 ? formatMoney(summary.monthlyIncome) : "—"} tone={summary.monthlyIncome > 0 ? undefined : "muted"} />
+        <Line label="Mensalidade" value={summary.monthlyIncome > 0 ? formatMoney(summary.monthlyIncome) : "—"} tone={summary.monthlyIncome > 0 ? undefined : "muted"} />
+        {margin && margin.mrr > 0 ? (
+          <Line
+            label="Margem do contrato"
+            value={`${formatMoney(margin.margin)} (${formatPercent(margin.marginRate, true)})`}
+            tone={margin.margin < 0 ? "late" : undefined}
+          />
+        ) : null}
+        {margin?.contractEnd ? (
+          <Line
+            label="Fim do contrato"
+            value={`${formatShortDate(margin.contractEnd, today)}${margin.daysToEnd !== null && margin.daysToEnd >= 0 ? ` · ${margin.daysToEnd} dias` : ""}`}
+            tone={margin.ending ? "late" : undefined}
+          />
+        ) : null}
         <Line
           label="Em atraso"
           value={summary.overdue.count > 0 ? `${formatMoney(summary.overdue.amount)} (${summary.overdue.count})` : "Nada"}
@@ -86,8 +96,11 @@ export function ClientFinanceCard({
       {overdue.length > 0 ? (
         <FinanceRows items={overdue} today={today} onOpen={openItem} showMonth hide={["client"]} className="border-t" />
       ) : null}
-      <Link href="/financeiro" className="block border-t px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground">
-        Abrir o financeiro
+      <Link
+        href={`/financeiro/lancamentos?cliente=${clientId}&de=${addPeriods(periodOf(today), -11).slice(0, 7)}&ate=${today.slice(0, 7)}`}
+        className="block border-t px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+      >
+        Lançamentos do cliente (12 meses)
       </Link>
       {element}
     </PanelCard>

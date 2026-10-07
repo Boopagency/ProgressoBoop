@@ -3,18 +3,26 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
+import { addPeriods, periodLabel } from "@/features/clients/logic"
 import { isPeriod } from "@/features/clients/validation"
 import { occurrenceDue } from "@/features/finance/logic"
+import { indexFinance, ledgerBalance } from "@/features/finance/management"
+import { getFinance } from "@/features/finance/queries"
 import {
+  parseClosingInput,
   parseEntryInput,
   parseEntryPatch,
   parseRecurrenceInput,
   parseRecurrencePatch,
+  parseSettingsPatch,
+  type ClosingInput,
   type EntryInput,
   type EntryPatch,
   type RecurrenceInput,
   type RecurrencePatch,
+  type SettingsPatch,
 } from "@/features/finance/validation"
+import { monthRangeOf, todayKey } from "@/lib/dates"
 import { dbFailure } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
@@ -27,6 +35,12 @@ import { isUuid } from "@/lib/utils"
 
 const ENTRY_NOT_FOUND = { ok: false, error: "Esse lançamento não existe mais." } as const
 const RECURRENCE_NOT_FOUND = { ok: false, error: "Essa recorrência não existe mais." } as const
+const ACCOUNT_MISMATCH = { ok: false, error: "Essa categoria não combina com o tipo (receita ou despesa)." } as const
+
+/** A categoria não combina com receita/despesa (check do banco). */
+function isAccountMismatch(error: { code?: string; message: string }): boolean {
+  return error.code === "23514" && error.message.includes("account_check")
+}
 
 function refreshApp() {
   revalidatePath("/", "layout")
@@ -50,7 +64,10 @@ export async function updateEntry(id: string, patch: EntryPatch): Promise<Action
   if (!parsed.ok) return parsed
   const supabase = await createClient()
   const { data, error } = await supabase.from("finance_entries").update(parsed.value).eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível salvar o lançamento.")
+  if (error) {
+    if (isAccountMismatch(error)) return ACCOUNT_MISMATCH
+    return dbFailure(error, "Não foi possível salvar o lançamento.")
+  }
   if (data.length === 0) return ENTRY_NOT_FOUND
   refreshApp()
   return { ok: true, data: null }
@@ -84,7 +101,7 @@ async function ensureOccurrence(
 
   const { data: recurrence, error: readError } = await supabase
     .from("finance_recurrences")
-    .select("kind, description, amount_cents, day_of_month, category, client_id, project_id, starts_on, ends_on")
+    .select("kind, account, description, amount_cents, day_of_month, category, client_id, project_id, starts_on, ends_on")
     .eq("id", recurrenceId)
     .maybeSingle()
   if (readError) return dbFailure(readError, "Não foi possível abrir o lançamento do mês.")
@@ -97,6 +114,7 @@ async function ensureOccurrence(
     .from("finance_entries")
     .insert({
       kind: recurrence.kind,
+      account: recurrence.account,
       description: recurrence.description,
       amount_cents: recurrence.amount_cents,
       due_on: occurrenceDue(recurrence, period),
@@ -134,7 +152,10 @@ export async function updateOccurrence(
   if (!occurrence.ok) return occurrence
   if (Object.keys(parsed.value).length > 0) {
     const { error } = await supabase.from("finance_entries").update(parsed.value).eq("id", occurrence.data.id)
-    if (error) return dbFailure(error, "Não foi possível salvar o lançamento.")
+    if (error) {
+      if (isAccountMismatch(error)) return ACCOUNT_MISMATCH
+      return dbFailure(error, "Não foi possível salvar o lançamento.")
+    }
   }
   refreshApp()
   return occurrence
@@ -160,6 +181,7 @@ export async function updateRecurrence(id: string, patch: RecurrencePatch): Prom
   const supabase = await createClient()
   const { data, error } = await supabase.from("finance_recurrences").update(parsed.value).eq("id", id).select("id")
   if (error) {
+    if (isAccountMismatch(error)) return ACCOUNT_MISMATCH
     if (error.code === "23514") return { ok: false, error: "O fim não pode ser antes do começo." }
     return dbFailure(error, "Não foi possível salvar a recorrência.")
   }
@@ -176,6 +198,75 @@ export async function deleteRecurrence(id: string): Promise<ActionResult> {
   const { data, error } = await supabase.from("finance_recurrences").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir a recorrência.")
   if (data.length === 0) return RECURRENCE_NOT_FOUND
+  refreshApp()
+  return { ok: true, data: null }
+}
+
+/* ------------------------------------------------------------------ */
+/* Parâmetros e fechamento do mês                                      */
+/* ------------------------------------------------------------------ */
+
+/** Premissas do financeiro (alíquota, caixa mínimo, divisão, sócios, saldo inicial). */
+export async function updateFinanceSettings(patch: SettingsPatch): Promise<ActionResult> {
+  await requireUser()
+  const parsed = parseSettingsPatch(patch)
+  if (!parsed.ok) return parsed
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("finance_settings").update(parsed.value).eq("id", true).select("id")
+  if (error) {
+    if (error.code === "23514") return { ok: false, error: "Caixa + reinvestimento não podem passar de 100%." }
+    return dbFailure(error, "Não foi possível salvar os parâmetros.")
+  }
+  if (data.length === 0) return { ok: false, error: "Os parâmetros do financeiro não foram encontrados." }
+  refreshApp()
+  return { ok: true, data: null }
+}
+
+/**
+ * Fecha um mês já encerrado: guarda o saldo pelos lançamentos (calculado aqui,
+ * no servidor) e o do extrato. Depois disso, os pagamentos do mês não mudam.
+ */
+export async function closeMonth(input: ClosingInput): Promise<ActionResult<{ ledger_balance_cents: number }>> {
+  await requireUser()
+  const parsed = parseClosingInput(input)
+  if (!parsed.ok) return parsed
+  const { period, bank_balance_cents, notes } = parsed.value
+  const today = todayKey()
+  const end = monthRangeOf(period).end
+  if (end >= today) return { ok: false, error: "Só dá para fechar um mês depois que ele termina." }
+  const finance = await getFinance()
+  if (period < finance.settings.opening_on) {
+    return { ok: false, error: "Esse mês é anterior ao início do controle (veja os parâmetros)." }
+  }
+  // Fecha em ordem: o saldo de um mês depende de todos os anteriores.
+  const closed = new Set(finance.closings.map((closing) => closing.period))
+  for (let earlier = finance.settings.opening_on; earlier < period; earlier = addPeriods(earlier, 1)) {
+    if (!closed.has(earlier)) return { ok: false, error: `Feche ${periodLabel(earlier).toLocaleLowerCase("pt-BR")} antes.` }
+  }
+  const ledger = ledgerBalance(indexFinance(finance, today), end)
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("finance_closings")
+    .insert({ period, ledger_balance_cents: ledger, bank_balance_cents, notes })
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "Esse mês já foi fechado." }
+    return dbFailure(error, "Não foi possível fechar o mês.")
+  }
+  refreshApp()
+  return { ok: true, data: { ledger_balance_cents: ledger } }
+}
+
+/** Reabre um mês fechado (os pagamentos dele voltam a poder mudar). */
+export async function reopenMonth(period: string): Promise<ActionResult> {
+  await requireUser()
+  if (!isPeriod(period)) return { ok: false, error: "Mês inválido." }
+  const supabase = await createClient()
+  const { data: later, error: readError } = await supabase.from("finance_closings").select("period").gt("period", period).limit(1)
+  if (readError) return dbFailure(readError, "Não foi possível reabrir o mês.")
+  if (later.length > 0) return { ok: false, error: "Reabra antes os meses fechados depois deste." }
+  const { data, error } = await supabase.from("finance_closings").delete().eq("period", period).select("period")
+  if (error) return dbFailure(error, "Não foi possível reabrir o mês.")
+  if (data.length === 0) return { ok: false, error: "Esse mês não está fechado." }
   refreshApp()
   return { ok: true, data: null }
 }

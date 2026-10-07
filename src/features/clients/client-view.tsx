@@ -51,7 +51,9 @@ import { DocKindTile, DocStatusBadge } from "@/features/docs/doc-meta"
 import { NewDocDialog, type NewDocDialogState } from "@/features/docs/new-doc-dialog"
 import { meetingsOverview, type MeetingEntry } from "@/features/meetings/logic"
 import { EntryStateBadge, dayLabel, entryState, timeLabel } from "@/features/meetings/meeting-meta"
+import { ClientDealsCard } from "@/features/deals/client-deals-card"
 import { ClientFinanceCard } from "@/features/finance/finance-cards"
+import type { FinanceData } from "@/features/finance/management"
 import { MeetingLink } from "@/features/meetings/open-meeting"
 import { ClientProjectsCard } from "@/features/projects/client-projects-card"
 import { dayContext, firstName, groupTasks, TASK_GROUP_LABEL, type TaskGroupKey } from "@/features/tasks/logic"
@@ -69,9 +71,8 @@ import type {
   Communication,
   DateKey,
   Decision,
+  Deal,
   DocSummary,
-  FinanceEntry,
-  FinanceRecurrence,
   MeetingRecord,
 } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -87,6 +88,7 @@ export function ClientView({
   communications,
   decisions,
   finance,
+  deals,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -100,7 +102,8 @@ export function ClientView({
   templateDocs: DocSummary[]
   communications: Communication[]
   decisions: Decision[]
-  finance: { entries: FinanceEntry[]; recurrences: FinanceRecurrence[] }
+  finance: FinanceData
+  deals: Deal[]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -246,7 +249,8 @@ export function ClientView({
         </div>
         <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
           <AboutCard client={client} />
-          <ClientFinanceCard clientId={client.id} entries={finance.entries} recurrences={finance.recurrences} today={today} />
+          <ClientFinanceCard clientId={client.id} finance={finance} today={today} />
+          <ClientDealsCard clientId={client.id} deals={deals} today={today} />
           <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
           <DecisionsCard
             decisions={decisions}

@@ -2,12 +2,16 @@ import type {
   ClientHealth,
   CommunicationChannel,
   CommunicationKind,
+  DealStage,
   DecisionStatus,
   DocKind,
   DocStatus,
   EventType,
+  FinanceAccount,
   FinanceKind,
+  LeadSource,
   MeetingStatus,
+  MetricUnit,
   ProjectStatus,
   TaskArea,
   TaskPriority,
@@ -117,6 +121,119 @@ export const COMMUNICATION_CHANNEL_LABEL: Record<CommunicationChannel, string> =
 export const FINANCE_KIND_LABEL: Record<FinanceKind, string> = {
   income: "Receita",
   expense: "Despesa",
+}
+
+/** Categorias gerenciais de entrada e de saída (a mesma lista da planilha). */
+export const INCOME_ACCOUNTS = ["client_revenue", "other_revenue", "owner_contribution"] as const satisfies readonly FinanceAccount[]
+export const EXPENSE_ACCOUNTS = [
+  "direct_cost",
+  "fixed_cost",
+  "other_expense",
+  "tax",
+  "owner_draw",
+  "reinvestment",
+] as const satisfies readonly FinanceAccount[]
+export const FINANCE_ACCOUNTS = [...INCOME_ACCOUNTS, ...EXPENSE_ACCOUNTS] as const
+
+export const FINANCE_ACCOUNT_LABEL: Record<FinanceAccount, string> = {
+  client_revenue: "Receita de cliente",
+  other_revenue: "Outras receitas",
+  owner_contribution: "Aporte de sócio",
+  direct_cost: "Custo direto de cliente",
+  fixed_cost: "Custo fixo",
+  other_expense: "Outras despesas",
+  tax: "Imposto (DAS)",
+  owner_draw: "Pró-labore",
+  reinvestment: "Reinvestimento",
+}
+
+/** Quando usar e onde aparece (ajuda no formulário). */
+export const FINANCE_ACCOUNT_HINT: Record<FinanceAccount, string> = {
+  client_revenue: "Mensalidade ou pagamento de cliente. Entra no DRE como receita bruta.",
+  other_revenue: "Receita que não é de contrato (palestra, venda avulsa). Receita bruta no DRE.",
+  owner_contribution: "Dinheiro que um sócio colocou na empresa. Soma no caixa, não é receita.",
+  direct_cost: "Custo ligado a um cliente (hospedagem da loja, freelancer do projeto). Custos diretos no DRE.",
+  fixed_cost: "Contabilidade, ferramentas, parcela de equipamentos. Custos fixos no DRE.",
+  other_expense: "Gasto avulso, que não se repete. Outras despesas no DRE.",
+  tax: "Guia do Simples (DAS). Fora do DRE: o DRE já desconta o imposto pela alíquota.",
+  owner_draw: "Pagamento aos sócios. Fora do DRE: é a divisão do resultado.",
+  reinvestment: "Gasto pago com a verba de reinvestimento. Fora do DRE.",
+}
+
+export function isFinanceAccount(value: unknown): value is FinanceAccount {
+  return FINANCE_ACCOUNTS.includes(value as FinanceAccount)
+}
+
+/** Receita ou despesa, pela conta. */
+export function accountKind(account: FinanceAccount): FinanceKind {
+  return (INCOME_ACCOUNTS as readonly FinanceAccount[]).includes(account) ? "income" : "expense"
+}
+
+export const DEAL_STAGES = ["lead", "contact", "proposal", "negotiation", "won", "lost"] as const satisfies readonly DealStage[]
+/** Etapas em aberto, na ordem do funil. */
+export const OPEN_DEAL_STAGES = ["lead", "contact", "proposal", "negotiation"] as const satisfies readonly DealStage[]
+export const DEAL_STAGE_LABEL: Record<DealStage, string> = {
+  lead: "Lead",
+  contact: "Em contato",
+  proposal: "Proposta enviada",
+  negotiation: "Negociação",
+  won: "Ganho",
+  lost: "Perdido",
+}
+/** Chance de fechar quando ninguém informa (%). */
+export const DEAL_STAGE_PROBABILITY: Record<DealStage, number> = {
+  lead: 10,
+  contact: 20,
+  proposal: 40,
+  negotiation: 60,
+  won: 100,
+  lost: 0,
+}
+
+export const LEAD_SOURCES = [
+  "referral",
+  "instagram",
+  "website",
+  "google",
+  "linkedin",
+  "whatsapp",
+  "outbound",
+  "event",
+  "existing_client",
+  "other",
+] as const satisfies readonly LeadSource[]
+export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
+  referral: "Indicação",
+  instagram: "Instagram",
+  website: "Site",
+  google: "Google",
+  linkedin: "LinkedIn",
+  whatsapp: "WhatsApp",
+  outbound: "Prospecção ativa",
+  event: "Evento",
+  existing_client: "Cliente da casa",
+  other: "Outra",
+}
+
+export function isDealStage(value: unknown): value is DealStage {
+  return DEAL_STAGES.includes(value as DealStage)
+}
+
+export function isLeadSource(value: unknown): value is LeadSource {
+  return LEAD_SOURCES.includes(value as LeadSource)
+}
+
+export const METRIC_UNITS = ["money", "percent", "count", "number", "days"] as const satisfies readonly MetricUnit[]
+export const METRIC_UNIT_LABEL: Record<MetricUnit, string> = {
+  money: "Reais",
+  percent: "Percentual",
+  count: "Quantidade",
+  number: "Número",
+  days: "Dias",
+}
+
+export function isMetricUnit(value: unknown): value is MetricUnit {
+  return METRIC_UNITS.includes(value as MetricUnit)
 }
 
 export function isProjectStatus(value: unknown): value is ProjectStatus {

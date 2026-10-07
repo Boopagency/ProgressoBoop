@@ -37,14 +37,21 @@ import {
   updateOccurrence,
   updateRecurrence,
 } from "@/features/finance/actions"
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type FinanceItem } from "@/features/finance/logic"
+import { CATEGORY_SUGGESTIONS, categoryFieldLabel, type FinanceItem } from "@/features/finance/logic"
+import { installmentsOf } from "@/features/finance/management"
 import { formatMoney, moneyInputValue, parseMoney } from "@/features/finance/money"
 import { CATEGORY_MAX, DESCRIPTION_MAX, NOTES_MAX } from "@/features/finance/validation"
 import { ProjectSelect } from "@/features/projects/project-meta"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatShortDate, todayKey } from "@/lib/dates"
-import { FINANCE_KIND_LABEL } from "@/lib/labels"
-import type { DateKey, FinanceKind, FinanceRecurrence } from "@/lib/types"
+import {
+  EXPENSE_ACCOUNTS,
+  FINANCE_ACCOUNT_HINT,
+  FINANCE_ACCOUNT_LABEL,
+  FINANCE_KIND_LABEL,
+  INCOME_ACCOUNTS,
+} from "@/lib/labels"
+import type { DateKey, FinanceAccount, FinanceKind, FinanceRecurrence } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export interface FinanceDialogState {
@@ -54,7 +61,7 @@ export interface FinanceDialogState {
   item?: FinanceItem
   /** Recorrência em edição (todos os meses). */
   recurrence?: FinanceRecurrence
-  defaults?: { kind?: FinanceKind; client_id?: string | null; project_id?: string | null }
+  defaults?: { kind?: FinanceKind; account?: FinanceAccount; client_id?: string | null; project_id?: string | null }
 }
 
 const NONE = "none"
@@ -130,10 +137,86 @@ function KindToggle({ value, onChange }: { value: FinanceKind; onChange: (kind: 
   )
 }
 
-/** Meses para escolher o fim de uma recorrência (do começo até dois anos à frente). */
+/** Meses para escolher o fim de uma recorrência (do começo até três anos à frente). */
 function endOptions(startsOn: DateKey, today: DateKey): DateKey[] {
   const first = startsOn > periodOf(today) ? startsOn : periodOf(today)
-  return Array.from({ length: 25 }, (_, index) => addPeriods(first, index))
+  return Array.from({ length: 37 }, (_, index) => addPeriods(first, index))
+}
+
+/** "até setembro de 2027 · 12 meses" (quantos meses a recorrência vai ter). */
+function endLabel(startsOn: DateKey, endsOn: DateKey, capital = false): string {
+  const months = installmentsOf({ starts_on: startsOn, ends_on: endsOn }) ?? 0
+  const text = `${capital ? "Até" : "até"} ${periodLabel(endsOn).toLocaleLowerCase("pt-BR")}`
+  return months > 0 ? `${text} · ${months} ${months === 1 ? "mês" : "meses"}` : text
+}
+
+/** Conta padrão: receita de cliente quando há cliente; despesa sem padrão (é preciso escolher). */
+function defaultAccount(kind: FinanceKind, clientId: string | null): FinanceAccount | null {
+  if (kind === "expense") return null
+  return clientId ? "client_revenue" : "other_revenue"
+}
+
+/** Categoria gerencial: onde o lançamento entra no DRE (com a explicação abaixo). */
+function AccountField({
+  kind,
+  value,
+  onChange,
+}: {
+  kind: FinanceKind
+  value: FinanceAccount | null
+  onChange: (account: FinanceAccount) => void
+}) {
+  const options = kind === "income" ? INCOME_ACCOUNTS : EXPENSE_ACCOUNTS
+  return (
+    <Field label="Categoria" className="sm:col-span-2">
+      <Select value={value ?? ""} onValueChange={(next) => onChange(next as FinanceAccount)}>
+        <SelectTrigger aria-label="Categoria" className={TRIGGER}>
+          <SelectValue placeholder="Escolha onde entra no resultado" />
+        </SelectTrigger>
+        <SelectContent position="popper" align="start">
+          {options.map((account) => (
+            <SelectItem key={account} value={account}>
+              {FINANCE_ACCOUNT_LABEL[account]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">{value ? FINANCE_ACCOUNT_HINT[value] : "Define a linha do DRE em que o valor aparece."}</p>
+    </Field>
+  )
+}
+
+/** Frente (receita de cliente) ou subcategoria, com sugestões da categoria. */
+function CategoryField({
+  id,
+  account,
+  value,
+  onChange,
+}: {
+  id: string
+  account: FinanceAccount | null
+  value: string
+  onChange: (value: string) => void
+}) {
+  const suggestions = account ? CATEGORY_SUGGESTIONS[account] : []
+  return (
+    <Field label={categoryFieldLabel(account)} htmlFor={`${id}-category`}>
+      <Input
+        id={`${id}-category`}
+        list={`${id}-categories`}
+        value={value}
+        maxLength={CATEGORY_MAX}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={suggestions[0] ?? "Opcional"}
+        className="h-9"
+      />
+      <datalist id={`${id}-categories`}>
+        {suggestions.map((option) => (
+          <option key={option} value={option} />
+        ))}
+      </datalist>
+    </Field>
+  )
 }
 
 function ClientProjectFields({
@@ -198,14 +281,22 @@ function EntryForm({
 }) {
   const ids = useId()
   const [today] = useState<DateKey>(() => todayKey())
-  const [kind, setKind] = useState<FinanceKind>(item?.kind ?? defaults?.kind ?? "income")
+  const initialKind = item?.kind ?? defaults?.kind ?? "income"
+  const initialClient = item ? item.client_id : (defaults?.client_id ?? null)
+  const [kind, setKind] = useState<FinanceKind>(initialKind)
+  const [account, setAccount] = useState<FinanceAccount | null>(
+    item?.account ?? defaults?.account ?? defaultAccount(initialKind, initialClient)
+  )
+  // Até alguém escolher a categoria, ela acompanha o cliente (receita de cliente ↔ outras receitas).
+  const [accountTouched, setAccountTouched] = useState(Boolean(item || defaults?.account))
   const [description, setDescription] = useState(item?.description ?? "")
   const [amount, setAmount] = useState(item ? moneyInputValue(item.amount_cents) : "")
+  const [fee, setFee] = useState(item?.fee_cents ? moneyInputValue(item.fee_cents) : "")
   const [dueOn, setDueOn] = useState<DateKey>(item?.due_on ?? today)
   const [paid, setPaid] = useState(Boolean(item?.paid_on))
   const [paidOn, setPaidOn] = useState<DateKey>(item?.paid_on ?? today)
   const [category, setCategory] = useState(item?.category ?? "")
-  const [clientId, setClientId] = useState<string | null>(item ? item.client_id : (defaults?.client_id ?? null))
+  const [clientId, setClientId] = useState<string | null>(initialClient)
   const [projectId, setProjectId] = useState<string | null>(item ? item.project_id : (defaults?.project_id ?? null))
   const [notes, setNotes] = useState(item?.entry?.notes ?? "")
   const [repeat, setRepeat] = useState(false)
@@ -216,7 +307,22 @@ function EntryForm({
 
   const occurrence = item?.recurrence && item.period ? { recurrence: item.recurrence, period: item.period } : null
   const income = kind === "income"
-  const categories = income ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+  // A taxa do gateway é cobrada no recebimento.
+  const showFee = income && paid
+  const amountCents = parseMoney(amount)
+  const feeCents = fee.trim() ? parseMoney(fee) : 0
+
+  function changeKind(next: FinanceKind) {
+    setKind(next)
+    setAccount(defaultAccount(next, clientId))
+    setAccountTouched(false)
+    if (error) setError(null)
+  }
+
+  function changeClient(next: string | null) {
+    setClientId(next)
+    if (!accountTouched && kind === "income") setAccount(defaultAccount("income", next))
+  }
 
   function submit() {
     const cents = parseMoney(amount)
@@ -228,8 +334,25 @@ function EntryForm({
       setError("Informe um valor (ex.: 3.500,00).")
       return
     }
+    if (!account) {
+      setError("Escolha a categoria (onde entra no resultado).")
+      return
+    }
+    if (account === "client_revenue" && !clientId) {
+      setError("Escolha o cliente desta receita.")
+      return
+    }
+    if (showFee && feeCents === null) {
+      setError("Taxa inválida (ex.: 13,58).")
+      return
+    }
+    if (showFee && (feeCents ?? 0) > cents) {
+      setError("A taxa não pode ser maior que o valor.")
+      return
+    }
     setError(null)
     const fields = {
+      account,
       description,
       amount_cents: cents,
       category: category || null,
@@ -237,16 +360,13 @@ function EntryForm({
       project_id: projectId,
       notes: notes || null,
     }
+    const payment = { paid_on: paid ? paidOn : null, fee_cents: showFee ? (feeCents ?? 0) : 0 }
     startTransition(async () => {
       let result
       if (item?.entry) {
-        result = await updateEntry(item.entry.id, { ...fields, due_on: dueOn, paid_on: paid ? paidOn : null })
+        result = await updateEntry(item.entry.id, { ...fields, due_on: dueOn, ...payment })
       } else if (occurrence) {
-        result = await updateOccurrence(occurrence.recurrence.id, occurrence.period, {
-          ...fields,
-          due_on: dueOn,
-          paid_on: paid ? paidOn : null,
-        })
+        result = await updateOccurrence(occurrence.recurrence.id, occurrence.period, { ...fields, due_on: dueOn, ...payment })
       } else if (repeat) {
         const created = await createRecurrence({
           kind,
@@ -257,10 +377,10 @@ function EntryForm({
         })
         result = created
         if (created.ok && paid) {
-          result = await updateOccurrence(created.data.id, periodOf(dueOn), { paid_on: paidOn })
+          result = await updateOccurrence(created.data.id, periodOf(dueOn), payment)
         }
       } else {
-        result = await createEntry({ kind, ...fields, due_on: dueOn, paid_on: paid ? paidOn : null })
+        result = await createEntry({ kind, ...fields, due_on: dueOn, ...payment })
       }
       if (!result.ok) {
         setError(result.error)
@@ -322,7 +442,7 @@ function EntryForm({
               {occurrence ? ` · ${periodLabel(occurrence.period).toLocaleLowerCase("pt-BR")} de uma recorrência` : ""}
             </p>
           ) : (
-            <KindToggle value={kind} onChange={setKind} />
+            <KindToggle value={kind} onChange={changeKind} />
           )}
         </div>
         <input
@@ -333,13 +453,22 @@ function EntryForm({
             if (error) setError(null)
           }}
           maxLength={DESCRIPTION_MAX}
-          placeholder={income ? "Ex.: Fee mensal Velmont, Site Hertmann (entrada)" : "Ex.: Adobe, Simples Nacional, freelancer"}
+          placeholder={income ? "Ex.: Mensalidade Velmont, Site Hertmann (entrada)" : "Ex.: Contabilidade, Adobe, freelancer do vídeo"}
           aria-label="Descrição"
           className="mt-3 w-full bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none placeholder:font-normal placeholder:text-subtle-foreground"
         />
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Field label="Valor (R$)" htmlFor={`${ids}-amount`}>
+          <AccountField
+            kind={kind}
+            value={account}
+            onChange={(next) => {
+              setAccount(next)
+              setAccountTouched(true)
+              if (error) setError(null)
+            }}
+          />
+          <Field label={income ? "Valor bruto (R$)" : "Valor (R$)"} htmlFor={`${ids}-amount`}>
             <Input
               id={`${ids}-amount`}
               inputMode="decimal"
@@ -365,23 +494,8 @@ function EntryForm({
               className="h-9 w-full justify-start border border-input px-3"
             />
           </Field>
-          <ClientProjectFields clientId={clientId} projectId={projectId} onClient={setClientId} onProject={setProjectId} />
-          <Field label="Categoria" htmlFor={`${ids}-category`}>
-            <Input
-              id={`${ids}-category`}
-              list={`${ids}-categories`}
-              value={category}
-              maxLength={CATEGORY_MAX}
-              onChange={(event) => setCategory(event.target.value)}
-              placeholder={categories[0]}
-              className="h-9"
-            />
-            <datalist id={`${ids}-categories`}>
-              {categories.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
-          </Field>
+          <ClientProjectFields clientId={clientId} projectId={projectId} onClient={changeClient} onProject={setProjectId} />
+          <CategoryField id={ids} account={account} value={category} onChange={setCategory} />
           <div className="space-y-1.5">
             <label className="flex h-[18px] items-center gap-2 text-xs font-medium text-muted-foreground">
               <Checkbox checked={paid} onCheckedChange={(checked) => setPaid(checked === true)} />
@@ -402,6 +516,27 @@ function EntryForm({
               <p className="flex h-9 items-center text-xs text-muted-foreground">Ainda não</p>
             )}
           </div>
+          {showFee ? (
+            <Field label="Taxa do gateway (R$)" htmlFor={`${ids}-fee`}>
+              <Input
+                id={`${ids}-fee`}
+                inputMode="decimal"
+                value={fee}
+                onChange={(event) => setFee(event.target.value)}
+                onBlur={() => {
+                  const cents = parseMoney(fee)
+                  if (cents) setFee(moneyInputValue(cents))
+                }}
+                placeholder="0,00"
+                className="h-9 text-right tabular-nums"
+              />
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {amountCents && feeCents !== null
+                  ? `Líquido: ${formatMoney(Math.max(0, amountCents - feeCents))}`
+                  : "Cobrada pelo Asaas no recebimento."}
+              </p>
+            </Field>
+          ) : null}
         </div>
 
         {!item ? (
@@ -422,14 +557,16 @@ function EntryForm({
                     <SelectItem value={NONE}>sem data para acabar</SelectItem>
                     {endOptions(periodOf(dueOn), today).map((period) => (
                       <SelectItem key={period} value={period}>
-                        até {periodLabel(period).toLocaleLowerCase("pt-BR")}
+                        {endLabel(periodOf(dueOn), period)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             ) : (
-              <p className="mt-1 text-xs text-muted-foreground">Para fees e assinaturas: cada mês aparece sozinho, é só marcar quando entrar.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Contratos, custos fixos e parcelas: cada mês aparece sozinho, é só marcar quando entrar ou sair.
+              </p>
             )}
           </div>
         ) : null}
@@ -516,6 +653,7 @@ function EntryForm({
 function RecurrenceForm({ recurrence, onDone }: { recurrence: FinanceRecurrence; onDone: () => void }) {
   const ids = useId()
   const [today] = useState<DateKey>(() => todayKey())
+  const [account, setAccount] = useState<FinanceAccount>(recurrence.account)
   const [description, setDescription] = useState(recurrence.description)
   const [amount, setAmount] = useState(moneyInputValue(recurrence.amount_cents))
   const [day, setDay] = useState(String(recurrence.day_of_month))
@@ -546,9 +684,14 @@ function RecurrenceForm({ recurrence, onDone }: { recurrence: FinanceRecurrence;
       setError("Dia do vencimento entre 1 e 31.")
       return
     }
+    if (account === "client_revenue" && !clientId) {
+      setError("Escolha o cliente desta receita.")
+      return
+    }
     setError(null)
     startTransition(async () => {
       const result = await updateRecurrence(recurrence.id, {
+        account,
         description,
         amount_cents: cents,
         day_of_month: dayNumber,
@@ -599,6 +742,7 @@ function RecurrenceForm({ recurrence, onDone }: { recurrence: FinanceRecurrence;
           className="mt-3 w-full bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none"
         />
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <AccountField kind={recurrence.kind} value={account} onChange={setAccount} />
           <Field label="Valor por mês (R$)" htmlFor={`${ids}-amount`}>
             <Input
               id={`${ids}-amount`}
@@ -622,21 +766,7 @@ function RecurrenceForm({ recurrence, onDone }: { recurrence: FinanceRecurrence;
             />
           </Field>
           <ClientProjectFields clientId={clientId} projectId={projectId} onClient={setClientId} onProject={setProjectId} />
-          <Field label="Categoria" htmlFor={`${ids}-category`}>
-            <Input
-              id={`${ids}-category`}
-              list={`${ids}-categories`}
-              value={category}
-              maxLength={CATEGORY_MAX}
-              onChange={(event) => setCategory(event.target.value)}
-              className="h-9"
-            />
-            <datalist id={`${ids}-categories`}>
-              {(income ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
-          </Field>
+          <CategoryField id={ids} account={account} value={category} onChange={setCategory} />
           <Field label="Até quando">
             <Select value={endsOn ?? NONE} onValueChange={(value) => setEndsOn(value === NONE ? null : value)}>
               <SelectTrigger aria-label="Até quando" className={TRIGGER}>
@@ -646,7 +776,7 @@ function RecurrenceForm({ recurrence, onDone }: { recurrence: FinanceRecurrence;
                 <SelectItem value={NONE}>Sem data para acabar</SelectItem>
                 {ends.map((period) => (
                   <SelectItem key={period} value={period}>
-                    Até {periodLabel(period).toLocaleLowerCase("pt-BR")}
+                    {endLabel(recurrence.starts_on, period, true)}
                   </SelectItem>
                 ))}
               </SelectContent>

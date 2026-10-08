@@ -352,12 +352,12 @@ function CommentComposer({ target, onAdded }: { target: CommentTarget; onAdded: 
     })
   }
 
+  // Sem <form>: o histórico também aparece dentro de formulários (negócio), e
+  // um formulário dentro de outro enviaria os dois.
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault()
-        submit()
-      }}
+    <div
+      role="group"
+      aria-label="Novo comentário"
       className="rounded-lg border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20"
     >
       <Textarea
@@ -375,10 +375,10 @@ function CommentComposer({ target, onAdded }: { target: CommentTarget; onAdded: 
         className="min-h-16 resize-none border-0 text-[13px] shadow-none focus-visible:ring-0"
       />
       <div className="flex justify-end px-2 pb-2">
-        <Button type="submit" size="sm" className="h-7" disabled={isPending || !body.trim()}>
+        <Button type="button" size="sm" className="h-7" disabled={isPending || !body.trim()} onClick={submit}>
           {isPending ? "Enviando…" : "Comentar"}
         </Button>
       </div>
-    </form>
+    </div>
   )
 }

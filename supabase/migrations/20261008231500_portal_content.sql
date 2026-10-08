@@ -119,7 +119,8 @@ $$;
 revoke all on function private.portal_visible_stage(public.content_stage) from public;
 grant execute on function private.portal_visible_stage(public.content_stage) to authenticated;
 
--- Post que a conta logada pode ver no portal (do cliente dela, etapa liberada).
+-- Post que a conta logada pode ver no portal (do cliente dela, cliente ativo,
+-- etapa liberada).
 create function private.portal_can_see_post(target_post uuid)
 returns boolean
 language sql
@@ -129,8 +130,10 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.content_posts p
+      join public.clients c on c.id = p.client_id
      where p.id = target_post
        and p.client_id in (select private.my_client_ids())
+       and c.active
        and private.portal_visible_stage(p.stage)
   );
 $$;
@@ -288,7 +291,7 @@ begin
   end if;
 
   select * into post from public.content_posts p where p.id = target_post for update;
-  if not found or post.client_id not in (select private.my_client_ids()) or not private.portal_visible_stage(post.stage) then
+  if not found or not private.portal_can_see_post(target_post) then
     raise exception 'post_not_found' using errcode = 'P0002';
   end if;
   if post.stage <> 'client_review' then

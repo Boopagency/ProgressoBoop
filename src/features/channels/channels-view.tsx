@@ -366,7 +366,16 @@ export function ChannelsView({
                 className="flex h-7 w-full items-center gap-1 px-2 text-[11px] font-medium tracking-wide text-subtle-foreground uppercase hover:text-foreground"
               >
                 <ChevronRight className={cn("size-3 transition-transform", showArchived && "rotate-90")} aria-hidden="true" />
-                Arquivados e clientes inativos ({groups.archived.length})
+                <span className="flex-1 text-left">Arquivados e clientes inativos ({groups.archived.length})</span>
+                {/* Recolhido, o grupo mostra o que os canais dele têm (o selo da barra lateral conta os de clientes inativos). */}
+                {showArchived ? null : (
+                  <span className="flex items-center gap-1 normal-case tracking-normal">
+                    <CountBadges
+                      pending={groups.archived.reduce((sum, channel) => sum + channel.counts.pending, 0)}
+                      unread={groups.archived.reduce((sum, channel) => sum + channel.counts.unread, 0)}
+                    />
+                  </span>
+                )}
               </button>
               {showArchived ? rows(groups.archived) : null}
             </section>

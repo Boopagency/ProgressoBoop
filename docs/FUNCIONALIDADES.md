@@ -532,6 +532,8 @@ cliente entra na fase 3 do portal).
     escolhe a pessoa;
   - em cada canal, as **não lidas** (na cor da marca) e os **pedidos de
     ajuste pendentes** (em laranja). A lista se atualiza a cada 15 segundos.
+    Com "Arquivados" recolhido, o título do grupo mostra as não lidas e os
+    pendentes dos clientes inativos (que também contam na barra lateral).
 - **Conversa** à direita: as mensagens por dia, quem escreveu e a hora
   (mensagens seguidas da mesma pessoa ficam juntas), links clicáveis e
   "(editada)". A conversa aberta se atualiza sozinha a cada 4 segundos e
@@ -832,7 +834,9 @@ juntos**, sem entrar cliente por cliente.
     geradas continuam, sem o vínculo);
   - **lateral direita** com duas abas: **Cliente**, o chat do post (o mesmo
     fio do canal do cliente, só as mensagens deste post, com pedido de
-    ajuste, virar tarefa e resolver; o número mostra os pendentes) e
+    ajuste, virar tarefa e resolver; o número mostra os pendentes; um aviso
+    lembra que o cliente lê essa conversa, inclusive o que foi escrito
+    antes, e o campo só libera depois que ela carrega) e
     **Interno**, o histórico e os comentários da equipe. No celular, "Post"
     e "Conversa" viram abas no topo.
 - **Regra importante:** atrasado é o post cujo dia de publicação já passou

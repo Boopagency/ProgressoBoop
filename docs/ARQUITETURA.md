@@ -603,7 +603,10 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     programado, publicado) por `portal_posts`, que devolve só título,
     formato, redes, data e hora, etapa, legenda, slides, capa, fixado e
     publicação (nada de ideia, orientação de design, roteiro, frentes,
-    responsável ou link do Drive). `portal_review_post` aprova (vai para
+    responsável ou link do Drive). Post em que o próprio cliente pediu
+    ajuste continua no portal enquanto volta para produção ou revisão
+    interna ("em ajuste": lê e conversa, não aprova); pedido marcado pela
+    equipe não libera o post (`private.portal_visible_post`). `portal_review_post` aprova (vai para
     "aprovado") ou pede ajuste com o que mudar (volta para "revisão
     interna") só em post "com o cliente", e grava a mensagem `approval` ou
     `change_request` no canal do cliente, ligada ao post. O chat do post no

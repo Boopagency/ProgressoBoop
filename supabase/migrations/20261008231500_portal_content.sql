@@ -107,20 +107,36 @@ revoke all on function private.log_activity(text, uuid, text, uuid, uuid, public
 
 -- Posts que o cliente vê ---------------------------------------------------------
 
-create function private.portal_visible_stage(stage public.content_stage)
+-- Etapas em que o post aparece no portal: a partir de "com o cliente". Um post
+-- em que o próprio cliente pediu ajuste e que voltou para a equipe (produção
+-- ou revisão interna) continua aparecendo, como "em ajuste", sem aprovação e
+-- com o chat. Pedido marcado pela equipe não conta: o post pode nunca ter
+-- chegado ao cliente.
+create function private.portal_visible_post(target_post uuid, stage public.content_stage)
 returns boolean
 language sql
-immutable
+stable
+security definer
 set search_path = ''
 as $$
-  select stage in ('client_review', 'approved', 'scheduled', 'published');
+  select stage in ('client_review', 'approved', 'scheduled', 'published')
+      or (
+        stage in ('production', 'internal_review')
+        and exists (
+          select 1 from public.messages m
+            join public.channels ch on ch.id = m.channel_id and ch.kind = 'client'
+            join public.client_members cm on cm.client_id = ch.client_id and cm.user_id = m.author_id
+           where m.post_id = target_post
+             and m.kind = 'change_request'
+        )
+      );
 $$;
 
-revoke all on function private.portal_visible_stage(public.content_stage) from public;
-grant execute on function private.portal_visible_stage(public.content_stage) to authenticated;
+revoke all on function private.portal_visible_post(uuid, public.content_stage) from public;
+grant execute on function private.portal_visible_post(uuid, public.content_stage) to authenticated;
 
 -- Post que a conta logada pode ver no portal (do cliente dela, cliente ativo,
--- etapa liberada).
+-- etapa liberada ou em ajuste).
 create function private.portal_can_see_post(target_post uuid)
 returns boolean
 language sql
@@ -134,7 +150,7 @@ as $$
      where p.id = target_post
        and p.client_id in (select private.my_client_ids())
        and c.active
-       and private.portal_visible_stage(p.stage)
+       and private.portal_visible_post(p.id, p.stage)
   );
 $$;
 
@@ -185,7 +201,7 @@ as $$
    where p.client_id = target_client
      and c.active
      and p.client_id in (select private.my_client_ids())
-     and private.portal_visible_stage(p.stage)
+     and private.portal_visible_post(p.id, p.stage)
    order by p.publish_on nulls last, p.publish_time nulls last, p.created_at;
 $$;
 
@@ -353,7 +369,7 @@ as $$
          or exists (
            select 1 from public.content_posts p
             where p.client_id = c.id
-              and private.portal_visible_stage(p.stage)
+              and private.portal_visible_post(p.id, p.stage)
               and (
                 p.cover_path = object_name
                 or p.slides @> jsonb_build_array(jsonb_build_object('image_path', object_name))

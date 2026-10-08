@@ -3,6 +3,7 @@ import "server-only"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 
+import { getPortalUser } from "@/features/portal/session"
 import { createClient } from "@/lib/supabase/server"
 import type { SessionUser } from "@/lib/types"
 
@@ -31,9 +32,12 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   }
 })
 
-/** Garante sessão em páginas, queries e actions. Sem sessão, vai para o login. */
+/**
+ * Garante sessão da equipe em páginas, queries e actions. Sem sessão, vai para
+ * o login; uma conta de cliente vai para o portal.
+ */
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser()
-  if (!user) redirect("/login")
+  if (!user) redirect((await getPortalUser()) ? "/portal" : "/login")
   return user
 }

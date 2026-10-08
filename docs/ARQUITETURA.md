@@ -76,6 +76,8 @@ src/
 │   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
 │   │                           # (mesma regra, bucket `content`)
 │   ├── login/                  # "/login" (sem "Criar conta")
+│   ├── portal/                 # "/portal": área do cliente (layout próprio, sem a
+│   │                           # sidebar; só contas de cliente)
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -115,6 +117,8 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
+│   ├── portal/                 # portal do cliente: sessão da conta de cliente e,
+│   │                           # na equipe, o cartão "Acesso do cliente"
 │   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
 ├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
 │                               # diálogo de criar da tela)
@@ -172,8 +176,9 @@ processos (`docs` e `doc_versions`), as revisões de clientes
 (`client_reviews`), a operação (`projects`, `saved_views`, `decisions`,
 `communications`, `finance_recurrences`, `finance_entries` e `activity`) e a
 gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
-`key_results`) e a Central de Conteúdo (`content_posts` e `content_ideas`). O
-SQL está em `supabase/migrations/`, uma migration por etapa:
+`key_results`), a Central de Conteúdo (`content_posts` e `content_ideas`) e os
+canais das Comunicações (`channels`, `channel_members`, `messages` e
+`channel_reads`). O SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
@@ -187,8 +192,10 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 [`finance_management`](../supabase/migrations/20261007174116_finance_management.sql),
 [`commercial`](../supabase/migrations/20261007174202_commercial.sql),
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
-[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql) e
-[`content`](../supabase/migrations/20261008122847_content.sql).
+[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
+[`content`](../supabase/migrations/20261008122847_content.sql),
+[`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql) e
+[`channels`](../supabase/migrations/20261008195016_channels.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -217,6 +224,11 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 | `key_results`      | `id`, `objective_id`, `title`, `metric` (indicador do catálogo; vazio = manual), `client_id` (recorte), `unit`, `target_value`, `baseline_value`, `manual_value`, `position`, `created_by`, `created_at`, `updated_at` |
 | `content_posts`    | `id`, `client_id` (obrigatório), `project_id`, `title`, `format`, `networks` (pelo menos uma), `intents`, `publish_on`, `publish_time`, `stage`, `copy_status`, `design_status`, `video_status` (frentes), `owner_id`, `brief` (ideia), `design_notes` (orientação de design ou vídeo), `script` (roteiro), `slides` (jsonb `[{ text, image_path }]`, até 20), `caption` (legenda), `drive_url`, `cover_path` (capa no Storage), `pinned` (fixado no feed), `published_at` (trigger), `created_by`, `created_at`, `updated_at` |
 | `content_ideas`    | `id`, `client_id` (obrigatório), `title`, `notes`, `format`, `reference_url`, `post_id` (o post em que virou), `created_by`, `created_at`, `updated_at` |
+| `client_members`   | `id`, `client_id`, `user_id` (conta do Auth **sem** perfil), `full_name` (quem acessa), `email` (guardado ao dar o acesso), `created_by`, `created_at`. Único por cliente e conta |
+| `channels`         | `id`, `kind` (cliente, interno ou direto), `client_id` (só no de cliente; um por cliente), `name` (no de cliente, "Alterações – <cliente>"; vazio na conversa direta), `archived`, `created_by`, `created_at` |
+| `channel_members`  | `channel_id`, `user_id` (chave composta): quem participa dos canais internos e diretos |
+| `messages`         | `id`, `channel_id`, `post_id` (o post de que fala, do cliente do canal), `author_id` (`auth.users`), `kind`, `body`, `resolved_at`, `resolved_by` (pedido de ajuste resolvido), `task_id` (a tarefa em que virou), `created_at`, `edited_at` |
+| `channel_reads`    | `user_id` (`auth.users`), `channel_id` (chave composta), `last_read_at` |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
@@ -251,10 +263,18 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `sponsored`), `content_stage` (`production`, `internal_review`,
 `client_review`, `approved`, `scheduled`, `published`) e
 `content_front_status` (`not_needed`, `todo`, `in_progress`,
-`missing_material`, `in_review`, `changes`, `done`).
+`missing_material`, `in_review`, `changes`, `done`), `channel_kind` (`client`,
+`internal`, `direct`) e `message_kind` (`text`, `change_request`, `approval`,
+`system`).
 
-Função exposta: `public.win_deal(...)` (`security invoker`, só para
-`authenticated`), que ganha um negócio numa transação (item 30).
+Funções expostas (só para `authenticated`): `public.win_deal(...)`
+(`security invoker`), que ganha um negócio numa transação (item 30);
+`public.link_client_member(target_client, member_email, member_name)` e
+`public.portal_my_clients()` (`security definer`), do portal do cliente
+(item 41); `public.open_direct_channel(profile_id)` (`security definer`), que
+abre ou cria a conversa direta com outra pessoa da equipe (item 46); e
+`public.channel_counts()` (`security invoker`), com as não lidas e os pedidos
+pendentes de cada canal (item 45).
 
 ### 5.1 Decisões sobre o schema
 
@@ -516,6 +536,62 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
     mês nos mensais). Estratégia e relatório do mês ficam sem revisão
     periódica (valem para um mês) e o planejamento de stories é revisto a
     cada 3 meses. O documento não guarda de que modelo veio.
+41. **Portal do cliente: conta de cliente nunca é da equipe.** Ter perfil
+    em `profiles` dá acesso a tudo, então a conta de um cliente não tem
+    perfil: fica em `client_members`, ligada a um ou mais clientes. Os
+    triggers `guard_client_member` e `guard_team_profile` impedem a mesma
+    conta de estar nas duas tabelas. Nenhuma política das tabelas da
+    equipe muda: o portal lê só por funções `security definer` que
+    conferem `client_members` e devolvem os campos liberados (nesta fase,
+    `portal_my_clients`: id, nome e foto dos clientes ativos da conta e o
+    nome de quem acessa). Dar acesso é `link_client_member`, só para a
+    equipe: acha a conta no Auth pelo e-mail (criada antes no painel do
+    Supabase, com senha) e a liga ao cliente, sem service role no app.
+    `private.my_client_ids()` fica pronta para as políticas das próximas
+    fases (canais de mensagem, imagens do conteúdo).
+42. **Comunicações em canais, sem mexer no que existe.** `channels` tem três
+    tipos: `client`, um por cliente ("Alterações – <cliente>"), criado pelo
+    trigger `sync_client_channel` junto com o cliente (inclusive pelo
+    `win_deal`) e com o nome acompanhando o do cliente (a migration criou os
+    dos clientes que já existiam); `internal`, por assunto (ex.:
+    "Financeiro"); e `direct`, entre duas pessoas, sem nome (o app mostra a
+    outra pessoa). `communications` continua como está: os registros antigos
+    entram no fio do canal do cliente pelo app, como itens, só para a equipe.
+    Excluir o cliente apaga o canal e as mensagens dele. O autor da mensagem
+    e a leitura apontam para `auth.users`, não para `profiles`, porque na
+    fase 3 o cliente também escreve.
+43. **O chat do post é o fio do canal do cliente.** A mensagem guarda
+    `post_id` (opcional), e o trigger `set_message_fields` só aceita post do
+    cliente do canal (nenhum em canal interno ou direto). O painel do post
+    mostra as mensagens com aquele `post_id`; no canal, elas aparecem com o
+    cartão do post. Excluir o post deixa a mensagem sem o cartão; levar o
+    post para outro cliente também (`unlink_post_messages`): a conversa fica
+    no canal em que foi escrita, sem mostrar a um cliente o que foi dito por
+    outro.
+44. **Pedido de ajuste = mensagem `change_request`.** Vira tarefa
+    (`messages.task_id`) e fica pendente até ser resolvido: `resolved_at` e
+    `resolved_by` são do banco (o app manda só resolvido ou não). Concluir a
+    tarefa resolve os pedidos dela, e reabrir a tarefa (inclusive o
+    "Desfazer") os deixa pendentes de novo, só os que ela resolveu
+    (`resolve_task_messages`; os resolvidos à mão continuam). Qualquer pessoa
+    da equipe marca uma mensagem como pedido (texto ↔ pedido), resolve e
+    liga a tarefa; o texto e o post, só quem escreveu muda (editar preenche
+    `edited_at`). `system` fica para mensagens do próprio banco, e canal
+    arquivado não recebe mensagem nova.
+45. **Não lidas sem contador gravado.** `channel_reads` guarda até onde cada
+    pessoa leu cada canal (o app grava a hora da última mensagem que
+    mostrou). `channel_counts()` devolve, para cada canal ativo que a pessoa
+    enxerga, as não lidas (dos outros, depois da leitura), os pedidos de
+    ajuste pendentes e a hora da última mensagem: uma consulta só serve a
+    barra lateral, a lista de canais e o Hoje.
+46. **Conversa direta por função; canal interno pela tabela.**
+    `open_direct_channel` acha ou cria a conversa do par (com uma trava para
+    duas pessoas não criarem duas ao mesmo tempo) e a reabre se estava
+    arquivada; é o único caminho para criar conversa direta e seus dois
+    participantes. Canal interno: o app cria com o id já sorteado e sem
+    `RETURNING` (antes do trigger, quem criou ainda não o enxerga), o trigger
+    `add_channel_creator` põe quem criou como participante e depois o app
+    inclui os outros.
 
 ### 5.2 Segurança (RLS)
 
@@ -542,12 +618,24 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
 | `finance_closings` | ver, fechar o mês (como autor) e reabrir                      |
 | `deals`, `objectives`, `key_results` | ver, criar (como autor), editar e excluir    |
 | `content_posts`, `content_ideas` | ver, criar (como autor), editar e excluir        |
+| `client_members`   | ver, renomear e tirar acessos. Dar acesso só por `link_client_member`. A conta do cliente lê só as próprias linhas |
 | `activity`         | ver; criar só comentários (como autor); editar e apagar só os próprios comentários. O resto é gravado pelo banco |
+| `channels`         | ver os de cliente e os internos e diretos de que participa; criar só canais internos (como autor); renomear e arquivar os que vê (o nome do canal de cliente acompanha o cliente); excluir os internos de que participa |
+| `channel_members`  | ver os dos canais que vê; incluir e tirar pessoas (ou sair) nos canais internos de que participa. Os da conversa direta não mudam |
+| `messages`         | ver e escrever (como autor, nunca `system`) nos canais que vê; editar o texto e apagar só as próprias; marcar como pedido, resolver e ligar a tarefa em qualquer uma que vê |
+| `channel_reads`    | só a própria leitura, nos canais que vê                       |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens                 |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
   então as políticas acima valem para tudo o que ela cria. Anônimos não
   podem executá-la.
+- Canais: as políticas usam `private.team_channel_ids()` (os canais que a
+  pessoa da equipe enxerga) e `private.can_manage_channel_members()`, ambas
+  `security definer` para não haver recursão entre canais e participantes.
+  `open_direct_channel` é `security definer` porque é o único caminho para
+  criar conversa direta; ela confere que quem chama e a outra pessoa são da
+  equipe. As políticas de hoje são só da equipe: as do cliente (fase 3)
+  entram numa migration própria, com `private.my_client_ids()`.
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
@@ -565,6 +653,13 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
+- Para dar acesso a um cliente: criar a conta como a da equipe
+  (Authentication → Users → Add user, com senha e "Auto Confirm User"),
+  passar a senha para a pessoa e ligar a conta ao cliente com
+  `link_client_member` (pelo app, no cartão "Acesso do cliente" da página
+  do cliente). "Invite user" não serve ainda: o app não recebe o link do
+  convite, e a pessoa ficaria sem senha (o login por link vem numa fase
+  seguinte). Nunca criar perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
   `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a

@@ -63,9 +63,27 @@ export type LeadSource =
   | "other"
 /** Unidade de um resultado-chave (dinheiro em centavos; percentual em pontos). */
 export type MetricUnit = "money" | "percent" | "count" | "number" | "days"
+/** Reels, Carrossel, Estático, Stories, Vídeo, Foto ou Texto. */
+export type ContentFormat = "reels" | "carousel" | "static" | "stories" | "video" | "photo" | "text"
+export type ContentNetwork = "instagram" | "tiktok" | "linkedin"
+/** Conversão, Crescimento, Autoridade, Conexão ou Publi. */
+export type ContentIntent = "conversion" | "growth" | "authority" | "connection" | "sponsored"
+/** Em produção, Revisão interna, Aguardando cliente, Aprovado, Programado ou Publicado. */
+export type ContentStage = "production" | "internal_review" | "client_review" | "approved" | "scheduled" | "published"
+/** Situação de uma frente do post (copy, design, vídeo). */
+export type ContentFrontStatus =
+  | "not_needed"
+  | "todo"
+  | "in_progress"
+  | "missing_material"
+  | "in_review"
+  | "changes"
+  | "done"
+/** Frentes de produção de um post. */
+export type ContentFront = "copy" | "design" | "video"
 export type ActivityAction = "created" | "updated" | "deleted" | "comment"
-/** Itens com histórico (e, os três primeiros, com comentários). */
-export type ActivityEntityType = "task" | "project" | "decision" | "communication" | "finance" | "recurrence" | "deal"
+/** Itens com histórico (comentários: tarefa, projeto, decisão, negócio e post). */
+export type ActivityEntityType = "task" | "project" | "decision" | "communication" | "finance" | "recurrence" | "deal" | "content_post"
 
 /** Data sem horário, `yyyy-MM-dd` (formato de colunas `date`). */
 export type DateKey = string
@@ -444,6 +462,67 @@ export interface KeyResult {
   baseline_value: number | null
   manual_value: number | null
   position: number
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Slide de um carrossel: texto e imagem (caminho no bucket `content`). */
+export interface ContentSlide {
+  text: string
+  image_path: string | null
+}
+
+/** Post da Central de Conteúdo (social media de um cliente). */
+export interface ContentPost {
+  id: string
+  client_id: string
+  project_id: string | null
+  title: string
+  format: ContentFormat
+  /** Pelo menos uma. */
+  networks: ContentNetwork[]
+  intents: ContentIntent[]
+  /** Dia e horário (São Paulo) previstos para a publicação. */
+  publish_on: DateKey | null
+  /** `HH:mm:ss`, como o banco devolve colunas `time`. */
+  publish_time: string | null
+  stage: ContentStage
+  copy_status: ContentFrontStatus
+  design_status: ContentFrontStatus
+  video_status: ContentFrontStatus
+  owner_id: string | null
+  /** Conteúdo/ideia do post. */
+  brief: string | null
+  /** Orientação de design ou de vídeo. */
+  design_notes: string | null
+  /** Roteiro (reels, vídeo, stories). */
+  script: string | null
+  /** Até 20. */
+  slides: ContentSlide[]
+  caption: string | null
+  drive_url: string | null
+  /** Capa no bucket `content` (`<client_id>/<arquivo>`). */
+  cover_path: string | null
+  /** Fixado no topo do feed. */
+  pinned: boolean
+  /** Quando virou publicado. */
+  published_at: Timestamp | null
+  created_by: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+/** Ideia ou referência do banco de ideias de um cliente. */
+export interface ContentIdea {
+  id: string
+  client_id: string
+  title: string
+  notes: string | null
+  format: ContentFormat | null
+  reference_url: string | null
+  /** Post em que a ideia virou. */
+  post_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp

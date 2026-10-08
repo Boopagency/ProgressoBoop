@@ -166,7 +166,8 @@ processos (`docs` e `doc_versions`), as revisões de clientes
 (`client_reviews`), a operação (`projects`, `saved_views`, `decisions`,
 `communications`, `finance_recurrences`, `finance_entries` e `activity`) e a
 gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
-`key_results`). O SQL está em `supabase/migrations/`, uma migration por etapa:
+`key_results`) e a Central de Conteúdo (`content_posts` e `content_ideas`). O
+SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
@@ -179,13 +180,14 @@ gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
 [`finance_occurrence_activity`](../supabase/migrations/20261007162915_finance_occurrence_activity.sql),
 [`finance_management`](../supabase/migrations/20261007174116_finance_management.sql),
 [`commercial`](../supabase/migrations/20261007174202_commercial.sql),
-[`goals`](../supabase/migrations/20261007174228_goals.sql) e
-[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql).
+[`goals`](../supabase/migrations/20261007174228_goals.sql),
+[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql) e
+[`content`](../supabase/migrations/20261008121500_content.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `profiles`         | `id` (= `auth.users.id`), `full_name`, `avatar_url`, `role`, `created_at`          |
-| `clients`          | `id`, `name` (único), `active`, `owner_id` (responsável da Boop), `services` (frentes), `since`, `contact_name`, `contact_email`, `contact_phone`, `notes`, `review_day` (dia do mês em que a revisão vence; vazio = sem revisão mensal), `created_at`, `updated_at` |
+| `clients`          | `id`, `name` (único), `active`, `owner_id` (responsável da Boop), `services` (frentes), `since`, `contact_name`, `contact_email`, `contact_phone`, `notes`, `review_day` (dia do mês em que a revisão vence; vazio = sem revisão mensal), `instagram_handle` (sem @), `instagram_bio`, `avatar_path` (foto do perfil no Storage), `created_at`, `updated_at` |
 | `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`. **Obsoleta**: virou projeto (mesmo `id`); sai na migration de limpeza |
 | `tasks`            | `id`, `title`, `description`, `client_id`, `project_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` (e `plan_id`, obsoleta) |
 | `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
@@ -207,14 +209,18 @@ gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
 | `deals`            | `id`, `title`, `client_id` (cliente da casa ou o criado ao ganhar), `company`, `contact_name`, `contact_email`, `contact_phone`, `source` (origem), `service` (frente), `stage`, `reached_stage` (etapa mais avançada, pelo trigger), `owner_id`, `recurring_cents`, `one_time_cents`, `term_months`, `probability`, `opened_on`, `expected_close_on`, `proposal_sent_on`, `closed_on`, `lost_reason`, `project_id` e `recurrence_id` (o que nasceu do ganho), `notes`, `created_by`, `created_at`, `updated_at` |
 | `objectives`       | `id`, `title`, `description`, `area`, `owner_id`, `starts_on`, `ends_on`, `created_by`, `created_at`, `updated_at` |
 | `key_results`      | `id`, `objective_id`, `title`, `metric` (indicador do catálogo; vazio = manual), `client_id` (recorte), `unit`, `target_value`, `baseline_value`, `manual_value`, `position`, `created_by`, `created_at`, `updated_at` |
+| `content_posts`    | `id`, `client_id` (obrigatório), `project_id`, `title`, `format`, `networks` (pelo menos uma), `intents`, `publish_on`, `publish_time`, `stage`, `copy_status`, `design_status`, `video_status` (frentes), `owner_id`, `brief` (ideia), `design_notes` (orientação de design ou vídeo), `script` (roteiro), `slides` (jsonb `[{ text, image_path }]`, até 20), `caption` (legenda), `drive_url`, `cover_path` (capa no Storage), `pinned` (fixado no feed), `published_at` (trigger), `created_by`, `created_at`, `updated_at` |
+| `content_ideas`    | `id`, `client_id` (obrigatório), `title`, `notes`, `format`, `reference_url`, `post_id` (o post em que virou), `created_by`, `created_at`, `updated_at` |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
 processo de cujo checklist ela saiu), `client_review_id` (a revisão mensal
 de cliente em que ela virou próximo passo), `project_id` (o projeto) e
-`communication_id` (o pedido do cliente que ela atende). Imagens dos
-processos ficam no bucket privado `docs` do Storage (até 5 MB; PNG, JPG, WebP
-e GIF). Dinheiro é sempre inteiro em centavos (`bigint`), sem arredondamento.
+`communication_id` (o pedido do cliente que ela atende) e `content_post_id`
+(o post de cuja frente ela saiu). Imagens dos processos ficam no bucket
+privado `docs` do Storage (até 5 MB; PNG, JPG, WebP e GIF); as de conteúdo
+(capas, slides e foto do perfil do cliente), no bucket privado `content`, em
+`<client_id>/<arquivo>` (até 5 MB; PNG, JPG e WebP). Dinheiro é sempre inteiro em centavos (`bigint`), sem arredondamento.
 
 Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `normal`, `high`), `task_area` (`commercial`, `finance`, `operations`,
@@ -232,7 +238,14 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `fixed_cost`, `other_expense`, `tax`, `owner_draw`, `reinvestment`),
 `deal_stage` (`lead`, `contact`, `proposal`, `negotiation`, `won`, `lost`) e
 `lead_source` (`referral`, `instagram`, `website`, `google`, `linkedin`,
-`whatsapp`, `outbound`, `event`, `existing_client`, `other`).
+`whatsapp`, `outbound`, `event`, `existing_client`, `other`),
+`content_format` (`reels`, `carousel`, `static`, `stories`, `video`,
+`photo`, `text`), `content_network` (`instagram`, `tiktok`, `linkedin`),
+`content_intent` (`conversion`, `growth`, `authority`, `connection`,
+`sponsored`), `content_stage` (`production`, `internal_review`,
+`client_review`, `approved`, `scheduled`, `published`) e
+`content_front_status` (`not_needed`, `todo`, `in_progress`,
+`missing_material`, `in_review`, `changes`, `done`).
 
 Função exposta: `public.win_deal(...)` (`security invoker`, só para
 `authenticated`), que ganha um negócio numa transação (item 30).
@@ -426,6 +439,32 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
     fórmulas que já levam o valor calculado (margens, resultado, totais e o
     imposto pela alíquota da aba Premissas, que pode ser editada). A rota
     confere a sessão e lê os dados com o RLS da pessoa.
+35. **Central de Conteúdo: os posts de todos os clientes numa tabela só.**
+    `content_posts` traz o modelo "Central de Conteúdo" do Notion para o
+    admin, com `client_id` obrigatório (excluir o cliente apaga os posts e as
+    ideias dele, sem um "excluiu" por post no histórico), para a visão
+    central filtrar por cliente, pessoa, rede, formato e etapa. A etapa
+    (`stage`) é o fluxo do post (produção → revisão interna → cliente →
+    aprovado → programado → publicado); as frentes (`copy_status`,
+    `design_status`, `video_status`) dizem o que falta produzir, e "Falta
+    material" em qualquer uma marca o post como travado. O trigger
+    `set_content_post_fields` mantém `updated_at` e a autoria, decide a
+    frente de vídeo na criação quando ninguém informa (A fazer em reels,
+    vídeo e stories; Não precisa nos demais) e preenche `published_at` ao
+    virar publicado (limpa ao sair). As regras (campos por formato, frentes
+    iniciais, progresso, atraso, filtros, agrupamentos e ordem do feed)
+    ficam em `features/content/logic.ts`. O histórico registra criação,
+    exclusão e mudanças de título, etapa, frentes, data, responsável e
+    formato; posts recebem comentários.
+36. **Textos, imagens e ligações do post.** Slides são jsonb
+    (`[{ text, image_path }]`, até 20), conferidos pelo check
+    `private.content_slides_valid`; links (`drive_url`, `reference_url`) só
+    `http(s)`. Imagens (capa, slides e a foto do perfil do cliente) ficam no
+    bucket privado `content`, em `<client_id>/<arquivo>`, com o mesmo modelo
+    do bucket `docs`. O perfil do Instagram (`instagram_handle`,
+    `instagram_bio`, `avatar_path`) fica no próprio cliente, para o preview
+    do feed. As frentes viram tarefas (`tasks.content_post_id`), e as ideias
+    do banco de ideias (`content_ideas`) apontam para o post em que viraram.
 
 ### 5.2 Segurança (RLS)
 
@@ -451,8 +490,9 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
 | `finance_settings` | ver e editar (a linha única já existe; ninguém cria nem apaga) |
 | `finance_closings` | ver, fechar o mês (como autor) e reabrir                      |
 | `deals`, `objectives`, `key_results` | ver, criar (como autor), editar e excluir    |
+| `content_posts`, `content_ideas` | ver, criar (como autor), editar e excluir        |
 | `activity`         | ver; criar só comentários (como autor); editar e apagar só os próprios comentários. O resto é gravado pelo banco |
-| Storage, bucket `docs` | ver, enviar e apagar imagens                              |
+| Storage, buckets `docs` e `content` | ver, enviar e apagar imagens                 |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
   então as políticas acima valem para tudo o que ela cria. Anônimos não

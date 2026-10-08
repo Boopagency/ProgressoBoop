@@ -25,3 +25,35 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Cor da marca só em detalhes (progresso, item ativo, foco, hoje, indicadores):
   `brand` (#00C2FF) como preenchimento, `brand-ink` (#0079A8) quando for texto.
 - Antes de concluir uma mudança: `npm run lint`, `npm run typecheck` e `npm run build`.
+
+## Trabalho com vários agentes
+
+Várias contas do Claude trabalham neste repositório ao mesmo tempo. Para não
+pisar no trabalho do outro:
+
+- **Uma branch por tarefa**, curta, saindo da `main` atualizada. Nada vai
+  direto para a `main`: tudo entra por PR, com o CI (lint, typecheck e build)
+  verde. Antes de abrir ou atualizar o PR, traga a `main` para a branch e rode
+  as três verificações de novo.
+- **PR pequeno e de uma área só** (ex.: financeiro, comercial, tarefas). Preencha
+  o template do PR. Um agente pode revisar o PR de outro (`/code-review`).
+- **Arquivos compartilhados** — mude o mínimo e espere conflito:
+  `src/lib/types.ts`, `src/lib/labels.ts`, `src/components/layout/nav-items.ts`,
+  `src/app/globals.css`, `docs/ARQUITETURA.md`, `docs/FUNCIONALIDADES.md`
+  (nos docs, edite só a seção da sua área).
+- **Banco (o mais importante): prévias e produção usam o mesmo Supabase.**
+  - Escreva a migration nova em `supabase/migrations/`, mas **não aplique** no
+    Supabase pela branch. Ela é aplicada só depois do merge do PR, por quem
+    fez o merge, uma de cada vez e na ordem do nome do arquivo.
+  - Mudanças no banco devem continuar funcionando com o código que já está na
+    `main` (adicionar coluna/tabela, nunca renomear ou apagar no mesmo PR).
+  - `src/lib/supabase/database.types.ts` é gerado: em conflito, não resolva à
+    mão; regenere depois de aplicar a migration.
+  - Testes que gravam dados reais usam nomes marcados (ex.: `E2E <agente>
+    <carimbo>`) e apagam tudo no fim, inclusive as linhas de `activity` dos
+    itens criados.
+- **Segredos**: nenhuma senha, token ou chave no código, em commits, PRs ou
+  issues. Acessos temporários (ex.: bypass de proteção da Vercel) são
+  revogados ao terminar.
+- **Coordenação**: antes de começar, confira os PRs e branches abertos para não
+  pegar a mesma área de outro agente.

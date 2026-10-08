@@ -77,7 +77,9 @@ app **não usa** chave secreta nem `service_role`.
   os clientes juntos em **Calendário** (mês ou semana), **Quadro** por etapa
   (arrastar muda a etapa) e **Próximos 7 dias** (o que falta em copy,
   design e vídeo), com filtros na URL. As frentes de um post viram tarefas
-  com prazo antes da publicação. Também na tela Hoje, no Calendário e na
+  com prazo antes da publicação. **Feed** mostra o preview do Instagram de
+  um cliente e **Ideias** guarda o banco de ideias e referências de cada
+  cliente, com "Virar post". Também na tela Hoje, no Calendário e na
   página do cliente.
 - **Clientes** (`/clientes`): cadastro completo no portal e saúde de cada
   cliente (Saudável, Atenção, Em risco). Cada cliente tem uma revisão
@@ -92,10 +94,12 @@ app **não usa** chave secreta nem `service_role`.
   revogadas, ligadas à reunião, ao cliente ou ao projeto.
 - **Processos** (`/processos`): a documentação interna (processos,
   checklists, políticas e guias) por área e por cliente, com busca no texto,
-  modelos e sugestões. Cada documento tem editor de blocos (estilo Notion,
-  salva sozinho e avisa se outra pessoa salvou no meio), imagens privadas,
-  responsável, revisão periódica, histórico de versões com restauração e
-  "Gerar tarefas" a partir do checklist.
+  modelos (gerais e os do cliente: persona, identidade verbal e visual,
+  estratégia e relatório do mês, stories) e sugestões. Cada documento tem
+  editor de blocos (estilo Notion, salva sozinho e avisa se outra pessoa
+  salvou no meio), imagens privadas, responsável, revisão periódica,
+  histórico de versões com restauração e "Gerar tarefas" a partir do
+  checklist.
 - **Comercial** (`/comercial`): o funil de vendas (lead, contato, proposta,
   negociação, ganho ou perdido) em quadro ou lista, com origem, valor mensal
   e pontual, chance de fechar e motivo de perda. **Ganhar** cria o cliente,
@@ -119,8 +123,8 @@ app **não usa** chave secreta nem `service_role`.
 - **Busca geral** em qualquer tela: <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd>
   ou "Buscar…" no topo. Acha tarefas, projetos, reuniões (inclusive resumos e
   transcrições), decisões, comunicações, processos (o texto inteiro),
-  clientes, negócios e lançamentos, sem acento, e tem ações rápidas para
-  criar qualquer coisa.
+  clientes, negócios, lançamentos, posts (título e legenda) e ideias, sem
+  acento, e tem ações rápidas para criar qualquer coisa.
 - Clicar numa tarefa abre o **Sheet lateral** de detalhes, editável ali
   mesmo, com o **histórico** (quem mudou o quê) e os comentários.
 - **Nova tarefa** pelo botão ou pela tecla <kbd>N</kbd>. Título, responsável e

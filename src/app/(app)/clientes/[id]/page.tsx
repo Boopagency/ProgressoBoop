@@ -13,6 +13,7 @@ import { getDecisions } from "@/features/decisions/queries"
 import { getDocs } from "@/features/docs/queries"
 import { getFinance } from "@/features/finance/queries"
 import { getMeetingRecords } from "@/features/meetings/queries"
+import { getClientMembers } from "@/features/portal/access-queries"
 import { getTasks } from "@/features/tasks/queries"
 import { TasksProvider } from "@/features/tasks/tasks-provider"
 import { todayKey } from "@/lib/dates"
@@ -29,7 +30,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
@@ -42,6 +43,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getDeals(),
     getContentPosts(id),
     getContentIdeas(id),
+    getClientMembers(id),
   ])
   if (!client) notFound()
 
@@ -68,6 +70,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
         deals={deals}
         posts={posts}
         ideas={ideas}
+        members={members}
       />
     </TasksProvider>
   )

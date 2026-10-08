@@ -76,6 +76,8 @@ src/
 │   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
 │   │                           # (mesma regra, bucket `content`)
 │   ├── login/                  # "/login" (sem "Criar conta")
+│   ├── portal/                 # "/portal": área do cliente (layout próprio, sem a
+│   │                           # sidebar; só contas de cliente)
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -115,6 +117,8 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
+│   ├── portal/                 # portal do cliente: sessão da conta de cliente e,
+│   │                           # na equipe, o cartão "Acesso do cliente"
 │   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
 ├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
 │                               # diálogo de criar da tela)
@@ -190,7 +194,7 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
 [`content`](../supabase/migrations/20261008122847_content.sql),
-[`client_portal_access`](../supabase/migrations/20261008190000_client_portal_access.sql) e
+[`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql) e
 [`channels`](../supabase/migrations/20261008200000_channels.sql).
 
 | Tabela             | Colunas principais                                                                 |
@@ -541,8 +545,8 @@ pendentes de cada canal (item 45).
     conferem `client_members` e devolvem os campos liberados (nesta fase,
     `portal_my_clients`: id, nome e foto dos clientes ativos da conta e o
     nome de quem acessa). Dar acesso é `link_client_member`, só para a
-    equipe: acha a conta no Auth pelo e-mail (criada antes pelo convite do
-    painel do Supabase) e a liga ao cliente, sem service role no app.
+    equipe: acha a conta no Auth pelo e-mail (criada antes no painel do
+    Supabase, com senha) e a liga ao cliente, sem service role no app.
     `private.my_client_ids()` fica pronta para as políticas das próximas
     fases (canais de mensagem, imagens do conteúdo).
 42. **Comunicações em canais, sem mexer no que existe.** `channels` tem três
@@ -649,10 +653,13 @@ pendentes de cada canal (item 45).
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
-- Para dar acesso a um cliente: convidar o e-mail em Authentication →
-  Users → Invite user e ligar a conta ao cliente com `link_client_member`
-  (pelo app, no cartão "Acesso do cliente", quando ele existir). Nunca
-  criar perfil para essa conta: o banco recusa.
+- Para dar acesso a um cliente: criar a conta como a da equipe
+  (Authentication → Users → Add user, com senha e "Auto Confirm User"),
+  passar a senha para a pessoa e ligar a conta ao cliente com
+  `link_client_member` (pelo app, no cartão "Acesso do cliente" da página
+  do cliente). "Invite user" não serve ainda: o app não recebe o link do
+  convite, e a pessoa ficaria sem senha (o login por link vem numa fase
+  seguinte). Nunca criar perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
   `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a

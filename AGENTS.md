@@ -49,6 +49,9 @@ pisar no trabalho do outro:
     `main` (adicionar coluna/tabela, nunca renomear ou apagar no mesmo PR).
   - `src/lib/supabase/database.types.ts` é gerado: em conflito, não resolva à
     mão; regenere depois de aplicar a migration.
+  - Ao aplicar, o Supabase registra a migration com a hora da aplicação. Quem
+    aplicou renomeia o arquivo para essa versão e sobe, no mesmo PR curto, os
+    tipos regenerados (assim o repositório e o banco contam a mesma história).
   - Testes que gravam dados reais usam nomes marcados (ex.: `E2E <agente>
     <carimbo>`) e apagam tudo no fim, inclusive as linhas de `activity` dos
     itens criados.

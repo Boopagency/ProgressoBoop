@@ -151,11 +151,14 @@ export type Database = {
       clients: {
         Row: {
           active: boolean
+          avatar_path: string | null
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
           created_at: string
           id: string
+          instagram_bio: string | null
+          instagram_handle: string | null
           name: string
           notes: string | null
           owner_id: string | null
@@ -166,11 +169,14 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avatar_path?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           id?: string
+          instagram_bio?: string | null
+          instagram_handle?: string | null
           name: string
           notes?: string | null
           owner_id?: string | null
@@ -181,11 +187,14 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avatar_path?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           id?: string
+          instagram_bio?: string | null
+          instagram_handle?: string | null
           name?: string
           notes?: string | null
           owner_id?: string | null
@@ -261,6 +270,183 @@ export type Database = {
           },
           {
             foreignKeyName: "communications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_ideas: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          format: Database["public"]["Enums"]["content_format"] | null
+          id: string
+          notes: string | null
+          post_id: string | null
+          reference_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string
+          format?: Database["public"]["Enums"]["content_format"] | null
+          id?: string
+          notes?: string | null
+          post_id?: string | null
+          reference_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          format?: Database["public"]["Enums"]["content_format"] | null
+          id?: string
+          notes?: string | null
+          post_id?: string | null
+          reference_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_ideas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_ideas_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_ideas_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_posts: {
+        Row: {
+          brief: string | null
+          caption: string | null
+          client_id: string
+          copy_status: Database["public"]["Enums"]["content_front_status"]
+          cover_path: string | null
+          created_at: string
+          created_by: string
+          design_notes: string | null
+          design_status: Database["public"]["Enums"]["content_front_status"]
+          drive_url: string | null
+          format: Database["public"]["Enums"]["content_format"]
+          id: string
+          intents: Database["public"]["Enums"]["content_intent"][]
+          networks: Database["public"]["Enums"]["content_network"][]
+          owner_id: string | null
+          pinned: boolean
+          project_id: string | null
+          publish_on: string | null
+          publish_time: string | null
+          published_at: string | null
+          script: string | null
+          slides: Json
+          stage: Database["public"]["Enums"]["content_stage"]
+          title: string
+          updated_at: string
+          video_status: Database["public"]["Enums"]["content_front_status"]
+        }
+        Insert: {
+          brief?: string | null
+          caption?: string | null
+          client_id: string
+          copy_status?: Database["public"]["Enums"]["content_front_status"]
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string
+          design_notes?: string | null
+          design_status?: Database["public"]["Enums"]["content_front_status"]
+          drive_url?: string | null
+          format: Database["public"]["Enums"]["content_format"]
+          id?: string
+          intents?: Database["public"]["Enums"]["content_intent"][]
+          networks?: Database["public"]["Enums"]["content_network"][]
+          owner_id?: string | null
+          pinned?: boolean
+          project_id?: string | null
+          publish_on?: string | null
+          publish_time?: string | null
+          published_at?: string | null
+          script?: string | null
+          slides?: Json
+          stage?: Database["public"]["Enums"]["content_stage"]
+          title: string
+          updated_at?: string
+          video_status: Database["public"]["Enums"]["content_front_status"]
+        }
+        Update: {
+          brief?: string | null
+          caption?: string | null
+          client_id?: string
+          copy_status?: Database["public"]["Enums"]["content_front_status"]
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string
+          design_notes?: string | null
+          design_status?: Database["public"]["Enums"]["content_front_status"]
+          drive_url?: string | null
+          format?: Database["public"]["Enums"]["content_format"]
+          id?: string
+          intents?: Database["public"]["Enums"]["content_intent"][]
+          networks?: Database["public"]["Enums"]["content_network"][]
+          owner_id?: string | null
+          pinned?: boolean
+          project_id?: string | null
+          publish_on?: string | null
+          publish_time?: string | null
+          published_at?: string | null
+          script?: string | null
+          slides?: Json
+          stage?: Database["public"]["Enums"]["content_stage"]
+          title?: string
+          updated_at?: string
+          video_status?: Database["public"]["Enums"]["content_front_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_posts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1395,6 +1581,7 @@ export type Database = {
           client_review_id: string | null
           communication_id: string | null
           completed_at: string | null
+          content_post_id: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -1415,6 +1602,7 @@ export type Database = {
           client_review_id?: string | null
           communication_id?: string | null
           completed_at?: string | null
+          content_post_id?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -1435,6 +1623,7 @@ export type Database = {
           client_review_id?: string | null
           communication_id?: string | null
           completed_at?: string | null
+          content_post_id?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -1469,6 +1658,13 @@ export type Database = {
             columns: ["communication_id"]
             isOneToOne: false
             referencedRelation: "communications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_content_post_id_fkey"
+            columns: ["content_post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
             referencedColumns: ["id"]
           },
           {
@@ -1573,6 +1769,36 @@ export type Database = {
         | "approval"
         | "feedback"
         | "other"
+      content_format:
+        | "reels"
+        | "carousel"
+        | "static"
+        | "stories"
+        | "video"
+        | "photo"
+        | "text"
+      content_front_status:
+        | "not_needed"
+        | "todo"
+        | "in_progress"
+        | "missing_material"
+        | "in_review"
+        | "changes"
+        | "done"
+      content_intent:
+        | "conversion"
+        | "growth"
+        | "authority"
+        | "connection"
+        | "sponsored"
+      content_network: "instagram" | "tiktok" | "linkedin"
+      content_stage:
+        | "production"
+        | "internal_review"
+        | "client_review"
+        | "approved"
+        | "scheduled"
+        | "published"
       deal_stage:
         | "lead"
         | "contact"
@@ -1754,6 +1980,40 @@ export const Constants = {
         "approval",
         "feedback",
         "other",
+      ],
+      content_format: [
+        "reels",
+        "carousel",
+        "static",
+        "stories",
+        "video",
+        "photo",
+        "text",
+      ],
+      content_front_status: [
+        "not_needed",
+        "todo",
+        "in_progress",
+        "missing_material",
+        "in_review",
+        "changes",
+        "done",
+      ],
+      content_intent: [
+        "conversion",
+        "growth",
+        "authority",
+        "connection",
+        "sponsored",
+      ],
+      content_network: ["instagram", "tiktok", "linkedin"],
+      content_stage: [
+        "production",
+        "internal_review",
+        "client_review",
+        "approved",
+        "scheduled",
+        "published",
       ],
       deal_stage: ["lead", "contact", "proposal", "negotiation", "won", "lost"],
       decision_status: ["active", "revoked"],

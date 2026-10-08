@@ -180,6 +180,14 @@ supabase/             migrations e seed
 public/brand/         logo oficial da Boop (SVG)
 ```
 
+## Trabalho em equipe (vários agentes)
+
+Cada tarefa numa branch própria, entrando na `main` só por PR. Todo PR roda o
+CI do GitHub Actions (`.github/workflows/ci.yml`: lint, typecheck e build) e
+segue o template em `.github/pull_request_template.md`. As regras completas,
+principalmente sobre migrations e o banco compartilhado, estão no
+[AGENTS.md](AGENTS.md#trabalho-com-vários-agentes).
+
 ## Deploy
 
 Projeto `boop-admin` na Vercel, ligado a este repositório. Cada push na `main`

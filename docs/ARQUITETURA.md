@@ -182,7 +182,7 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 [`commercial`](../supabase/migrations/20261007174202_commercial.sql),
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql) e
-[`content`](../supabase/migrations/20261008121500_content.sql).
+[`content`](../supabase/migrations/20261008122847_content.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

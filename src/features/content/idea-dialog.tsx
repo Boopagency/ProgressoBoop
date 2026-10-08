@@ -450,10 +450,14 @@ function IdeaForm({
           </Field>
           <Field label="Link de referência" htmlFor={`${ids}-reference`} className="sm:col-span-2">
             <div className="flex gap-2">
+              {/* Texto, não "url": o navegador barraria o link sem https://, que o portal completa. */}
               <Input
                 id={`${ids}-reference`}
-                type="url"
+                type="text"
                 inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={fields.reference_url}
                 maxLength={REFERENCE_URL_MAX}
                 onChange={(event) => set("reference_url", event.target.value)}

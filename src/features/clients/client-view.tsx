@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
+import { ClientChannelCard } from "@/features/channels/client-channel-card"
 import { deleteClient, setClientActive } from "@/features/clients/actions"
 import { ClientDialog, type ClientDialogState } from "@/features/clients/client-dialog"
 import { HealthBadge, HealthDot } from "@/features/clients/client-meta"
@@ -260,6 +261,7 @@ export function ClientView({
           <ClientIdeasCard clientId={client.id} ideas={ideas} posts={posts} />
           <ClientDocsCard docs={docs} today={today} onNew={openNewDoc} />
           <ClientTasksCard clientId={client.id} />
+          <ClientChannelCard clientId={client.id} />
           <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
           <ClientMeetingsCard client={client} events={events} records={records} onNew={() =>
             setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))

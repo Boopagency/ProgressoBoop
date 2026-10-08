@@ -4,6 +4,8 @@ import { useState } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
+import type { PendingRequest } from "@/features/channels/logic"
+import { TodayRequestsCard } from "@/features/channels/today-requests-card"
 import { ReviewsDueCard } from "@/features/clients/client-pulse"
 import type { PostSummary } from "@/features/content/logic"
 import { TodayContentCard } from "@/features/content/today-content-card"
@@ -56,6 +58,7 @@ export function TodayView({
   finance,
   deals,
   posts,
+  requests,
   initialScope,
 }: {
   greeting: string
@@ -68,6 +71,7 @@ export function TodayView({
   finance: FinanceData
   deals: Deal[]
   posts: PostSummary[]
+  requests: PendingRequest[]
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
@@ -163,6 +167,7 @@ export function TodayView({
           <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
           <ReviewsDueCard clients={clients} reviews={reviews} />
           <TodayContentCard posts={posts} today={today} scope={scope} />
+          <TodayRequestsCard requests={requests} today={today} />
           <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
           <ManagementCard finance={finance} deals={deals} today={today} />
           <DocsToReview docs={docs} scope={scope} />

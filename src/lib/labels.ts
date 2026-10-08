@@ -17,6 +17,7 @@ import type {
   FinanceKind,
   LeadSource,
   MeetingStatus,
+  MessageKind,
   MetricUnit,
   ProjectStatus,
   TaskArea,
@@ -113,6 +114,13 @@ export const COMMUNICATION_KIND_LABEL: Record<CommunicationKind, string> = {
   feedback: "Feedback",
   update: "Atualização",
   other: "Outro",
+}
+
+export const MESSAGE_KIND_LABEL: Record<MessageKind, string> = {
+  text: "Mensagem",
+  change_request: "Pedido de ajuste",
+  approval: "Aprovação",
+  system: "Aviso",
 }
 
 export const COMMUNICATION_CHANNELS = ["whatsapp", "email", "call", "meeting", "other"] as const satisfies readonly CommunicationChannel[]

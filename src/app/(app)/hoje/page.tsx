@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { cookies } from "next/headers"
 
 import { getEvents } from "@/features/calendar/queries"
+import { getPendingRequests } from "@/features/channels/queries"
 import { getClientReviews, getClients } from "@/features/clients/queries"
 import { getContentPosts } from "@/features/content/queries"
 import { getDeals } from "@/features/deals/queries"
@@ -17,7 +18,7 @@ import { greetingFor, todayKey } from "@/lib/dates"
 export const metadata: Metadata = { title: "Hoje" }
 
 export default async function TodayPage() {
-  const [tasks, events, clients, reviews, { records, items }, docs, finance, deals, posts, cookieStore] = await Promise.all([
+  const [tasks, events, clients, reviews, { records, items }, docs, finance, deals, posts, requests, cookieStore] = await Promise.all([
     getTasks(),
     getEvents(),
     getClients(),
@@ -27,6 +28,7 @@ export default async function TodayPage() {
     getFinance(),
     getDeals(),
     getContentPosts(),
+    getPendingRequests(),
     cookies(),
   ])
   const now = new Date()
@@ -45,6 +47,7 @@ export default async function TodayPage() {
         finance={finance}
         deals={deals}
         posts={posts}
+        requests={requests}
         initialScope={parseTodayScope(cookieStore.get(TODAY_SCOPE_COOKIE)?.value)}
       />
     </TasksProvider>

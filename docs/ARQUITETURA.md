@@ -76,6 +76,8 @@ src/
 │   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
 │   │                           # (mesma regra, bucket `content`)
 │   ├── login/                  # "/login" (sem "Criar conta")
+│   ├── portal/                 # "/portal": área do cliente (layout próprio, sem a
+│   │                           # sidebar; só contas de cliente)
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -115,6 +117,8 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
+│   ├── portal/                 # portal do cliente: sessão da conta de cliente e,
+│   │                           # na equipe, o cartão "Acesso do cliente"
 │   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
 ├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
 │                               # diálogo de criar da tela)
@@ -586,7 +590,7 @@ Funções expostas (só para `authenticated`): `public.win_deal(...)`
   (`insert into profiles (id, full_name, role) values (...)`).
 - Para dar acesso a um cliente: convidar o e-mail em Authentication →
   Users → Invite user e ligar a conta ao cliente com `link_client_member`
-  (pelo app, no cartão "Acesso do cliente", quando ele existir). Nunca
+  (pelo app, no cartão "Acesso do cliente" da página do cliente). Nunca
   criar perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para

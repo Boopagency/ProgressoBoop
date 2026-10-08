@@ -17,7 +17,10 @@ function signInErrorMessage(error: AuthError): string {
   return "Não foi possível entrar agora. Tente de novo."
 }
 
-/** Login com e-mail e senha no Supabase Auth. Só contas com perfil (a equipe) entram. */
+/**
+ * Login com e-mail e senha no Supabase Auth. A equipe (com perfil) vai para o
+ * Hoje; uma conta de cliente com acesso liberado, para o portal.
+ */
 export async function signIn(_previous: SignInState, formData: FormData): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const password = String(formData.get("password") ?? "")
@@ -35,12 +38,14 @@ export async function signIn(_previous: SignInState, formData: FormData): Promis
     .select("id")
     .eq("id", data.user.id)
     .maybeSingle()
-  if (!profile) {
-    await supabase.auth.signOut({ scope: "local" })
-    return { error: "Esta conta não tem acesso ao Boop Admin.", email }
-  }
+  if (profile) redirect("/hoje")
 
-  redirect("/hoje")
+  // Sem perfil: pode ser uma conta de cliente, que entra no portal.
+  const { data: clients } = await supabase.rpc("portal_my_clients")
+  if (clients && clients.length > 0) redirect("/portal")
+
+  await supabase.auth.signOut({ scope: "local" })
+  return { error: "Esta conta não tem acesso ao Boop Admin.", email }
 }
 
 /** Sai só deste navegador; as sessões em outros aparelhos continuam. */

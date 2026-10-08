@@ -46,6 +46,8 @@ import { HealthBadge, HealthDot } from "@/features/clients/client-meta"
 import { currentHealth, healthHistory, monthName, periodParam } from "@/features/clients/logic"
 import { ReviewCard } from "@/features/clients/review-card"
 import { CommunicationsCard } from "@/features/communications/communications-card"
+import { ClientContentCard } from "@/features/content/client-content-card"
+import type { PostSummary } from "@/features/content/logic"
 import { DecisionsCard } from "@/features/decisions/decisions-card"
 import { DocKindTile, DocStatusBadge } from "@/features/docs/doc-meta"
 import { NewDocDialog, type NewDocDialogState } from "@/features/docs/new-doc-dialog"
@@ -89,6 +91,7 @@ export function ClientView({
   decisions,
   finance,
   deals,
+  posts,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -104,6 +107,8 @@ export function ClientView({
   decisions: Decision[]
   finance: FinanceData
   deals: Deal[]
+  /** Posts do cliente (Central de Conteúdo). */
+  posts: PostSummary[]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -241,6 +246,7 @@ export function ClientView({
         <div className="min-w-0 space-y-6">
           <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
           <ClientProjectsCard clientId={client.id} docs={templateDocs} />
+          <ClientContentCard clientId={client.id} posts={posts} today={today} />
           <ClientTasksCard clientId={client.id} />
           <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
           <ClientMeetingsCard client={client} events={events} records={records} onNew={() =>

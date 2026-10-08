@@ -5,6 +5,8 @@ import { useState } from "react"
 import { PageContainer, PageHeader } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { ReviewsDueCard } from "@/features/clients/client-pulse"
+import type { PostSummary } from "@/features/content/logic"
+import { TodayContentCard } from "@/features/content/today-content-card"
 import { FinanceAlertCard } from "@/features/finance/finance-cards"
 import type { FinanceData } from "@/features/finance/management"
 import { ManagementCard } from "@/features/today/management-card"
@@ -53,6 +55,7 @@ export function TodayView({
   docs,
   finance,
   deals,
+  posts,
   initialScope,
 }: {
   greeting: string
@@ -64,6 +67,7 @@ export function TodayView({
   docs: DocSummary[]
   finance: FinanceData
   deals: Deal[]
+  posts: PostSummary[]
   initialScope: TodayScope
 }) {
   const { tasks, today, keepInPlace } = useTasks()
@@ -158,6 +162,7 @@ export function TodayView({
         <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
           <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
           <ReviewsDueCard clients={clients} reviews={reviews} />
+          <TodayContentCard posts={posts} today={today} scope={scope} />
           <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
           <ManagementCard finance={finance} deals={deals} today={today} />
           <DocsToReview docs={docs} scope={scope} />

@@ -3,10 +3,11 @@
 import { useState } from "react"
 
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { EventItem, TaskItem } from "@/features/calendar/calendar-items"
+import { EventItem, PostItem, TaskItem } from "@/features/calendar/calendar-items"
 import { EVENT_TYPE_STYLE } from "@/features/calendar/event-type"
 import { isWeekend, type DayItems } from "@/features/calendar/logic"
 import type { Occurrence } from "@/features/calendar/recurrence"
+import type { PostSummary } from "@/features/content/logic"
 import { capitalize, formatDayMonth, formatWeekdayLong, formatWeekdayShort } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -23,6 +24,7 @@ export function MonthView({
   today,
   items,
   onOpenEvent,
+  onOpenPost,
 }: {
   days: DateKey[]
   /** "yyyy-MM" do mês exibido. */
@@ -30,6 +32,7 @@ export function MonthView({
   today: DateKey
   items: Map<DateKey, DayItems>
   onOpenEvent: (occurrence: Occurrence) => void
+  onOpenPost: (post: PostSummary) => void
 }) {
   return (
     <div className="overflow-hidden rounded-xl border">
@@ -49,8 +52,9 @@ export function MonthView({
             isToday={day === today}
             firstColumn={index % 7 === 0}
             firstRow={index < 7}
-            items={items.get(day) ?? { occurrences: [], tasks: [] }}
+            items={items.get(day) ?? { occurrences: [], tasks: [], posts: [] }}
             onOpenEvent={onOpenEvent}
+            onOpenPost={onOpenPost}
           />
         ))}
       </div>
@@ -66,6 +70,7 @@ function DayCell({
   firstRow,
   items,
   onOpenEvent,
+  onOpenPost,
 }: {
   day: DateKey
   outside: boolean
@@ -74,16 +79,23 @@ function DayCell({
   firstRow: boolean
   items: DayItems
   onOpenEvent: (occurrence: Occurrence) => void
+  onOpenPost: (post: PostSummary) => void
 }) {
   const [open, setOpen] = useState(false)
-  const total = items.occurrences.length + items.tasks.length
+  const total = items.occurrences.length + items.posts.length + items.tasks.length
   const hidden = Math.max(total - VISIBLE_ITEMS, 0)
   const visibleEvents = items.occurrences.slice(0, VISIBLE_ITEMS)
-  const visibleTasks = items.tasks.slice(0, Math.max(VISIBLE_ITEMS - visibleEvents.length, 0))
+  const visiblePosts = items.posts.slice(0, Math.max(VISIBLE_ITEMS - visibleEvents.length, 0))
+  const visibleTasks = items.tasks.slice(0, Math.max(VISIBLE_ITEMS - visibleEvents.length - visiblePosts.length, 0))
 
   function openEvent(occurrence: Occurrence) {
     setOpen(false)
     onOpenEvent(occurrence)
+  }
+
+  function openPost(post: PostSummary) {
+    setOpen(false)
+    onOpenPost(post)
   }
 
   const dayNumber = (
@@ -129,6 +141,9 @@ function DayCell({
                     )}
                   />
                 ))}
+                {items.posts.length > 0 ? (
+                  <span className="size-1.5 rounded-full border border-brand-slate" />
+                ) : null}
                 {items.tasks.length > 0 ? (
                   <span className="size-1.5 rounded-full bg-muted-foreground/50" />
                 ) : null}
@@ -142,6 +157,9 @@ function DayCell({
             <div className="space-y-px">
               {visibleEvents.map((occurrence) => (
                 <EventItem key={occurrence.key} occurrence={occurrence} onOpen={openEvent} compact />
+              ))}
+              {visiblePosts.map((post) => (
+                <PostItem key={post.id} post={post} onOpen={openPost} compact />
               ))}
               {visibleTasks.map((task) => (
                 <TaskItem key={task.id} task={task} compact />
@@ -167,6 +185,9 @@ function DayCell({
         <div className="space-y-px" onClickCapture={() => setOpen(false)}>
           {items.occurrences.map((occurrence) => (
             <EventItem key={occurrence.key} occurrence={occurrence} onOpen={openEvent} compact />
+          ))}
+          {items.posts.map((post) => (
+            <PostItem key={post.id} post={post} onOpen={openPost} compact />
           ))}
           {items.tasks.map((task) => (
             <TaskItem key={task.id} task={task} compact />

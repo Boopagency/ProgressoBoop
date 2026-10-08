@@ -1,6 +1,15 @@
 import type { Progress } from "@/features/tasks/logic"
-import { isWithin, type DateRange } from "@/lib/dates"
-import { CONTENT_FRONTS, CONTENT_STAGES } from "@/lib/labels"
+import {
+  addDaysToKey,
+  capitalize,
+  daysBetween,
+  formatShortDate,
+  formatWeekdayShort,
+  isWithin,
+  toDateKey,
+  type DateRange,
+} from "@/lib/dates"
+import { CONTENT_FRONT_LABEL, CONTENT_FRONTS, CONTENT_STAGES } from "@/lib/labels"
 import type {
   ContentFormat,
   ContentFront,
@@ -24,7 +33,33 @@ import type {
  * - Calendário e quadro: dia, depois horário (sem horário por último), depois
  *   título. Feed: fixados primeiro, depois a publicação mais recente; sem
  *   data no fim.
+ * - Tarefas das frentes: uma por frente que falta, com prazo antes da
+ *   publicação (copy D-5, design e vídeo D-3), nunca antes de hoje.
  */
+
+/* ------------------------------------------------------------------ */
+/* Resumo (listas)                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Textos longos do post: ficam fora das listas e são lidos ao abrir o post. */
+export const POST_TEXT_FIELDS = ["brief", "design_notes", "script", "slides", "caption"] as const
+export type PostTextField = (typeof POST_TEXT_FIELDS)[number]
+/** O post sem os textos longos (calendário, quadro, listas e cartões). */
+export type PostSummary = Omit<ContentPost, PostTextField>
+export type PostTexts = Pick<ContentPost, PostTextField>
+
+/**
+ * Cor estável de um cliente, derivada do id (sem coluna no banco): índice de
+ * 0 a `size - 1`, sempre o mesmo para o mesmo cliente.
+ */
+export function clientColorIndex(clientId: string, size: number): number {
+  let hash = 0x811c9dc5
+  for (let index = 0; index < clientId.length; index += 1) {
+    hash ^= clientId.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return (hash >>> 0) % size
+}
 
 /* ------------------------------------------------------------------ */
 /* Formatos                                                            */
@@ -52,6 +87,11 @@ export function formatUses(format: ContentFormat, field: ContentTextField): bool
 
 /** Formatos com gravação ou edição de vídeo. */
 const VIDEO_FORMATS: readonly ContentFormat[] = ["reels", "video", "stories"]
+
+/** Reels, vídeo e stories: a orientação é de vídeo, não de design. */
+export function isVideoFormat(format: ContentFormat): boolean {
+  return VIDEO_FORMATS.includes(format)
+}
 
 /* ------------------------------------------------------------------ */
 /* Frentes                                                             */
@@ -100,6 +140,45 @@ export function blockedFronts(post: FrontStatuses): ContentFront[] {
 
 export function isBlocked(post: FrontStatuses): boolean {
   return blockedFronts(post).length > 0
+}
+
+/** O que falta produzir: frentes que o post precisa e ainda não foram finalizadas. */
+export function pendingFronts(post: FrontStatuses): ContentFront[] {
+  return CONTENT_FRONTS.filter((front) => {
+    const status = frontStatus(post, front)
+    return status !== "not_needed" && status !== "done"
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Tarefas das frentes                                                 */
+/* ------------------------------------------------------------------ */
+
+/** Quantos dias antes da publicação vence a tarefa de cada frente. */
+export const FRONT_TASK_LEAD_DAYS: Record<ContentFront, number> = { copy: 5, design: 3, video: 3 }
+
+/**
+ * Prazo da tarefa de uma frente: a publicação menos a antecedência da frente
+ * (copy D-5, design e vídeo D-3). Se esse dia já passou, hoje. Sem data de
+ * publicação, sem prazo.
+ */
+export function frontTaskDue(publishOn: DateKey | null, front: ContentFront, today: DateKey): DateKey | null {
+  if (publishOn === null) return null
+  const due = addDaysToKey(publishOn, -FRONT_TASK_LEAD_DAYS[front])
+  return due < today ? today : due
+}
+
+const FRONT_TASK_SEPARATOR = " — "
+
+/** "Copy — Carrossel de dicas", cortado no limite de título das tarefas. */
+export function frontTaskTitle(front: ContentFront, postTitle: string, max = 200): string {
+  const title = `${CONTENT_FRONT_LABEL[front]}${FRONT_TASK_SEPARATOR}${postTitle}`
+  return title.length > max ? `${title.slice(0, max - 1).trimEnd()}…` : title
+}
+
+/** Frente de uma tarefa gerada, pelo começo do título (null se foi renomeada). */
+export function frontOfTaskTitle(title: string): ContentFront | null {
+  return CONTENT_FRONTS.find((front) => title.startsWith(`${CONTENT_FRONT_LABEL[front]}${FRONT_TASK_SEPARATOR}`)) ?? null
 }
 
 /* ------------------------------------------------------------------ */
@@ -158,6 +237,80 @@ export function groupByStage<T extends Sortable & Pick<ContentPost, "stage">>(
   const groups = Object.fromEntries(CONTENT_STAGES.map((stage) => [stage, [] as T[]])) as Record<ContentStage, T[]>
   for (const post of [...posts].sort(comparePosts)) groups[post.stage].push(post)
   return groups
+}
+
+/** Quantos dias de publicados o quadro mostra. */
+export const BOARD_PUBLISHED_DAYS = 30
+
+/**
+ * Colunas do quadro da visão central: as etapas em ordem de data e, em
+ * Publicado, só os dos últimos 30 dias (o mais recente primeiro).
+ */
+export function boardColumns<T extends Sortable & Pick<ContentPost, "stage" | "published_at">>(
+  posts: readonly T[],
+  today: DateKey
+): Record<ContentStage, T[]> {
+  const columns = groupByStage(posts)
+  const since = addDaysToKey(today, -BOARD_PUBLISHED_DAYS)
+  columns.published = columns.published
+    .filter((post) => (post.published_at ? toDateKey(post.published_at) : post.publish_on ?? today) >= since)
+    .reverse()
+  return columns
+}
+
+/** "Hoje", "Amanhã", "Ontem", "Qua, 14/10" (com o ano quando é outro); com o horário, "Hoje · 18:00". */
+export function publishLabel(post: Pick<ContentPost, "publish_on" | "publish_time">, today: DateKey): string {
+  if (post.publish_on === null) return "Sem data"
+  const diff = daysBetween(today, post.publish_on)
+  const day =
+    diff === 0
+      ? "Hoje"
+      : diff === 1
+        ? "Amanhã"
+        : diff === -1
+          ? "Ontem"
+          : post.publish_on.slice(0, 4) === today.slice(0, 4)
+            ? `${capitalize(formatWeekdayShort(post.publish_on))}, ${formatShortDate(post.publish_on)}`
+            : formatShortDate(post.publish_on, today)
+  return post.publish_time ? `${day} · ${post.publish_time.slice(0, 5)}` : day
+}
+
+type Dated = Sortable & Pick<ContentPost, "stage">
+
+export interface UpcomingPosts<T> {
+  /** Data passou e não foi programado nem publicado. */
+  late: T[]
+  /** Os dias (de hoje em diante) que têm post, em ordem. */
+  days: { day: DateKey; posts: T[] }[]
+}
+
+/** Lista "Próximos 7 dias": os atrasados e os posts de hoje até daqui a 6 dias. */
+export function upcomingPosts<T extends Dated>(posts: readonly T[], today: DateKey, length = 7): UpcomingPosts<T> {
+  const late = posts.filter((post) => isLate(post, today)).sort(comparePosts)
+  const byDay = groupByDay(postsInRange(posts, { start: today, end: addDaysToKey(today, length - 1) }))
+  return { late, days: [...byDay].map(([day, list]) => ({ day, posts: list })) }
+}
+
+export interface TodayContent<T> {
+  late: T[]
+  /** Saem hoje e ainda não foram publicados. */
+  today: T[]
+  /** Com o cliente para aprovar (fora os que já estão nas duas listas acima). */
+  awaitingClient: T[]
+}
+
+/** Quadro "Conteúdo" da tela Hoje. Cada post aparece numa lista só. */
+export function todayContent<T extends Dated>(posts: readonly T[], today: DateKey): TodayContent<T> {
+  const late = posts.filter((post) => isLate(post, today)).sort(comparePosts)
+  const dueToday = posts.filter((post) => post.publish_on === today && post.stage !== "published").sort(comparePosts)
+  const listed = new Set([...late, ...dueToday])
+  const awaitingClient = posts.filter((post) => post.stage === "client_review" && !listed.has(post)).sort(comparePosts)
+  return { late, today: dueToday, awaitingClient }
+}
+
+/** Próximos posts (página do cliente): os que não foram publicados, atrasados primeiro e sem data no fim. */
+export function nextPosts<T extends Dated>(posts: readonly T[]): T[] {
+  return posts.filter((post) => post.stage !== "published").sort(comparePosts)
 }
 
 /* ------------------------------------------------------------------ */

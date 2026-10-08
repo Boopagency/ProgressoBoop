@@ -22,7 +22,7 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   "Sair" desconecta só aquele navegador.
 - **Menu lateral:** Hoje, Tarefas (com as visões salvas logo abaixo),
   Projetos, Calendário e Reuniões; em **Relacionamento**, Comercial,
-  Clientes e Comunicações; em **Gestão**, Indicadores, Metas, Financeiro,
+  Conteúdo, Clientes e Comunicações; em **Gestão**, Indicadores, Metas, Financeiro,
   Relatórios, Decisões e Processos. No rodapé
   ficam a pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no
   topo ou com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo
@@ -79,6 +79,8 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
     campo "Algo para discutir?", que adiciona um assunto sem sair da tela.
     "Abrir pauta" leva à reunião;
   - **Revisões de clientes** do mês por fazer (2.13);
+  - **Conteúdo:** posts atrasados, os que saem hoje e os que esperam o
+    cliente aprovar (até 6; clicar abre o post, 2.26);
   - **Financeiro em atraso:** quanto há a receber e a pagar vencido, com
     link para o Financeiro (2.20);
   - **Processos para revisar:** os marcados para revisar ou com a revisão
@@ -98,7 +100,8 @@ cumprir um combinado e pôr um assunto na pauta da próxima reunião.
 processos seguem o filtro Minhas/Todas. No Minhas aparecem os combinados da
 pessoa e os da "Equipe", e os processos dela e os sem responsável. Os
 projetos em foco (além do "suas: X de Y"), as revisões de clientes, o
-financeiro e a gestão não seguem o filtro.
+financeiro e a gestão não seguem o filtro. O quadro Conteúdo segue: no
+Minhas, os posts da pessoa e os sem responsável.
 
 ### 2.3 Tarefas (`/tarefas`)
 
@@ -177,9 +180,10 @@ ali mesmo e salvo na hora.
 
 - **Visões Semana e Mês.** As setas navegam e o botão "Hoje" volta ao período
   atual. A visão e a data ficam no endereço, então o link pode ser salvo.
-- **O que aparece:** tarefas no dia do prazo e eventos de três tipos: Reunião
-  (ciano), Evento interno (azul acinzentado) e Entrega (laranja). Há uma
-  legenda no topo.
+- **O que aparece:** tarefas no dia do prazo, eventos de três tipos: Reunião
+  (ciano), Evento interno (azul acinzentado) e Entrega (laranja), e os posts
+  da Central de Conteúdo no dia de publicação (com a inicial do cliente; só
+  para ver: clicar abre o post, 2.26). Há uma legenda no topo.
 - **Semana:**
   - uma coluna por dia, com o fim de semana sombreado e o dia de hoje
     destacado;
@@ -274,6 +278,9 @@ segunda, 07:00).
     passou).
 - **Projetos** do cliente (abertos; os concluídos e cancelados recolhidos),
   com progresso e prazo, e **Novo**, já com o cliente.
+- **Conteúdo:** quantos posts em cada etapa, os próximos (atrasados
+  primeiro), **Post** já com o cliente e "Abrir no Conteúdo", que leva à
+  visão central filtrada pelo cliente (2.26).
 - **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
   recolhidas; **Tarefa** no topo cria uma já com o cliente.
 - **Comunicações** recentes com o cliente e **Registrar** (2.18).
@@ -372,7 +379,7 @@ passo), checklists, políticas (regras combinadas) e guias.
   link; ali, use o botão do topo.
 - **Sem digitar nada:** ações rápidas (Nova tarefa, Novo projeto, Nova
   reunião, Novo documento, Novo cliente, Registrar comunicação, Registrar
-  decisão, Novo lançamento, Novo negócio, Novo objetivo), as visões salvas de
+  decisão, Novo lançamento, Novo negócio, Novo post, Novo objetivo), as visões salvas de
   Tarefas e atalhos para cada tela. A ação leva à tela certa e já abre a janela de criar.
 - **Digitando** (a partir de 2 letras, sem acento: "reuniao" acha "reunião"):
   - **Tarefas:** pelo título e pela descrição; as abertas vêm primeiro.
@@ -647,6 +654,58 @@ Todos os números da Boop num lugar, calculados dos dados do portal.
   (margens, resultado, totais), as premissas editáveis (mudar a alíquota
   recalcula o DRE) e uma aba "Sobre" com o que cada número significa.
 
+### 2.26 Conteúdo (`/conteudo`)
+
+A Central de Conteúdo: a social media vê os posts de **todos os clientes
+juntos**, sem entrar cliente por cliente.
+
+- **Indicadores:** posts nesta semana (e quantos já foram publicados),
+  **atrasados** (vermelho quando há algum), **aguardando cliente** e com
+  **falta material**. Clicar leva à visão que mostra cada um.
+- **Calendário** (mês ou semana, com setas e "Hoje"): cada post mostra a
+  inicial do cliente numa cor que é sempre a mesma para aquele cliente, o
+  ícone do formato, a etapa e um ponto vermelho (atrasado) ou laranja (falta
+  material). No mês, até 3 posts por dia e "+N"; no celular, pontos por dia
+  que abrem a lista. Na semana, o "+" do dia cria um post naquela data.
+  Posts sem data ficam em "Sem data de publicação", abaixo.
+- **Quadro:** Em produção, Revisão interna, Aguardando cliente, Aprovado,
+  Programado e Publicado (este com os últimos 30 dias). Arrastar muda a
+  etapa (no celular, mude a etapa dentro do post). Cada cartão mostra o
+  cliente, o responsável, o formato, a data, os sinais e as frentes (C, D,
+  V) com a cor da situação.
+- **7 dias:** os atrasados, hoje, amanhã e os dias seguintes, com o que falta
+  em cada frente ("Copy: A fazer · Design: Em revisão").
+- **Filtros** (ficam no endereço, então o link pode ser salvo ou mandado):
+  clientes (vários), responsável (Todos, Meus ou uma pessoa), redes,
+  formatos e etapas. "Limpar filtros" volta tudo.
+- **Novo post:** pelo botão, pela busca geral (Ctrl/⌘ + K → "Novo post") ou
+  pelo "+" de um dia. Com um só cliente filtrado, ele já vem escolhido.
+- **Post (janela):**
+  - título, cliente, projeto (os do cliente), formato, etapa, dia e horário
+    de publicação, responsável, redes (pelo menos uma) e intenções;
+  - **frentes:** a situação de copy, design e vídeo (Não precisa, A fazer,
+    Em produção, Falta material, Em revisão, Em alteração, Finalizado). Num
+    post novo, vídeo já vem "A fazer" em reels, vídeo e stories e "Não
+    precisa" nos outros formatos;
+  - **textos conforme o formato:** conteúdo/ideia e orientação de design
+    (ou de vídeo) em todos; slides no carrossel (até 20); roteiro em reels,
+    vídeo e stories; legenda em reels, carrossel, vídeo, estático, foto e
+    texto; e o link do Drive (com o botão para abrir). Trocar o formato não
+    apaga o texto que ficou escondido;
+  - **Tarefas das frentes:** as tarefas já ligadas ao post (clicar abre o
+    painel da tarefa) e **Gerar tarefas**, que cria uma tarefa por frente
+    que ainda falta ("Copy — título do post"), ligada ao post e ao cliente,
+    com responsável (o do post, por padrão) e prazo antes da publicação:
+    copy 5 dias antes, design e vídeo 3 dias antes, nunca antes de hoje.
+    Vêm marcadas as frentes que ainda não têm tarefa. As tarefas aparecem em
+    Tarefas, no Hoje e no Calendário como qualquer outra, e o painel delas
+    tem "ver post";
+  - **histórico e comentários** e **excluir** (com confirmação; as tarefas
+    geradas continuam, sem o vínculo).
+- **Regra importante:** atrasado é o post cujo dia de publicação já passou
+  e que ainda não está programado nem publicado. Falta material é qualquer
+  frente com essa situação.
+
 ## 3. Regras: como os números são calculados
 
 O fuso é o de São Paulo e a semana vai de segunda a domingo.
@@ -726,6 +785,7 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Parâmetros do financeiro | os da planilha (alíquota 6% a confirmar, caixa mínimo de 3 meses, 20% caixa, 10% reinvestimento, 3 sócios, alvo de R$ 5.000) | editar em Financeiro → Parâmetros | — |
 | Fechamentos | os meses que a equipe fechar | fechar e reabrir o último | — |
 | Negócios | os que a equipe registrar | tudo (inclusive ganhar e perder) | — |
+| Posts (Central de Conteúdo) | os que a equipe planejar | tudo (inclusive gerar as tarefas das frentes) | — |
 | Metas | os objetivos e resultados-chave que a equipe criar | tudo | — |
 | Indicadores | calculados dos dados (nada é digitado) | — | criar um indicador novo (código: `src/features/metrics/catalog.ts`) |
 | Histórico | gravado pelo banco desde 07/10/2026 | comentar, editar e apagar os próprios comentários | — |
@@ -750,8 +810,8 @@ mudá-los é preciso alterar o código e o banco.
 | / (no editor de processos) | menu de blocos: título, lista, checklist, tabela, imagem… |
 | Ctrl/⌘ + S (no editor de processos) | salva na hora |
 
-Links de Tarefas com filtros e modo, do Calendário em uma semana ou mês
-específicos, do Financeiro (mês, DRE, lançamentos filtrados) e dos
+Links de Tarefas com filtros e modo, do Conteúdo com filtros e visão, do
+Calendário em uma semana ou mês específicos, do Financeiro (mês, DRE, lançamentos filtrados) e dos
 Indicadores num período podem ser salvos nos favoritos (ou, em Tarefas,
 como visão salva).
 
@@ -807,6 +867,12 @@ como visão salva).
 - **Volume:** cada tela carrega todas as tarefas de uma vez, e o Supabase
   devolve no máximo 1.000 linhas por consulta. Antes de chegar a 1.000
   tarefas, será preciso arquivar ou paginar.
+- **Conteúdo:** as telas trazem os posts não publicados, os sem data e os
+  publicados nos últimos 6 meses; o calendário não mostra publicados mais
+  antigos (o post ainda abre pelo link). Os filtros do Conteúdo ficam no
+  endereço, mas ainda não viram "visão salva" do menu (as visões salvas são
+  da tela Tarefas). A foto do cliente e as imagens do post chegam com o
+  preview do feed.
 - **Plano gratuito do Supabase:**
   - o projeto é pausado depois de 7 dias com pouco uso. Para evitar isso,
     um cron da Vercel visita o banco duas vezes por dia (`/api/keepalive`);
@@ -875,6 +941,7 @@ são uma sugestão para começar.
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |
 | Comercial (funil, negócios, ganhar) | `src/features/deals/` (`logic.ts` regras), função `win_deal` em `supabase/migrations/20261007212513_win_deal.sql` |
+| Central de Conteúdo (calendário, quadro, 7 dias, post, tarefas das frentes) | `src/features/content/` (`logic.ts` regras, `filters.ts` URL, `post-dialog.tsx` post), `src/app/(app)/conteudo/` |
 | Indicadores (catálogo, períodos, painéis) | `src/features/metrics/` (`catalog.ts` cada KPI e sua fórmula) |
 | Metas (OKRs) | `src/features/goals/` (`logic.ts` progresso e sugestões) |
 | Relatório e Excel | `src/features/reports/`, `src/lib/xlsx.ts`, `src/app/api/relatorios/excel/route.ts`, `src/app/relatorio/` |

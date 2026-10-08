@@ -187,8 +187,9 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 [`finance_management`](../supabase/migrations/20261007174116_finance_management.sql),
 [`commercial`](../supabase/migrations/20261007174202_commercial.sql),
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
-[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql) e
-[`content`](../supabase/migrations/20261008122847_content.sql).
+[`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
+[`content`](../supabase/migrations/20261008122847_content.sql) e
+[`client_portal_access`](../supabase/migrations/20261008190000_client_portal_access.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -217,6 +218,7 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 | `key_results`      | `id`, `objective_id`, `title`, `metric` (indicador do catálogo; vazio = manual), `client_id` (recorte), `unit`, `target_value`, `baseline_value`, `manual_value`, `position`, `created_by`, `created_at`, `updated_at` |
 | `content_posts`    | `id`, `client_id` (obrigatório), `project_id`, `title`, `format`, `networks` (pelo menos uma), `intents`, `publish_on`, `publish_time`, `stage`, `copy_status`, `design_status`, `video_status` (frentes), `owner_id`, `brief` (ideia), `design_notes` (orientação de design ou vídeo), `script` (roteiro), `slides` (jsonb `[{ text, image_path }]`, até 20), `caption` (legenda), `drive_url`, `cover_path` (capa no Storage), `pinned` (fixado no feed), `published_at` (trigger), `created_by`, `created_at`, `updated_at` |
 | `content_ideas`    | `id`, `client_id` (obrigatório), `title`, `notes`, `format`, `reference_url`, `post_id` (o post em que virou), `created_by`, `created_at`, `updated_at` |
+| `client_members`   | `id`, `client_id`, `user_id` (conta do Auth **sem** perfil), `full_name` (quem acessa), `email` (guardado ao dar o acesso), `created_by`, `created_at`. Único por cliente e conta |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
@@ -253,8 +255,11 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `content_front_status` (`not_needed`, `todo`, `in_progress`,
 `missing_material`, `in_review`, `changes`, `done`).
 
-Função exposta: `public.win_deal(...)` (`security invoker`, só para
-`authenticated`), que ganha um negócio numa transação (item 30).
+Funções expostas (só para `authenticated`): `public.win_deal(...)`
+(`security invoker`), que ganha um negócio numa transação (item 30);
+`public.link_client_member(target_client, member_email, member_name)` e
+`public.portal_my_clients()` (`security definer`), do portal do cliente
+(item 41).
 
 ### 5.1 Decisões sobre o schema
 
@@ -516,6 +521,19 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
     mês nos mensais). Estratégia e relatório do mês ficam sem revisão
     periódica (valem para um mês) e o planejamento de stories é revisto a
     cada 3 meses. O documento não guarda de que modelo veio.
+41. **Portal do cliente: conta de cliente nunca é da equipe.** Ter perfil
+    em `profiles` dá acesso a tudo, então a conta de um cliente não tem
+    perfil: fica em `client_members`, ligada a um ou mais clientes. Os
+    triggers `guard_client_member` e `guard_team_profile` impedem a mesma
+    conta de estar nas duas tabelas. Nenhuma política das tabelas da
+    equipe muda: o portal lê só por funções `security definer` que
+    conferem `client_members` e devolvem os campos liberados (nesta fase,
+    `portal_my_clients`: id, nome e foto dos clientes ativos da conta e o
+    nome de quem acessa). Dar acesso é `link_client_member`, só para a
+    equipe: acha a conta no Auth pelo e-mail (criada antes pelo convite do
+    painel do Supabase) e a liga ao cliente, sem service role no app.
+    `private.my_client_ids()` fica pronta para as políticas das próximas
+    fases (canais de mensagem, imagens do conteúdo).
 
 ### 5.2 Segurança (RLS)
 
@@ -542,6 +560,7 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
 | `finance_closings` | ver, fechar o mês (como autor) e reabrir                      |
 | `deals`, `objectives`, `key_results` | ver, criar (como autor), editar e excluir    |
 | `content_posts`, `content_ideas` | ver, criar (como autor), editar e excluir        |
+| `client_members`   | ver, renomear e tirar acessos. Dar acesso só por `link_client_member`. A conta do cliente lê só as próprias linhas |
 | `activity`         | ver; criar só comentários (como autor); editar e apagar só os próprios comentários. O resto é gravado pelo banco |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens                 |
 
@@ -565,6 +584,10 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
+- Para dar acesso a um cliente: convidar o e-mail em Authentication →
+  Users → Invite user e ligar a conta ao cliente com `link_client_member`
+  (pelo app, no cartão "Acesso do cliente", quando ele existir). Nunca
+  criar perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
   `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a

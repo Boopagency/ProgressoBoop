@@ -108,10 +108,11 @@ revoke all on function private.log_activity(text, uuid, text, uuid, uuid, public
 -- Posts que o cliente vê ---------------------------------------------------------
 
 -- Etapas em que o post aparece no portal: a partir de "com o cliente". Um post
--- em que o próprio cliente pediu ajuste e que voltou para a equipe (produção
--- ou revisão interna) continua aparecendo, como "em ajuste", sem aprovação e
--- com o chat. Pedido marcado pela equipe não conta: o post pode nunca ter
--- chegado ao cliente.
+-- que voltou para a equipe (produção ou revisão interna) depois de o cliente
+-- escrever nele (o pedido de ajuste, por exemplo) continua aparecendo, como
+-- "em ajuste", sem aprovação e com o chat. Vale qualquer mensagem da conta do
+-- cliente, para não depender do tipo que a equipe pode trocar; mensagem da
+-- equipe não conta, porque o post pode nunca ter chegado ao cliente.
 create function private.portal_visible_post(target_post uuid, stage public.content_stage)
 returns boolean
 language sql
@@ -127,13 +128,11 @@ as $$
             join public.channels ch on ch.id = m.channel_id and ch.kind = 'client'
             join public.client_members cm on cm.client_id = ch.client_id and cm.user_id = m.author_id
            where m.post_id = target_post
-             and m.kind = 'change_request'
         )
       );
 $$;
 
 revoke all on function private.portal_visible_post(uuid, public.content_stage) from public;
-grant execute on function private.portal_visible_post(uuid, public.content_stage) to authenticated;
 
 -- Post que a conta logada pode ver no portal (do cliente dela, cliente ativo,
 -- etapa liberada ou em ajuste).

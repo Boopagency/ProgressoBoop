@@ -58,14 +58,15 @@ arquivos do Storage dele (não apague arquivos por SQL em `storage.objects`).
 Os scripts dos testes ficam no sandbox `boop-e2e` (`/vercel/p8`, `/vercel/p12`;
 login, senha e bypass vão por variável de ambiente, nunca no arquivo).
 
-## Central de Conteúdo (em andamento)
+## Central de Conteúdo (concluída em 08/10/2026)
 
-Plano em 4 PRs (issues #2 a #5), um agente por vez, depois a fase 2.
+Plano em 4 PRs (issues #2 a #5), um agente por vez, depois a fase 2. As 4
+partes estão na `main`; falta só a fase 2.
 
 - [x] 1/4 — banco do conteúdo (#6, migration `20261008122847_content.sql`, tipos em #7)
 - [x] 2/4 — tela `/conteudo` com todos os clientes, quadro, 7 dias, post, tarefas das frentes, Hoje, Calendário e cliente (#8)
 - [x] 3/4 — feed do Instagram por cliente e imagens (capa, slides, foto do cliente) no bucket `content` (#12, sem migration)
-- [ ] 4/4 — ideias, modelos em Processos e busca (issue #5; notas da coordenação nos comentários da issue, inclusive o que a 3/4 mudou). Ao trazer a `main`, o conflito esperado é a visão nova em `filters.ts`/`content-view.tsx`: manter `feed` e acrescentar `ideias`.
+- [x] 4/4 — banco de ideias por cliente, modelos de documento do cliente em Processos e busca de posts e ideias (#14, sem migration). Sobrou: o "Link do Drive" do post (`post-dialog.tsx`) é `type="url"` e mostra a mensagem do navegador em vez da do portal; corrigir num PR à parte.
 - [ ] Fase 2 — portal do cliente: login criado pela equipe, RLS por cliente, `/portal` para ver o feed e aprovar posts.
 
 Correção fora do plano: rolagem lateral do Hoje no celular (#9).

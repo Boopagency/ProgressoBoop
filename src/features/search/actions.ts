@@ -5,9 +5,13 @@ import { getEvents } from "@/features/calendar/queries"
 import { periodOf, periodParam } from "@/features/clients/logic"
 import { getClients } from "@/features/clients/queries"
 import { getCommunications } from "@/features/communications/queries"
+import { ideaHref, isScheduled } from "@/features/content/ideas-logic"
+import { getContentIdeas } from "@/features/content/ideas-queries"
+import { publishLabel } from "@/features/content/logic"
+import { getPostsForSearch } from "@/features/content/queries"
 import { getDeals } from "@/features/deals/queries"
 import { getDecisions } from "@/features/decisions/queries"
-import { matchesQuick } from "@/features/docs/logic"
+import { matchesQuick, searchSnippet } from "@/features/docs/logic"
 import { getDocs, searchDocs } from "@/features/docs/queries"
 import { getFinance } from "@/features/finance/queries"
 import { formatMoney } from "@/features/finance/money"
@@ -17,15 +21,22 @@ import { isDone } from "@/features/tasks/logic"
 import { getTasks } from "@/features/tasks/queries"
 import { getWorkspace } from "@/features/workspace/queries"
 import { formatShortDate, todayKey } from "@/lib/dates"
-import { COMMUNICATION_KIND_LABEL, DEAL_STAGE_LABEL, PROJECT_STATUS_LABEL } from "@/lib/labels"
+import {
+  COMMUNICATION_KIND_LABEL,
+  CONTENT_FORMAT_LABEL,
+  CONTENT_STAGE_LABEL,
+  DEAL_STAGE_LABEL,
+  PROJECT_STATUS_LABEL,
+} from "@/lib/labels"
 import { includesText } from "@/lib/text"
 import type { DateKey, TaskStatus } from "@/lib/types"
 
 /*
  * Busca geral (Ctrl/⌘ + K): tarefas, projetos, reuniões, decisões,
- * processos, clientes, comunicações, lançamentos e negócios. O volume é pequeno, então
- * títulos e nomes são filtrados aqui (sem acento); textos longos (processos,
- * resumos e transcrições) usam a busca do Postgres.
+ * processos, clientes, comunicações, lançamentos, negócios, posts e ideias de
+ * conteúdo. O volume é pequeno, então títulos, nomes, legendas e notas são
+ * filtrados aqui (sem acento); textos longos (processos, resumos e
+ * transcrições) usam a busca do Postgres.
  */
 
 const QUERY_MAX = 120
@@ -47,6 +58,8 @@ export interface SearchResults {
   communications: { id: string; summary: string; clientId: string; detail: string }[]
   finance: { key: string; description: string; href: string; detail: string }[]
   deals: { id: string; title: string; detail: string }[]
+  posts: { id: string; title: string; detail: string }[]
+  ideas: { id: string; title: string; href: string; detail: string }[]
 }
 
 const EMPTY: SearchResults = {
@@ -59,6 +72,8 @@ const EMPTY: SearchResults = {
   communications: [],
   finance: [],
   deals: [],
+  posts: [],
+  ideas: [],
 }
 
 export async function searchEverything(rawQuery: string): Promise<SearchResults> {
@@ -68,7 +83,7 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
   // A busca textual do banco só vale a pena com algumas letras.
   const fullText = query.length >= 3
 
-  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits, workspace, decisions, communications, finance, deals] =
+  const [tasks, events, { records, items }, docs, clients, docHits, meetingHits, workspace, decisions, communications, finance, deals, posts, ideas] =
     await Promise.all([
       getTasks(),
       getEvents(),
@@ -82,6 +97,8 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
       getCommunications(),
       getFinance(),
       getDeals(),
+      getPostsForSearch(),
+      getContentIdeas(),
     ])
   const today = todayKey()
   const clientName = new Map(clients.map((client) => [client.id, client.name]))
@@ -222,6 +239,54 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
         .join(" · "),
     }))
 
+  // Posts: título e legenda. Os que batem no título e os não publicados primeiro.
+  const postResults = posts
+    .flatMap((post) => {
+      const inTitle = includesText(post.title, query)
+      if (!inTitle && !(post.caption && includesText(post.caption, query))) return []
+      return [{ post, inTitle }]
+    })
+    .sort(
+      (a, b) =>
+        Number(b.inTitle) - Number(a.inTitle) ||
+        Number(a.post.stage === "published") - Number(b.post.stage === "published")
+    )
+    .slice(0, 6)
+    .map(({ post, inTitle }) => ({
+      id: post.id,
+      title: post.title,
+      detail: [
+        clientName.get(post.client_id),
+        inTitle || !post.caption
+          ? `${CONTENT_FORMAT_LABEL[post.format]} · ${CONTENT_STAGE_LABEL[post.stage]} · ${publishLabel(post, today)}`
+          : `Legenda: ${searchSnippet(post.caption, query, 50) ?? post.caption}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    }))
+
+  // Ideias: título e notas; as que ainda não viraram post primeiro.
+  const ideaResults = ideas
+    .flatMap((idea) => {
+      const inTitle = includesText(idea.title, query)
+      if (!inTitle && !(idea.notes && includesText(idea.notes, query))) return []
+      return [{ idea, inTitle }]
+    })
+    .sort((a, b) => Number(b.inTitle) - Number(a.inTitle) || Number(isScheduled(a.idea)) - Number(isScheduled(b.idea)))
+    .slice(0, 6)
+    .map(({ idea, inTitle }) => ({
+      id: idea.id,
+      title: idea.title,
+      href: ideaHref(idea),
+      detail: [
+        clientName.get(idea.client_id),
+        isScheduled(idea) ? "No cronograma" : idea.format ? CONTENT_FORMAT_LABEL[idea.format] : null,
+        !inTitle && idea.notes ? searchSnippet(idea.notes, query, 50) : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    }))
+
   return {
     tasks: taskResults,
     meetings: meetingResults,
@@ -232,5 +297,7 @@ export async function searchEverything(rawQuery: string): Promise<SearchResults>
     communications: communicationResults,
     finance: financeResults,
     deals: dealResults,
+    posts: postResults,
+    ideas: ideaResults,
   }
 }

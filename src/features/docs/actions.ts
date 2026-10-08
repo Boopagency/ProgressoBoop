@@ -63,9 +63,11 @@ export async function createDoc(input: NewDocInput): Promise<ActionResult<{ id: 
   if (!title) return { ok: false, error: "Dê um título ao documento." }
   if (title.length > TITLE_MAX) return { ok: false, error: "Título muito longo." }
 
-  const area = suggestion?.area ?? (isTaskArea(input?.area) ? input.area : null)
+  // Modelos do cliente pedem o cliente e, sem área escolhida, ficam em Clientes.
+  const area = suggestion?.area ?? (isTaskArea(input?.area) ? input.area : template?.client ? "clients" : null)
   const clientId = input?.client_id == null ? null : isUuid(input.client_id) ? input.client_id : undefined
   if (clientId === undefined) return { ok: false, error: "Cliente inválido." }
+  if (template?.client && !clientId) return { ok: false, error: "Escolha o cliente deste documento." }
 
   const blocks = (suggestion ?? template)?.blocks() ?? []
   const supabase = await createClient()
@@ -77,11 +79,11 @@ export async function createDoc(input: NewDocInput): Promise<ActionResult<{ id: 
       area,
       client_id: clientId,
       owner_id: user.id,
-      summary: suggestion?.summary ?? null,
+      summary: suggestion?.summary ?? template?.summary ?? null,
       pinned: suggestion?.pinned ?? false,
       content: blocks as unknown as Json,
       content_text: blocksToText(blocks).slice(0, TEXT_MAX),
-      review_every_months: defaultReview(kind),
+      review_every_months: template?.reviewEveryMonths !== undefined ? template.reviewEveryMonths : defaultReview(kind),
       reviewed_on: todayKey(),
     })
     .select("id")

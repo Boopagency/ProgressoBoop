@@ -26,6 +26,9 @@ import {
   type ContentUrlState,
   type ContentViewMode,
 } from "@/features/content/filters"
+import { IdeaDialog, useIdeaDialog } from "@/features/content/idea-dialog"
+import { IdeasBoard } from "@/features/content/ideas-board"
+import { filterIdeas } from "@/features/content/ideas-logic"
 import { filterPosts, isBlocked, isLate, postsInRange, type PostSummary } from "@/features/content/logic"
 import { PostDialog, usePostDialog } from "@/features/content/post-dialog"
 import { ClientMark, StageDot } from "@/features/content/post-meta"
@@ -43,7 +46,7 @@ import {
   CONTENT_STAGE_LABEL,
   CONTENT_STAGES,
 } from "@/lib/labels"
-import type { ContentStage } from "@/lib/types"
+import type { ContentIdea, ContentStage } from "@/lib/types"
 import { cn, isUuid } from "@/lib/utils"
 
 const VIEW_OPTIONS: { value: ContentViewMode; label: string }[] = [
@@ -51,18 +54,21 @@ const VIEW_OPTIONS: { value: ContentViewMode; label: string }[] = [
   { value: "board", label: "Quadro" },
   { value: "list", label: "7 dias" },
   { value: "feed", label: "Feed" },
+  { value: "ideas", label: "Ideias" },
 ]
 
 /**
  * Tela Conteúdo: os posts de todos os clientes juntos, em calendário, quadro
- * por etapa ou nos próximos 7 dias. Filtros e visão ficam na URL.
+ * por etapa ou nos próximos 7 dias; o feed de um cliente; e o banco de ideias.
+ * Filtros e visão ficam na URL.
  */
-export function ContentView({ posts }: { posts: PostSummary[] }) {
+export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: ContentIdea[] }) {
   const { today } = useTasks()
   const { currentUser, profiles, clients } = useWorkspace()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const dialog = usePostDialog()
+  const ideaDialog = useIdeaDialog()
   const [, startTransition] = useTransition()
   const [optimistic, moveOptimistic] = useOptimistic(posts, (current: PostSummary[], change: { id: string; stage: ContentStage }) =>
     current.map((post) => (post.id === change.id ? { ...post, stage: change.stage } : post))
@@ -92,12 +98,14 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
     navigate({ ...state, filters: { ...filters, ...patch } })
   }
 
+  const singleClient = filters.clients.length === 1 ? filters.clients[0] : null
+
   function openNew(publishOn?: string) {
-    dialog.openNew({ client_id: filters.clients.length === 1 ? filters.clients[0] : null, publish_on: publishOn ?? null })
+    dialog.openNew({ client_id: singleClient, publish_on: publishOn ?? null })
   }
 
-  // ?novo=<marca> (busca geral): abre o post novo.
-  useUrlTrigger(() => openNew())
+  // ?novo=<marca> (busca geral): abre o post novo; na visão Ideias, a ideia nova.
+  useUrlTrigger(() => (state.view === "ideas" ? ideaDialog.openNew({ client_id: singleClient }) : openNew()))
 
   // ?post=<id> (tela Hoje, tarefa gerada): abre o post e limpa a URL.
   const postParam = searchParams.get("post")
@@ -119,6 +127,21 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
   useEffect(() => {
     if (postParam) openFromUrl(postParam)
   }, [postParam])
+
+  // ?ideia=<id> (busca geral): abre a ideia e limpa a URL.
+  const ideaParam = searchParams.get("ideia")
+  const openIdeaFromUrl = useEffectEvent((id: string) => {
+    const found = ideas.find((idea) => idea.id === id)
+    if (found) ideaDialog.openIdea(found)
+    else toast.error("Essa ideia não existe mais.")
+    const params = new URLSearchParams(window.location.search)
+    params.delete("ideia")
+    const rest = params.toString()
+    window.history.replaceState(null, "", rest ? `${pathname}?${rest}` : pathname)
+  })
+  useEffect(() => {
+    if (ideaParam) openIdeaFromUrl(ideaParam)
+  }, [ideaParam])
 
   function move(id: string, stage: ContentStage) {
     const post = optimistic.find((candidate) => candidate.id === id)
@@ -194,8 +217,13 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
           options={VIEW_OPTIONS}
           className="self-start"
         />
-        {/* No feed (o grid real do perfil) só o filtro de cliente vale: os outros somem. */}
-        <div className={cn("flex flex-wrap items-center gap-2", state.view === "feed" && "[&>*:not(:first-child)]:hidden")}>
+        {/* No feed (o grid real do perfil) e nas ideias só o filtro de cliente vale: os outros somem. */}
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-2",
+            (state.view === "feed" || state.view === "ideas") && "[&>*:not(:first-child)]:hidden"
+          )}
+        >
           <MultiFilter
             label="Clientes"
             plural="clientes"
@@ -260,7 +288,16 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
         </div>
       </div>
 
-      {posts.length === 0 ? (
+      {state.view === "ideas" ? (
+        <IdeasBoard
+          ideas={filterIdeas(ideas, filters.clients)}
+          posts={optimistic}
+          today={today}
+          onOpenIdea={ideaDialog.openIdea}
+          onNewIdea={() => ideaDialog.openNew({ client_id: singleClient })}
+          onOpenPost={dialog.openPost}
+        />
+      ) : posts.length === 0 ? (
         <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
           <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
@@ -297,6 +334,7 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
       )}
 
       <PostDialog state={dialog.state} onOpenChange={dialog.onOpenChange} />
+      <IdeaDialog state={ideaDialog.state} onOpenChange={ideaDialog.onOpenChange} posts={optimistic} onOpenPost={dialog.openPost} />
     </PageContainer>
   )
 }

@@ -6,12 +6,12 @@ import { isUuid } from "@/lib/utils"
 
 /**
  * Filtros e visão da tela Conteúdo na URL
- * (?cliente=a,b&pessoa=mine&rede=…&formato=…&etapa=…&ver=quadro&visao=semana&data=…),
+ * (?cliente=a,b&pessoa=mine&rede=…&formato=…&etapa=…&ver=quadro|lista|feed|ideias&visao=semana&data=…),
  * para que um link ou um favorito abra a mesma tela. Listas separadas por
  * vírgula; valores desconhecidos são ignorados.
  */
 
-export type ContentViewMode = "calendar" | "board" | "list" | "feed"
+export type ContentViewMode = "calendar" | "board" | "list" | "feed" | "ideas"
 export type CalendarMode = "month" | "week"
 
 export interface ContentUrlFilters {
@@ -34,7 +34,7 @@ export interface ContentUrlState {
 export const EMPTY_FILTERS: ContentUrlFilters = { clients: [], person: "all", networks: [], formats: [], stages: [] }
 
 /** Modo na URL, em português. */
-const VIEW_PARAM: Record<ContentViewMode, string> = { calendar: "calendario", board: "quadro", list: "lista", feed: "feed" }
+const VIEW_PARAM: Record<ContentViewMode, string> = { calendar: "calendario", board: "quadro", list: "lista", feed: "feed", ideas: "ideias" }
 
 type SearchParams = Record<string, string | string[] | undefined>
 

@@ -1,7 +1,20 @@
-import { BookOpen, ListChecks, Scale, Workflow, type LucideIcon } from "lucide-react"
+import {
+  BookOpen,
+  ChartColumn,
+  ListChecks,
+  MessageSquareQuote,
+  Palette,
+  Scale,
+  Smartphone,
+  Target,
+  UserRound,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react"
 import type { ReactNode } from "react"
 
 import { needsReview } from "@/features/docs/logic"
+import type { TemplateId } from "@/features/docs/templates"
 import { daysBetween, formatShortDate, toDateKey } from "@/lib/dates"
 import { DOC_STATUS_LABEL } from "@/lib/labels"
 import { findMatches } from "@/lib/text"
@@ -13,6 +26,16 @@ export const DOC_KIND_ICON: Record<DocKind, LucideIcon> = {
   checklist: ListChecks,
   policy: Scale,
   guide: BookOpen,
+}
+
+/** Ícones dos modelos do cliente (os outros modelos usam o ícone do tipo). */
+export const CLIENT_TEMPLATE_ICON: Partial<Record<TemplateId, LucideIcon>> = {
+  persona: UserRound,
+  verbal_identity: MessageSquareQuote,
+  visual_identity: Palette,
+  monthly_strategy: Target,
+  stories_plan: Smartphone,
+  monthly_report: ChartColumn,
 }
 
 /** Ícone do tipo de documento, num quadradinho. */

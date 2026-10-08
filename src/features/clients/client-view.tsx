@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  BookOpen,
   CalendarPlus,
   ChevronDown,
   ChevronLeft,
@@ -47,10 +46,12 @@ import { currentHealth, healthHistory, monthName, periodParam } from "@/features
 import { ReviewCard } from "@/features/clients/review-card"
 import { CommunicationsCard } from "@/features/communications/communications-card"
 import { ClientContentCard } from "@/features/content/client-content-card"
+import { ClientIdeasCard } from "@/features/content/client-ideas-card"
 import type { PostSummary } from "@/features/content/logic"
 import { DecisionsCard } from "@/features/decisions/decisions-card"
-import { DocKindTile, DocStatusBadge } from "@/features/docs/doc-meta"
+import { ClientDocsCard } from "@/features/docs/client-docs-card"
 import { NewDocDialog, type NewDocDialogState } from "@/features/docs/new-doc-dialog"
+import type { TemplateId } from "@/features/docs/templates"
 import { meetingsOverview, type MeetingEntry } from "@/features/meetings/logic"
 import { EntryStateBadge, dayLabel, entryState, timeLabel } from "@/features/meetings/meeting-meta"
 import { ClientDealsCard } from "@/features/deals/client-deals-card"
@@ -71,6 +72,7 @@ import type {
   ClientDetail,
   ClientReview,
   Communication,
+  ContentIdea,
   DateKey,
   Decision,
   Deal,
@@ -92,6 +94,7 @@ export function ClientView({
   finance,
   deals,
   posts,
+  ideas,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -109,6 +112,8 @@ export function ClientView({
   deals: Deal[]
   /** Posts do cliente (Central de Conteúdo). */
   posts: PostSummary[]
+  /** Banco de ideias do cliente. */
+  ideas: ContentIdea[]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -122,6 +127,14 @@ export function ClientView({
   const health = currentHealth(client.id, reviews)
   const ownerIndex = profiles.findIndex((profile) => profile.id === client.owner_id)
   const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
+
+  function openNewDoc(template?: TemplateId) {
+    setDocDialog((current) => ({
+      open: true,
+      key: current.key + 1,
+      defaults: { client_id: client.id, area: "clients", template },
+    }))
+  }
 
   function toggleActive() {
     startTransition(async () => {
@@ -216,17 +229,9 @@ export function ClientView({
                 <CalendarPlus />
                 Nova reunião
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  setDocDialog((current) => ({
-                    open: true,
-                    key: current.key + 1,
-                    defaults: { client_id: client.id, area: "clients" },
-                  }))
-                }
-              >
+              <DropdownMenuItem onSelect={() => openNewDoc()}>
                 <FilePlus2 />
-                Novo processo do cliente
+                Novo documento do cliente
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={toggleActive} disabled={isPending}>
@@ -247,6 +252,8 @@ export function ClientView({
           <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
           <ClientProjectsCard clientId={client.id} docs={templateDocs} />
           <ClientContentCard clientId={client.id} posts={posts} today={today} />
+          <ClientIdeasCard clientId={client.id} ideas={ideas} posts={posts} />
+          <ClientDocsCard docs={docs} today={today} onNew={openNewDoc} />
           <ClientTasksCard clientId={client.id} />
           <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
           <ClientMeetingsCard client={client} events={events} records={records} onNew={() =>
@@ -262,16 +269,6 @@ export function ClientView({
             decisions={decisions}
             defaults={{ client_id: client.id, area: "clients" }}
             emptyText="Combinados de preço, escopo ou prazo com este cliente ficam aqui."
-          />
-          <ClientDocsCard
-            docs={docs}
-            onNew={() =>
-              setDocDialog((current) => ({
-                open: true,
-                key: current.key + 1,
-                defaults: { client_id: client.id, area: "clients" },
-              }))
-            }
           />
         </aside>
       </div>
@@ -289,7 +286,7 @@ export function ClientView({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {client.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              O cadastro, as revisões mensais, as comunicações e os posts (com as imagens) serão apagados.
+              O cadastro, as revisões mensais, as comunicações, os posts (com as imagens) e as ideias de conteúdo serão apagados.
               Tarefas, projetos, eventos, processos, decisões e lançamentos continuam, sem o cliente. Para só
               tirar das listas, use “Desativar cliente”.
             </AlertDialogDescription>
@@ -631,49 +628,6 @@ function HealthHistoryCard({
           </li>
         ))}
       </ul>
-    </Card>
-  )
-}
-
-function ClientDocsCard({ docs, onNew }: { docs: DocSummary[]; onNew: () => void }) {
-  const { today } = useTasks()
-  return (
-    <Card
-      id="processos-cliente"
-      title={
-        <>
-          Processos do cliente
-          <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{docs.length}</span>
-        </>
-      }
-      action={
-        <Button variant="ghost" size="sm" onClick={onNew} className="h-7 gap-1 px-2 text-xs">
-          <Plus className="size-3.5" />
-          Novo
-        </Button>
-      }
-    >
-      {docs.length === 0 ? (
-        <p className="flex items-start gap-2 px-4 py-4 text-[13px] leading-5 text-muted-foreground">
-          <BookOpen className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          Briefing, acessos, combinados e o que é específico deste cliente.
-        </p>
-      ) : (
-        <ul className="py-1">
-          {docs.map((doc) => (
-            <li key={doc.id}>
-              <Link
-                href={`/processos/${doc.id}`}
-                className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/50"
-              >
-                <DocKindTile kind={doc.kind} className="size-7" />
-                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">{doc.title}</span>
-                {doc.status !== "active" ? <DocStatusBadge doc={doc} today={today} /> : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
     </Card>
   )
 }

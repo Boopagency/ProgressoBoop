@@ -29,7 +29,8 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   botão do topo.
 - **Busca geral:** "Buscar…" no topo de qualquer tela, ou Ctrl/⌘+K, acha
   tarefas, projetos, reuniões, decisões, comunicações, processos, clientes,
-  negócios e lançamentos e cria qualquer coisa (2.14).
+  negócios, lançamentos, posts e ideias de conteúdo e cria qualquer coisa
+  (2.14).
 - **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
   só em detalhes: barras de progresso, item ativo do menu, dia de hoje, foco e
   pontos indicadores. O logo é o oficial (o "olhar") e os títulos usam Poppins.
@@ -284,6 +285,18 @@ segunda, 07:00).
 - **Feed** (no cartão Conteúdo): o preview do Instagram do cliente, as
   primeiras quatro linhas do grid, com o link para o feed inteiro no
   Conteúdo (2.26).
+- **Ideias:** o banco de ideias do cliente (as que ainda não viraram post,
+  a mais nova primeiro), **Ideia** para guardar uma nova já com o cliente,
+  **Virar post** em cada uma e "Abrir no Conteúdo", que leva à visão Ideias
+  filtrada pelo cliente (2.26). O rodapé conta quantas já estão no
+  cronograma.
+- **Documentos do cliente:** os processos com o cliente (persona,
+  identidade, estratégia e relatório do mês, briefing, acessos…), **Novo**
+  e os atalhos **Novo documento do cliente** com os seis modelos de social
+  media: Estudo de persona, Identidade verbal, Identidade visual e
+  moodboard, Estratégia de conteúdo do mês, Planejamento de stories e
+  Relatório do mês (2.11). O atalho abre o "Novo documento" com o cliente,
+  o modelo e o título já escolhidos.
 - **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
   recolhidas; **Tarefa** no topo cria uma já com o cliente.
 - **Comunicações** recentes com o cliente e **Registrar** (2.18).
@@ -294,10 +307,11 @@ segunda, 07:00).
   contrato, o que está em atraso e o recebido no ano, com **Lançar** e o
   link para os lançamentos do cliente nos últimos 12 meses), **Negócios**
   (upsell, renovação ou projeto novo no funil, com **Negócio**), **Saúde
-  mês a mês** (seis meses; clicar abre aquela revisão), **Decisões** sobre o
-  cliente e **Processos do cliente** (com "Novo").
-- **Editar** muda o cadastro. No menu: desativar/reativar e excluir (apaga o
-  cadastro, as revisões, as comunicações e os posts, com as imagens; tarefas,
+  mês a mês** (seis meses; clicar abre aquela revisão) e **Decisões** sobre
+  o cliente.
+- **Editar** muda o cadastro. No menu: nova reunião, novo documento do
+  cliente, desativar/reativar e excluir (apaga o cadastro, as revisões, as
+  comunicações, os posts, com as imagens, e as ideias; tarefas,
   projetos, eventos, decisões, lançamentos e processos continuam, sem o
   cliente).
 - A Boop (projetos internos) está cadastrada sem revisão mensal.
@@ -315,9 +329,30 @@ passo), checklists, políticas (regras combinadas) e guias.
   revisar, Rascunhos, cada área e cada cliente que tenha documentos.
 - **Busca** no título, no "para que serve" e no texto, sem acento, com o
   trecho encontrado em destaque.
-- **Novo documento:** título e um modelo (Processo passo a passo, Checklist,
-  Política, Guia, Onboarding de cliente ou Em branco), área e cliente. Começa
-  como rascunho.
+- **Novo documento:** título e um modelo, área e cliente. Começa como
+  rascunho. Os modelos ficam em duas abas:
+  - **Gerais:** Processo passo a passo, Checklist, Política, Guia,
+    Onboarding de cliente ou Em branco;
+  - **Do cliente** (os "arquivos" do modelo de social media do Notion):
+    **Estudo de persona** (nome fictício, quem é, características, dores,
+    sonhos, crenças, conexão com a comunicação e o diário de perguntas),
+    **Identidade verbal** (essência, personalidade, tom de voz,
+    vocabulário, exemplos), **Identidade visual e moodboard** (logo,
+    cores, tipografia, fotografia, moodboard, feed), **Estratégia de
+    conteúdo do mês** (objetivo, datas, pilares por intenção, formatos,
+    ideias escolhidas, metas), **Planejamento de stories** (ritual diário,
+    o que mostrar, cronograma da semana, diferenciais, destaques) e
+    **Relatório do mês** (resultados, destaques, o que não funcionou,
+    próximos passos e o link do relatório completo). Eles pedem o cliente,
+    entram na área Clientes, já vêm com o "para que serve" e sugerem o
+    título ("Estudo de persona — Hertmann", "Relatório de outubro de 2026
+    — Hertmann"), que dá para mudar. Estratégia e relatório do mês não
+    têm revisão periódica; o planejamento de stories pede revisão a cada 3
+    meses. Os próximos passos do relatório viram tarefas por **Gerar
+    tarefas** (2.12).
+
+  Com um cliente já escolhido (página do cliente ou filtro de cliente),
+  a janela abre nos modelos do cliente.
 - **Sugestões para documentar:** dez documentos com estrutura pronta
   (Como funciona a Boop, Rotina da weekly, Onboarding de cliente, Aprovação
   de conteúdo, Relatório mensal, Proposta comercial, Faturamento e cobrança,
@@ -383,11 +418,18 @@ passo), checklists, políticas (regras combinadas) e guias.
   link; ali, use o botão do topo.
 - **Sem digitar nada:** ações rápidas (Nova tarefa, Novo projeto, Nova
   reunião, Novo documento, Novo cliente, Registrar comunicação, Registrar
-  decisão, Novo lançamento, Novo negócio, Novo post, Novo objetivo), as visões salvas de
-  Tarefas e atalhos para cada tela. A ação leva à tela certa e já abre a janela de criar.
+  decisão, Novo lançamento, Novo negócio, Novo post, Nova ideia de
+  conteúdo, Novo objetivo), as visões salvas de Tarefas e atalhos para cada
+  tela. A ação leva à tela certa e já abre a janela de criar.
 - **Digitando** (a partir de 2 letras, sem acento: "reuniao" acha "reunião"):
   - **Tarefas:** pelo título e pela descrição; as abertas vêm primeiro.
     Abrir leva a Tarefas com o painel da tarefa aberto;
+  - **Posts:** pelo título e pela legenda (com o trecho da legenda
+    encontrado), inclusive os publicados há muito tempo; os não publicados
+    vêm primeiro. Abrir leva ao Conteúdo com o post aberto;
+  - **Ideias:** pelo título e pelas notas; as que ainda não viraram post
+    vêm primeiro. Abrir leva à visão Ideias do Conteúdo, filtrada pelo
+    cliente, com a ideia aberta;
   - **Projetos:** pelo nome e pelo cliente;
   - **Reuniões:** pelo título, pelo cliente, pelos assuntos e combinados e
     pelo resumo e pela transcrição. Das próximas aparece só a próxima de cada
@@ -700,6 +742,24 @@ juntos**, sem entrar cliente por cliente.
 - **Filtros** (ficam no endereço, então o link pode ser salvo ou mandado):
   clientes (vários), responsável (Todos, Meus ou uma pessoa), redes,
   formatos e etapas. "Limpar filtros" volta tudo.
+- **Ideias** (`?ver=ideias`): o banco de ideias e referências dos
+  clientes, como o do Notion. Só o filtro de cliente vale aqui.
+  - **cartões** com o cliente, o título, as notas, o formato (se já tiver)
+    e o link da referência (abre numa aba nova), a mais nova primeiro;
+  - **Virar post** cria o post do cliente já preenchido: título e formato
+    da ideia (sem formato, o botão pergunta qual), as notas e o link de
+    referência em "Conteúdo/ideia", em produção, sem data e com quem
+    converteu como responsável. O post abre em seguida para completar
+    (data, frentes, textos) e a ideia passa para **No cronograma**;
+  - **No cronograma:** as ideias que já viraram post, com a etapa e a data
+    do post e **Ver post**. Se o post for excluído, a ideia volta para a
+    lista de ideias;
+  - **Nova ideia:** pelo botão ou pela busca geral (Ctrl/⌘ + K → "Nova
+    ideia de conteúdo"). Com um só cliente filtrado, ele já vem escolhido;
+  - **ideia (janela):** título, notas, cliente, formato ("Ainda não sei"
+    vale) e link de referência (sem "https://", o portal completa).
+    **Virar post** salva o que mudou antes de criar o post; excluir a
+    ideia não apaga o post que nasceu dela.
 - **Novo post:** pelo botão, pela busca geral (Ctrl/⌘ + K → "Novo post") ou
   pelo "+" de um dia. Com um só cliente filtrado, ele já vem escolhido.
 - **Post (janela):**
@@ -815,12 +875,14 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Fechamentos | os meses que a equipe fechar | fechar e reabrir o último | — |
 | Negócios | os que a equipe registrar | tudo (inclusive ganhar e perder) | — |
 | Posts (Central de Conteúdo) | os que a equipe planejar | tudo (inclusive gerar as tarefas das frentes) | — |
+| Ideias de conteúdo | as que a equipe guardar | tudo (inclusive virar post) | — |
 | Metas | os objetivos e resultados-chave que a equipe criar | tudo | — |
 | Indicadores | calculados dos dados (nada é digitado) | — | criar um indicador novo (código: `src/features/metrics/catalog.ts`) |
 | Histórico | gravado pelo banco desde 07/10/2026 | comentar, editar e apagar os próprios comentários | — |
 | Eventos | a reunião semanal | criar, editar, excluir | — |
 | Reuniões | registros, assuntos, combinados, resumo e transcrição | tudo | — |
 | Processos | documentos, versões e imagens | tudo (versões: ver e restaurar) | — |
+| Modelos de documento | os gerais e os seis do cliente (social media) | usar | criar ou mudar um modelo (código: `src/features/docs/templates.ts`) |
 
 Áreas (Comercial, Financeiro, Operação, Marca, Tecnologia, Clientes), status
 (A fazer, Fazendo, Feito) e prioridades (Alta, Normal, Baixa) são fixos. Para
@@ -903,6 +965,8 @@ como visão salva).
   da tela Tarefas). O feed mostra o que a tela carregou (publicados dos
   últimos 6 meses) e não puxa nada do Instagram: o @, a bio e a foto são
   copiados à mão. Vídeos não sobem para o app (ficam no link do Drive).
+  As ideias não têm histórico de alterações (o post criado a partir delas
+  tem). A busca geral procura nos 1.000 posts editados por último.
 - **Plano gratuito do Supabase:**
   - o projeto é pausado depois de 7 dias com pouco uso. Para evitar isso,
     um cron da Vercel visita o banco duas vezes por dia (`/api/keepalive`);

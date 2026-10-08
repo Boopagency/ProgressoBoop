@@ -13,6 +13,7 @@ import {
   FolderPlus,
   Gavel,
   Handshake,
+  Lightbulb,
   ListTodo,
   Loader2,
   Megaphone,
@@ -49,8 +50,9 @@ import { cn } from "@/lib/utils"
 
 /*
  * Busca geral (Ctrl/⌘ + K): ações rápidas, telas e resultados de tarefas,
- * reuniões, processos e clientes. Abre de qualquer tela; no editor de
- * processos, Ctrl/⌘ + K continua criando link (use o botão "Buscar").
+ * reuniões, processos, clientes, posts, ideias e o resto. Abre de qualquer
+ * tela; no editor de processos, Ctrl/⌘ + K continua criando link (use o botão
+ * "Buscar").
  */
 
 interface PaletteContextValue {
@@ -111,7 +113,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         >
           <DialogTitle className="sr-only">Buscar no portal</DialogTitle>
           <DialogDescription className="sr-only">
-            Busque tarefas, projetos, reuniões, decisões, processos, clientes, comunicações e lançamentos, ou escolha uma ação.
+            Busque tarefas, projetos, reuniões, decisões, processos, clientes, comunicações, lançamentos, posts e ideias, ou escolha uma ação.
           </DialogDescription>
           <Palette key={state.key} onClose={() => setState((current) => ({ ...current, open: false }))} />
         </DialogContent>
@@ -215,6 +217,7 @@ function Palette({ onClose }: { onClose: () => void }) {
     { id: "new-finance", group: "Ações", label: "Novo lançamento (receita ou despesa)", icon: Wallet, run: () => go(`/financeiro?novo=${freshStamp()}`) },
     { id: "new-deal", group: "Ações", label: "Novo negócio (lead ou proposta)", icon: Handshake, run: () => go(`/comercial?novo=${freshStamp()}`) },
     { id: "new-post", group: "Ações", label: "Novo post (conteúdo de cliente)", icon: Megaphone, run: () => go(`/conteudo?novo=${freshStamp()}`) },
+    { id: "new-idea", group: "Ações", label: "Nova ideia de conteúdo (banco de ideias)", icon: Lightbulb, run: () => go(`/conteudo?ver=ideias&novo=${freshStamp()}`) },
     { id: "new-goal", group: "Ações", label: "Novo objetivo (meta)", icon: Target, run: () => go(`/metas?novo=${freshStamp()}`) },
   ]
   const pages: Item[] = [
@@ -255,6 +258,22 @@ function Palette({ onClose }: { onClose: () => void }) {
             run: () => go(`/tarefas?tarefa=${task.id}`),
           }
         }),
+        ...data.posts.map<Item>((post) => ({
+          id: `post-${post.id}`,
+          group: "Posts",
+          label: post.title,
+          detail: post.detail,
+          icon: Megaphone,
+          run: () => go(`/conteudo?post=${post.id}`),
+        })),
+        ...data.ideas.map<Item>((idea) => ({
+          id: `idea-${idea.id}`,
+          group: "Ideias",
+          label: idea.title,
+          detail: idea.detail,
+          icon: Lightbulb,
+          run: () => go(idea.href),
+        })),
         ...data.meetings.map<Item>((meeting) => ({
           id: `meeting-${meeting.key}`,
           group: "Reuniões",

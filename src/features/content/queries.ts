@@ -8,7 +8,7 @@ import { addDaysToKey, todayKey } from "@/lib/dates"
 import type { Json } from "@/lib/supabase/database.types"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
-import type { ContentSlide } from "@/lib/types"
+import type { ContentPost, ContentSlide } from "@/lib/types"
 
 /** Colunas das listas (sem os textos longos, lidos ao abrir o post). */
 export const POST_SUMMARY_COLUMNS =
@@ -46,3 +46,25 @@ export const getContentPosts = cache(async (clientId?: string): Promise<PostSumm
   if (error) throw loadError(error, "os posts")
   return data
 })
+
+export type PostSearchRow = Pick<
+  ContentPost,
+  "id" | "client_id" | "title" | "caption" | "format" | "stage" | "publish_on" | "publish_time"
+>
+
+/**
+ * Posts para a busca geral: título e legenda (inclusive os publicados há
+ * muito tempo), os editados por último primeiro. A busca sem acento é feita
+ * no servidor do app, como nos outros grupos.
+ */
+export async function getPostsForSearch(): Promise<PostSearchRow[]> {
+  await requireUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("content_posts")
+    .select("id, client_id, title, caption, format, stage, publish_on, publish_time")
+    .order("updated_at", { ascending: false })
+    .limit(1000)
+  if (error) throw loadError(error, "a busca")
+  return data
+}

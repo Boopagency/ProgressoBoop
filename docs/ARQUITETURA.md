@@ -101,7 +101,8 @@ src/
 │   │                           # receita necessária, inadimplência, fechamento)
 │   ├── deals/                  # comercial: negócios, funil, conversão em cliente
 │   ├── content/                # Central de Conteúdo: posts de todos os clientes
-│   │                           # (calendário, quadro, 7 dias), frentes → tarefas
+│   │                           # (calendário, quadro, 7 dias), frentes → tarefas,
+│   │                           # feed e o banco de ideias (ideas-*.ts, "virar post")
 │   ├── metrics/                # catálogo de indicadores (KPIs), períodos e painéis
 │   ├── goals/                  # metas (OKRs) com progresso pelos indicadores
 │   ├── reports/                # relatório para apresentar e as abas do Excel
@@ -494,6 +495,27 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
     (`createPost`/`updatePost`, inclusive ao levar um post fixado para outro
     cliente), sem trava no banco: com três pessoas, a corrida é improvável
     e, se acontecer, o feed só mostra um fixado a mais.
+39. **Banco de ideias sem estado próprio.** "No cronograma" é só
+    `content_ideas.post_id` preenchido, sem enum nem migration; excluir o
+    post devolve a ideia às livres (`on delete set null`). `convertIdeaToPost`
+    cria o post com o título e o formato da ideia (ou o escolhido, quando a
+    ideia não tem), as notas e o link de referência no conteúdo/ideia
+    (`ideaBrief`, no limite do campo), em produção, sem data e com quem
+    converteu como responsável. Depois liga a ideia só se ela continuar
+    livre (`post_id is null`); se outra pessoa converteu no meio-tempo, o
+    post recém-criado é apagado. As regras ficam em
+    `features/content/ideas-logic.ts`. Ideias não entram no histórico
+    (`activity`); o post criado entra.
+40. **Modelos do cliente sem tabela nova.** Os "arquivos" do modelo de
+    social media do Notion (estudo de persona, identidade verbal,
+    identidade visual e moodboard, estratégia de conteúdo do mês,
+    planejamento de stories e relatório do mês) são modelos de documento
+    em `features/docs/templates.ts` com `client: true`, do tipo Guia. Pedem
+    o cliente (`createDoc` recusa sem ele), começam na área Clientes, já
+    trazem o "para que serve" e um título sugerido (`clientDocTitle`, com o
+    mês nos mensais). Estratégia e relatório do mês ficam sem revisão
+    periódica (valem para um mês) e o planejamento de stories é revisto a
+    cada 3 meses. O documento não guarda de que modelo veio.
 
 ### 5.2 Segurança (RLS)
 
@@ -735,12 +757,16 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - No cartão **Conteúdo**, **Feed** troca a lista pelo preview do Instagram do
   cliente (as primeiras quatro linhas do grid, com o link para o feed
   inteiro em `/conteudo?cliente=<id>&ver=feed`).
+- Logo abaixo do Conteúdo: **Ideias** (as livres, com "Virar post", "Ideia"
+  já com o cliente e o link para `/conteudo?cliente=<id>&ver=ideias`) e
+  **Documentos do cliente** (os processos com o cliente e os atalhos "Novo
+  documento do cliente" com os seis modelos de social media).
 - Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
   WhatsApp, observações), **Financeiro** (mensalidade, margem do contrato,
   fim do contrato, em atraso, recebido no ano e o link para os lançamentos
   do cliente), **Negócios** (upsell e renovação no funil), **Saúde mês a
-  mês** (seis meses), **Decisões** e **Processos do cliente**.
-- Menu: nova reunião, novo processo do cliente, desativar/reativar e excluir.
+  mês** (seis meses) e **Decisões**.
+- Menu: nova reunião, novo documento do cliente, desativar/reativar e excluir.
 
 ### Comunicações (`/comunicacoes`)
 
@@ -774,8 +800,13 @@ A documentação interna da Boop: processos, checklists, políticas e guias.
   vencida), Rascunhos, cada área e cada cliente.
 - **Busca** no título, no "para que serve" e no texto, sem acento, com o
   trecho encontrado destacado.
-- **Novo documento** com modelo (processo passo a passo, checklist, política,
-  guia, onboarding de cliente ou em branco), área e cliente.
+- **Novo documento** com modelo, área e cliente. Modelos **Gerais**
+  (processo passo a passo, checklist, política, guia, onboarding de cliente
+  ou em branco) e **Do cliente** (estudo de persona, identidade verbal,
+  identidade visual e moodboard, estratégia de conteúdo do mês,
+  planejamento de stories e relatório do mês), que pedem o cliente e
+  sugerem o título ("Estudo de persona — Cliente", "Relatório de outubro
+  de 2026 — Cliente"). Com um cliente já escolhido, abre nos do cliente.
 - **Sugestões para documentar**: dez documentos que toda agência precisa,
   já com estrutura (com a biblioteca vazia, elas são a tela inicial).
 
@@ -877,8 +908,17 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   "Todos os planejados" × "Só aprovados"; fixar e desafixar (até 3).
   Clicar num quadrado abre o post. Só o filtro de cliente vale no feed (é
   o grid real); os outros ficam escondidos nessa visão.
+- **Ideias** (`ver=ideias`): o banco de ideias e referências dos clientes
+  filtrados (só o filtro de cliente vale). Cartões com cliente, título,
+  notas, formato e o link de referência, a mais nova primeiro, e **Virar
+  post** (sem formato na ideia, pergunta qual); abaixo, **No cronograma**,
+  as que já viraram post, com a etapa e a data do post e "Ver post".
+  **Nova ideia** pelo botão ou pela busca (`ver=ideias&novo=`);
+  `?ideia=<id>` abre uma ideia. Na ideia (diálogo): título, notas, cliente,
+  formato e link de referência; "Virar post" salva o que mudou, cria o
+  post e o abre; excluir a ideia não apaga o post.
 - Filtros na URL (`?cliente=a,b&pessoa=mine&rede=…&formato=…&etapa=…&ver=
-  quadro|lista&visao=semana&data=…`): clientes (vários), responsável
+  quadro|lista|feed|ideias&visao=semana&data=…`): clientes (vários), responsável
   (Todos, Meus ou uma pessoa), redes, formatos e etapas. O endereço pode ser
   salvo ou compartilhado.
 - **Novo post** pelo botão, por `?novo=` (busca geral) ou pelo "+" do dia;
@@ -947,14 +987,18 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   celular, a lupa). No editor de processos, Ctrl/⌘ + K continua criando link.
 - Sem texto: **Ações** (nova tarefa, projeto, reunião, documento, cliente,
   registrar comunicação, registrar decisão, novo lançamento, novo negócio,
-  novo post, novo objetivo), as **visões salvas** e **Ir para** (as telas).
+  novo post, nova ideia de conteúdo, novo objetivo), as **visões salvas** e
+  **Ir para** (as telas).
 - A partir de 2 letras, sem acento: **Tarefas** (título e descrição; abertas
   primeiro), **Projetos**, **Reuniões** (título, cliente, assuntos,
   combinados, resumo e transcrição; das próximas, uma por série),
   **Decisões**, **Comunicações**, **Processos** (título, "para que serve" e,
   a partir de 3 letras, o texto), **Clientes** (nome), **Negócios** (título,
-  empresa e contato; abre o negócio em `/comercial?negocio=<id>`) e
-  **Financeiro** (descrição). Até seis resultados por grupo.
+  empresa e contato; abre o negócio em `/comercial?negocio=<id>`),
+  **Financeiro** (descrição), **Posts** (título e legenda, com o trecho da
+  legenda encontrado; abre o post em `/conteudo?post=<id>`) e **Ideias**
+  (título e notas; abre a ideia na visão Ideias, filtrada pelo cliente).
+  Posts e Ideias vêm logo depois de Tarefas. Até seis resultados por grupo.
 - ↑ ↓ navegam, Enter abre, Esc fecha.
 - Links usados pela busca: `/tarefas?tarefa=<id>` abre o Sheet da tarefa;
   as telas com `?novo=<marca>` abrem o diálogo de criar; `/decisoes?q=` e
@@ -1004,6 +1048,8 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `ContentView` / `ContentCalendar` / `ContentBoard` / `UpcomingList` | Central de Conteúdo: calendário, quadro por etapa e próximos 7 dias, com filtros na URL |
 | `ContentFeed` | preview do feed do Instagram de um cliente: perfil editável, grid 3:4, filtro e fixados |
 | `PostDialog` / `ClientContentCard` / `TodayContentCard` | post (campos, textos por formato, tarefas das frentes, histórico) e os cartões no cliente e no Hoje |
+| `IdeasBoard` / `IdeaDialog` / `ClientIdeasCard` | banco de ideias: a visão Ideias do Conteúdo, a ideia (com "Virar post") e o cartão no cliente |
+| `ClientDocsCard` | documentos do cliente e os atalhos dos modelos de social media (página do cliente) |
 | `MetricsView`        | Indicadores: período, comparação, áreas, KPIs, gráficos e o detalhe de cada número |
 | `GoalsView` / `ObjectiveDialog` / `KeyResultDialog` | metas (OKRs) com progresso automático e sugestões de meta |
 | `ReportBuilder` / `ReportView` | montar o relatório (período, recorte, seções) e a página para apresentar |
@@ -1182,6 +1228,13 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     publicado, os sem data e os publicados dos últimos 180 dias, longe do
     limite de 1.000 linhas; um post mais antigo ainda abre por
     `/conteudo?post=<id>`.
+21. **Posts e ideias na busca geral, sem coluna de busca nova.** Legendas e
+    notas são filtradas sem acento no servidor do app, junto com os
+    títulos, como os outros grupos. `getPostsForSearch` lê título e
+    legenda dos 1.000 posts editados por último (inclusive publicados
+    antigos, que as telas não carregam). A ideia abre por
+    `/conteudo?cliente=<id>&ver=ideias&ideia=<id>`, como `?post=` abre o
+    post.
 
 ## 11. Plano de implementação
 

@@ -189,7 +189,7 @@ SQL está em `supabase/migrations/`, uma migration por etapa:
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
 [`content`](../supabase/migrations/20261008122847_content.sql) e
-[`client_portal_access`](../supabase/migrations/20261008190000_client_portal_access.sql).
+[`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

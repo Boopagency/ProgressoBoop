@@ -48,7 +48,15 @@ respeitando as restrições abaixo.
 
 Detalhes que já enganaram o teste: o histórico junta as mudanças feitas pela
 mesma pessoa até 2 min depois de criar o item (`private.log_activity`); o aviso
-"Post excluído" repete o título do post.
+"Post excluído" repete o título do post; sem sessão, as rotas `/api/arquivos` e
+`/api/conteudo` levam ao `/login` (307), não a 401; o item do menu do cliente é
+"Excluir…"; o `id` do `PanelCard` fica no `h2`, não na `section`.
+
+Para testes que mexem no perfil ou nas imagens de um cliente, crie um cliente
+`E2E …` pelo SQL e exclua-o pela tela no fim: o app apaga os posts e os
+arquivos do Storage dele (não apague arquivos por SQL em `storage.objects`).
+Os scripts dos testes ficam no sandbox `boop-e2e` (`/vercel/p8`, `/vercel/p12`;
+login, senha e bypass vão por variável de ambiente, nunca no arquivo).
 
 ## Central de Conteúdo (em andamento)
 
@@ -56,8 +64,8 @@ Plano em 4 PRs (issues #2 a #5), um agente por vez, depois a fase 2.
 
 - [x] 1/4 — banco do conteúdo (#6, migration `20261008122847_content.sql`, tipos em #7)
 - [x] 2/4 — tela `/conteudo` com todos os clientes, quadro, 7 dias, post, tarefas das frentes, Hoje, Calendário e cliente (#8)
-- [ ] 3/4 — preview do feed e imagens (issue #4; notas da coordenação no comentário da issue). Sugestão: Opus, esforço alto, sessão nova.
-- [ ] 4/4 — ideias, modelos em Processos e busca (issue #5; notas da coordenação no comentário da issue). Pode rodar em paralelo com a 3/4: a divisão de arquivos está nos comentários das duas issues; o único conflito esperado é a visão nova em `filters.ts`/`content-view.tsx` (`ver=feed` × `ver=ideias`), resolvido por quem entrar depois.
+- [x] 3/4 — feed do Instagram por cliente e imagens (capa, slides, foto do cliente) no bucket `content` (#12, sem migration)
+- [ ] 4/4 — ideias, modelos em Processos e busca (issue #5; notas da coordenação nos comentários da issue, inclusive o que a 3/4 mudou). Ao trazer a `main`, o conflito esperado é a visão nova em `filters.ts`/`content-view.tsx`: manter `feed` e acrescentar `ideias`.
 - [ ] Fase 2 — portal do cliente: login criado pela equipe, RLS por cliente, `/portal` para ver o feed e aprovar posts.
 
 Correção fora do plano: rolagem lateral do Hoje no celular (#9).

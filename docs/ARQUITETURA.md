@@ -58,7 +58,7 @@ src/
 │   │   ├── calendario/         # "/calendario"
 │   │   ├── reunioes/           # "/reunioes" e "/reunioes/[id]" ("/segunda" redireciona)
 │   │   ├── clientes/           # "/clientes" e "/clientes/[id]" (?mes=aaaa-mm)
-│   │   ├── comunicacoes/       # "/comunicacoes" (?cliente=…)
+│   │   ├── comunicacoes/       # "/comunicacoes" (canais; ?canal=, ?cliente=, ?ver=pendentes)
 │   │   ├── decisoes/           # "/decisoes"
 │   │   ├── processos/          # "/processos" e "/processos/[id]"
 │   │   ├── financeiro/         # "/financeiro" (?mes=aaaa-mm) e as abas dre/, projecao/,
@@ -97,7 +97,10 @@ src/
 │   ├── activity/               # histórico (quem mudou o quê) e comentários
 │   ├── decisions/              # decisões: registro, lista, cartões de reunião,
 │   │                           # cliente e projeto
-│   ├── communications/         # comunicações com clientes (pedido → tarefa)
+│   ├── channels/               # Comunicações em canais: lista, conversa (atualiza a cada
+│   │                           # poucos segundos), pedido de ajuste → tarefa, chat do post,
+│   │                           # não lidas (barra lateral), quadros do Hoje e do cliente
+│   ├── communications/         # registros de contato com clientes (pedido → tarefa)
 │   ├── finance/                # receitas e despesas, recorrências, atrasados e a gestão
 │   │                           # (management.ts: DRE, MRR, projeção, divisão do resultado,
 │   │                           # receita necessária, inadimplência, fechamento)
@@ -747,6 +750,8 @@ página limpa do relatório para apresentar ou imprimir.
   - **Conteúdo**: posts atrasados, os que saem hoje e os que esperam o
     cliente (no Minhas, os da pessoa e os sem responsável); clicar abre o
     post;
+  - **Comunicações**: os pedidos de ajuste pendentes (o mais antigo
+    primeiro) e as mensagens não lidas; clicar abre os pendentes do canal;
   - **Financeiro em atraso**: quanto há a receber e a pagar vencido, com
     link para o Financeiro;
   - **Processos para revisar** (no Minhas, os da pessoa e os sem responsável);
@@ -867,8 +872,9 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - **Projetos** do cliente (com "Novo"), **Conteúdo** (posts por etapa, os
   próximos, "Post" já com o cliente e o link para
   `/conteudo?cliente=<id>`), **Tarefas** por prazo (e as concluídas nos
-  últimos 30 dias), **Comunicações** e **Reuniões** (próximas e recentes,
-  com "Nova reunião" já com o cliente).
+  últimos 30 dias), **Canal do cliente** (pendentes e últimas mensagens,
+  com o link para o canal), **Comunicações** (os registros de contato) e
+  **Reuniões** (próximas e recentes, com "Nova reunião" já com o cliente).
 - No cartão **Conteúdo**, **Feed** troca a lista pelo preview do Instagram do
   cliente (as primeiras quatro linhas do grid, com o link para o feed
   inteiro em `/conteudo?cliente=<id>&ver=feed`).
@@ -885,15 +891,27 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 
 ### Comunicações (`/comunicacoes`)
 
-- O que foi falado com os clientes, do mais recente para o mais antigo
-  (Hoje, Ontem, Esta semana, Semana passada, meses): tipo (Pedido,
-  Aprovação, Feedback, Atualização, Outro), canal (WhatsApp, e-mail,
-  ligação, reunião), cliente, projeto e quem registrou.
-- Busca, filtro por cliente e por tipo. O cabeçalho conta os pedidos que
-  ainda não viraram tarefa.
-- **Registrar**: resumo, detalhes, cliente, projeto, canal e data. Um pedido
-  **vira tarefa** num clique (cliente e projeto junto, ligada à
-  comunicação).
+Canais estilo Slack, só para a equipe por enquanto (o cliente entra na fase 3
+do portal).
+
+- À esquerda, os canais: **Clientes** (um "Alterações – cliente" por
+  cliente), **Canais** por assunto (só quem participa) e **Conversas**
+  diretas; cada um com as não lidas e os pedidos de ajuste pendentes. Os
+  arquivados e os de clientes inativos ficam recolhidos.
+- À direita, a conversa: mensagens por dia, as seguidas da mesma pessoa
+  juntas, o cartão do post nas mensagens que falam de um post, e o campo de
+  escrever (Enter envia; no canal de cliente, "Pedido de ajuste").
+- Cada mensagem: **Virar tarefa** (cliente, post e projeto do post junto),
+  **Resolver**/**Reabrir**, marcar como pedido de ajuste e, nas próprias,
+  editar e apagar. Aba **Pendentes**: os pedidos ainda não resolvidos.
+- No canal de cliente, os registros de `communications` entram no fio como
+  itens (abrem o diálogo de antes, com "Virar tarefa"); **Registrar
+  contato** fica no menu do canal e `?novo=` (busca geral) também abre.
+- Menu do canal: arquivar; nos internos, nome e participantes, sair e
+  excluir. **Nova conversa** abre (ou cria) a conversa direta com a pessoa.
+- Endereços: `?canal=<id>`, `?cliente=<id>` (o canal do cliente; com `q=`,
+  já busca nele, como vem da busca geral) e `&ver=pendentes`. No celular, a
+  lista e a conversa são telas separadas.
 
 ### Decisões (`/decisoes`)
 
@@ -1043,9 +1061,11 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   design e vídeo; **capa** e "Fixar no topo do feed"; os textos conforme o
   formato (`FORMAT_TEMPLATES`): conteúdo/ideia, orientação de design ou de
   vídeo, slides (carrossel, até 20, com texto e imagem), roteiro, legenda e
-  o link do Drive; **Tarefas das frentes**;
-  histórico e comentários; excluir com confirmação. Salvar envia só os
-  campos que mudaram.
+  o link do Drive; **Tarefas das frentes**; excluir com confirmação. Salvar
+  envia só os campos que mudaram. Na lateral direita, duas abas:
+  **Cliente** (o chat do post: as mensagens do canal do cliente com aquele
+  `post_id`) e **Interno** (histórico e comentários). No celular, "Post" e
+  "Conversa" são abas.
 - **Gerar tarefas**: uma tarefa por frente que falta ("Copy — <título>"),
   ligada ao post (`content_post_id`), ao cliente e ao projeto, área
   Clientes, com responsáveis (o do post, por padrão) e prazo antes da
@@ -1154,7 +1174,10 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `ProjectsView` / `ProjectView` / `ProjectDialog` | lista, página e criação de projetos (modelos, repetir, checklist) |
 | `ActivityFeed`       | histórico em frases ("mudou o prazo de 10/10 para 12/10") + comentários |
 | `DecisionsView` / `DecisionsCard` / `DecisionDialog` | decisões: tela, cartão (reunião, cliente, projeto) e registro |
-| `CommunicationsView` / `CommunicationsCard` / `CommunicationDialog` | comunicações: tela, cartão (cliente, projeto), registro e "Virar tarefa" |
+| `CommunicationsCard` / `CommunicationDialog` | registros de contato: cartão (cliente, projeto), registro e "Virar tarefa" |
+| `ChannelsView` / `Conversation` / `ChannelDialog` | Comunicações: lista de canais, conversa (fio, pendentes, busca, menu) e novo canal, conversa direta, nome e participantes |
+| `ThreadView` / `MessageItem` / `Composer` / `useThread` | o fio por dia, a mensagem (post, tarefa, resolver, editar) e o campo de escrever; `useThread` busca de novo a cada poucos segundos |
+| `PostSidePanel` / `ClientChannelCard` / `TodayRequestsCard` / `UnreadProvider` | chat do post (Cliente/Interno), canal na página do cliente, quadro do Hoje e as não lidas da barra lateral |
 | `FinanceView` / `FinanceRows` / `FinanceDialog` | financeiro do mês, linhas com recebido/pago otimista, lançamento e recorrência |
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
 | `FinanceShell`       | cabeçalho e abas do Financeiro; o diálogo de lançamento compartilhado (`useFinanceDialog`) |
@@ -1351,6 +1374,16 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     `/conteudo?cliente=<id>&ver=ideias&ideia=<id>`, como `?post=` abre o
     post.
 
+22. **Conversa sem Realtime nem Supabase no navegador.** A conversa aberta
+    (canal ou chat do post) chama uma Server Action com a sessão da pessoa
+    a cada 4 segundos, com a aba visível (e ao voltar para ela); só a
+    resposta mais nova vale, e a mensagem enviada aparece na hora. A lista
+    de canais pergunta as contagens a cada 15 segundos e a barra lateral, a
+    cada 30 (`channel_counts()`). Escrever, editar e resolver não recarregam
+    o app (o fio busca de novo); criar tarefa e mudar canais recarregam.
+    Lido = a hora da mensagem mais nova que a pessoa viu, enviada como veio
+    do banco (microssegundos).
+
 ## 11. Plano de implementação
 
 ### Etapa 1 — protótipo visual ✅
@@ -1472,7 +1505,8 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ## 13. Fora do escopo (por enquanto)
 
-Chat, portal do cliente, emissão de nota fiscal, conciliação bancária
+Chat com o cliente (os canais são só da equipe até a fase 3 do portal),
+portal do cliente, tempo real, emissão de nota fiscal, conciliação bancária
 automática (o fechamento confere o saldo com o extrato à mão), aprovações
 formais, IA, notificações, automações, integrações (WhatsApp, e-mail, banco,
 gateway de pagamento), permissões por cargo, várias moedas e importação de

@@ -30,6 +30,10 @@ export type DecisionStatus = "active" | "revoked"
 /** Atualização, Pedido, Aprovação, Feedback ou Outro. */
 export type CommunicationKind = "update" | "request" | "approval" | "feedback" | "other"
 export type CommunicationChannel = "whatsapp" | "email" | "call" | "meeting" | "other"
+/** Canal de cliente (um por cliente), interno (por assunto) ou conversa direta. */
+export type ChannelKind = "client" | "internal" | "direct"
+/** Mensagem, Pedido de ajuste, Aprovação ou aviso do sistema. */
+export type MessageKind = "text" | "change_request" | "approval" | "system"
 /** Receita ou despesa. */
 export type FinanceKind = "income" | "expense"
 /**
@@ -326,6 +330,37 @@ export interface Communication {
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp
+}
+
+/** Canal de conversa da equipe (Comunicações). */
+export interface Channel {
+  id: string
+  kind: ChannelKind
+  /** Só nos canais de cliente. */
+  client_id: string | null
+  /** "Alterações – <cliente>" ou o assunto; vazio na conversa direta. */
+  name: string | null
+  archived: boolean
+  created_by: string | null
+  created_at: Timestamp
+}
+
+/** Mensagem de um canal. No canal de cliente, pode falar de um post. */
+export interface Message {
+  id: string
+  channel_id: string
+  post_id: string | null
+  /** Conta do Auth (na fase 3, também a do cliente); vazio se a conta saiu. */
+  author_id: string | null
+  kind: MessageKind
+  body: string
+  /** Pedido de ajuste resolvido: quando e por quem. */
+  resolved_at: Timestamp | null
+  resolved_by: string | null
+  /** Tarefa em que o pedido virou. */
+  task_id: string | null
+  created_at: Timestamp
+  edited_at: Timestamp | null
 }
 
 /** Lançamento de receita ou despesa (avulso ou um mês de uma recorrência). */

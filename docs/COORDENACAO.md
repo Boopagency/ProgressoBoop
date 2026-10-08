@@ -57,10 +57,20 @@ Plano em 4 PRs (issues #2 a #5), um agente por vez, depois a fase 2.
 - [x] 1/4 — banco do conteúdo (#6, migration `20261008122847_content.sql`, tipos em #7)
 - [x] 2/4 — tela `/conteudo` com todos os clientes, quadro, 7 dias, post, tarefas das frentes, Hoje, Calendário e cliente (#8)
 - [ ] 3/4 — preview do feed e imagens (issue #4; notas da coordenação no comentário da issue). Sugestão: Opus, esforço alto, sessão nova.
-- [ ] 4/4 — ideias, modelos em Processos e busca (issue #5)
+- [ ] 4/4 — ideias, modelos em Processos e busca (issue #5; notas da coordenação no comentário da issue). Pode rodar em paralelo com a 3/4: a divisão de arquivos está nos comentários das duas issues; o único conflito esperado é a visão nova em `filters.ts`/`content-view.tsx` (`ver=feed` × `ver=ideias`), resolvido por quem entrar depois.
 - [ ] Fase 2 — portal do cliente: login criado pela equipe, RLS por cliente, `/portal` para ver o feed e aprovar posts.
 
 Correção fora do plano: rolagem lateral do Hoje no celular (#9).
+
+## Acesso da sessão de coordenação
+
+A coordenação precisa dos conectores do **Supabase** (SQL, migrations,
+tipos, Storage) e da **Vercel** (prévia, bypass, sandbox `boop-e2e`) para os
+passos 3 a 5 do roteiro. Antes de revisar um PR, confira se a sessão os tem;
+sem eles, dá para ler o diff, conferir o CI e comentar, mas não testar na
+prévia, aplicar migration nem validar em produção — nesse caso, não fazer o
+merge de PR que muda o app (PR só de docs pode entrar com o CI verde) e
+pedir à pessoa uma sessão com os conectores.
 
 ## Pendências com a pessoa
 

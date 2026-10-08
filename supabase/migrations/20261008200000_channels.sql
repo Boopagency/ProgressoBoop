@@ -169,7 +169,10 @@ begin
   end if;
   new.kind := old.kind;
   new.client_id := old.client_id;
-  new.created_by := old.created_by;
+  -- Autor apagado (on delete set null, vindo do banco): deixa ficar vazio.
+  if not (pg_trigger_depth() > 1 and new.created_by is null) then
+    new.created_by := old.created_by;
+  end if;
   new.created_at := old.created_at;
   if new.kind = 'client' and pg_trigger_depth() = 1 then
     new.name := old.name;
@@ -273,7 +276,10 @@ begin
   if tg_op = 'UPDATE' then
     new.id := old.id;
     new.channel_id := old.channel_id;
-    new.author_id := old.author_id;
+    -- Conta apagada (on delete set null, vindo do banco): deixa ficar vazio.
+    if not (pg_trigger_depth() > 1 and new.author_id is null) then
+      new.author_id := old.author_id;
+    end if;
     new.created_at := old.created_at;
     -- Ajustes do próprio banco (post trocado de cliente, tarefa concluída)
     -- passam direto.
@@ -315,7 +321,9 @@ begin
     new.resolved_by := (select auth.uid());
   else
     new.resolved_at := old.resolved_at;
-    new.resolved_by := old.resolved_by;
+    if not (pg_trigger_depth() > 1 and new.resolved_by is null) then
+      new.resolved_by := old.resolved_by;
+    end if;
   end if;
   return new;
 end;

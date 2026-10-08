@@ -15,6 +15,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -23,6 +24,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useUnread } from "@/features/channels/unread-provider"
 import { sameQuery } from "@/features/tasks/filters"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 
@@ -31,6 +33,7 @@ export function AppSidebar() {
   const searchParams = useSearchParams()
   const { savedViews } = useWorkspace()
   const { isMobile, setOpenMobile } = useSidebar()
+  const { unread } = useUnread()
 
   // No celular a sidebar é um Sheet: fecha ao navegar.
   const closeOnMobile = () => {
@@ -82,6 +85,14 @@ export function AppSidebar() {
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {item.href === "/comunicacoes" && unread > 0 ? (
+                      <SidebarMenuBadge
+                        aria-label={`${unread} ${unread === 1 ? "mensagem não lida" : "mensagens não lidas"}`}
+                        className="rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[active=true]/menu-button:text-brand-navy"
+                      >
+                        {unread > 99 ? "99+" : unread}
+                      </SidebarMenuBadge>
+                    ) : null}
                     {item.href === "/tarefas" && savedViews.length > 0 ? (
                       <SidebarMenuSub className="mr-0 pr-0">
                         {savedViews.slice(0, 8).map((view) => (

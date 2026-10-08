@@ -82,6 +82,9 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   - **Revisões de clientes** do mês por fazer (2.13);
   - **Conteúdo:** posts atrasados, os que saem hoje e os que esperam o
     cliente aprovar (até 6; clicar abre o post, 2.26);
+  - **Comunicações:** os pedidos de ajuste pendentes, o mais antigo
+    primeiro (até 5; clicar abre os pendentes do canal, 2.18), e quantas
+    mensagens estão sem ler;
   - **Financeiro em atraso:** quanto há a receber e a pagar vencido, com
     link para o Financeiro (2.20);
   - **Processos para revisar:** os marcados para revisar ou com a revisão
@@ -101,7 +104,7 @@ cumprir um combinado e pôr um assunto na pauta da próxima reunião.
 processos seguem o filtro Minhas/Todas. No Minhas aparecem os combinados da
 pessoa e os da "Equipe", e os processos dela e os sem responsável. Os
 projetos em foco (além do "suas: X de Y"), as revisões de clientes, o
-financeiro e a gestão não seguem o filtro. O quadro Conteúdo segue: no
+financeiro, a gestão e as comunicações não seguem o filtro. O quadro Conteúdo segue: no
 Minhas, os posts da pessoa e os sem responsável.
 
 ### 2.3 Tarefas (`/tarefas`)
@@ -299,7 +302,10 @@ segunda, 07:00).
   o modelo e o título já escolhidos.
 - **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
   recolhidas; **Tarefa** no topo cria uma já com o cliente.
-- **Comunicações** recentes com o cliente e **Registrar** (2.18).
+- **Canal do cliente:** os pedidos de ajuste pendentes e as últimas
+  mensagens do canal "Alterações – cliente", com **Abrir** (2.18).
+- **Comunicações** recentes com o cliente (os registros de contato) e
+  **Registrar** (2.18).
 - **Reuniões** com o cliente (próximas e recentes) e **Nova reunião**, que já
   vem com o cliente escolhido.
 - Na lateral: **Sobre o cliente** (contato com link de e-mail e de
@@ -455,7 +461,8 @@ passo), checklists, políticas (regras combinadas) e guias.
   novo".
 - **Endereço inexistente:** "Página não encontrada".
 - **Mudanças de outra pessoa:** aparecem ao navegar ou recarregar. Não há
-  atualização em tempo real.
+  atualização em tempo real; a exceção é a conversa aberta em Comunicações
+  (e no chat do post), que pergunta ao servidor a cada 4 segundos (2.18).
 - **Buscadores:** o portal não é indexado.
 
 ### 2.16 Projetos (`/projetos`)
@@ -508,23 +515,52 @@ visual da Hertmann) ou de um ciclo interno ("Estruturação da Boop até
 
 ### 2.18 Comunicações (`/comunicacoes`)
 
-O que foi falado com cada cliente: pedidos, aprovações, retornos e
-atualizações. Serve para não perder um pedido feito no WhatsApp e para saber,
-depois, quem aprovou o quê.
+A conversa da equipe em canais, como no Slack (por enquanto, só a equipe; o
+cliente entra na fase 3 do portal).
 
-- **Lista** do mais recente para o mais antigo, em grupos (Hoje, Ontem, Esta
-  semana, Semana passada e por mês). Cada item mostra o canal (WhatsApp,
-  e-mail, ligação, reunião), o tipo (Pedido, Aprovação, Feedback,
-  Atualização, Outro), a data, o cliente, o projeto, quem registrou e se
-  "virou tarefa".
-- O cabeçalho avisa quantos **pedidos ainda não viraram tarefa**.
-- **Busca** (resumo e detalhes), **filtro por cliente** e **por tipo**.
-- **Registrar:** tipo, resumo (o que foi dito, em uma linha), detalhes,
-  cliente (obrigatório), projeto, canal e data (padrão: hoje).
-- **Virar tarefa:** cria a tarefa com o resumo, o cliente e o projeto,
-  ligada à comunicação.
-- Também aparecem na página do cliente e na do projeto, com "Registrar" já
-  ligado a eles.
+- **Lista de canais** à esquerda:
+  - **Clientes:** todo cliente tem o canal "Alterações – cliente", criado
+    sozinho quando o cliente é cadastrado (os que já existiam ganharam o
+    deles). O nome acompanha o do cliente; clientes inativos vão para
+    "Arquivados";
+  - **Canais:** por assunto (ex.: "Financeiro"), só para quem participa.
+    **+** cria um canal com nome e participantes;
+  - **Conversas:** diretas, entre duas pessoas (uma conversa por par). **+**
+    escolhe a pessoa;
+  - em cada canal, as **não lidas** (na cor da marca) e os **pedidos de
+    ajuste pendentes** (em laranja). A lista se atualiza a cada 15 segundos.
+- **Conversa** à direita: as mensagens por dia, quem escreveu e a hora
+  (mensagens seguidas da mesma pessoa ficam juntas), links clicáveis e
+  "(editada)". A conversa aberta se atualiza sozinha a cada 4 segundos e
+  marca o canal como lido enquanto a pessoa olha.
+- **Escrever:** Enter envia, Shift + Enter quebra a linha. No canal de
+  cliente, **Pedido de ajuste** marca a mensagem como pedido (fica
+  pendente).
+- **Mensagem com post:** o que é escrito no chat do post (2.26) aparece no
+  canal do cliente com o cartão do post (capa, título, etapa e data);
+  clicar no cartão abre o post.
+- **Em cada mensagem** (menu "…"): **Virar tarefa** (título, responsáveis e
+  prazo; a tarefa vem com o cliente, o post e o projeto do post),
+  **Resolver**/**Reabrir o pedido**, **Marcar como pedido de ajuste** (ou
+  "Não é pedido de ajuste"), e **Editar** e **Apagar** nas próprias.
+  Concluir a tarefa de um pedido o resolve; reabrir a tarefa o deixa
+  pendente de novo.
+- **Pendentes** (aba no topo do canal): todos os pedidos de ajuste ainda
+  não resolvidos do canal, com o post e a tarefa.
+- **Buscar** (lupa): nas mensagens carregadas e nos registros do canal.
+- **Registros antigos:** no canal do cliente, as comunicações registradas
+  antes (e as que forem registradas) aparecem no fio como itens
+  tracejados, no dia em que aconteceram; clicar abre o registro (editar,
+  virar tarefa, excluir). **Registrar contato** fica no menu do canal.
+- **Menu do canal:** arquivar e desarquivar (canal arquivado não recebe
+  mensagem nova); nos canais por assunto, também nome e participantes,
+  sair e excluir (com confirmação).
+- Sem um canal aberto, a tela mostra os canais com pedidos pendentes e com
+  mensagens não lidas.
+- A barra lateral mostra quantas mensagens estão sem ler (atualiza a cada
+  30 segundos).
+- Links: `?canal=<id>` abre um canal, `?cliente=<id>` abre o do cliente e
+  `&ver=pendentes` abre os pendentes.
 
 ### 2.19 Decisões (`/decisoes`)
 
@@ -789,8 +825,13 @@ juntos**, sem entrar cliente por cliente.
     Vêm marcadas as frentes que ainda não têm tarefa. As tarefas aparecem em
     Tarefas, no Hoje e no Calendário como qualquer outra, e o painel delas
     tem "ver post";
-  - **histórico e comentários** e **excluir** (com confirmação; as imagens
-    são apagadas e as tarefas geradas continuam, sem o vínculo).
+  - **excluir** (com confirmação; as imagens são apagadas e as tarefas
+    geradas continuam, sem o vínculo);
+  - **lateral direita** com duas abas: **Cliente**, o chat do post (o mesmo
+    fio do canal do cliente, só as mensagens deste post, com pedido de
+    ajuste, virar tarefa e resolver; o número mostra os pendentes) e
+    **Interno**, o histórico e os comentários da equipe. No celular, "Post"
+    e "Conversa" viram abas no topo.
 - **Regra importante:** atrasado é o post cujo dia de publicação já passou
   e que ainda não está programado nem publicado. Falta material é qualquer
   frente com essa situação.
@@ -870,6 +911,7 @@ O fuso é o de São Paulo e a semana vai de segunda a domingo.
 | Visões salvas | as que a equipe criar | criar, atualizar, renomear, excluir | — |
 | Decisões | as que a equipe registrar | tudo (inclusive revogar) | — |
 | Comunicações | as que a equipe registrar | tudo (inclusive virar tarefa) | — |
+| Canais e mensagens | um canal por cliente (criado sozinho) e os da equipe | escrever, editar e apagar as próprias, virar tarefa, resolver, criar canais e conversas, arquivar | — |
 | Financeiro | lançamentos e recorrências que a equipe registrar | tudo | — |
 | Parâmetros do financeiro | os da planilha (alíquota 6% a confirmar, caixa mínimo de 3 meses, 20% caixa, 10% reinvestimento, 3 sócios, alvo de R$ 5.000) | editar em Financeiro → Parâmetros | — |
 | Fechamentos | os meses que a equipe fechar | fechar e reabrir o último | — |
@@ -940,7 +982,11 @@ como visão salva).
 - O Excel não leva gráficos (os números e as fórmulas, sim); os gráficos
   estão no relatório para apresentar.
 - Visões salvas só existem na tela Tarefas.
-- Não há atualização em tempo real (2.15).
+- Não há atualização em tempo real (2.15). A conversa aberta pergunta ao
+  servidor a cada 4 segundos; as não lidas da barra lateral, a cada 30.
+- Canais: sem menção (@pessoa), sem anexos e sem aviso fora do app. A busca
+  do canal procura nas mensagens carregadas (as mais recentes e as de "Ver
+  mensagens anteriores"); mensagens não entram na busca geral.
 - A recorrência é só semanal e sempre da série inteira: não dá para pular uma
   segunda de feriado.
 - Na visão Mês, clicar no dia não cria evento.
@@ -1031,7 +1077,7 @@ são uma sugestão para começar.
 | Projetos (lista, página, modelos, progresso) | `src/features/projects/` (`templates.ts` modelos, `logic.ts` regras), `src/app/(app)/projetos/` |
 | Histórico e comentários | `src/features/activity/` (`logic.ts` frases), triggers em `supabase/migrations/20261007144504_activity.sql` |
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
-| Comunicações | `src/features/communications/`, `src/app/(app)/comunicacoes/` |
+| Comunicações (canais, mensagens, chat do post, não lidas) | `src/features/channels/` (`logic.ts` regras, `use-thread.ts` atualização, `actions.ts`), `src/app/(app)/comunicacoes/`; registros de contato em `src/features/communications/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |
 | Comercial (funil, negócios, ganhar) | `src/features/deals/` (`logic.ts` regras), função `win_deal` em `supabase/migrations/20261007212513_win_deal.sql` |

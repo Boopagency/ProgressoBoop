@@ -81,6 +81,110 @@ export type Database = {
           },
         ]
       }
+      channel_members: {
+        Row: {
+          channel_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_reads: {
+        Row: {
+          channel_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_reads_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          archived: boolean
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: Database["public"]["Enums"]["channel_kind"]
+          name: string | null
+        }
+        Insert: {
+          archived?: boolean
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["channel_kind"]
+          name?: string | null
+        }
+        Update: {
+          archived?: boolean
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["channel_kind"]
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_reviews: {
         Row: {
           checklist: Json
@@ -1334,6 +1438,70 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          channel_id: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          post_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          task_id: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          channel_id: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          post_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          task_id?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          channel_id?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          post_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       objectives: {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
@@ -1741,6 +1909,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      channel_counts: {
+        Args: never
+        Returns: {
+          channel_id: string
+          last_message_at: string
+          pending: number
+          unread: number
+        }[]
+      }
+      open_direct_channel: { Args: { profile_id: string }; Returns: string }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
         Returns: string
@@ -1761,6 +1939,7 @@ export type Database = {
     }
     Enums: {
       activity_action: "created" | "updated" | "deleted" | "comment"
+      channel_kind: "client" | "internal" | "direct"
       client_health: "healthy" | "attention" | "at_risk"
       communication_channel: "whatsapp" | "email" | "call" | "meeting" | "other"
       communication_kind:
@@ -1834,6 +2013,7 @@ export type Database = {
         | "other"
       meeting_item_kind: "topic" | "agreement"
       meeting_status: "scheduled" | "done" | "canceled"
+      message_kind: "text" | "change_request" | "approval" | "system"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -1972,6 +2152,7 @@ export const Constants = {
   public: {
     Enums: {
       activity_action: ["created", "updated", "deleted", "comment"],
+      channel_kind: ["client", "internal", "direct"],
       client_health: ["healthy", "attention", "at_risk"],
       communication_channel: ["whatsapp", "email", "call", "meeting", "other"],
       communication_kind: [
@@ -2046,6 +2227,7 @@ export const Constants = {
       ],
       meeting_item_kind: ["topic", "agreement"],
       meeting_status: ["scheduled", "done", "canceled"],
+      message_kind: ["text", "change_request", "approval", "system"],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [
         "commercial",

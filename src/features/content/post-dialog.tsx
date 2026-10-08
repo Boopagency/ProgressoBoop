@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { loadActivity } from "@/features/activity/actions"
 import { ActivityFeed } from "@/features/activity/activity-feed"
+import { PostSidePanel } from "@/features/channels/post-side-panel"
 import { createFrontTasks, createPost, deletePost, loadPost, updatePost } from "@/features/content/actions"
 import { ContentImage, ImagePick } from "@/features/content/content-image"
 import { discardUploads, uploadContentImage } from "@/features/content/image-upload"
@@ -111,7 +112,10 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-[3%] max-h-[94svh] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[5%] sm:max-w-[760px]"
+        className={cn(
+          "top-[3%] max-h-[94svh] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[5%] sm:max-w-[760px]",
+          state.post && "lg:top-[3%] lg:max-w-[1160px]"
+        )}
       >
         <DialogTitle className="sr-only">{state.post ? "Post" : "Novo post"}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -286,6 +290,8 @@ function PostForm({
   const [activity, setActivity] = useState<ActivityEntry[] | null>(null)
   const [activityVersion, setActivityVersion] = useState(0)
   const [uploading, setUploading] = useState<ImageTarget[]>([])
+  // No celular, o post e a conversa dividem a tela por abas; no computador, lado a lado.
+  const [pane, setPane] = useState<"post" | "chat">("post")
   const [isPending, startTransition] = useTransition()
   // Imagens enviadas com o post aberto e ainda não salvas: se o post fechar
   // sem salvar (ou a imagem for trocada antes), saem do Storage.
@@ -480,9 +486,9 @@ function PostForm({
   const linkedTasks = post ? tasks.filter((task) => task.content_post_id === post.id) : []
   const drive = fields.drive_url.trim()
 
-  return (
+  const form = (
     <form
-      className="flex max-h-[94svh] flex-col"
+      className={cn("flex max-h-[94svh] min-h-0 flex-col", post && "lg:max-h-none lg:flex-1", post && pane === "chat" && "max-lg:hidden")}
       onSubmit={(event) => {
         event.preventDefault()
         submit()
@@ -858,22 +864,6 @@ function PostForm({
           </section>
         ) : null}
 
-        {post ? (
-          <section aria-label="Histórico e comentários" className="mt-5 border-t pt-4">
-            <h3 className="text-xs font-medium text-muted-foreground">Histórico e comentários</h3>
-            {activity ? (
-              <ActivityFeed
-                entries={activity}
-                target={{ type: "content_post", id: post.id }}
-                onChanged={() => setActivityVersion((value) => value + 1)}
-                limit={8}
-                className="mt-2"
-              />
-            ) : (
-              <p className="mt-2 text-xs text-muted-foreground">Carregando…</p>
-            )}
-          </section>
-        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/40 px-5 py-3">
@@ -925,6 +915,52 @@ function PostForm({
         </AlertDialogContent>
       </AlertDialog>
     </form>
+  )
+
+  if (!post) return form
+
+  return (
+    <div className="flex max-h-[94svh] flex-col lg:h-[94svh] lg:flex-row">
+      <div role="tablist" aria-label="Post ou conversa" className="flex shrink-0 gap-1 border-b px-3 pt-2 lg:hidden">
+        {(
+          [
+            ["post", "Post"],
+            ["chat", "Conversa"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={pane === value}
+            onClick={() => setPane(value)}
+            className={cn(
+              "-mb-px h-9 border-b-2 px-3 text-[13px] transition-colors",
+              pane === value ? "border-brand font-medium text-foreground" : "border-transparent text-muted-foreground"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {form}
+      <PostSidePanel
+        postId={post.id}
+        className={cn("h-[85svh] lg:h-auto lg:w-[400px] lg:shrink-0 lg:border-l", pane === "post" && "max-lg:hidden")}
+        internal={
+          activity ? (
+            <ActivityFeed
+              entries={activity}
+              target={{ type: "content_post", id: post.id }}
+              onChanged={() => setActivityVersion((value) => value + 1)}
+              emptyText="Nada registrado ainda. Comentários da equipe ficam aqui; o cliente não vê."
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground">Carregando…</p>
+          )
+        }
+      />
+    </div>
   )
 }
 

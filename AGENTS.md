@@ -11,6 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Boop Admin — convenções do projeto
 
 - Contexto, schema, RLS e infraestrutura: `docs/ARQUITETURA.md`. Como rodar: `README.md`.
+- Coordenação dos agentes (roteiro de revisão, andamento, pendências): `docs/COORDENACAO.md`.
 - Interface em português (pt-BR); código, tabelas e valores de enum em inglês
   (rótulos em `src/lib/labels.ts`).
 - Datas sempre por `src/lib/dates.ts`: fuso America/Sao_Paulo, semana de segunda

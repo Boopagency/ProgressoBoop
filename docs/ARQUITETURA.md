@@ -195,7 +195,7 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
 [`content`](../supabase/migrations/20261008122847_content.sql),
 [`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql) e
-[`channels`](../supabase/migrations/20261008200000_channels.sql).
+[`channels`](../supabase/migrations/20261008195016_channels.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

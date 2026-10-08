@@ -19,7 +19,8 @@ type Tab = "client" | "internal"
 /**
  * Lateral do post: "Cliente" é o chat do post (o mesmo fio do canal do
  * cliente, só as mensagens deste post) e "Interno" é o histórico com os
- * comentários da equipe.
+ * comentários da equipe. O cliente lê a aba "Cliente" no portal; o campo só
+ * libera depois de a conversa carregar (antes disso não há canal para enviar).
  */
 export function PostSidePanel({ postId, internal, className }: { postId: string; internal: ReactNode; className?: string }) {
   const [tab, setTab] = useState<Tab>("client")
@@ -95,8 +96,8 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
             scrollToEndKey={sentCount}
             empty={
               <p className="px-6 py-12 text-center text-[13px] text-muted-foreground">
-                Nenhuma mensagem sobre este post ainda. O que for escrito aqui aparece no canal do cliente, com o cartão
-                do post.
+                Nenhuma mensagem sobre este post ainda. O que for escrito aqui vai para o canal do cliente, com o cartão
+                do post, e o cliente lê quando o post chegar a ele.
               </p>
             }
             renderItem={(item) =>
@@ -112,11 +113,23 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
               ) : null
             }
           />
+          <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
+            O cliente lê esta conversa (inclusive o que foi escrito antes). Assunto só da equipe vai em Interno.
+          </p>
           <Composer
             onSend={send}
             allowRequest
-            placeholder="Escreva sobre este post…"
-            disabledText={thread.messages !== null && !channelId ? "Este cliente ainda não tem canal." : null}
+            placeholder="Escreva para o cliente sobre este post…"
+            disabledText={
+              thread.messages === null
+                ? thread.error
+                  ? "Não foi possível carregar a conversa."
+                  : "Carregando a conversa…"
+                : !channelId
+                  ? "Este cliente ainda não tem canal."
+                  : null
+            }
+            className="border-t-0"
           />
         </>
       ) : (

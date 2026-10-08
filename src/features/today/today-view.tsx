@@ -120,7 +120,7 @@ export function TodayView({
         Celular: resumo → progresso → listas → agenda.
         Desktop: listas à esquerda; progresso e agenda na coluna da direita.
       */}
-      <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <ProgressCard
           focus={focus}
           week={week}

@@ -47,10 +47,13 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
 - Mensagens de erro:
   - "E-mail ou senha incorretos."
   - "Muitas tentativas. Aguarde um pouco e tente de novo."
-  - "Esta conta não tem acesso ao Boop Admin." (conta sem perfil de equipe)
+  - "Esta conta não tem acesso ao Boop Admin." (conta sem perfil de equipe
+    e sem acesso de cliente)
 - Não há "Criar conta" nem "Esqueci minha senha".
-- Depois de entrar, a pessoa vai para Hoje. Quem já está logado e abre
-  `/login` também vai para Hoje.
+- Depois de entrar, a equipe vai para Hoje e uma conta de cliente vai para
+  o portal (`/portal`). Quem já está logado e abre `/login` vai para a sua
+  tela inicial; uma conta de cliente que abre uma tela da equipe volta para
+  o portal.
 
 ### 2.2 Hoje (`/hoje`, tela inicial)
 
@@ -835,6 +838,26 @@ juntos**, sem entrar cliente por cliente.
 - **Regra importante:** atrasado é o post cujo dia de publicação já passou
   e que ainda não está programado nem publicado. Falta material é qualquer
   frente com essa situação.
+
+### 2.27 Portal do cliente (`/portal`)
+
+A área em que a pessoa de um cliente entra com a própria conta e vê só o
+que é daquele cliente. Layout próprio (sem a barra lateral da equipe),
+pensado para o celular.
+
+- **Nesta fase:** a saudação com o nome de quem acessa e o nome do cliente,
+  um seletor quando a conta acompanha mais de um cliente e o aviso do que
+  vem a seguir (calendário e feed dos posts, aprovar ou pedir ajuste e o
+  chat de cada peça). "Sair" no topo.
+- **Acesso do cliente** (página do cliente, coluna da direita): quem do
+  cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
+  e-mail de uma conta já criada no Supabase (Authentication → Users → Add
+  user, com senha e "Auto Confirm User"; "Invite user" ainda não serve,
+  porque o app não recebe o link do convite e a pessoa ficaria sem senha);
+  e-mail sem conta ou de alguém da equipe é recusado com uma
+  mensagem clara. O "x" tira o acesso (com confirmação); a conta continua
+  no Supabase.
+- Cliente desativado some do portal de quem o acompanhava.
 
 ## 3. Regras: como os números são calculados
 

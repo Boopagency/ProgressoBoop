@@ -59,6 +59,8 @@ import { ClientDealsCard } from "@/features/deals/client-deals-card"
 import { ClientFinanceCard } from "@/features/finance/finance-cards"
 import type { FinanceData } from "@/features/finance/management"
 import { MeetingLink } from "@/features/meetings/open-meeting"
+import type { ClientMember } from "@/features/portal/access-queries"
+import { ClientAccessCard } from "@/features/portal/client-access-card"
 import { ClientProjectsCard } from "@/features/projects/client-projects-card"
 import { dayContext, firstName, groupTasks, TASK_GROUP_LABEL, type TaskGroupKey } from "@/features/tasks/logic"
 import { useNewTask } from "@/features/tasks/new-task-dialog"
@@ -96,6 +98,7 @@ export function ClientView({
   deals,
   posts,
   ideas,
+  members,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -115,6 +118,8 @@ export function ClientView({
   posts: PostSummary[]
   /** Banco de ideias do cliente. */
   ideas: ContentIdea[]
+  /** Quem do cliente tem acesso ao portal. */
+  members: ClientMember[]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -264,6 +269,7 @@ export function ClientView({
         </div>
         <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
           <AboutCard client={client} />
+          <ClientAccessCard clientId={client.id} clientName={client.name} members={members} />
           <ClientFinanceCard clientId={client.id} finance={finance} today={today} />
           <ClientDealsCard clientId={client.id} deals={deals} today={today} />
           <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />

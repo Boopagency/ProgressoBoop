@@ -185,6 +185,51 @@ export type Database = {
           },
         ]
       }
+      client_members: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          email: string
+          full_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string
+          email: string
+          full_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          email?: string
+          full_name?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_members_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_reviews: {
         Row: {
           checklist: Json
@@ -1918,7 +1963,24 @@ export type Database = {
           unread: number
         }[]
       }
+      link_client_member: {
+        Args: {
+          member_email: string
+          member_name: string
+          target_client: string
+        }
+        Returns: string
+      }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
+      portal_my_clients: {
+        Args: never
+        Returns: {
+          avatar_path: string
+          client_id: string
+          client_name: string
+          member_name: string
+        }[]
+      }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
         Returns: string
@@ -2242,3 +2304,4 @@ export const Constants = {
     },
   },
 } as const
+

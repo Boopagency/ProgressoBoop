@@ -2,6 +2,12 @@ import type {
   ClientHealth,
   CommunicationChannel,
   CommunicationKind,
+  ContentFormat,
+  ContentFront,
+  ContentFrontStatus,
+  ContentIntent,
+  ContentNetwork,
+  ContentStage,
   DealStage,
   DecisionStatus,
   DocKind,
@@ -234,6 +240,111 @@ export const METRIC_UNIT_LABEL: Record<MetricUnit, string> = {
 
 export function isMetricUnit(value: unknown): value is MetricUnit {
   return METRIC_UNITS.includes(value as MetricUnit)
+}
+
+export const CONTENT_FORMATS = [
+  "reels",
+  "carousel",
+  "static",
+  "stories",
+  "video",
+  "photo",
+  "text",
+] as const satisfies readonly ContentFormat[]
+export const CONTENT_FORMAT_LABEL: Record<ContentFormat, string> = {
+  reels: "Reels",
+  carousel: "Carrossel",
+  static: "Estático",
+  stories: "Stories",
+  video: "Vídeo",
+  photo: "Foto",
+  text: "Texto",
+}
+
+export const CONTENT_NETWORKS = ["instagram", "tiktok", "linkedin"] as const satisfies readonly ContentNetwork[]
+export const CONTENT_NETWORK_LABEL: Record<ContentNetwork, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+}
+
+export const CONTENT_INTENTS = [
+  "conversion",
+  "growth",
+  "authority",
+  "connection",
+  "sponsored",
+] as const satisfies readonly ContentIntent[]
+export const CONTENT_INTENT_LABEL: Record<ContentIntent, string> = {
+  conversion: "Conversão",
+  growth: "Crescimento",
+  authority: "Autoridade",
+  connection: "Conexão",
+  sponsored: "Publi",
+}
+
+/** Etapas do post, na ordem do fluxo. */
+export const CONTENT_STAGES = [
+  "production",
+  "internal_review",
+  "client_review",
+  "approved",
+  "scheduled",
+  "published",
+] as const satisfies readonly ContentStage[]
+export const CONTENT_STAGE_LABEL: Record<ContentStage, string> = {
+  production: "Em produção",
+  internal_review: "Revisão interna",
+  client_review: "Aguardando cliente",
+  approved: "Aprovado",
+  scheduled: "Programado",
+  published: "Publicado",
+}
+
+export const CONTENT_FRONTS = ["copy", "design", "video"] as const satisfies readonly ContentFront[]
+export const CONTENT_FRONT_LABEL: Record<ContentFront, string> = {
+  copy: "Copy",
+  design: "Design",
+  video: "Vídeo",
+}
+
+export const CONTENT_FRONT_STATUSES = [
+  "not_needed",
+  "todo",
+  "in_progress",
+  "missing_material",
+  "in_review",
+  "changes",
+  "done",
+] as const satisfies readonly ContentFrontStatus[]
+export const CONTENT_FRONT_STATUS_LABEL: Record<ContentFrontStatus, string> = {
+  not_needed: "Não precisa",
+  todo: "A fazer",
+  in_progress: "Em produção",
+  missing_material: "Falta material",
+  in_review: "Em revisão",
+  changes: "Em alteração",
+  done: "Finalizado",
+}
+
+export function isContentFormat(value: unknown): value is ContentFormat {
+  return CONTENT_FORMATS.includes(value as ContentFormat)
+}
+
+export function isContentNetwork(value: unknown): value is ContentNetwork {
+  return CONTENT_NETWORKS.includes(value as ContentNetwork)
+}
+
+export function isContentIntent(value: unknown): value is ContentIntent {
+  return CONTENT_INTENTS.includes(value as ContentIntent)
+}
+
+export function isContentStage(value: unknown): value is ContentStage {
+  return CONTENT_STAGES.includes(value as ContentStage)
+}
+
+export function isContentFrontStatus(value: unknown): value is ContentFrontStatus {
+  return CONTENT_FRONT_STATUSES.includes(value as ContentFrontStatus)
 }
 
 export function isProjectStatus(value: unknown): value is ProjectStatus {

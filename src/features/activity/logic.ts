@@ -3,6 +3,9 @@ import { firstName } from "@/features/tasks/logic"
 import { addDaysToKey, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
 import {
   COMMUNICATION_KIND_LABEL,
+  CONTENT_FORMAT_LABEL,
+  CONTENT_FRONT_STATUS_LABEL,
+  CONTENT_STAGE_LABEL,
   DEAL_STAGE_LABEL,
   FINANCE_ACCOUNT_LABEL,
   LEAD_SOURCE_LABEL,
@@ -11,6 +14,9 @@ import {
   TASK_PRIORITY_LABEL,
   TASK_STATUS_LABEL,
   isCommunicationKind,
+  isContentFormat,
+  isContentFrontStatus,
+  isContentStage,
   isDealStage,
   isDecisionStatus,
   isFinanceAccount,
@@ -87,6 +93,11 @@ function assigneeChange([before, after]: Pair, names: NameLookup): string | null
   return parts.length > 0 ? parts.join(" e ") : null
 }
 
+/** Frente do post: "mudou o status da copy para Em revisão". */
+function frontPhrase(front: string, after: unknown): string | null {
+  return isContentFrontStatus(after) ? `mudou o status ${front} para ${CONTENT_FRONT_STATUS_LABEL[after]}` : null
+}
+
 /** Uma frase por campo alterado (na ordem em que aparecem). */
 function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry, names: NameLookup): string | null {
   const isProject = entry.entity_type === "project"
@@ -110,6 +121,10 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
       return null
     }
     case "stage": {
+      if (entry.entity_type === "content_post") {
+        if (!isContentStage(after)) return null
+        return after === "published" ? "marcou como publicado" : `moveu para ${CONTENT_STAGE_LABEL[after]}`
+      }
       if (!isDealStage(after)) return null
       if (after === "won") return "ganhou o negócio"
       if (after === "lost") return "marcou o negócio como perdido"
@@ -151,6 +166,7 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
     }
     case "owner_id":
       if (entry.entity_type === "deal") return after ? `passou o negócio para ${personName(after, names)}` : "deixou o negócio sem responsável"
+      if (entry.entity_type === "content_post") return after ? `passou o post para ${personName(after, names)}` : "deixou o post sem responsável"
       return after ? `passou a responsabilidade para ${personName(after, names)}` : "deixou o projeto sem responsável"
     case "assignees":
       return assigneeChange([before, after], names)
@@ -187,6 +203,18 @@ function fieldPhrase(field: string, [before, after]: Pair, entry: ActivityEntry,
       return isLeadSource(after) ? `mudou a origem para ${LEAD_SOURCE_LABEL[after]}` : null
     case "lost_reason":
       return str(after) ? `registrou o motivo: ${quote(str(after)!)}` : null
+    case "copy_status":
+      return frontPhrase("da copy", after)
+    case "design_status":
+      return frontPhrase("do design", after)
+    case "video_status":
+      return frontPhrase("do vídeo", after)
+    case "publish_on":
+      if (!before) return `marcou a publicação para ${dateLabel(after, names)}`
+      if (!after) return "tirou a data de publicação"
+      return `mudou a publicação de ${dateLabel(before, names)} para ${dateLabel(after, names)}`
+    case "format":
+      return isContentFormat(after) ? `mudou o formato para ${CONTENT_FORMAT_LABEL[after]}` : null
     default:
       return null
   }
@@ -200,6 +228,7 @@ const ENTITY_NOUN: Record<ActivityEntry["entity_type"], string> = {
   finance: "o lançamento",
   recurrence: "a recorrência",
   deal: "o negócio",
+  content_post: "o post",
 }
 
 const CREATED_VERB: Record<ActivityEntry["entity_type"], string> = {
@@ -210,6 +239,7 @@ const CREATED_VERB: Record<ActivityEntry["entity_type"], string> = {
   finance: "lançou",
   recurrence: "criou a recorrência",
   deal: "criou o negócio",
+  content_post: "criou o post",
 }
 
 /**

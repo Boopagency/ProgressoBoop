@@ -21,7 +21,7 @@ import { todayKey } from "@/lib/dates"
 import type { ActivityEntry, DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-type CommentTarget = { type: "task" | "project" | "decision" | "deal"; id: string }
+type CommentTarget = { type: "task" | "project" | "decision" | "deal" | "content_post"; id: string }
 
 function currentTime(): number {
   return Date.now()

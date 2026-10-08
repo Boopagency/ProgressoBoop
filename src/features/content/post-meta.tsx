@@ -13,9 +13,11 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   blockedFronts,
   clientColorIndex,
+  contentImageUrl,
   frontStatus,
   isBlocked,
   isLate,
@@ -36,8 +38,9 @@ import type { ContentFormat, ContentFrontStatus, ContentStage, DateKey } from "@
 import { cn } from "@/lib/utils"
 
 /*
- * Peças visuais dos posts: a marca do cliente (inicial numa cor estável), a
- * etapa, os sinais de atrasado e de falta material e as frentes.
+ * Peças visuais dos posts: a marca do cliente (a foto do perfil ou a inicial
+ * numa cor estável), a etapa, os sinais de atrasado e de falta material e as
+ * frentes.
  */
 
 /**
@@ -77,7 +80,10 @@ const MARK_SIZE = {
   md: "size-7 text-xs",
 } as const
 
-/** Inicial do cliente na cor dele (a foto do perfil entra com o preview do feed). */
+/**
+ * Foto do perfil do cliente (a do feed) ou, sem foto, a inicial na cor dele.
+ * Enquanto a foto carrega (ou se falhar), aparece a inicial.
+ */
 export function ClientMark({
   clientId,
   size = "sm",
@@ -88,7 +94,22 @@ export function ClientMark({
   className?: string
 }) {
   const { clientById } = useWorkspace()
-  const name = clientById.get(clientId)?.name ?? "Cliente"
+  const client = clientById.get(clientId)
+  const name = client?.name ?? "Cliente"
+  const initial = name.trim().charAt(0).toLocaleUpperCase("pt-BR")
+  if (client?.avatar_path) {
+    return (
+      <Avatar
+        role="img"
+        aria-label={name}
+        title={name}
+        className={cn("leading-none font-semibold", MARK_SIZE[size], className)}
+      >
+        <AvatarImage src={contentImageUrl(client.avatar_path)} alt="" className="object-cover" />
+        <AvatarFallback className={cn("text-[length:inherit]", clientColor(clientId))}>{initial}</AvatarFallback>
+      </Avatar>
+    )
+  }
   return (
     <span
       role="img"
@@ -101,7 +122,7 @@ export function ClientMark({
         className
       )}
     >
-      {name.trim().charAt(0).toLocaleUpperCase("pt-BR")}
+      {initial}
     </span>
   )
 }

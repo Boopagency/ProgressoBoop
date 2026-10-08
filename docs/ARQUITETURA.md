@@ -73,6 +73,8 @@ src/
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
 │   │                           # para uma URL assinada e temporária do Storage)
+│   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
+│   │                           # (mesma regra, bucket `content`)
 │   ├── login/                  # "/login" (sem "Criar conta")
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
@@ -156,8 +158,9 @@ Server Component (page.tsx)
 - **Sem cliente do Supabase no navegador.** Todo acesso ao banco passa pelo
   servidor (Server Components e Server Actions) com a sessão da pessoa, via
   `@supabase/ssr` e cookies. Única exceção, sem acesso ao banco: o envio de
-  imagens dos processos vai do navegador direto ao Storage, numa URL de envio
-  assinada que o servidor gera (com a sessão) para um caminho só.
+  imagens dos processos e do conteúdo vai do navegador direto ao Storage,
+  numa URL de envio assinada que o servidor gera (com a sessão) para um
+  caminho só.
 
 ## 5. Schema do Supabase
 
@@ -467,6 +470,30 @@ Função exposta: `public.win_deal(...)` (`security invoker`, só para
     `instagram_bio`, `avatar_path`) fica no próprio cliente, para o preview
     do feed. As frentes viram tarefas (`tasks.content_post_id`), e as ideias
     do banco de ideias (`content_ideas`) apontam para o post em que viraram.
+37. **Imagens do conteúdo: o banco guarda o caminho, o app entrega.**
+    `cover_path`, `slides[].image_path` e `avatar_path` guardam
+    `<client_id>/<arquivo>` (dois UUIDs; o arquivo é sorteado pelo servidor
+    no envio, então trocar a imagem é sempre um arquivo novo). A tela usa
+    `/api/conteudo/<client_id>/<arquivo>`, que confere a sessão e
+    redireciona para uma URL assinada de uma hora, como nos processos. O
+    navegador reduz a imagem antes de enviar (lado maior 1440 px; a foto do
+    perfil, 400 px; WebP ou, sem suporte, JPEG) e a envia direto ao Storage
+    pela URL de envio assinada. Limpeza: `updatePost` apaga as imagens que
+    saíram do post (capa ou slide trocados ou tirados), `deletePost` as do
+    post, `setClientAvatar` a foto anterior e `deleteClient` as do cliente
+    (lidas antes, porque os posts saem em cascata). Imagens enviadas num
+    post que fechou sem salvar (ou trocadas antes de salvar) são apagadas
+    por `discardContentImages`, que não apaga nenhuma que algum post ou
+    cliente use. Vídeo não sobe: fica no `drive_url`.
+38. **Preview do feed sem dados novos.** O grid é o dos próprios posts:
+    `feedPosts` em `features/content/logic.ts` pega os do cliente que saem
+    no Instagram e não são stories, na ordem `feedOrder` (fixados, depois
+    do mais recente para o mais antigo), com o filtro "só aprovados"
+    (aprovado, programado e publicado). Quadrados em 3:4, como o Instagram
+    mostra hoje. O limite de 3 fixados por cliente é conferido na action
+    (`createPost`/`updatePost`, inclusive ao levar um post fixado para outro
+    cliente), sem trava no banco: com três pessoas, a corrida é improvável
+    e, se acontecer, o feed só mostra um fixado a mais.
 
 ### 5.2 Segurança (RLS)
 
@@ -705,6 +732,9 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
   `/conteudo?cliente=<id>`), **Tarefas** por prazo (e as concluídas nos
   últimos 30 dias), **Comunicações** e **Reuniões** (próximas e recentes,
   com "Nova reunião" já com o cliente).
+- No cartão **Conteúdo**, **Feed** troca a lista pelo preview do Instagram do
+  cliente (as primeiras quatro linhas do grid, com o link para o feed
+  inteiro em `/conteudo?cliente=<id>&ver=feed`).
 - Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
   WhatsApp, observações), **Financeiro** (mensalidade, margem do contrato,
   fim do contrato, em atraso, recebido no ano e o link para os lançamentos
@@ -828,17 +858,25 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 
 - Indicadores: posts nesta semana (e quantos já saíram), atrasados,
   aguardando cliente e com falta material; clicar leva à visão certa.
-- **Calendário** (mês ou semana, setas e "Hoje"): cada post com a inicial do
-  cliente numa cor estável (derivada do id), o ícone do formato, a etapa e
-  um ponto quando está atrasado (vermelho) ou com falta material (laranja).
-  No celular, o mês mostra pontos e abre a lista do dia; a semana vira uma
-  lista por dia. O "+" do dia cria um post naquela data. Posts sem data
+- **Calendário** (mês ou semana, setas e "Hoje"): cada post com a foto do
+  cliente (ou a inicial numa cor estável, derivada do id), o ícone do
+  formato, a etapa e um ponto quando está atrasado (vermelho) ou com falta
+  material (laranja). No celular, o mês mostra pontos e abre a lista do
+  dia; a semana vira uma lista por dia. O "+" do dia cria um post naquela data. Posts sem data
   ficam numa lista abaixo.
 - **Quadro** por etapa (Em produção → Revisão interna → Aguardando cliente →
   Aprovado → Programado → Publicado, este com os últimos 30 dias); arrastar
   muda a etapa.
 - **7 dias**: os atrasados, hoje, amanhã e o resto da semana, com o que
   falta em cada frente (copy, design, vídeo).
+- **Feed** (`ver=feed`, com um cliente filtrado; sem um, a tela pede para
+  escolher): o preview do Instagram do cliente. Cabeçalho com foto, @,
+  número de posts, nome e bio, editáveis ali mesmo; grid de 3 colunas em
+  3:4 (fixados primeiro, depois do mais recente), com a capa (ou o título
+  num fundo neutro), o ícone de carrossel ou vídeo e o alfinete; filtro
+  "Todos os planejados" × "Só aprovados"; fixar e desafixar (até 3).
+  Clicar num quadrado abre o post. Só o filtro de cliente vale no feed (é
+  o grid real); os outros ficam escondidos nessa visão.
 - Filtros na URL (`?cliente=a,b&pessoa=mine&rede=…&formato=…&etapa=…&ver=
   quadro|lista&visao=semana&data=…`): clientes (vários), responsável
   (Todos, Meus ou uma pessoa), redes, formatos e etapas. O endereço pode ser
@@ -847,9 +885,10 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   `?post=<id>` abre um post (tela Hoje, tarefa gerada).
 - **Post** (diálogo): título, cliente, projeto do cliente, formato, etapa,
   data e horário, responsável, redes, intenções e a situação de copy,
-  design e vídeo; os textos conforme o formato (`FORMAT_TEMPLATES`):
-  conteúdo/ideia, orientação de design ou de vídeo, slides (carrossel, até
-  20), roteiro, legenda e o link do Drive; **Tarefas das frentes**;
+  design e vídeo; **capa** e "Fixar no topo do feed"; os textos conforme o
+  formato (`FORMAT_TEMPLATES`): conteúdo/ideia, orientação de design ou de
+  vídeo, slides (carrossel, até 20, com texto e imagem), roteiro, legenda e
+  o link do Drive; **Tarefas das frentes**;
   histórico e comentários; excluir com confirmação. Salvar envia só os
   campos que mudaram.
 - **Gerar tarefas**: uma tarefa por frente que falta ("Copy — <título>"),
@@ -963,6 +1002,7 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `DreView` / `ProjectionView` / `ContractsView` / `LedgerView` / `ClosingView` / `SettingsView` | as abas do Financeiro |
 | `DealsView` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: quadro e lista, negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
 | `ContentView` / `ContentCalendar` / `ContentBoard` / `UpcomingList` | Central de Conteúdo: calendário, quadro por etapa e próximos 7 dias, com filtros na URL |
+| `ContentFeed` | preview do feed do Instagram de um cliente: perfil editável, grid 3:4, filtro e fixados |
 | `PostDialog` / `ClientContentCard` / `TodayContentCard` | post (campos, textos por formato, tarefas das frentes, histórico) e os cartões no cliente e no Hoje |
 | `MetricsView`        | Indicadores: período, comparação, áreas, KPIs, gráficos e o detalhe de cada número |
 | `GoalsView` / `ObjectiveDialog` / `KeyResultDialog` | metas (OKRs) com progresso automático e sugestões de meta |

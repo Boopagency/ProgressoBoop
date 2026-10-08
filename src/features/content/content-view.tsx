@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { loadPost, updatePost } from "@/features/content/actions"
 import { ContentBoard } from "@/features/content/content-board"
 import { ContentCalendar } from "@/features/content/content-calendar"
+import { ContentFeed } from "@/features/content/content-feed"
 import {
   contentQuery,
   EMPTY_FILTERS,
@@ -49,6 +50,7 @@ const VIEW_OPTIONS: { value: ContentViewMode; label: string }[] = [
   { value: "calendar", label: "Calendário" },
   { value: "board", label: "Quadro" },
   { value: "list", label: "7 dias" },
+  { value: "feed", label: "Feed" },
 ]
 
 /**
@@ -136,6 +138,9 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
   const blocked = visible.filter((post) => post.stage !== "published" && isBlocked(post))
   const publishedThisWeek = week.filter((post) => post.stage === "published").length
 
+  // O feed (preview do Instagram) é de um cliente só: o filtrado.
+  const feedClient = filters.clients.length === 1 ? clients.find((client) => client.id === filters.clients[0]) : undefined
+
   const clientOptions = clients
     .filter((client) => client.active || filters.clients.includes(client.id))
     .map((client) => ({ value: client.id, label: client.name, leading: <ClientMark clientId={client.id} size="xs" /> }))
@@ -189,7 +194,8 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
           options={VIEW_OPTIONS}
           className="self-start"
         />
-        <div className="flex flex-wrap items-center gap-2">
+        {/* No feed (o grid real do perfil) só o filtro de cliente vale: os outros somem. */}
+        <div className={cn("flex flex-wrap items-center gap-2", state.view === "feed" && "[&>*:not(:first-child)]:hidden")}>
           <MultiFilter
             label="Clientes"
             plural="clientes"
@@ -269,6 +275,15 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
         <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
       ) : state.view === "list" ? (
         <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
+      ) : state.view === "feed" ? (
+        feedClient ? (
+          <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} className="mt-6" />
+        ) : (
+          <FeedClientPicker
+            clients={clients.filter((client) => client.active)}
+            onPick={(id) => navigate({ ...state, filters: { ...filters, clients: [id] } })}
+          />
+        )
       ) : (
         <ContentCalendar
           posts={visible}
@@ -283,6 +298,24 @@ export function ContentView({ posts }: { posts: PostSummary[] }) {
 
       <PostDialog state={dialog.state} onOpenChange={dialog.onOpenChange} />
     </PageContainer>
+  )
+}
+
+/** O feed é de um cliente só: sem um (ou com vários) filtrado, escolha qual. */
+function FeedClientPicker({ clients, onPick }: { clients: { id: string; name: string }[]; onPick: (id: string) => void }) {
+  return (
+    <div className="mt-6 rounded-xl border border-dashed px-6 py-10 text-center">
+      <h2 className="text-sm font-semibold">De qual cliente é o feed?</h2>
+      <p className="mt-1 text-sm text-muted-foreground">O preview mostra o perfil do Instagram de um cliente, com os posts planejados.</p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {clients.map((client) => (
+          <Button key={client.id} type="button" variant="outline" size="sm" onClick={() => onPick(client.id)} className="gap-1.5 shadow-none">
+            <ClientMark clientId={client.id} size="xs" />
+            {client.name}
+          </Button>
+        ))}
+      </div>
+    </div>
   )
 }
 

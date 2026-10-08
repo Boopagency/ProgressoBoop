@@ -182,8 +182,8 @@ ali mesmo e salvo na hora.
   atual. A visão e a data ficam no endereço, então o link pode ser salvo.
 - **O que aparece:** tarefas no dia do prazo, eventos de três tipos: Reunião
   (ciano), Evento interno (azul acinzentado) e Entrega (laranja), e os posts
-  da Central de Conteúdo no dia de publicação (com a inicial do cliente; só
-  para ver: clicar abre o post, 2.26). Há uma legenda no topo.
+  da Central de Conteúdo no dia de publicação (com a foto ou a inicial do
+  cliente; só para ver: clicar abre o post, 2.26). Há uma legenda no topo.
 - **Semana:**
   - uma coluna por dia, com o fim de semana sombreado e o dia de hoje
     destacado;
@@ -281,6 +281,9 @@ segunda, 07:00).
 - **Conteúdo:** quantos posts em cada etapa, os próximos (atrasados
   primeiro), **Post** já com o cliente e "Abrir no Conteúdo", que leva à
   visão central filtrada pelo cliente (2.26).
+- **Feed** (no cartão Conteúdo): o preview do Instagram do cliente, as
+  primeiras quatro linhas do grid, com o link para o feed inteiro no
+  Conteúdo (2.26).
 - **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
   recolhidas; **Tarefa** no topo cria uma já com o cliente.
 - **Comunicações** recentes com o cliente e **Registrar** (2.18).
@@ -294,8 +297,9 @@ segunda, 07:00).
   mês a mês** (seis meses; clicar abre aquela revisão), **Decisões** sobre o
   cliente e **Processos do cliente** (com "Novo").
 - **Editar** muda o cadastro. No menu: desativar/reativar e excluir (apaga o
-  cadastro, as revisões e as comunicações; tarefas, projetos, eventos,
-  decisões, lançamentos e processos continuam, sem o cliente).
+  cadastro, as revisões, as comunicações e os posts, com as imagens; tarefas,
+  projetos, eventos, decisões, lançamentos e processos continuam, sem o
+  cliente).
 - A Boop (projetos internos) está cadastrada sem revisão mensal.
 
 ### 2.11 Processos (`/processos`)
@@ -663,10 +667,10 @@ juntos**, sem entrar cliente por cliente.
   **atrasados** (vermelho quando há algum), **aguardando cliente** e com
   **falta material**. Clicar leva à visão que mostra cada um.
 - **Calendário** (mês ou semana, com setas e "Hoje"): cada post mostra a
-  inicial do cliente numa cor que é sempre a mesma para aquele cliente, o
-  ícone do formato, a etapa e um ponto vermelho (atrasado) ou laranja (falta
-  material). No mês, até 3 posts por dia e "+N"; no celular, pontos por dia
-  que abrem a lista. Na semana, o "+" do dia cria um post naquela data.
+  foto do perfil do cliente (ou, sem foto, a inicial numa cor que é sempre a
+  mesma para aquele cliente), o ícone do formato, a etapa e um ponto
+  vermelho (atrasado) ou laranja (falta material). No mês, até 3 posts por
+  dia e "+N"; no celular, pontos por dia que abrem a lista. Na semana, o "+" do dia cria um post naquela data.
   Posts sem data ficam em "Sem data de publicação", abaixo.
 - **Quadro:** Em produção, Revisão interna, Aguardando cliente, Aprovado,
   Programado e Publicado (este com os últimos 30 dias). Arrastar muda a
@@ -675,6 +679,24 @@ juntos**, sem entrar cliente por cliente.
   V) com a cor da situação.
 - **7 dias:** os atrasados, hoje, amanhã e os dias seguintes, com o que falta
   em cada frente ("Copy: A fazer · Design: Em revisão").
+- **Feed** (`?ver=feed`, com um cliente filtrado; sem cliente, a tela pede
+  para escolher um): o preview do perfil do Instagram do cliente. Como é o
+  grid real, só o filtro de cliente vale aqui (os outros continuam valendo
+  nas outras visões).
+  - **Cabeçalho** como o do Instagram: foto, @, número de posts, nome e
+    bio. **Editar perfil** troca a foto (salva na hora; a anterior é
+    apagada) e o @ e a bio (até 150 caracteres, como no Instagram);
+  - **grid de 3 colunas** em 3:4, o formato que o Instagram mostra hoje:
+    os fixados primeiro, depois do mais recente para o mais antigo (sem
+    data no fim). Entram os posts do Instagram, menos stories. Cada
+    quadrado mostra a capa (sem capa, o título num fundo neutro), o ícone
+    de carrossel ou vídeo no canto, o alfinete dos fixados e o ponto da
+    etapa. Clicar abre o post;
+  - **Todos os planejados** × **Só aprovados** (aprovados, programados e
+    publicados);
+  - **fixar e desafixar** (até 3 por cliente): no computador, pelo
+    alfinete que aparece ao passar o mouse; no celular, em "Fixar no topo
+    do feed", dentro do post.
 - **Filtros** (ficam no endereço, então o link pode ser salvo ou mandado):
   clientes (vários), responsável (Todos, Meus ou uma pessoa), redes,
   formatos e etapas. "Limpar filtros" volta tudo.
@@ -687,11 +709,18 @@ juntos**, sem entrar cliente por cliente.
     Em produção, Falta material, Em revisão, Em alteração, Finalizado). Num
     post novo, vídeo já vem "A fazer" em reels, vídeo e stories e "Não
     precisa" nos outros formatos;
+  - **capa e feed:** a capa do post (aparece no feed) e "Fixar no topo do
+    feed". Imagens são reduzidas no navegador antes de enviar (lado maior
+    1440 px, WebP ou JPEG) e ficam privadas: só abrem para quem está
+    logado. Trocar ou tirar a capa e excluir o post apagam o arquivo
+    antigo; uma imagem enviada num post fechado sem salvar também é
+    apagada. Vídeo não sobe: continua no link do Drive;
   - **textos conforme o formato:** conteúdo/ideia e orientação de design
-    (ou de vídeo) em todos; slides no carrossel (até 20); roteiro em reels,
-    vídeo e stories; legenda em reels, carrossel, vídeo, estático, foto e
-    texto; e o link do Drive (com o botão para abrir). Trocar o formato não
-    apaga o texto que ficou escondido;
+    (ou de vídeo) em todos; slides no carrossel (até 20, cada um com texto
+    e imagem); roteiro em reels, vídeo e stories; legenda em reels,
+    carrossel, vídeo, estático, foto e texto; e o link do Drive (com o
+    botão para abrir). Trocar o formato não apaga o texto que ficou
+    escondido;
   - **Tarefas das frentes:** as tarefas já ligadas ao post (clicar abre o
     painel da tarefa) e **Gerar tarefas**, que cria uma tarefa por frente
     que ainda falta ("Copy — título do post"), ligada ao post e ao cliente,
@@ -700,8 +729,8 @@ juntos**, sem entrar cliente por cliente.
     Vêm marcadas as frentes que ainda não têm tarefa. As tarefas aparecem em
     Tarefas, no Hoje e no Calendário como qualquer outra, e o painel delas
     tem "ver post";
-  - **histórico e comentários** e **excluir** (com confirmação; as tarefas
-    geradas continuam, sem o vínculo).
+  - **histórico e comentários** e **excluir** (com confirmação; as imagens
+    são apagadas e as tarefas geradas continuam, sem o vínculo).
 - **Regra importante:** atrasado é o post cujo dia de publicação já passou
   e que ainda não está programado nem publicado. Falta material é qualquer
   frente com essa situação.
@@ -871,8 +900,9 @@ como visão salva).
   publicados nos últimos 6 meses; o calendário não mostra publicados mais
   antigos (o post ainda abre pelo link). Os filtros do Conteúdo ficam no
   endereço, mas ainda não viram "visão salva" do menu (as visões salvas são
-  da tela Tarefas). A foto do cliente e as imagens do post chegam com o
-  preview do feed.
+  da tela Tarefas). O feed mostra o que a tela carregou (publicados dos
+  últimos 6 meses) e não puxa nada do Instagram: o @, a bio e a foto são
+  copiados à mão. Vídeos não sobem para o app (ficam no link do Drive).
 - **Plano gratuito do Supabase:**
   - o projeto é pausado depois de 7 dias com pouco uso. Para evitar isso,
     um cron da Vercel visita o banco duas vezes por dia (`/api/keepalive`);
@@ -942,6 +972,7 @@ são uma sugestão para começar.
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |
 | Comercial (funil, negócios, ganhar) | `src/features/deals/` (`logic.ts` regras), função `win_deal` em `supabase/migrations/20261007212513_win_deal.sql` |
 | Central de Conteúdo (calendário, quadro, 7 dias, post, tarefas das frentes) | `src/features/content/` (`logic.ts` regras, `filters.ts` URL, `post-dialog.tsx` post), `src/app/(app)/conteudo/` |
+| Feed e imagens do conteúdo (preview, capa, slides, foto do cliente) | `src/features/content/content-feed.tsx`, `image-upload.ts` (redução e envio), `storage.ts` (limpeza), `src/app/api/conteudo/` |
 | Indicadores (catálogo, períodos, painéis) | `src/features/metrics/` (`catalog.ts` cada KPI e sua fórmula) |
 | Metas (OKRs) | `src/features/goals/` (`logic.ts` progresso e sugestões) |
 | Relatório e Excel | `src/features/reports/`, `src/lib/xlsx.ts`, `src/app/api/relatorios/excel/route.ts`, `src/app/relatorio/` |

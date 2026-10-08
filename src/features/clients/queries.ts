@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import type { ClientDetail, ClientReview, ReviewCheckItem } from "@/lib/types"
 
 const CLIENT_COLUMNS =
-  "id, name, active, owner_id, services, since, contact_name, contact_email, contact_phone, notes, review_day, created_at, updated_at"
+  "id, name, active, avatar_path, instagram_handle, instagram_bio, owner_id, services, since, contact_name, contact_email, contact_phone, notes, review_day, created_at, updated_at"
 
 const REVIEW_COLUMNS =
   "id, client_id, period, health, checklist, notes, done, done_at, done_by, created_by, created_at, updated_at"

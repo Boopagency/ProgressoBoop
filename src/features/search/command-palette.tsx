@@ -15,6 +15,7 @@ import {
   Handshake,
   ListTodo,
   Loader2,
+  Megaphone,
   MessageSquarePlus,
   MessagesSquare,
   Plus,
@@ -213,6 +214,7 @@ function Palette({ onClose }: { onClose: () => void }) {
     { id: "new-decision", group: "Ações", label: "Registrar decisão", icon: Gavel, run: () => go(`/decisoes?novo=${freshStamp()}`) },
     { id: "new-finance", group: "Ações", label: "Novo lançamento (receita ou despesa)", icon: Wallet, run: () => go(`/financeiro?novo=${freshStamp()}`) },
     { id: "new-deal", group: "Ações", label: "Novo negócio (lead ou proposta)", icon: Handshake, run: () => go(`/comercial?novo=${freshStamp()}`) },
+    { id: "new-post", group: "Ações", label: "Novo post (conteúdo de cliente)", icon: Megaphone, run: () => go(`/conteudo?novo=${freshStamp()}`) },
     { id: "new-goal", group: "Ações", label: "Novo objetivo (meta)", icon: Target, run: () => go(`/metas?novo=${freshStamp()}`) },
   ]
   const pages: Item[] = [

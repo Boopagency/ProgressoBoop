@@ -98,6 +98,8 @@ src/
 │   │                           # (management.ts: DRE, MRR, projeção, divisão do resultado,
 │   │                           # receita necessária, inadimplência, fechamento)
 │   ├── deals/                  # comercial: negócios, funil, conversão em cliente
+│   ├── content/                # Central de Conteúdo: posts de todos os clientes
+│   │                           # (calendário, quadro, 7 dias), frentes → tarefas
 │   ├── metrics/                # catálogo de indicadores (KPIs), períodos e painéis
 │   ├── goals/                  # metas (OKRs) com progresso pelos indicadores
 │   ├── reports/                # relatório para apresentar e as abas do Excel
@@ -547,7 +549,7 @@ sentido.
 
 Rotas em português. Todas usam o mesmo layout: sidebar à esquerda (Hoje,
 Tarefas e as visões salvas, Projetos, Calendário, Reuniões; **Relacionamento**:
-Comercial, Clientes, Comunicações; **Gestão**: Indicadores, Metas,
+Comercial, Conteúdo, Clientes, Comunicações; **Gestão**: Indicadores, Metas,
 Financeiro, Relatórios, Decisões, Processos; usuário e sair no rodapé) e
 conteúdo num painel branco sobre fundo off-white. No topo de todas,
 **Buscar…** (Ctrl/⌘ + K) abre a busca geral. A exceção é `/relatorio`, a
@@ -578,6 +580,9 @@ página limpa do relatório para apresentar ou imprimir.
     campo "Algo para discutir?", que põe um assunto na pauta sem sair da tela;
   - **Revisões de clientes** do mês por fazer (todos os clientes, com o
     responsável);
+  - **Conteúdo**: posts atrasados, os que saem hoje e os que esperam o
+    cliente (no Minhas, os da pessoa e os sem responsável); clicar abre o
+    post;
   - **Financeiro em atraso**: quanto há a receber e a pagar vencido, com
     link para o Financeiro;
   - **Processos para revisar** (no Minhas, os da pessoa e os sem responsável);
@@ -638,7 +643,8 @@ página limpa do relatório para apresentar ou imprimir.
 
 - Visualizações **Semana** e **Mês**, navegação anterior/próximo e "Hoje".
 - Mostra tarefas com prazo, reuniões, eventos internos e entregas, com cor
-  discreta por tipo.
+  discreta por tipo, e os **posts** da Central de Conteúdo no dia de
+  publicação (só leitura; clicar abre o post).
 - Eventos recorrentes são expandidos para o período visível. Primeiro evento:
   **Reunião semanal da Boop**, toda segunda às 07:00.
 - Clicar num item abre os detalhes no Sheet lateral. Tarefas podem ser
@@ -694,9 +700,11 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 - **Revisão do mês** (setas para os meses anteriores): saúde, checklist,
   notas que salvam sozinhas, **próximos passos** que viram tarefas do
   cliente, **Concluir** e **Reabrir**.
-- **Projetos** do cliente (com "Novo"), **Tarefas** por prazo (e as
-  concluídas nos últimos 30 dias), **Comunicações** e **Reuniões** (próximas
-  e recentes, com "Nova reunião" já com o cliente).
+- **Projetos** do cliente (com "Novo"), **Conteúdo** (posts por etapa, os
+  próximos, "Post" já com o cliente e o link para
+  `/conteudo?cliente=<id>`), **Tarefas** por prazo (e as concluídas nos
+  últimos 30 dias), **Comunicações** e **Reuniões** (próximas e recentes,
+  com "Nova reunião" já com o cliente).
 - Lateral: **Sobre o cliente** (responsável, frentes, contato com e-mail e
   WhatsApp, observações), **Financeiro** (mensalidade, margem do contrato,
   fim do contrato, em atraso, recebido no ano e o link para os lançamentos
@@ -814,6 +822,43 @@ botão **Novo lançamento** em todas.
   entrada pontual e o projeto; a função `win_deal` cria tudo de uma vez e o
   negócio passa a apontar para o que criou.
 
+### Conteúdo (`/conteudo`)
+
+A Central de Conteúdo: os posts de **todos os clientes juntos**.
+
+- Indicadores: posts nesta semana (e quantos já saíram), atrasados,
+  aguardando cliente e com falta material; clicar leva à visão certa.
+- **Calendário** (mês ou semana, setas e "Hoje"): cada post com a inicial do
+  cliente numa cor estável (derivada do id), o ícone do formato, a etapa e
+  um ponto quando está atrasado (vermelho) ou com falta material (laranja).
+  No celular, o mês mostra pontos e abre a lista do dia; a semana vira uma
+  lista por dia. O "+" do dia cria um post naquela data. Posts sem data
+  ficam numa lista abaixo.
+- **Quadro** por etapa (Em produção → Revisão interna → Aguardando cliente →
+  Aprovado → Programado → Publicado, este com os últimos 30 dias); arrastar
+  muda a etapa.
+- **7 dias**: os atrasados, hoje, amanhã e o resto da semana, com o que
+  falta em cada frente (copy, design, vídeo).
+- Filtros na URL (`?cliente=a,b&pessoa=mine&rede=…&formato=…&etapa=…&ver=
+  quadro|lista&visao=semana&data=…`): clientes (vários), responsável
+  (Todos, Meus ou uma pessoa), redes, formatos e etapas. O endereço pode ser
+  salvo ou compartilhado.
+- **Novo post** pelo botão, por `?novo=` (busca geral) ou pelo "+" do dia;
+  `?post=<id>` abre um post (tela Hoje, tarefa gerada).
+- **Post** (diálogo): título, cliente, projeto do cliente, formato, etapa,
+  data e horário, responsável, redes, intenções e a situação de copy,
+  design e vídeo; os textos conforme o formato (`FORMAT_TEMPLATES`):
+  conteúdo/ideia, orientação de design ou de vídeo, slides (carrossel, até
+  20), roteiro, legenda e o link do Drive; **Tarefas das frentes**;
+  histórico e comentários; excluir com confirmação. Salvar envia só os
+  campos que mudaram.
+- **Gerar tarefas**: uma tarefa por frente que falta ("Copy — <título>"),
+  ligada ao post (`content_post_id`), ao cliente e ao projeto, área
+  Clientes, com responsáveis (o do post, por padrão) e prazo antes da
+  publicação: copy D-5, design e vídeo D-3, nunca antes de hoje. Vêm
+  marcadas as frentes que ainda não têm tarefa. As tarefas aparecem em
+  Tarefas, no Hoje e no Calendário; o painel da tarefa tem "ver post".
+
 ### Indicadores (`/indicadores`)
 
 - Período (mês, trimestre ou ano, com setas) e comparação (período
@@ -863,7 +908,7 @@ botão **Novo lançamento** em todas.
   celular, a lupa). No editor de processos, Ctrl/⌘ + K continua criando link.
 - Sem texto: **Ações** (nova tarefa, projeto, reunião, documento, cliente,
   registrar comunicação, registrar decisão, novo lançamento, novo negócio,
-  novo objetivo), as **visões salvas** e **Ir para** (as telas).
+  novo post, novo objetivo), as **visões salvas** e **Ir para** (as telas).
 - A partir de 2 letras, sem acento: **Tarefas** (título e descrição; abertas
   primeiro), **Projetos**, **Reuniões** (título, cliente, assuntos,
   combinados, resumo e transcrição; das próximas, uma por série),
@@ -917,6 +962,8 @@ botão **Novo lançamento** em todas.
 | `FinanceShell`       | cabeçalho e abas do Financeiro; o diálogo de lançamento compartilhado (`useFinanceDialog`) |
 | `DreView` / `ProjectionView` / `ContractsView` / `LedgerView` / `ClosingView` / `SettingsView` | as abas do Financeiro |
 | `DealsView` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: quadro e lista, negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
+| `ContentView` / `ContentCalendar` / `ContentBoard` / `UpcomingList` | Central de Conteúdo: calendário, quadro por etapa e próximos 7 dias, com filtros na URL |
+| `PostDialog` / `ClientContentCard` / `TodayContentCard` | post (campos, textos por formato, tarefas das frentes, histórico) e os cartões no cliente e no Hoje |
 | `MetricsView`        | Indicadores: período, comparação, áreas, KPIs, gráficos e o detalhe de cada número |
 | `GoalsView` / `ObjectiveDialog` / `KeyResultDialog` | metas (OKRs) com progresso automático e sugestões de meta |
 | `ReportBuilder` / `ReportView` | montar o relatório (período, recorte, seções) e a página para apresentar |
@@ -1088,6 +1135,13 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     fica fora do layout com sidebar, usa o mesmo catálogo e os mesmos
     gráficos (versões prontas, sem funções vindas do servidor) e tem CSS de
     impressão (A4 deitado, sem quebrar blocos no meio).
+20. **Posts nas listas sem os textos longos.** Cada post pode ter vários KB
+    de texto (slides, roteiro, legenda), e ele aparece em quatro telas.
+    `getContentPosts` busca só o resumo (`PostSummary`) e o diálogo lê o
+    post inteiro ao abrir (`loadPost`). A consulta traz tudo o que não foi
+    publicado, os sem data e os publicados dos últimos 180 dias, longe do
+    limite de 1.000 linhas; um post mais antigo ainda abre por
+    `/conteudo?post=<id>`.
 
 ## 11. Plano de implementação
 

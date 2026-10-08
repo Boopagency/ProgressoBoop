@@ -73,6 +73,12 @@ app **não usa** chave secreta nem `service_role`.
   destaque, histórico por mês e busca. Cada reunião tem assuntos, combinados
   (viram tarefa num clique), pauta automática, resumo e transcrição com
   busca. `/segunda` redireciona para cá.
+- **Conteúdo** (`/conteudo`): a Central de Conteúdo, com os posts de todos
+  os clientes juntos em **Calendário** (mês ou semana), **Quadro** por etapa
+  (arrastar muda a etapa) e **Próximos 7 dias** (o que falta em copy,
+  design e vídeo), com filtros na URL. As frentes de um post viram tarefas
+  com prazo antes da publicação. Também na tela Hoje, no Calendário e na
+  página do cliente.
 - **Clientes** (`/clientes`): cadastro completo no portal e saúde de cada
   cliente (Saudável, Atenção, Em risco). Cada cliente tem uma revisão
   mensal (checklist, notas, próximos passos que viram tarefas, histórico) e

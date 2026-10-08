@@ -413,6 +413,18 @@ function TaskDetails({ task }: { task: Task }) {
             </Link>
           </p>
         ) : null}
+        {task.content_post_id ? (
+          <p>
+            Nasceu de um post da Central de Conteúdo ·{" "}
+            <Link
+              href={`/conteudo?post=${task.content_post_id}`}
+              className="inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-2 hover:text-brand-ink hover:underline"
+            >
+              ver post
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

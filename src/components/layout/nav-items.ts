@@ -8,6 +8,7 @@ import {
   Gavel,
   Handshake,
   ListTodo,
+  Megaphone,
   MessagesSquare,
   Presentation,
   Sun,
@@ -44,6 +45,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Relacionamento",
     items: [
       { title: "Comercial", href: "/comercial", icon: Handshake },
+      { title: "Conteúdo", href: "/conteudo", icon: Megaphone },
       { title: "Clientes", href: "/clientes", icon: Building2 },
       { title: "Comunicações", href: "/comunicacoes", icon: MessagesSquare },
     ],

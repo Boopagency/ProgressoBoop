@@ -4,10 +4,13 @@ import { Repeat } from "lucide-react"
 
 import { EVENT_TYPE_STYLE, EventTypeDot } from "@/features/calendar/event-type"
 import type { Occurrence } from "@/features/calendar/recurrence"
+import type { PostSummary } from "@/features/content/logic"
+import { ClientMark, FormatIcon } from "@/features/content/post-meta"
 import { assigneesLabel, isDone } from "@/features/tasks/logic"
 import { TaskCheckbox } from "@/features/tasks/task-checkbox"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { CONTENT_FORMAT_LABEL, CONTENT_STAGE_LABEL } from "@/lib/labels"
 import type { Task } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -121,5 +124,58 @@ export function TaskItem({ task, compact = false }: { task: Task; compact?: bool
         </span>
       </button>
     </div>
+  )
+}
+
+/** Post da Central de Conteúdo: só leitura no calendário; clicar abre o post. */
+export function PostItem({
+  post,
+  onOpen,
+  compact = false,
+}: {
+  post: PostSummary
+  onOpen: (post: PostSummary) => void
+  compact?: boolean
+}) {
+  const { clientById } = useWorkspace()
+  const client = clientById.get(post.client_id)?.name ?? "Cliente"
+  const time = post.publish_time?.slice(0, 5) ?? null
+  const label = `Post: ${post.title} · ${client} · ${CONTENT_FORMAT_LABEL[post.format]} · ${CONTENT_STAGE_LABEL[post.stage]}`
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpen(post)}
+        title={label}
+        aria-label={label}
+        className="flex w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-left text-xs transition-colors hover:bg-muted"
+      >
+        <ClientMark clientId={post.client_id} size="xs" className="size-3.5 text-[8px]" />
+        {time ? <span className="shrink-0 text-muted-foreground tabular-nums">{time}</span> : null}
+        <span className={cn("truncate text-foreground", post.stage === "published" && "text-muted-foreground")}>{post.title}</span>
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(post)}
+      aria-label={label}
+      className="block w-full rounded-md border border-dashed px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+    >
+      <span className="flex items-center gap-1 text-muted-foreground tabular-nums">
+        <ClientMark clientId={post.client_id} size="xs" />
+        <FormatIcon format={post.format} className="size-3" />
+        {time ?? "Post"}
+      </span>
+      <span className={cn("mt-0.5 line-clamp-3 leading-4 font-medium text-foreground", post.stage === "published" && "text-muted-foreground")}>
+        {post.title}
+      </span>
+      <span className="mt-0.5 block truncate text-muted-foreground">
+        {client} · {CONTENT_STAGE_LABEL[post.stage]}
+      </span>
+    </button>
   )
 }

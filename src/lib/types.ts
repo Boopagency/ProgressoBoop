@@ -197,6 +197,8 @@ export interface Task {
   client_review_id: string | null
   /** Comunicação com o cliente em que a tarefa nasceu (ex.: um pedido). */
   communication_id: string | null
+  /** Post da Central de Conteúdo em que a tarefa nasceu (uma frente do post). */
+  content_post_id: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp

@@ -15,6 +15,8 @@ import { EVENT_TYPE_STYLE } from "@/features/calendar/event-type"
 import { itemsByDay, type CalendarView as View } from "@/features/calendar/logic"
 import type { Occurrence } from "@/features/calendar/recurrence"
 import { expandEvents } from "@/features/calendar/recurrence"
+import type { PostSummary } from "@/features/content/logic"
+import { PostDialog, usePostDialog } from "@/features/content/post-dialog"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { MonthView } from "@/features/calendar/month-view"
 import { WeekView } from "@/features/calendar/week-view"
@@ -49,10 +51,13 @@ function periodLabel(view: View, anchor: DateKey, range: DateRange): string {
 export function CalendarView({
   events,
   meetingRecords,
+  posts,
 }: {
   events: CalendarEvent[]
   /** Registros de reunião (situação no Sheet e aviso ao excluir). */
   meetingRecords: MeetingRecord[]
+  /** Posts da Central de Conteúdo (só leitura; clicar abre o post). */
+  posts: PostSummary[]
 }) {
   const { tasks, today } = useTasks()
   const pathname = usePathname()
@@ -83,7 +88,7 @@ export function CalendarView({
 
   const range = view === "week" ? weekRangeOf(anchor) : monthGridRangeOf(anchor)
   const days = eachDayKey(range)
-  const items = itemsByDay(range, events, tasks)
+  const items = itemsByDay(range, events, tasks, posts)
   const showsToday = isWithin(today, view === "week" ? range : monthRangeOf(anchor))
 
   // Detalhes do evento: guarda id + dia e lê o evento atual (reflete edições).
@@ -97,6 +102,7 @@ export function CalendarView({
       : null
 
   const [dialog, setDialog] = useState<EventDialogState>({ open: false, key: 0 })
+  const postDialog = usePostDialog()
   const [, startDeleting] = useTransition()
 
   function openEvent(occurrence: Occurrence) {
@@ -125,7 +131,7 @@ export function CalendarView({
     <PageContainer className="@container">
       <PageHeader
         title="Calendário"
-        description="Prazos das tarefas, reuniões, eventos internos e entregas."
+        description="Prazos das tarefas, reuniões, eventos internos, entregas e posts."
         actions={
           <>
             <SegmentedControl
@@ -183,6 +189,7 @@ export function CalendarView({
           today={today}
           items={items}
           onOpenEvent={openEvent}
+          onOpenPost={postDialog.openPost}
           onCreateEvent={createEventOn}
         />
       ) : (
@@ -192,6 +199,7 @@ export function CalendarView({
           today={today}
           items={items}
           onOpenEvent={openEvent}
+          onOpenPost={postDialog.openPost}
         />
       )}
 
@@ -209,6 +217,7 @@ export function CalendarView({
         today={today}
         onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
       />
+      <PostDialog state={postDialog.state} onOpenChange={postDialog.onOpenChange} />
     </PageContainer>
   )
 }
@@ -222,6 +231,10 @@ function Legend() {
           {EVENT_TYPE_LABEL[type]}
         </li>
       ))}
+      <li className="flex items-center gap-1.5">
+        <span className="size-2 rounded-full border border-dashed border-brand-slate" />
+        Post
+      </li>
       <li className="flex items-center gap-1.5">
         <span className="size-2 rounded-full border border-muted-foreground/60" />
         Tarefa

@@ -4,9 +4,10 @@ import { Plus } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { EventItem, TaskItem } from "@/features/calendar/calendar-items"
+import { EventItem, PostItem, TaskItem } from "@/features/calendar/calendar-items"
 import { isWeekend, type DayItems } from "@/features/calendar/logic"
 import type { Occurrence } from "@/features/calendar/recurrence"
+import type { PostSummary } from "@/features/content/logic"
 import {
   capitalize,
   formatDayMonth,
@@ -25,12 +26,14 @@ export function WeekView({
   today,
   items,
   onOpenEvent,
+  onOpenPost,
   onCreateEvent,
 }: {
   days: DateKey[]
   today: DateKey
   items: Map<DateKey, DayItems>
   onOpenEvent: (occurrence: Occurrence) => void
+  onOpenPost: (post: PostSummary) => void
   onCreateEvent: (date: DateKey) => void
 }) {
   return (
@@ -73,6 +76,7 @@ export function WeekView({
                 {dayItems?.occurrences.map((occurrence) => (
                   <EventItem key={occurrence.key} occurrence={occurrence} onOpen={onOpenEvent} />
                 ))}
+                {dayItems?.posts.map((post) => <PostItem key={post.id} post={post} onOpen={onOpenPost} />)}
                 {dayItems?.tasks.map((task) => <TaskItem key={task.id} task={task} />)}
               </div>
             </div>
@@ -83,7 +87,8 @@ export function WeekView({
       <div className="space-y-6 @3xl:hidden">
         {days.map((day) => {
           const dayItems = items.get(day)
-          const empty = !dayItems || (dayItems.occurrences.length === 0 && dayItems.tasks.length === 0)
+          const empty =
+            !dayItems || (dayItems.occurrences.length === 0 && dayItems.tasks.length === 0 && dayItems.posts.length === 0)
           return (
             <section key={day} aria-label={formatDayMonth(day)}>
               <div className="flex items-center justify-between border-b pb-1.5">
@@ -109,6 +114,9 @@ export function WeekView({
                 <div className="space-y-1 pt-2">
                   {dayItems.occurrences.map((occurrence) => (
                     <EventItem key={occurrence.key} occurrence={occurrence} onOpen={onOpenEvent} />
+                  ))}
+                  {dayItems.posts.map((post) => (
+                    <PostItem key={post.id} post={post} onOpen={onOpenPost} />
                   ))}
                   {dayItems.tasks.map((task) => (
                     <TaskItem key={task.id} task={task} />

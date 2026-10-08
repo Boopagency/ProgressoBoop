@@ -9,8 +9,9 @@ import type { ActionResult } from "@/lib/types"
 import { isUuid } from "@/lib/utils"
 
 /*
- * Acesso do cliente ao portal (lado da equipe). A conta é criada antes pelo
- * convite do painel do Supabase; aqui ela só é ligada ao cliente, pela função
+ * Acesso do cliente ao portal (lado da equipe). A conta é criada antes no
+ * painel do Supabase (Add user, com senha; o app ainda não recebe o link de
+ * convite); aqui ela só é ligada ao cliente, pela função
  * `link_client_member`, que confere no banco quem chama e recusa contas da
  * equipe.
  */
@@ -25,7 +26,7 @@ const NAME_REQUIRED = "Informe o nome de quem vai acessar."
 /** Erros de `link_client_member` (a mensagem do banco é o código). */
 const LINK_ERRORS: Partial<Record<string, string>> = {
   account_not_found:
-    "Não há conta com esse e-mail. Convide a pessoa antes no Supabase (Authentication → Users → Invite user).",
+    "Não há conta com esse e-mail. Crie a conta antes no Supabase (Authentication → Users → Add user, com senha).",
   account_is_team: "Esse e-mail é de alguém da equipe, que já vê tudo no admin.",
   client_not_found: CLIENT_GONE,
   invalid_name: NAME_REQUIRED,

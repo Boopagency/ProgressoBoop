@@ -31,7 +31,7 @@ import type { ClientMember } from "@/features/portal/access-queries"
 
 /**
  * Página do cliente: quem do cliente entra no portal (`/portal`). Dar acesso
- * liga uma conta já convidada no Supabase; tirar acesso só desliga do cliente.
+ * liga uma conta já criada no Supabase; tirar acesso só desliga do cliente.
  */
 export function ClientAccessCard({
   clientId,
@@ -178,8 +178,8 @@ function GrantAccessDialog({
         <DialogHeader>
           <DialogTitle>Dar acesso ao portal</DialogTitle>
           <DialogDescription>
-            A pessoa vai ver só o que é de {clientName}. Convide o e-mail antes no Supabase (Authentication → Users →
-            Invite user) e depois ligue a conta aqui.
+            A pessoa vai ver só o que é de {clientName}. Crie a conta antes no Supabase (Authentication → Users → Add
+            user, com senha e &quot;Auto Confirm User&quot;), passe a senha para a pessoa e depois ligue a conta aqui.
           </DialogDescription>
         </DialogHeader>
         <form

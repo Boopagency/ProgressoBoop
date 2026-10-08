@@ -810,8 +810,10 @@ pensado para o celular.
   chat de cada peça). "Sair" no topo.
 - **Acesso do cliente** (página do cliente, coluna da direita): quem do
   cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
-  e-mail de uma conta já convidada no Supabase (Authentication → Users →
-  Invite user); e-mail sem conta ou de alguém da equipe é recusado com uma
+  e-mail de uma conta já criada no Supabase (Authentication → Users → Add
+  user, com senha e "Auto Confirm User"; "Invite user" ainda não serve,
+  porque o app não recebe o link do convite e a pessoa ficaria sem senha);
+  e-mail sem conta ou de alguém da equipe é recusado com uma
   mensagem clara. O "x" tira o acesso (com confirmação); a conta continua
   no Supabase.
 - Cliente desativado some do portal de quem o acompanhava.

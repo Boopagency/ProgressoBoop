@@ -534,8 +534,8 @@ Funções expostas (só para `authenticated`): `public.win_deal(...)`
     conferem `client_members` e devolvem os campos liberados (nesta fase,
     `portal_my_clients`: id, nome e foto dos clientes ativos da conta e o
     nome de quem acessa). Dar acesso é `link_client_member`, só para a
-    equipe: acha a conta no Auth pelo e-mail (criada antes pelo convite do
-    painel do Supabase) e a liga ao cliente, sem service role no app.
+    equipe: acha a conta no Auth pelo e-mail (criada antes no painel do
+    Supabase, com senha) e a liga ao cliente, sem service role no app.
     `private.my_client_ids()` fica pronta para as políticas das próximas
     fases (canais de mensagem, imagens do conteúdo).
 
@@ -588,10 +588,13 @@ Funções expostas (só para `authenticated`): `public.win_deal(...)`
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
-- Para dar acesso a um cliente: convidar o e-mail em Authentication →
-  Users → Invite user e ligar a conta ao cliente com `link_client_member`
-  (pelo app, no cartão "Acesso do cliente" da página do cliente). Nunca
-  criar perfil para essa conta: o banco recusa.
+- Para dar acesso a um cliente: criar a conta como a da equipe
+  (Authentication → Users → Add user, com senha e "Auto Confirm User"),
+  passar a senha para a pessoa e ligar a conta ao cliente com
+  `link_client_member` (pelo app, no cartão "Acesso do cliente" da página
+  do cliente). "Invite user" não serve ainda: o app não recebe o link do
+  convite, e a pessoa ficaria sem senha (o login por link vem numa fase
+  seguinte). Nunca criar perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
   `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a

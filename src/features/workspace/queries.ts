@@ -23,7 +23,7 @@ export async function getWorkspace(): Promise<Workspace> {
   const [profiles, clients, projects, savedViews] = await Promise.all([
     // A ordem de criação dos perfis é a ordem da equipe (Jabez, Renatha, Léo).
     supabase.from("profiles").select("id, full_name, avatar_url, role").order("created_at"),
-    supabase.from("clients").select("id, name, active"),
+    supabase.from("clients").select("id, name, active, avatar_path, instagram_handle, instagram_bio"),
     supabase.from("projects").select(PROJECT_COLUMNS).order("starts_on"),
     supabase.from("saved_views").select("id, name, query, created_by, created_at").order("created_at"),
   ])

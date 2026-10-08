@@ -1,7 +1,7 @@
 "use client"
 
-import { CalendarDays, ExternalLink, ListPlus, Plus, Trash2, X } from "lucide-react"
-import { useEffect, useId, useState, useTransition, type ReactNode } from "react"
+import { CalendarDays, ExternalLink, ImagePlus, ListPlus, Loader2, Plus, Trash2, X } from "lucide-react"
+import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { DatePicker } from "@/components/date-picker"
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { loadActivity } from "@/features/activity/actions"
 import { ActivityFeed } from "@/features/activity/activity-feed"
 import { createFrontTasks, createPost, deletePost, loadPost, updatePost } from "@/features/content/actions"
+import { ContentImage, ImagePick } from "@/features/content/content-image"
+import { discardUploads, uploadContentImage } from "@/features/content/image-upload"
 import {
   defaultFronts,
   formatUses,
@@ -31,8 +33,10 @@ import {
   frontTaskDue,
   FRONT_TASK_LEAD_DAYS,
   isVideoFormat,
+  MAX_PINNED,
   MAX_SLIDES,
   pendingFronts,
+  postImagePaths,
   type PostSummary,
   type PostTexts,
 } from "@/features/content/logic"
@@ -144,6 +148,9 @@ interface Fields {
   video_status: ContentFrontStatus
   owner_id: string | null
   drive_url: string
+  /** Capa no Storage (`<client_id>/<arquivo>`). */
+  cover_path: string | null
+  pinned: boolean
 }
 
 type TextFields = Omit<PostTexts, "brief" | "design_notes" | "script" | "caption"> & {
@@ -171,6 +178,8 @@ function fieldsOf(post: PostSummary): Fields {
     video_status: post.video_status,
     owner_id: post.owner_id,
     drive_url: post.drive_url ?? "",
+    cover_path: post.cover_path,
+    pinned: post.pinned,
   }
 }
 
@@ -189,6 +198,8 @@ function newFields(defaults: PostDialogState["defaults"], ownerId: string): Fiel
     ...defaultFronts(format),
     owner_id: ownerId,
     drive_url: "",
+    cover_path: null,
+    pinned: false,
   }
 }
 
@@ -221,6 +232,9 @@ function textPayloadOf(texts: TextFields): PostTexts {
     slides: texts.slides.map((slide) => ({ text: slide.text.trim(), image_path: slide.image_path })),
   }
 }
+
+/** Chave da imagem que está subindo: a capa ou o slide (pela posição). */
+type ImageTarget = "cover" | `slide-${number}`
 
 /** Só o que mudou em relação ao que abriu (quem editou outra coisa ao mesmo tempo não é sobrescrito). */
 function changes<T extends object>(before: T, after: T): Partial<T> {
@@ -271,7 +285,21 @@ function PostForm({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [activity, setActivity] = useState<ActivityEntry[] | null>(null)
   const [activityVersion, setActivityVersion] = useState(0)
+  const [uploading, setUploading] = useState<ImageTarget[]>([])
   const [isPending, startTransition] = useTransition()
+  // Imagens enviadas com o post aberto e ainda não salvas: se o post fechar
+  // sem salvar (ou a imagem for trocada antes), saem do Storage.
+  const uploads = useRef({ pending: new Set<string>(), closed: false })
+
+  useEffect(() => {
+    const current = uploads.current
+    current.closed = false
+    return () => {
+      current.closed = true
+      if (current.pending.size > 0) void discardUploads([...current.pending])
+      current.pending.clear()
+    }
+  }, [])
 
   useEffect(() => {
     if (!post) return
@@ -315,6 +343,51 @@ function PostForm({
     setTexts((current) => (current ? { ...current, [key]: value } : current))
   }
 
+  /** Envia a imagem (reduzida no navegador) e devolve o caminho no Storage, ou null se falhou. */
+  async function upload(target: ImageTarget, file: File): Promise<string | null> {
+    if (!fields.client_id) {
+      toast.error("Escolha o cliente antes de enviar imagens.")
+      return null
+    }
+    setUploading((current) => [...current, target])
+    try {
+      const path = await uploadContentImage(fields.client_id, file)
+      // Fechou enquanto enviava: a imagem não vai para lugar nenhum.
+      if (uploads.current.closed) {
+        void discardUploads([path])
+        return null
+      }
+      uploads.current.pending.add(path)
+      return path
+    } catch (failure) {
+      toast.error(failure instanceof Error ? failure.message : "Não foi possível enviar a imagem.")
+      return null
+    } finally {
+      setUploading((current) => current.filter((item) => item !== target))
+    }
+  }
+
+  async function pickCover(file: File) {
+    const path = await upload("cover", file)
+    if (path) set("cover_path", path)
+  }
+
+  async function pickSlideImage(index: number, file: File) {
+    const path = await upload(`slide-${index}`, file)
+    if (!path) return
+    setTexts((current) =>
+      current ? { ...current, slides: current.slides.map((slide, at) => (at === index ? { ...slide, image_path: path } : slide)) } : current
+    )
+  }
+
+  /** Depois de salvar: as enviadas que ficaram de fora (trocadas antes de salvar) saem do Storage. */
+  function settleUploads(saved: string[]) {
+    const { pending } = uploads.current
+    const orphans = [...pending].filter((path) => !saved.includes(path))
+    pending.clear()
+    if (orphans.length > 0) void discardUploads(orphans)
+  }
+
   function changeFormat(format: ContentFormat) {
     setFields((current) => ({
       ...current,
@@ -348,8 +421,13 @@ function PostForm({
       setError(problem ?? "Escolha o cliente.")
       return
     }
+    if (uploading.length > 0) {
+      setError("Espere a imagem terminar de enviar.")
+      return
+    }
     setError(null)
     const payload = payloadOf(fields, clientId)
+    const savedImages = postImagePaths({ cover_path: fields.cover_path, slides: texts?.slides ?? [] })
     startTransition(async () => {
       if (post) {
         const patch = {
@@ -364,6 +442,7 @@ function PostForm({
           }
           toast.success("Post salvo", { description: fields.title.trim() })
         }
+        settleUploads(savedImages)
         onDone()
         return
       }
@@ -372,6 +451,7 @@ function PostForm({
         setError(created.error)
         return
       }
+      settleUploads(savedImages)
       const clientName = fields.client_id ? clientById.get(fields.client_id)?.name : null
       toast.success("Post criado", { description: [fields.title.trim(), clientName].filter(Boolean).join(" · ") })
       onDone()
@@ -602,6 +682,52 @@ function PostForm({
           })}
         </div>
 
+        <section aria-label="Capa e feed" className="mt-4 flex gap-3 rounded-lg border p-3">
+          <CoverPicker
+            path={fields.cover_path}
+            uploading={uploading.includes("cover")}
+            disabled={!fields.client_id}
+            onPick={(file) => void pickCover(file)}
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Capa</p>
+              <p className="mt-0.5 text-xs text-subtle-foreground">
+                {fields.client_id
+                  ? "Aparece no preview do feed, cortada em 3:4 como no Instagram. Vídeo não sobe: fica no link do Drive."
+                  : "Escolha o cliente para enviar a capa."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <ImagePick
+                label={fields.cover_path ? "Trocar a capa" : "Enviar a capa"}
+                disabled={!fields.client_id || uploading.includes("cover")}
+                onPick={(file) => void pickCover(file)}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7 px-2.5 text-xs shadow-none")}
+              >
+                <ImagePlus className="size-3.5" aria-hidden="true" />
+                {fields.cover_path ? "Trocar" : "Enviar capa"}
+              </ImagePick>
+              {fields.cover_path ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => set("cover_path", null)}
+                  className="h-7 px-2 text-xs text-muted-foreground"
+                >
+                  Tirar
+                </Button>
+              ) : null}
+            </div>
+            <label className="flex w-fit cursor-pointer items-center gap-2 text-[13px] text-foreground">
+              <Checkbox checked={fields.pinned} onCheckedChange={(state) => set("pinned", state === true)} />
+              Fixar no topo do feed
+              <span className="text-xs text-muted-foreground">(até {MAX_PINNED})</span>
+            </label>
+          </div>
+        </section>
+
         <section aria-label="Textos" className="mt-5 space-y-3">
           {texts === null ? (
             <p className="rounded-lg border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
@@ -630,7 +756,13 @@ function PostForm({
                 />
               </Field>
               {formatUses(fields.format, "slides") ? (
-                <SlidesEditor slides={texts.slides} onChange={(slides) => setText("slides", slides)} />
+                <SlidesEditor
+                  slides={texts.slides}
+                  onChange={(slides) => setText("slides", slides)}
+                  canUpload={fields.client_id !== null}
+                  uploading={uploading}
+                  onPickImage={(index, file) => void pickSlideImage(index, file)}
+                />
               ) : null}
               {formatUses(fields.format, "script") ? (
                 <Field label="Roteiro" htmlFor={`${ids}-script`}>
@@ -769,8 +901,8 @@ function PostForm({
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
             Cancelar
           </Button>
-          <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? "Salvando…" : post ? "Salvar" : "Criar post"}
+          <Button type="submit" size="sm" disabled={isPending || uploading.length > 0}>
+            {isPending ? "Salvando…" : uploading.length > 0 ? "Enviando imagem…" : post ? "Salvar" : "Criar post"}
           </Button>
         </div>
       </div>
@@ -780,8 +912,8 @@ function PostForm({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir este post?</AlertDialogTitle>
             <AlertDialogDescription>
-              “{post?.title}” sai do calendário, do quadro e da página do cliente. As tarefas geradas por ele continuam,
-              sem o vínculo com o post.
+              “{post?.title}” sai do calendário, do quadro, do feed e da página do cliente, e as imagens dele são
+              apagadas. As tarefas geradas por ele continuam, sem o vínculo com o post.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -800,7 +932,50 @@ function PostForm({
 /* Slides                                                              */
 /* ------------------------------------------------------------------ */
 
-function SlidesEditor({ slides, onChange }: { slides: ContentSlide[]; onChange: (slides: ContentSlide[]) => void }) {
+/** Capa do post: a imagem em 3:4 (como o grid do Instagram) ou o espaço para enviar. */
+function CoverPicker({
+  path,
+  uploading,
+  disabled,
+  onPick,
+}: {
+  path: string | null
+  uploading: boolean
+  disabled: boolean
+  onPick: (file: File) => void
+}) {
+  return (
+    <ImagePick
+      label={path ? "Trocar a capa" : "Enviar a capa"}
+      disabled={disabled || uploading}
+      onPick={onPick}
+      className="relative flex aspect-[3/4] w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted"
+    >
+      {path ? <ContentImage key={path} path={path} alt="Capa do post" /> : <ImagePlus className="size-5" aria-hidden="true" />}
+      {uploading ? (
+        <span className="absolute inset-0 flex items-center justify-center bg-background/70">
+          <Loader2 className="size-4 animate-spin" aria-label="Enviando" />
+        </span>
+      ) : null}
+    </ImagePick>
+  )
+}
+
+function SlidesEditor({
+  slides,
+  onChange,
+  canUpload,
+  uploading,
+  onPickImage,
+}: {
+  slides: ContentSlide[]
+  onChange: (slides: ContentSlide[]) => void
+  canUpload: boolean
+  uploading: readonly ImageTarget[]
+  onPickImage: (index: number, file: File) => void
+}) {
+  // Enquanto uma imagem sobe, os slides não mudam de posição (a imagem vai para o slide certo).
+  const busy = uploading.some((target) => target !== "cover")
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">
@@ -811,6 +986,14 @@ function SlidesEditor({ slides, onChange }: { slides: ContentSlide[]; onChange: 
           {slides.map((slide, index) => (
             <li key={index} className="flex items-start gap-2">
               <span className="mt-2 w-5 shrink-0 text-right text-xs text-muted-foreground tabular-nums">{index + 1}</span>
+              <SlideImage
+                index={index}
+                path={slide.image_path}
+                uploading={uploading.includes(`slide-${index}`)}
+                disabled={!canUpload}
+                onPick={(file) => onPickImage(index, file)}
+                onRemove={() => onChange(slides.map((current, at) => (at === index ? { ...current, image_path: null } : current)))}
+              />
               <Textarea
                 value={slide.text}
                 maxLength={SLIDE_TEXT_MAX}
@@ -824,6 +1007,7 @@ function SlidesEditor({ slides, onChange }: { slides: ContentSlide[]; onChange: 
                 variant="ghost"
                 size="icon-sm"
                 aria-label={`Tirar o slide ${index + 1}`}
+                disabled={busy}
                 onClick={() => onChange(slides.filter((_, at) => at !== index))}
                 className="mt-0.5 shrink-0 text-muted-foreground"
               >
@@ -844,6 +1028,52 @@ function SlidesEditor({ slides, onChange }: { slides: ContentSlide[]; onChange: 
         <Plus className="size-3.5" />
         {slides.length >= MAX_SLIDES ? `Máximo de ${MAX_SLIDES} slides` : "Slide"}
       </Button>
+    </div>
+  )
+}
+
+/** Imagem de um slide: miniatura (clicar troca) e o botão de tirar. */
+function SlideImage({
+  index,
+  path,
+  uploading,
+  disabled,
+  onPick,
+  onRemove,
+}: {
+  index: number
+  path: string | null
+  uploading: boolean
+  disabled: boolean
+  onPick: (file: File) => void
+  onRemove: () => void
+}) {
+  const label = `${path ? "Trocar a imagem" : "Imagem"} do slide ${index + 1}`
+  return (
+    <div className="relative shrink-0">
+      <ImagePick
+        label={disabled ? "Escolha o cliente para enviar imagens" : label}
+        disabled={disabled || uploading}
+        onPick={onPick}
+        className="relative flex aspect-[3/4] w-10 items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted"
+      >
+        {path ? <ContentImage key={path} path={path} alt={`Imagem do slide ${index + 1}`} /> : <ImagePlus className="size-3.5" aria-hidden="true" />}
+        {uploading ? (
+          <span className="absolute inset-0 flex items-center justify-center bg-background/70">
+            <Loader2 className="size-3.5 animate-spin" aria-label="Enviando" />
+          </span>
+        ) : null}
+      </ImagePick>
+      {path && !uploading ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Tirar a imagem do slide ${index + 1}`}
+          className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+        >
+          <X className="size-2.5" />
+        </button>
+      ) : null}
     </div>
   )
 }

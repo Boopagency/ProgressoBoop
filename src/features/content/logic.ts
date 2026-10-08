@@ -19,6 +19,7 @@ import type {
   ContentStage,
   DateKey,
 } from "@/lib/types"
+import { isUuid } from "@/lib/utils"
 
 /*
  * Regras da Central de Conteúdo: funções puras sobre os posts, sem React.
@@ -35,6 +36,8 @@ import type {
  *   data no fim.
  * - Tarefas das frentes: uma por frente que falta, com prazo antes da
  *   publicação (copy D-5, design e vídeo D-3), nunca antes de hoje.
+ * - Feed (preview do Instagram): só os posts do Instagram que não são
+ *   stories; até 3 fixados por cliente.
  */
 
 /* ------------------------------------------------------------------ */
@@ -345,6 +348,39 @@ export function filterPosts<T extends Filterable>(posts: readonly T[], filters: 
 /* Feed                                                                */
 /* ------------------------------------------------------------------ */
 
+/** Quantos posts de um cliente podem ficar fixados no topo do feed (como no Instagram). */
+export const MAX_PINNED = 3
+
+/** Filtro do preview: tudo o que está planejado ou só o que o cliente já aprovou. */
+export type FeedFilter = "planned" | "approved"
+
+/** Etapas que contam como aprovadas no filtro do feed. */
+const APPROVED_STAGES: readonly ContentStage[] = ["approved", "scheduled", "published"]
+
+/** Vai para o grid do Instagram: sai no Instagram e não é story (stories não ficam no perfil). */
+export function isFeedPost(post: Pick<ContentPost, "format" | "networks">): boolean {
+  return post.format !== "stories" && post.networks.includes("instagram")
+}
+
+type FeedCandidate = FeedSortable & Pick<ContentPost, "client_id" | "format" | "networks" | "stage">
+
+/** Os quadrados do feed de um cliente, já na ordem do grid (`feedOrder`). */
+export function feedPosts<T extends FeedCandidate>(posts: readonly T[], clientId: string, filter: FeedFilter): T[] {
+  return feedOrder(
+    posts.filter(
+      (post) =>
+        post.client_id === clientId &&
+        isFeedPost(post) &&
+        (filter === "planned" || APPROVED_STAGES.includes(post.stage))
+    )
+  )
+}
+
+/** Posts fixados do cliente (para conferir o limite antes de fixar mais um). */
+export function pinnedCount(posts: readonly Pick<ContentPost, "client_id" | "pinned">[], clientId: string): number {
+  return posts.filter((post) => post.pinned && post.client_id === clientId).length
+}
+
 type FeedSortable = Sortable & Pick<ContentPost, "pinned" | "created_at">
 
 /**
@@ -367,4 +403,34 @@ export function feedOrder<T extends FeedSortable>(posts: readonly T[]): T[] {
     }
     return b.created_at.localeCompare(a.created_at)
   })
+}
+
+/* ------------------------------------------------------------------ */
+/* Imagens                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Caminho de uma imagem no bucket privado `content`: `<client_id>/<arquivo>`,
+ * os dois UUIDs (o arquivo é sorteado pelo servidor no envio).
+ */
+export function isContentImagePath(value: unknown): value is string {
+  if (typeof value !== "string") return false
+  const parts = value.split("/")
+  return parts.length === 2 && parts.every(isUuid)
+}
+
+/** Endereço estável da imagem no app: confere a sessão e redireciona para uma URL assinada. */
+export function contentImageUrl(path: string): string {
+  return `/api/conteudo/${path}`
+}
+
+/** Imagens de um post (capa e slides), sem repetir. */
+export function postImagePaths(post: Pick<ContentPost, "cover_path" | "slides">): string[] {
+  const paths = [post.cover_path, ...post.slides.map((slide) => slide.image_path)]
+  return [...new Set(paths.filter((path): path is string => path !== null))]
+}
+
+/** Imagens que saíram: estavam antes e não estão depois (o arquivo pode ser apagado). */
+export function removedImages(before: readonly string[], after: readonly string[]): string[] {
+  return before.filter((path) => !after.includes(path))
 }

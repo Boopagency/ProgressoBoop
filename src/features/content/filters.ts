@@ -11,7 +11,7 @@ import { isUuid } from "@/lib/utils"
  * vírgula; valores desconhecidos são ignorados.
  */
 
-export type ContentViewMode = "calendar" | "board" | "list"
+export type ContentViewMode = "calendar" | "board" | "list" | "feed"
 export type CalendarMode = "month" | "week"
 
 export interface ContentUrlFilters {
@@ -34,7 +34,7 @@ export interface ContentUrlState {
 export const EMPTY_FILTERS: ContentUrlFilters = { clients: [], person: "all", networks: [], formats: [], stages: [] }
 
 /** Modo na URL, em português. */
-const VIEW_PARAM: Record<ContentViewMode, string> = { calendar: "calendario", board: "quadro", list: "lista" }
+const VIEW_PARAM: Record<ContentViewMode, string> = { calendar: "calendario", board: "quadro", list: "lista", feed: "feed" }
 
 type SearchParams = Record<string, string | string[] | undefined>
 

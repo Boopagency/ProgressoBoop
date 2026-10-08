@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
 import { defaultChecklist } from "@/features/clients/logic"
+import { clientContentImages, removeContentImages } from "@/features/content/storage"
 import {
   isPeriod,
   parseClientInput,
@@ -81,17 +82,21 @@ export async function setClientActive(id: string, active: boolean): Promise<Acti
 }
 
 /**
- * Exclui o cliente, as revisões e as comunicações dele. Tarefas, projetos,
- * eventos, processos, decisões e lançamentos continuam, sem o cliente.
+ * Exclui o cliente, as revisões, as comunicações e os posts dele (com as
+ * imagens). Tarefas, projetos, eventos, processos, decisões e lançamentos
+ * continuam, sem o cliente.
  */
 export async function deleteClient(id: string): Promise<ActionResult> {
   await requireUser()
   if (!isUuid(id)) return NOT_FOUND
 
   const supabase = await createClient()
+  // Os posts saem em cascata: as imagens deles (e a foto do perfil) são lidas antes.
+  const images = await clientContentImages(supabase, id)
   const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir o cliente.")
   if (data.length === 0) return NOT_FOUND
+  await removeContentImages(supabase, images)
   refreshApp()
   return { ok: true, data: null }
 }

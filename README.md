@@ -149,7 +149,8 @@ app **não usa** chave secreta nem `service_role`.
   [ARQUITETURA.md](docs/ARQUITETURA.md#próximos-passos)).
 - Imagens dos processos: bucket privado `docs` do Storage (criado pela
   migration `docs`), servidas pelo app em `/api/arquivos/…` só para quem está
-  logado.
+  logado. As do conteúdo (capas, slides e foto do cliente), no bucket privado
+  `content` (migration `content`), em `/api/conteudo/…`, com a mesma regra.
 
 ### Contas
 

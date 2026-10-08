@@ -289,9 +289,9 @@ export function ClientView({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {client.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              O cadastro, as revisões mensais e as comunicações serão apagados. Tarefas, projetos, eventos,
-              processos, decisões e lançamentos continuam, sem o cliente. Para só tirar das listas, use “Desativar
-              cliente”.
+              O cadastro, as revisões mensais, as comunicações e os posts (com as imagens) serão apagados.
+              Tarefas, projetos, eventos, processos, decisões e lançamentos continuam, sem o cliente. Para só
+              tirar das listas, use “Desativar cliente”.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -101,6 +101,11 @@ export interface Client {
   id: string
   name: string
   active: boolean
+  /** Foto do perfil no bucket `content` (`<client_id>/<arquivo>`). */
+  avatar_path: string | null
+  /** Perfil do Instagram para o preview do feed: o @ (sem a arroba) e a bio. */
+  instagram_handle: string | null
+  instagram_bio: string | null
 }
 
 /** Cadastro completo do cliente (tela Clientes). */

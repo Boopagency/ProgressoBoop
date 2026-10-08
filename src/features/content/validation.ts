@@ -1,4 +1,4 @@
-import { defaultFronts, MAX_SLIDES } from "@/features/content/logic"
+import { defaultFronts, isContentImagePath, MAX_SLIDES } from "@/features/content/logic"
 import { isDateKey } from "@/lib/dates"
 import {
   CONTENT_FRONTS,
@@ -29,8 +29,15 @@ export const SCRIPT_MAX = 10000
 export const CAPTION_MAX = 5000
 export const SLIDE_TEXT_MAX = 2000
 export const DRIVE_URL_MAX = 2000
-const IMAGE_PATH_MAX = 500
 const INTENTS_MAX = 5
+/** Perfil do Instagram: @ (sem a arroba) e bio, com os limites do próprio Instagram. */
+export const HANDLE_MAX = 30
+export const BIO_MAX = 150
+/** Imagens que o bucket `content` aceita (o navegador reduz antes de enviar). */
+export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const
+export const IMAGE_MAX = 5 * 1024 * 1024
+/** Imagens descartadas por chamada (o diálogo manda em lotes). */
+export const DISCARD_MAX = 50
 
 export interface PostInput {
   title: string
@@ -53,6 +60,10 @@ export interface PostInput {
   slides: ContentSlide[]
   caption: string | null
   drive_url: string | null
+  /** Capa no bucket `content` (`<client_id>/<arquivo>`). */
+  cover_path: string | null
+  /** Fixado no topo do feed (até 3 por cliente, conferido na action). */
+  pinned: boolean
 }
 
 export type PostPatch = Partial<PostInput>
@@ -87,7 +98,7 @@ function parseSlides(value: unknown): ContentSlide[] | null {
     const text = slide.text.replace(/\r\n?/g, "\n").trim()
     if (text.length > SLIDE_TEXT_MAX) return null
     const path = slide.image_path ?? null
-    if (path !== null && (typeof path !== "string" || path.length === 0 || path.length > IMAGE_PATH_MAX)) return null
+    if (path !== null && !isContentImagePath(path)) return null
     slides.push({ text, image_path: path })
   }
   return slides
@@ -176,6 +187,14 @@ export function parsePostPatch(raw: unknown): Parsed<PostPatch> {
     }
     patch.drive_url = parsed.value
   }
+  if ("cover_path" in input) {
+    if (input.cover_path !== null && !isContentImagePath(input.cover_path)) return { ok: false, error: "Capa inválida." }
+    patch.cover_path = input.cover_path
+  }
+  if ("pinned" in input) {
+    if (typeof input.pinned !== "boolean") return { ok: false, error: "Dados inválidos." }
+    patch.pinned = input.pinned
+  }
   return { ok: true, value: patch }
 }
 
@@ -213,6 +232,8 @@ export function parsePostInput(raw: unknown): Parsed<PostInput> {
       slides: patch.slides ?? [],
       caption: patch.caption ?? null,
       drive_url: patch.drive_url ?? null,
+      cover_path: patch.cover_path ?? null,
+      pinned: patch.pinned ?? false,
     },
   }
 }
@@ -239,4 +260,25 @@ export function parseFrontTasks(raw: unknown): Parsed<FrontTaskInput[]> {
     items.push({ front: item.front as ContentFront, assignee_ids: assignees, due_date: due })
   }
   return { ok: true, value: items }
+}
+
+export interface FeedProfileInput {
+  /** Sem @: letras, números, ponto e sublinhado. */
+  instagram_handle: string | null
+  instagram_bio: string | null
+}
+
+/** Perfil do Instagram do cliente (cabeçalho do feed). Vazio vira null; a arroba do começo sai. */
+export function parseFeedProfile(raw: unknown): Parsed<FeedProfileInput> {
+  const input = record(raw)
+  if (!input) return { ok: false, error: "Dados inválidos." }
+  const handleText = input.instagram_handle ?? null
+  if (handleText !== null && typeof handleText !== "string") return { ok: false, error: "@ inválido." }
+  const handle = (handleText ?? "").trim().replace(/^@+/, "")
+  if (handle && !new RegExp(`^[A-Za-z0-9._]{1,${HANDLE_MAX}}$`).test(handle)) {
+    return { ok: false, error: `O @ aceita letras, números, ponto e sublinhado (até ${HANDLE_MAX}).` }
+  }
+  const bio = longText(input.instagram_bio, BIO_MAX)
+  if (!bio.ok) return { ok: false, error: `A bio tem até ${BIO_MAX} caracteres.` }
+  return { ok: true, value: { instagram_handle: handle || null, instagram_bio: bio.value } }
 }

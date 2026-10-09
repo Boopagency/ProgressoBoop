@@ -197,8 +197,9 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`goals`](../supabase/migrations/20261007174228_goals.sql),
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
 [`content`](../supabase/migrations/20261008122847_content.sql),
-[`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql) e
-[`channels`](../supabase/migrations/20261008195016_channels.sql).
+[`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql),
+[`channels`](../supabase/migrations/20261008195016_channels.sql) e
+[`portal_content`](../supabase/migrations/20261008231500_portal_content.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -277,7 +278,9 @@ Funções expostas (só para `authenticated`): `public.win_deal(...)`
 (item 41); `public.open_direct_channel(profile_id)` (`security definer`), que
 abre ou cria a conversa direta com outra pessoa da equipe (item 46); e
 `public.channel_counts()` (`security invoker`), com as não lidas e os pedidos
-pendentes de cada canal (item 45).
+pendentes de cada canal (item 45); e as do conteúdo no portal
+(`security definer`, item 47): `portal_client_profile`, `portal_posts`,
+`portal_post_messages`, `portal_send_message` e `portal_review_post`.
 
 ### 5.1 Decisões sobre o schema
 
@@ -595,6 +598,27 @@ pendentes de cada canal (item 45).
     `RETURNING` (antes do trigger, quem criou ainda não o enxerga), o trigger
     `add_channel_creator` põe quem criou como participante e depois o app
     inclui os outros.
+47. **Portal: conteúdo e aprovação só por funções.** O cliente vê os posts
+    do cliente dele a partir de "com o cliente" (com o cliente, aprovado,
+    programado, publicado) por `portal_posts`, que devolve só título,
+    formato, redes, data e hora, etapa, legenda, slides, capa, fixado e
+    publicação (nada de ideia, orientação de design, roteiro, frentes,
+    responsável ou link do Drive). Post em que o próprio cliente já
+    escreveu (o pedido de ajuste, por exemplo) continua no portal enquanto
+    volta para produção ou revisão interna ("em ajuste": lê e conversa, não
+    aprova); mensagem da equipe não libera o post
+    (`private.portal_visible_post`). `portal_review_post` aprova (vai para
+    "aprovado") ou pede ajuste com o que mudar (volta para "revisão
+    interna") só em post "com o cliente", e grava a mensagem `approval` ou
+    `change_request` no canal do cliente, ligada ao post. O chat do post no
+    portal lê por `portal_post_messages` (só o canal do cliente, com o nome
+    de quem escreveu) e escreve por `portal_send_message`. Como
+    `activity.actor_id` aponta para `profiles`, `log_activity` passou a
+    gravar o autor só quando é da equipe: a etapa mudada pelo cliente entra
+    no histórico como "O sistema", e quem aprovou fica na mensagem. As
+    imagens: a política "cliente vê as imagens dos próprios posts" no bucket
+    `content` libera só a foto do perfil e as capas e slides dos posts que
+    ele vê (`private.portal_can_read_content_object`).
 
 ### 5.2 Segurança (RLS)
 
@@ -627,7 +651,7 @@ pendentes de cada canal (item 45).
 | `channel_members`  | ver os dos canais que vê; incluir e tirar pessoas (ou sair) nos canais internos de que participa. Os da conversa direta não mudam |
 | `messages`         | ver e escrever (como autor, nunca `system`) nos canais que vê; editar o texto e apagar só as próprias; marcar como pedido, resolver e ligar a tarefa em qualquer uma que vê |
 | `channel_reads`    | só a própria leitura, nos canais que vê                       |
-| Storage, buckets `docs` e `content` | ver, enviar e apagar imagens                 |
+| Storage, buckets `docs` e `content` | ver, enviar e apagar imagens. A conta do cliente lê, no `content`, só a foto do perfil e as imagens dos posts que vê no portal |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
   então as políticas acima valem para tudo o que ela cria. Anônimos não

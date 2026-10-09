@@ -206,7 +206,7 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql),
 [`channels`](../supabase/migrations/20261008195016_channels.sql),
 [`portal_content`](../supabase/migrations/20261009000106_portal_content.sql) e
-[`notifications`](../supabase/migrations/20261009140633_notifications.sql).
+[`notifications`](../supabase/migrations/20261009143009_notifications.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

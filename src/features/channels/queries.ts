@@ -15,9 +15,9 @@ import type { Timestamp } from "@/lib/types"
 
 export const CHANNEL_COLUMNS = "id, kind, client_id, name, archived, created_by, created_at"
 
-/** Mensagem com o cartão do post (capa, título, etapa). */
+/** Mensagem com o cartão do post (capa, título, etapa) e o do projeto. */
 export const MESSAGE_COLUMNS =
-  "id, channel_id, post_id, author_id, kind, body, resolved_at, resolved_by, task_id, created_at, edited_at, post:content_posts(id, client_id, title, stage, format, cover_path, publish_on)"
+  "id, channel_id, post_id, project_id, author_id, kind, body, resolved_at, resolved_by, task_id, created_at, edited_at, post:content_posts(id, client_id, title, stage, format, cover_path, publish_on), project:projects(id, name)"
 
 
 export async function fetchCounts(supabase: SupabaseServerClient): Promise<Map<string, ChannelCounts>> {
@@ -30,22 +30,29 @@ export async function fetchCounts(supabase: SupabaseServerClient): Promise<Map<s
 
 /**
  * Uma página do fio: as mensagens mais recentes (ou as de antes de `before`),
- * em ordem, e todos os pedidos pendentes do canal (ou do post).
+ * em ordem, e todos os pedidos pendentes do canal (ou do post, ou do projeto).
  */
 export async function fetchThread(
   supabase: SupabaseServerClient,
-  scope: { channelId: string } | { postId: string },
+  scope: { channelId: string } | { postId: string } | { projectId: string },
   before?: Timestamp
 ): Promise<ThreadData> {
+  // Canal inteiro, ou só as mensagens de um post ou de um projeto.
+  const inScope = <Q extends { eq: (column: "channel_id" | "post_id" | "project_id", value: string) => Q }>(query: Q) =>
+    "channelId" in scope
+      ? query.eq("channel_id", scope.channelId)
+      : "postId" in scope
+        ? query.eq("post_id", scope.postId)
+        : query.eq("project_id", scope.projectId)
   const page = () => {
     let query = supabase.from("messages").select(MESSAGE_COLUMNS)
-    query = "channelId" in scope ? query.eq("channel_id", scope.channelId) : query.eq("post_id", scope.postId)
+    query = inScope(query)
     if (before) query = query.lt("created_at", before)
     return query.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(THREAD_PAGE + 1)
   }
   const pendingQuery = () => {
     const query = supabase.from("messages").select(MESSAGE_COLUMNS).eq("kind", "change_request").is("resolved_at", null)
-    return ("channelId" in scope ? query.eq("channel_id", scope.channelId) : query.eq("post_id", scope.postId))
+    return inScope(query)
       .order("created_at")
       .limit(200)
   }

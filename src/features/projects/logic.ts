@@ -102,6 +102,8 @@ export interface SeedTask {
   due_date: DateKey | null
   area: TaskArea | null
   priority?: Task["priority"]
+  /** Etapa que o cliente vê no portal (só vale em projeto de cliente). */
+  client_visible?: boolean
 }
 
 /** Tarefas de um modelo, com prazos a partir do começo do projeto. */
@@ -110,6 +112,7 @@ export function templateTasks(template: ProjectTemplate, startsOn: DateKey): See
     title: task.title,
     due_date: addDaysToKey(startsOn, task.offset),
     area: task.area ?? template.area,
+    client_visible: task.clientVisible ?? false,
   }))
 }
 
@@ -119,7 +122,7 @@ export function templateTasks(template: ProjectTemplate, startsOn: DateKey): See
  */
 export function copiedTasks(
   source: Pick<Project, "starts_on">,
-  sourceTasks: Pick<Task, "title" | "due_date" | "area" | "priority" | "created_at">[],
+  sourceTasks: Pick<Task, "title" | "due_date" | "area" | "priority" | "client_visible" | "created_at">[],
   startsOn: DateKey
 ): SeedTask[] {
   return [...sourceTasks]
@@ -136,5 +139,6 @@ export function copiedTasks(
       due_date: task.due_date ? addDaysToKey(startsOn, Math.max(0, daysBetween(source.starts_on, task.due_date))) : null,
       area: task.area,
       priority: task.priority,
+      client_visible: task.client_visible,
     }))
 }

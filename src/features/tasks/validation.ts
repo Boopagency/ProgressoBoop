@@ -12,6 +12,8 @@ export interface TaskInput {
   area: TaskArea | null
   client_id: string | null
   project_id: string | null
+  /** Etapa que o cliente vê no portal (padrão: não). */
+  client_visible?: boolean
   priority: TaskPriority
   status: TaskStatus
 }
@@ -92,6 +94,11 @@ export function parseTaskPatch(raw: unknown): Parsed<TaskPatch> {
     patch.project_id = projectId
   }
 
+  if ("client_visible" in raw) {
+    if (typeof raw.client_visible !== "boolean") return { ok: false, error: "Opção do portal inválida." }
+    patch.client_visible = raw.client_visible
+  }
+
   if ("priority" in raw) {
     if (!isTaskPriority(raw.priority)) return { ok: false, error: "Prioridade inválida." }
     patch.priority = raw.priority
@@ -122,6 +129,7 @@ export function parseTaskInput(raw: unknown): Parsed<TaskInput> {
       area: patch.area ?? null,
       client_id: patch.client_id ?? null,
       project_id: patch.project_id ?? null,
+      client_visible: patch.client_visible ?? false,
       priority: patch.priority ?? "normal",
       status: patch.status ?? "todo",
     },

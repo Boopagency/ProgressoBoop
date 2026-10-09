@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
+import { useState } from "react"
 
 import { BoopMark } from "@/components/layout/boop-mark"
-import { isActivePath, NAV_GROUPS } from "@/components/layout/nav-items"
+import { CLAUDE_NAV_ITEM, isActivePath, NAV_GROUPS } from "@/components/layout/nav-items"
 import { NavUser } from "@/components/layout/nav-user"
 import {
   Sidebar,
@@ -25,6 +26,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useUnread } from "@/features/channels/unread-provider"
+import { ClaudePanel } from "@/features/mcp/claude-panel"
 import { sameQuery } from "@/features/tasks/filters"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 
@@ -34,6 +36,7 @@ export function AppSidebar() {
   const { savedViews } = useWorkspace()
   const { isMobile, setOpenMobile } = useSidebar()
   const { unread } = useUnread()
+  const [claudeOpen, setClaudeOpen] = useState(false)
 
   // No celular a sidebar é um Sheet: fecha ao navegar.
   const closeOnMobile = () => {
@@ -44,6 +47,7 @@ export function AppSidebar() {
   const currentQuery = onTasks ? searchParams.toString() : ""
 
   return (
+    <>
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader className="pt-3">
         <SidebarMenu>
@@ -120,9 +124,27 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={CLAUDE_NAV_ITEM.title}
+              onClick={() => {
+                closeOnMobile()
+                setClaudeOpen(true)
+              }}
+              className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground [&>svg]:text-muted-foreground"
+            >
+              <CLAUDE_NAV_ITEM.icon />
+              <span>{CLAUDE_NAV_ITEM.title}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+    {/* Fora da Sidebar: no celular ela é um Sheet que desmonta ao fechar. */}
+    <ClaudePanel open={claudeOpen} onOpenChange={setClaudeOpen} />
+    </>
   )
 }

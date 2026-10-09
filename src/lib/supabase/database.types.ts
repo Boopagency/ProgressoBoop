@@ -1493,6 +1493,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["message_kind"]
           post_id: string | null
+          project_id: string | null
           resolved_at: string | null
           resolved_by: string | null
           task_id: string | null
@@ -1506,6 +1507,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
           post_id?: string | null
+          project_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           task_id?: string | null
@@ -1519,6 +1521,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
           post_id?: string | null
+          project_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           task_id?: string | null
@@ -1536,6 +1539,13 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1792,6 +1802,7 @@ export type Database = {
           area: Database["public"]["Enums"]["task_area"] | null
           client_id: string | null
           client_review_id: string | null
+          client_visible: boolean
           communication_id: string | null
           completed_at: string | null
           content_post_id: string | null
@@ -1813,6 +1824,7 @@ export type Database = {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
           client_review_id?: string | null
+          client_visible?: boolean
           communication_id?: string | null
           completed_at?: string | null
           content_post_id?: string | null
@@ -1834,6 +1846,7 @@ export type Database = {
           area?: Database["public"]["Enums"]["task_area"] | null
           client_id?: string | null
           client_review_id?: string | null
+          client_visible?: boolean
           communication_id?: string | null
           completed_at?: string | null
           content_post_id?: string | null
@@ -2023,12 +2036,54 @@ export type Database = {
           updated_at: string
         }[]
       }
+      portal_project_messages: {
+        Args: { target_project: string }
+        Returns: {
+          author_name: string
+          body: string
+          created_at: string
+          edited_at: string
+          from_team: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          mine: boolean
+          resolved: boolean
+        }[]
+      }
+      portal_project_steps: {
+        Args: { target_project: string }
+        Returns: {
+          completed_at: string
+          due_date: string
+          id: string
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+        }[]
+      }
+      portal_projects: {
+        Args: { target_client: string }
+        Returns: {
+          completed_at: string
+          due_on: string
+          id: string
+          name: string
+          starts_on: string
+          status: Database["public"]["Enums"]["project_status"]
+          tasks_done: number
+          tasks_total: number
+          template: string
+        }[]
+      }
       portal_review_post: {
         Args: { decision: string; note?: string; target_post: string }
         Returns: string
       }
       portal_send_message: {
         Args: { message_body: string; target_post: string }
+        Returns: string
+      }
+      portal_send_project_message: {
+        Args: { message_body: string; target_project: string }
         Returns: string
       }
       restore_doc_version: {

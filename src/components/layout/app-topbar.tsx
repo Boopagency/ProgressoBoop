@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation"
 import { isActivePath, NAV_ITEMS } from "@/components/layout/nav-items"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import type { NotificationFeed } from "@/features/notifications/logic"
+import { NotificationBell } from "@/features/notifications/notification-bell"
 import { SearchButton } from "@/features/search/command-palette"
 
-export function AppTopbar() {
+export function AppTopbar({ notifications }: { notifications: NotificationFeed }) {
   const pathname = usePathname()
   const current = NAV_ITEMS.find((item) => isActivePath(pathname, item.href))
 
@@ -22,6 +24,7 @@ export function AppTopbar() {
         </span>
       ) : null}
       <SearchButton className="ml-auto" />
+      <NotificationBell initial={notifications} />
     </header>
   )
 }

@@ -925,6 +925,41 @@ própria conta.
 - **Limites:** vê só o que a pessoa vê, não apaga nada e não acessa o
   financeiro nem o comercial. Para desconectar, remove o conector no Claude.
 
+### 2.29 Notificações (sino no topo)
+
+O sino fica no canto superior direito de todas as telas da equipe, ao lado
+de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
+
+- **O que avisa:** mensagem nova num canal interno ou numa conversa direta
+  de que a pessoa participa; mensagem de um cliente pelo portal (para a
+  equipe toda); cliente que aprovou um post ou pediu ajuste (equipe toda); e
+  tarefa atribuída à pessoa. Quem escreveu ou atribuiu não recebe. Várias
+  tarefas de uma vez (modelo de projeto, checklist, frentes do post) viram
+  um aviso só ("atribuiu 12 tarefas a você em Site Velmont"). Mensagem da
+  equipe no canal do cliente não avisa (já conta nas não lidas de
+  Comunicações).
+- **A lista:** os 30 avisos mais recentes, com quem fez, do que se trata, o
+  trecho da mensagem e quando. Os não lidos têm o ponto azul. Clicar abre o
+  canal, o post, a tarefa ou o projeto e marca o aviso como lido.
+  **Marcar todas como lidas** zera o contador. Ler um canal em
+  Comunicações também marca como lidos os avisos das mensagens vistas.
+- **Atualização:** o sino pergunta ao servidor a cada 15 segundos (e ao
+  voltar para a aba). Com a aba em segundo plano, o navegador pode espaçar
+  as consultas (até 1 minuto).
+- **Som:** aviso novo toca dois toques curtos. Os navegadores só deixam
+  tocar som depois do primeiro clique (ou tecla) na página; antes disso, o
+  aviso chega calado.
+- **Aviso do navegador:** com a aba em segundo plano, o aviso aparece no
+  canto da tela (até 3 de uma vez); clicar nele volta para o app no lugar
+  certo. Ao ligar, o navegador pede a permissão; se ela foi bloqueada, é
+  preciso liberar nas configurações do site.
+- **Ligar e desligar:** **Som** e **Aviso do navegador**, no rodapé da
+  lista, valem para aquele navegador (o som começa ligado; o aviso, desligado).
+  No celular só aparece o som: push no celular fica para depois.
+- Com o app aberto em várias abas, só uma toca o som e mostra o aviso.
+- Avisos com mais de 90 dias somem sozinhos. O cliente do portal não tem
+  sino nem avisos.
+
 ## 3. Regras: como os números são calculados
 
 O fuso é o de São Paulo e a semana vai de segunda a domingo.
@@ -1072,8 +1107,11 @@ como visão salva).
   estão no relatório para apresentar.
 - Visões salvas só existem na tela Tarefas.
 - Não há atualização em tempo real (2.15). A conversa aberta pergunta ao
-  servidor a cada 4 segundos; as não lidas da barra lateral, a cada 30.
-- Canais: sem menção (@pessoa), sem anexos e sem aviso fora do app. A busca
+  servidor a cada 4 segundos; o sino, a cada 15; as não lidas da barra
+  lateral, a cada 30.
+- Canais: sem menção (@pessoa) e sem anexos. O aviso fora da aba (2.29) só
+  vem com o app aberto em alguma aba do navegador; push no celular e e-mail
+  ficam para depois. A busca
   do canal procura nas mensagens carregadas (as mais recentes e as de "Ver
   mensagens anteriores"); mensagens não entram na busca geral.
 - A recorrência é só semanal e sempre da série inteira: não dá para pular uma
@@ -1166,6 +1204,7 @@ são uma sugestão para começar.
 | Projetos (lista, página, modelos, progresso) | `src/features/projects/` (`templates.ts` modelos, `logic.ts` regras), `src/app/(app)/projetos/` |
 | Histórico e comentários | `src/features/activity/` (`logic.ts` frases), triggers em `supabase/migrations/20261007144504_activity.sql` |
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
+| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009163255_notifications.sql` |
 | Comunicações (canais, mensagens, chat do post, não lidas) | `src/features/channels/` (`logic.ts` regras, `use-thread.ts` atualização, `actions.ts`), `src/app/(app)/comunicacoes/`; registros de contato em `src/features/communications/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |

@@ -122,6 +122,8 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
+│   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
+│   │                           # navegador (browser.ts), atualização a cada 15 s
 │   ├── portal/                 # portal do cliente: sessão da conta de cliente, o
 │   │                           # conteúdo (queries, actions e regras pelas funções
 │   │                           # `portal_*`, telas do post e chat) e, na equipe, o
@@ -781,7 +783,8 @@ Tarefas e as visões salvas, Projetos, Calendário, Reuniões; **Relacionamento*
 Comercial, Conteúdo, Clientes, Comunicações; **Gestão**: Indicadores, Metas,
 Financeiro, Relatórios, Decisões, Processos; usuário e sair no rodapé) e
 conteúdo num painel branco sobre fundo off-white. No topo de todas,
-**Buscar…** (Ctrl/⌘ + K) abre a busca geral. A exceção é `/relatorio`, a
+**Buscar…** (Ctrl/⌘ + K) abre a busca geral, e o **sino** mostra as
+notificações (contador, lista e "Marcar todas como lidas"). A exceção é `/relatorio`, a
 página limpa do relatório para apresentar ou imprimir.
 
 ### Hoje (`/hoje`)
@@ -1239,6 +1242,7 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `CommunicationsCard` / `CommunicationDialog` | registros de contato: cartão (cliente, projeto), registro e "Virar tarefa" |
 | `ChannelsView` / `Conversation` / `ChannelDialog` | Comunicações: lista de canais, conversa (fio, pendentes, busca, menu) e novo canal, conversa direta, nome e participantes |
 | `ThreadView` / `MessageItem` / `Composer` / `useThread` | o fio por dia, a mensagem (post, tarefa, resolver, editar) e o campo de escrever; `useThread` busca de novo a cada poucos segundos |
+| `NotificationBell`   | sino do topo: contador, lista, "Marcar todas como lidas", som e aviso do navegador (liga e desliga por navegador) |
 | `PostSidePanel` / `ClientChannelCard` / `TodayRequestsCard` / `UnreadProvider` | chat do post (Cliente/Interno), canal na página do cliente, quadro do Hoje e as não lidas da barra lateral |
 | `FinanceView` / `FinanceRows` / `FinanceDialog` | financeiro do mês, linhas com recebido/pago otimista, lançamento e recorrência |
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
@@ -1441,7 +1445,11 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     a cada 4 segundos, com a aba visível (e ao voltar para ela); só a
     resposta mais nova vale, e a mensagem enviada aparece na hora. A lista
     de canais pergunta as contagens a cada 15 segundos e a barra lateral, a
-    cada 30 (`channel_counts()`). Escrever, editar e resolver não recarregam
+    cada 30 (`channel_counts()`). O sino das notificações pergunta a cada 15
+    segundos, também com a aba em segundo plano (para o aviso do navegador);
+    só o que chega depois de a aba abrir toca o som (liberado no primeiro
+    clique na página), e com várias abas só uma anuncia cada aviso
+    (`localStorage`). Escrever, editar e resolver não recarregam
     o app (o fio busca de novo); criar tarefa e mudar canais recarregam.
     Lido = a hora da mensagem mais nova que a pessoa viu, enviada como veio
     do banco (microssegundos).

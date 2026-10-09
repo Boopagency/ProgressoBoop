@@ -849,10 +849,31 @@ A área em que a pessoa de um cliente entra com a própria conta e vê só o
 que é daquele cliente. Layout próprio (sem a barra lateral da equipe),
 pensado para o celular.
 
-- **Nesta fase:** a saudação com o nome de quem acessa e o nome do cliente,
-  um seletor quando a conta acompanha mais de um cliente e o aviso do que
-  vem a seguir (calendário e feed dos posts, aprovar ou pedir ajuste e o
-  chat de cada peça). "Sair" no topo.
+- **O que o cliente vê:** os posts a partir de "Aguardando cliente"
+  (aguardando, aprovado, programado e publicado) e os que voltaram para a
+  equipe depois de ele escrever no post, como "Em ajuste". Nada interno:
+  ideia, orientação de design, roteiro, frentes, responsável e link do
+  Drive ficam de fora. Para o cliente, as etapas aparecem como Para
+  aprovar, Em ajuste, Aprovado, Programado e Publicado.
+- **Início:** a saudação com o nome de quem acessa e quantos posts esperam
+  a aprovação; as listas "Para aprovar", "Em ajuste" (só quando há) e
+  "Próximos 14 dias" (aprovados e programados com data). Um seletor de
+  cliente quando a conta acompanha mais de um. "Sair" no topo.
+- **Calendário:** o mês, de segunda a domingo, com os posts em cada dia
+  (ponto da situação e título); setas para mudar de mês e "Hoje". No
+  celular, só os dias que têm post, em lista. Os sem data ficam abaixo.
+- **Feed:** a prévia do Instagram como na Central de Conteúdo (foto, @,
+  número de posts, bio e o grid na mesma ordem, fixados primeiro), só com os
+  posts que o cliente vê. Stories não entram.
+- **Post aberto:** a situação, o formato, as redes e a data; as imagens
+  (capa e slides) uma de cada vez, a legenda e o texto dos slides. Em "Para
+  aprovar", **Aprovar** (com comentário opcional; o post vai para
+  Aprovado) e **Pedir ajuste** (com o que mudar, obrigatório; o post volta
+  para a revisão interna e fica como Em ajuste). Em ajuste, o post é só
+  leitura, com um aviso. Ao lado, a **conversa com a equipe**: o mesmo fio
+  do canal "Alterações" do cliente, só deste post, que atualiza sozinho
+  a cada 10 segundos; Enter envia e Shift+Enter quebra a linha. A aprovação
+  e o pedido de ajuste entram no fio, marcados.
 - **Acesso do cliente** (página do cliente, coluna da direita): quem do
   cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
   e-mail de uma conta já criada no Supabase (Authentication → Users → Add

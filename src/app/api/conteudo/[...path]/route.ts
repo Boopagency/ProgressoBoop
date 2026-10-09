@@ -3,16 +3,19 @@ import type { NextRequest } from "next/server"
 import { getSessionUser } from "@/features/auth/session"
 import { isContentImagePath } from "@/features/content/logic"
 import { CONTENT_BUCKET } from "@/features/content/storage"
+import { getPortalUser } from "@/features/portal/session"
 import { createClient } from "@/lib/supabase/server"
 
 /**
  * Imagens da Central de Conteúdo (capas, slides e a foto do perfil do
  * cliente; bucket privado). O banco guarda o caminho `<cliente>/<arquivo>`;
  * a cada pedido o app confere a sessão e redireciona para uma URL assinada
- * que expira em uma hora. Nunca há URL pública.
+ * que expira em uma hora. Nunca há URL pública. Conta de cliente (portal)
+ * também passa: a política do Storage só deixa ela ler as imagens dos posts
+ * que vê e a foto do perfil do cliente dela.
  */
 export async function GET(_request: NextRequest, context: RouteContext<"/api/conteudo/[...path]">) {
-  const user = await getSessionUser()
+  const user = (await getSessionUser()) ?? (await getPortalUser())
   if (!user) return new Response("Faça login para ver este arquivo.", { status: 401 })
 
   const { path } = await context.params

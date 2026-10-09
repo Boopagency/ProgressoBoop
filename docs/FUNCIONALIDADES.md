@@ -880,7 +880,10 @@ pensado para o celular.
   andamento e, ao lado, as **etapas** que a equipe marcou como "o cliente
   vê" (feita, próxima, em andamento ou a fazer, com a data) e a **conversa
   do projeto**, no mesmo canal "Alterações" do cliente, marcada com o
-  projeto. Nada de descrição, responsável ou tarefa interna.
+  projeto. Nada de descrição, responsável ou tarefa interna. Na equipe, a
+  página do projeto de cliente mostra a mesma **Conversa com o cliente**
+  (escrever, marcar pedido de ajuste, virar tarefa já com o projeto), e no
+  canal "Alterações" a mensagem aparece com a etiqueta do projeto.
 - **"O cliente vê" (equipe):** na tarefa de um projeto de cliente, a
   opção "Portal: o cliente vê esta etapa". Nos modelos (site, identidade
   visual, social media), as etapas com o cliente (briefing, aprovações,

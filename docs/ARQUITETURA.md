@@ -123,7 +123,8 @@ src/
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
 │   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
-│   │                           # navegador (browser.ts), atualização a cada 15 s
+│   │                           # navegador (browser.ts), avisos na hora pelo Realtime
+│   │                           # (realtime.ts)
 │   ├── portal/                 # portal do cliente: sessão da conta de cliente, o
 │   │                           # conteúdo (queries, actions e regras pelas funções
 │   │                           # `portal_*`, telas do post e chat) e, na equipe, o
@@ -171,10 +172,12 @@ Server Component (page.tsx)
   progresso na hora. Se o servidor falhar, a UI volta e aparece um toast.
 - **Sem cliente do Supabase no navegador.** Todo acesso ao banco passa pelo
   servidor (Server Components e Server Actions) com a sessão da pessoa, via
-  `@supabase/ssr` e cookies. Única exceção, sem acesso ao banco: o envio de
+  `@supabase/ssr` e cookies. Duas exceções, sem leitura de dados: o envio de
   imagens dos processos e do conteúdo vai do navegador direto ao Storage,
   numa URL de envio assinada que o servidor gera (com a sessão) para um
-  caminho só.
+  caminho só; e o sino escuta pelo Realtime os próprios avisos (só o sinal
+  de que algo mudou; a lista vem do servidor), com o token da sessão que o
+  servidor entrega, sem sessão nem renovação de token no navegador.
 
 ## 5. Schema do Supabase
 
@@ -207,7 +210,7 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`channels`](../supabase/migrations/20261008195016_channels.sql),
 [`portal_content`](../supabase/migrations/20261009000106_portal_content.sql),
 [`notifications`](../supabase/migrations/20261009163255_notifications.sql) e
-[`notifications_realtime`](../supabase/migrations/20261009172648_notifications_realtime.sql).
+[`notifications_realtime`](../supabase/migrations/20261009193411_notifications_realtime.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -647,7 +650,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     tarefa apaga o aviso ainda não lido; ler o canal (`channel_reads`) marca
     como lidos os avisos das mensagens vistas. Pela API só muda `read_at`
     (com a hora do banco), e cada aviso novo apaga os de mais de 90 dias de
-    quem o recebeu.
+    quem o recebeu. A tabela está na publicação do Realtime
+    (`supabase_realtime`), para o sino avisar na hora (item 22).
 49. **Conector do Claude (MCP) com o OAuth do Supabase, sem service role.**
     Cada pessoa da equipe adiciona `https://admin.deumboop.com.br/api/mcp`
     como conector personalizado no próprio Claude. O login é o servidor
@@ -703,7 +707,7 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 | `channel_members`  | ver os dos canais que vê; incluir e tirar pessoas (ou sair) nos canais internos de que participa. Os da conversa direta não mudam |
 | `messages`         | ver e escrever (como autor, nunca `system`) nos canais que vê; editar o texto e apagar só as próprias; marcar como pedido, resolver e ligar a tarefa em qualquer uma que vê |
 | `channel_reads`    | só a própria leitura, nos canais que vê                       |
-| `notifications`    | ver e marcar como lidas (só `read_at`) as próprias. Ninguém cria nem apaga pela API (só os triggers); a conta do cliente não tem nenhuma |
+| `notifications`    | ver e marcar como lidas (só `read_at`) as próprias. Ninguém cria nem apaga pela API (só os triggers); a conta do cliente não tem nenhuma. O Realtime aplica o mesmo RLS: cada um escuta só as próprias |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens. A conta do cliente lê, no `content`, só a foto do perfil e as imagens dos posts que vê no portal |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
@@ -1243,7 +1247,7 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `CommunicationsCard` / `CommunicationDialog` | registros de contato: cartão (cliente, projeto), registro e "Virar tarefa" |
 | `ChannelsView` / `Conversation` / `ChannelDialog` | Comunicações: lista de canais, conversa (fio, pendentes, busca, menu) e novo canal, conversa direta, nome e participantes |
 | `ThreadView` / `MessageItem` / `Composer` / `useThread` | o fio por dia, a mensagem (post, tarefa, resolver, editar) e o campo de escrever; `useThread` busca de novo a cada poucos segundos |
-| `NotificationBell`   | sino do topo: contador, lista, "Marcar todas como lidas", som e aviso do navegador (liga e desliga por navegador) |
+| `NotificationBell`   | sino do topo: contador, lista, "Marcar todas como lidas", som e aviso do navegador (liga e desliga por navegador); avisos na hora pelo Realtime |
 | `PostSidePanel` / `ClientChannelCard` / `TodayRequestsCard` / `UnreadProvider` | chat do post (Cliente/Interno), canal na página do cliente, quadro do Hoje e as não lidas da barra lateral |
 | `FinanceView` / `FinanceRows` / `FinanceDialog` | financeiro do mês, linhas com recebido/pago otimista, lançamento e recorrência |
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
@@ -1441,15 +1445,22 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     `/conteudo?cliente=<id>&ver=ideias&ideia=<id>`, como `?post=` abre o
     post.
 
-22. **Conversa sem Realtime nem Supabase no navegador.** A conversa aberta
+22. **Conversa sem Realtime nem Supabase no navegador; o sino, na hora.** A conversa aberta
     (canal ou chat do post) chama uma Server Action com a sessão da pessoa
     a cada 4 segundos, com a aba visível (e ao voltar para ela); só a
     resposta mais nova vale, e a mensagem enviada aparece na hora. A lista
     de canais pergunta as contagens a cada 15 segundos e a barra lateral, a
-    cada 30 (`channel_counts()`). O sino das notificações pergunta a cada 15
-    segundos, também com a aba em segundo plano (para o aviso do navegador);
-    só o que chega depois de a aba abrir toca o som (liberado no primeiro
-    clique na página), e com várias abas só uma anuncia cada aviso
+    cada 30 (`channel_counts()`). O sino é a exceção: o aviso precisa chegar
+    na hora (pedido: no máximo 5 s). O navegador escuta pelo Realtime as
+    linhas novas e as lidas de `notifications` da pessoa e, ao receber o
+    sinal, busca a lista pela Server Action, como as outras telas; com o
+    Realtime no ar, ainda confere a cada minuto e, sem ele, pergunta a cada
+    10 segundos (também com a aba em segundo plano, para o aviso do
+    navegador). O cliente do Supabase do navegador não tem auth: o token é o
+    da sessão (o mesmo do cookie), entregue por `getRealtimeToken` e pedido
+    de novo perto de vencer; a biblioteca só carrega depois da página. Só o
+    que chega depois de a aba abrir toca o som (liberado no primeiro clique
+    na página), e com várias abas só uma anuncia cada aviso
     (`localStorage`). Escrever, editar e resolver não recarregam
     o app (o fio busca de novo); criar tarefa e mudar canais recarregam.
     Lido = a hora da mensagem mais nova que a pessoa viu, enviada como veio

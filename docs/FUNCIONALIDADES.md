@@ -943,9 +943,10 @@ de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
   canal, o post, a tarefa ou o projeto e marca o aviso como lido.
   **Marcar todas como lidas** zera o contador. Ler um canal em
   Comunicações também marca como lidos os avisos das mensagens vistas.
-- **Atualização:** o sino pergunta ao servidor a cada 15 segundos (e ao
-  voltar para a aba). Com a aba em segundo plano, o navegador pode espaçar
-  as consultas (até 1 minuto).
+- **Atualização:** na hora. O aviso aparece em cerca de 1 segundo, também
+  com a aba em segundo plano. Se a conexão em tempo real cair, o sino volta
+  a perguntar ao servidor a cada 10 segundos até ela voltar (e confere a
+  cada minuto mesmo com ela no ar).
 - **Som:** aviso novo toca dois toques curtos. Os navegadores só deixam
   tocar som depois do primeiro clique (ou tecla) na página; antes disso, o
   aviso chega calado.
@@ -1106,9 +1107,9 @@ como visão salva).
 - O Excel não leva gráficos (os números e as fórmulas, sim); os gráficos
   estão no relatório para apresentar.
 - Visões salvas só existem na tela Tarefas.
-- Não há atualização em tempo real (2.15). A conversa aberta pergunta ao
-  servidor a cada 4 segundos; o sino, a cada 15; as não lidas da barra
-  lateral, a cada 30.
+- Não há atualização em tempo real (2.15), fora o sino (2.29), que avisa na
+  hora. A conversa aberta pergunta ao servidor a cada 4 segundos; as não
+  lidas da barra lateral, a cada 30.
 - Canais: sem menção (@pessoa) e sem anexos. O aviso fora da aba (2.29) só
   vem com o app aberto em alguma aba do navegador; push no celular e e-mail
   ficam para depois. A busca
@@ -1204,7 +1205,7 @@ são uma sugestão para começar.
 | Projetos (lista, página, modelos, progresso) | `src/features/projects/` (`templates.ts` modelos, `logic.ts` regras), `src/app/(app)/projetos/` |
 | Histórico e comentários | `src/features/activity/` (`logic.ts` frases), triggers em `supabase/migrations/20261007144504_activity.sql` |
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
-| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009163255_notifications.sql` |
+| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`, `realtime.ts` avisos na hora), triggers em `supabase/migrations/20261009163255_notifications.sql` |
 | Comunicações (canais, mensagens, chat do post, não lidas) | `src/features/channels/` (`logic.ts` regras, `use-thread.ts` atualização, `actions.ts`), `src/app/(app)/comunicacoes/`; registros de contato em `src/features/communications/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |

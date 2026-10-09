@@ -6,8 +6,12 @@ import type { Timestamp } from "@/lib/types"
  * aviso do sistema, preferências) fica em `browser.ts`.
  */
 
-/** O sino pergunta ao servidor a cada 15 segundos (sem Realtime). */
-export const NOTIFICATIONS_POLL_MS = 15000
+/** Com o Realtime no ar, o sino ainda confere a lista a cada minuto. */
+export const REALTIME_CHECK_MS = 60000
+/** Sem o Realtime (conexão caiu, sem configuração), pergunta a cada 10 segundos. */
+export const FALLBACK_POLL_MS = 10000
+/** Pede um token novo para o Realtime quando faltam 2 minutos para vencer. */
+export const TOKEN_MARGIN_MS = 2 * 60 * 1000
 /** Avisos mostrados na lista (os mais recentes). */
 export const NOTIFICATIONS_LIMIT = 30
 
@@ -95,4 +99,17 @@ export function badgeLabel(count: number): string {
  */
 export function freshNotifications(items: AppNotification[], known: ReadonlySet<string>): AppNotification[] {
   return items.filter((item) => !item.read_at && !known.has(item.id)).reverse()
+}
+
+/** Quando o JWT vence (ms desde 1970), pelo campo `exp`; null se não der para ler. */
+export function jwtExpiry(token: string): number | null {
+  try {
+    const part = token.split(".")[1]
+    if (!part) return null
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(part.length / 4) * 4, "="))
+    const exp: unknown = JSON.parse(json).exp
+    return typeof exp === "number" ? exp * 1000 : null
+  } catch {
+    return null
+  }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ListPlus, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
+import { Check, FolderKanban, ListPlus, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Fragment, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -30,7 +30,7 @@ import {
   setMessageKind,
   setMessageResolved,
 } from "@/features/channels/actions"
-import { BODY_MAX, isPending, messageTime, taskTitleFrom, type MessagePost, type ThreadMessage } from "@/features/channels/logic"
+import { BODY_MAX, isPending, messageTime, taskTitleFrom, type MessagePost, type MessageProject, type ThreadMessage } from "@/features/channels/logic"
 import { ContentImage } from "@/features/content/content-image"
 import { FormatIcon, StageDot } from "@/features/content/post-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
@@ -121,6 +121,19 @@ export function PostCard({ post, today, onOpen }: { post: MessagePost; today: Da
   )
 }
 
+/** Projeto de que a mensagem fala (a conversa do projeto com o cliente). */
+export function ProjectChip({ project }: { project: MessageProject }) {
+  return (
+    <Link
+      href={`/projetos/${project.id}`}
+      className="mt-1.5 inline-flex max-w-xs items-center gap-1.5 rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted/50"
+    >
+      <FolderKanban className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <span className="truncate">{project.name}</span>
+    </Link>
+  )
+}
+
 /** Pedido de ajuste: pendente (laranja) ou resolvido (verde, por quem e quando). */
 export function RequestStatus({ message, className }: { message: ThreadMessage; className?: string }) {
   const resolver = useAuthor(message.resolved_by)
@@ -173,6 +186,7 @@ export function MessageItem({
   message,
   continued = false,
   showPost = true,
+  showProject = true,
   canWrite = true,
   onChanged,
   onRemoved,
@@ -183,6 +197,8 @@ export function MessageItem({
   /** Mensagem seguida da mesma pessoa: sem nome nem foto. */
   continued?: boolean
   showPost?: boolean
+  /** Etiqueta do projeto (some na própria conversa do projeto). */
+  showProject?: boolean
   /** Canal arquivado: só leitura das ações que mudam o texto. */
   canWrite?: boolean
   onChanged: () => void
@@ -325,6 +341,7 @@ export function MessageItem({
         ) : null}
 
         {showPost && message.post ? <PostCard post={message.post} today={today} onOpen={onOpenPost} /> : null}
+        {showProject && message.project ? <ProjectChip project={message.project} /> : null}
 
         {taskOpen ? (
           <MessageTaskForm

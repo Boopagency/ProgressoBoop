@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import { ActivityFeed } from "@/features/activity/activity-feed"
+import { ProjectClientChat } from "@/features/channels/project-chat"
 import { CommunicationsCard } from "@/features/communications/communications-card"
 import { DecisionsCard } from "@/features/decisions/decisions-card"
 import { ProjectFinanceCard } from "@/features/finance/finance-cards"
@@ -278,6 +279,7 @@ export function ProjectView({
           </PanelCard>
         </div>
         <aside aria-label="Sobre o projeto" className="min-w-0 space-y-6">
+          {project.client_id ? <ProjectClientChat projectId={project.id} /> : null}
           <PanelCard
             id="sobre-projeto"
             title="Sobre o projeto"

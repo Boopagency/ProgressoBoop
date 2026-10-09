@@ -193,6 +193,8 @@ export interface Task {
   assignee_ids: string[]
   client_id: string | null
   project_id: string | null
+  /** Etapa que o cliente vê no portal, na página do projeto. */
+  client_visible: boolean
   area: TaskArea | null
   status: TaskStatus
   priority: TaskPriority

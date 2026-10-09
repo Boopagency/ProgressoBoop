@@ -12,6 +12,8 @@ export interface ProjectTemplateTask {
   /** Dias depois do começo do projeto. */
   offset: number
   area?: TaskArea
+  /** Etapa que o cliente vive (aprovação, revisão, entrega): já vem marcada para o portal. */
+  clientVisible?: boolean
 }
 
 export interface ProjectTemplate {
@@ -35,20 +37,20 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     durationDays: 45,
     forClient: true,
     tasks: [
-      { title: "Kickoff com o cliente e briefing", offset: 0, area: "clients" },
+      { title: "Kickoff com o cliente e briefing", offset: 0, area: "clients", clientVisible: true },
       { title: "Coletar acessos: domínio, hospedagem e redes", offset: 2 },
-      { title: "Mapa do site e lista de páginas aprovados", offset: 5, area: "clients" },
+      { title: "Mapa do site e lista de páginas aprovados", offset: 5, area: "clients", clientVisible: true },
       { title: "Textos das páginas (rascunho)", offset: 10, area: "brand" },
       { title: "Layout da home", offset: 12, area: "brand" },
-      { title: "Aprovação do layout da home pelo cliente", offset: 15, area: "clients" },
+      { title: "Aprovação do layout da home pelo cliente", offset: 15, area: "clients", clientVisible: true },
       { title: "Layout das páginas internas", offset: 20, area: "brand" },
       { title: "Desenvolvimento das páginas", offset: 30 },
       { title: "Formulários, WhatsApp e integrações", offset: 32 },
       { title: "SEO básico: títulos, descrições e Search Console", offset: 34 },
       { title: "QA: celular, velocidade e links", offset: 36 },
-      { title: "Revisão final com o cliente", offset: 38, area: "clients" },
-      { title: "Publicação e redirecionamentos", offset: 40 },
-      { title: "Treinamento e entrega dos acessos", offset: 42, area: "clients" },
+      { title: "Revisão final com o cliente", offset: 38, area: "clients", clientVisible: true },
+      { title: "Publicação e redirecionamentos", offset: 40, clientVisible: true },
+      { title: "Treinamento e entrega dos acessos", offset: 42, area: "clients", clientVisible: true },
       { title: "Case no portfólio da Boop", offset: 45, area: "brand" },
     ],
   },
@@ -60,16 +62,16 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     durationDays: 30,
     forClient: true,
     tasks: [
-      { title: "Briefing e referências com o cliente", offset: 0, area: "clients" },
+      { title: "Briefing e referências com o cliente", offset: 0, area: "clients", clientVisible: true },
       { title: "Pesquisa de concorrentes e mercado", offset: 3 },
       { title: "Conceito e moodboard", offset: 6 },
-      { title: "Aprovação do conceito pelo cliente", offset: 8, area: "clients" },
+      { title: "Aprovação do conceito pelo cliente", offset: 8, area: "clients", clientVisible: true },
       { title: "Proposta de logo (dois caminhos)", offset: 13 },
       { title: "Ajustes do logo", offset: 17 },
       { title: "Paleta, tipografia e elementos de apoio", offset: 21 },
       { title: "Aplicações: redes, papelaria e fachada", offset: 25 },
       { title: "Manual de marca", offset: 28 },
-      { title: "Entrega dos arquivos finais", offset: 30, area: "clients" },
+      { title: "Entrega dos arquivos finais", offset: 30, area: "clients", clientVisible: true },
     ],
   },
   {
@@ -80,16 +82,16 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     durationDays: 30,
     forClient: true,
     tasks: [
-      { title: "Briefing: tom de voz, público e objetivos", offset: 0 },
+      { title: "Briefing: tom de voz, público e objetivos", offset: 0, clientVisible: true },
       { title: "Acessos às contas e ao Meta Business", offset: 1 },
       { title: "Diagnóstico dos perfis atuais", offset: 3 },
       { title: "Linha editorial e pilares de conteúdo", offset: 6, area: "brand" },
       { title: "Ajustes de bio, destaques e capa", offset: 7 },
       { title: "Calendário do primeiro mês", offset: 9 },
-      { title: "Aprovação do calendário pelo cliente", offset: 11 },
+      { title: "Aprovação do calendário pelo cliente", offset: 11, clientVisible: true },
       { title: "Produção dos posts da primeira quinzena", offset: 14, area: "brand" },
-      { title: "Primeiras publicações", offset: 15 },
-      { title: "Relatório do primeiro mês", offset: 30 },
+      { title: "Primeiras publicações", offset: 15, clientVisible: true },
+      { title: "Relatório do primeiro mês", offset: 30, clientVisible: true },
     ],
   },
   {

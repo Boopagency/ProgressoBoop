@@ -42,11 +42,13 @@ import {
   describeNotification,
   freshNotifications,
   notificationSentence,
-  NOTIFICATIONS_POLL_MS,
+  FALLBACK_POLL_MS,
+  REALTIME_CHECK_MS,
   type AppNotification,
   type NotificationFeed,
   type NotificationKind,
 } from "@/features/notifications/logic"
+import { listenToNotifications } from "@/features/notifications/realtime"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { todayKey } from "@/lib/dates"
@@ -63,6 +65,10 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */
 const BROWSER_BURST = 3
+/** Vários sinais seguidos do Realtime viram uma consulta só. */
+const SIGNAL_DEBOUNCE_MS = 250
+/** De quanto em quanto tempo o relógio confere se está na hora de consultar. */
+const TICK_MS = 5000
 
 function currentTime() {
   return Date.now()
@@ -78,8 +84,10 @@ function serverPrefs() {
 
 /**
  * Sino do topo: contador de não lidas, a lista dos avisos mais recentes e
- * "Marcar todas como lidas". Pergunta ao servidor a cada 15 segundos (também
- * com a aba em segundo plano, quando o navegador pode espaçar as consultas).
+ * "Marcar todas como lidas". O aviso chega na hora: o Realtime avisa que algo
+ * mudou e o sino busca a lista no servidor. Com o Realtime no ar, ainda
+ * confere a cada minuto; sem ele, pergunta a cada 10 segundos (também com a
+ * aba em segundo plano, quando o navegador pode espaçar as consultas).
  * Aviso novo toca um som (só depois do primeiro clique na página, regra dos
  * navegadores) e, com a aba em segundo plano, mostra o aviso do navegador.
  * Os dois ligam e desligam no rodapé da lista, por navegador.
@@ -87,7 +95,8 @@ function serverPrefs() {
 export function NotificationBell({ initial }: { initial: NotificationFeed }) {
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { clientById } = useWorkspace()
+  const { clientById, currentUser } = useWorkspace()
+  const userId = currentUser.id
   const [feed, setFeed] = useState(initial)
   const [synced, setSynced] = useState(initial)
   // Ids já vistos nesta aba: só o que chega depois disso é anunciado.
@@ -179,17 +188,41 @@ export function NotificationBell({ initial }: { initial: NotificationFeed }) {
   })
 
   useEffect(() => {
-    const tick = () => void poll()
-    const onVisible = () => {
-      if (document.visibilityState === "visible") tick()
+    let live = false
+    let lastPoll = Date.now()
+    let pending: number | undefined
+    const run = () => {
+      window.clearTimeout(pending)
+      lastPoll = Date.now()
+      void poll()
     }
-    const timer = window.setInterval(tick, NOTIFICATIONS_POLL_MS)
+    const soon = () => {
+      window.clearTimeout(pending)
+      pending = window.setTimeout(run, SIGNAL_DEBOUNCE_MS)
+    }
+    const tick = () => {
+      if (Date.now() - lastPoll >= (live ? REALTIME_CHECK_MS : FALLBACK_POLL_MS)) run()
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") run()
+    }
+    const timer = window.setInterval(tick, TICK_MS)
     document.addEventListener("visibilitychange", onVisible)
+    const stop = listenToNotifications(userId, {
+      onChange: soon,
+      onStatus: (next) => {
+        // Voltou a escutar: busca o que pode ter chegado enquanto estava fora.
+        if (next && !live) soon()
+        live = next
+      },
+    })
     return () => {
+      stop()
       window.clearInterval(timer)
+      window.clearTimeout(pending)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [])
+  }, [userId])
 
   // O som só pode tocar depois de um clique (ou tecla) na página.
   useEffect(() => {

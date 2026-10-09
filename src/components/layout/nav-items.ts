@@ -11,6 +11,7 @@ import {
   Megaphone,
   MessagesSquare,
   Presentation,
+  Sparkles,
   Sun,
   Target,
   Wallet,
@@ -64,6 +65,9 @@ export const NAV_GROUPS: NavGroup[] = [
 ]
 
 export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
+
+/** IA no rodapé do menu: abre o painel para conectar o Boop Admin no Claude (não é uma tela). */
+export const CLAUDE_NAV_ITEM = { title: "Claude", icon: Sparkles } as const
 
 export function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)

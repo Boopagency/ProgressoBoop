@@ -3,6 +3,7 @@
 import type { AuthError } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 
+import { safeNextPath } from "@/features/mcp/oauth"
 import { createClient } from "@/lib/supabase/server"
 
 export interface SignInState {
@@ -19,11 +20,13 @@ function signInErrorMessage(error: AuthError): string {
 
 /**
  * Login com e-mail e senha no Supabase Auth. A equipe (com perfil) vai para o
- * Hoje; uma conta de cliente com acesso liberado, para o portal.
+ * Hoje; uma conta de cliente com acesso liberado, para o portal. Quem veio da
+ * tela de autorização do Claude (`next`) volta para ela.
  */
 export async function signIn(_previous: SignInState, formData: FormData): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const password = String(formData.get("password") ?? "")
+  const next = safeNextPath(formData.get("next"))
 
   if (!email || !password) {
     return { error: "Informe e-mail e senha.", email }
@@ -38,11 +41,12 @@ export async function signIn(_previous: SignInState, formData: FormData): Promis
     .select("id")
     .eq("id", data.user.id)
     .maybeSingle()
-  if (profile) redirect("/hoje")
+  if (profile) redirect(next ?? "/hoje")
 
-  // Sem perfil: pode ser uma conta de cliente, que entra no portal.
+  // Sem perfil: pode ser uma conta de cliente, que entra no portal (a tela
+  // de autorização explica que o Claude é só da equipe).
   const { data: clients } = await supabase.rpc("portal_my_clients")
-  if (clients && clients.length > 0) redirect("/portal")
+  if (clients && clients.length > 0) redirect(next ?? "/portal")
 
   await supabase.auth.signOut({ scope: "local" })
   return { error: "Esta conta não tem acesso ao Boop Admin.", email }

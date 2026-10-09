@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { loadPortalMessages, sendPortalMessage } from "@/features/portal/content-actions"
+import { loadPortalProjectMessages, sendPortalProjectMessage } from "@/features/portal/project-actions"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import type { PortalMessage } from "@/features/portal/content-queries"
 import { formatShortDate, todayKey, toDateKey, toTimeLabel } from "@/lib/dates"
@@ -22,8 +23,33 @@ function sentAt(instant: string, today: string): string {
   return day === today ? time : `${formatShortDate(day, today)} · ${time}`
 }
 
-/** Chat do post com a equipe: o mesmo fio do canal "Alterações" do cliente, só deste post. */
-export function PostChat({ postId, initialMessages }: { postId: string; initialMessages: PortalMessage[] }) {
+/** De que é a conversa: um post ou um projeto (os dois ficam no canal "Alterações" do cliente). */
+export type ChatTarget = { kind: "post" | "project"; id: string }
+
+const CHAT_COPY = {
+  post: {
+    label: "Conversa sobre o post",
+    description: "Dúvidas e pedidos sobre este post.",
+    empty: "Nenhuma mensagem ainda. Escreva aqui se tiver alguma dúvida sobre o post.",
+  },
+  project: {
+    label: "Conversa sobre o projeto",
+    description: "Dúvidas, pedidos e materiais sobre este projeto.",
+    empty: "Nenhuma mensagem ainda. Escreva aqui se tiver alguma dúvida sobre o projeto.",
+  },
+} as const
+
+function loadMessages(target: ChatTarget) {
+  return target.kind === "post" ? loadPortalMessages(target.id) : loadPortalProjectMessages(target.id)
+}
+
+function sendMessage(target: ChatTarget, body: string) {
+  return target.kind === "post" ? sendPortalMessage(target.id, body) : sendPortalProjectMessage(target.id, body)
+}
+
+/** Chat com a equipe: o mesmo fio do canal "Alterações" do cliente, só deste post ou projeto. */
+export function PostChat({ target, initialMessages }: { target: ChatTarget; initialMessages: PortalMessage[] }) {
+  const { kind, id } = target
   const [messages, setMessages] = useState(initialMessages)
   const [draft, setDraft] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -34,7 +60,7 @@ export function PostChat({ postId, initialMessages }: { postId: string; initialM
     let active = true
     async function poll() {
       if (document.visibilityState !== "visible") return
-      const result = await loadPortalMessages(postId).catch(() => null)
+      const result = await loadMessages({ kind, id }).catch(() => null)
       if (active && result?.ok) setMessages(result.data)
     }
     const timer = window.setInterval(poll, POLL_MS)
@@ -44,7 +70,7 @@ export function PostChat({ postId, initialMessages }: { postId: string; initialM
       window.clearInterval(timer)
       document.removeEventListener("visibilitychange", poll)
     }
-  }, [postId])
+  }, [kind, id])
 
   useEffect(() => {
     const list = listRef.current
@@ -55,13 +81,13 @@ export function PostChat({ postId, initialMessages }: { postId: string; initialM
     const body = draft.trim()
     if (!body || isPending) return
     startTransition(async () => {
-      const result = await sendPortalMessage(postId, body)
+      const result = await sendMessage(target, body)
       if (!result.ok) {
         toast.error(result.error)
         return
       }
       setDraft("")
-      const latest = await loadPortalMessages(postId).catch(() => null)
+      const latest = await loadMessages(target).catch(() => null)
       if (latest?.ok) setMessages(latest.data)
     })
   }
@@ -74,15 +100,15 @@ export function PostChat({ postId, initialMessages }: { postId: string; initialM
   }
 
   return (
-    <section aria-label="Conversa sobre o post" className="flex min-h-80 flex-col rounded-xl border bg-card md:max-h-[640px]">
+    <section aria-label={CHAT_COPY[kind].label} className="flex min-h-80 flex-col rounded-xl border bg-card md:max-h-[640px]">
       <header className="border-b px-4 py-3">
         <h2 className="text-sm font-semibold text-foreground">Conversa com a equipe</h2>
-        <p className="text-xs text-muted-foreground">Dúvidas e pedidos sobre este post.</p>
+        <p className="text-xs text-muted-foreground">{CHAT_COPY[kind].description}</p>
       </header>
 
       {messages.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 py-10 text-center text-[13px] text-muted-foreground">
-          Nenhuma mensagem ainda. Escreva aqui se tiver alguma dúvida sobre o post.
+          {CHAT_COPY[kind].empty}
         </p>
       ) : (
         <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">

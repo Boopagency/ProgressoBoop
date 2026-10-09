@@ -874,6 +874,21 @@ pensado para o celular.
   do canal "Alterações" do cliente, só deste post, que atualiza sozinho
   a cada 10 segundos; Enter envia e Shift+Enter quebra a linha. A aprovação
   e o pedido de ajuste entram no fio, marcados.
+- **Projetos:** os projetos do cliente (menos os cancelados), cada um com
+  a situação, o modelo, quanto já foi feito (todas as tarefas contam, como
+  no admin), o prazo e a próxima etapa. O **projeto aberto** mostra o
+  andamento e, ao lado, as **etapas** que a equipe marcou como "o cliente
+  vê" (feita, próxima, em andamento ou a fazer, com a data) e a **conversa
+  do projeto**, no mesmo canal "Alterações" do cliente, marcada com o
+  projeto. Nada de descrição, responsável ou tarefa interna. Na equipe, a
+  página do projeto de cliente mostra a mesma **Conversa com o cliente**
+  (escrever, marcar pedido de ajuste, virar tarefa já com o projeto), e no
+  canal "Alterações" a mensagem aparece com a etiqueta do projeto.
+- **"O cliente vê" (equipe):** na tarefa de um projeto de cliente, a
+  opção "Portal: o cliente vê esta etapa". Nos modelos (site, identidade
+  visual, social media), as etapas com o cliente (briefing, aprovações,
+  revisão final, publicação e entrega) já vêm marcadas; na cópia de outro
+  projeto, a marca vem junto.
 - **Acesso do cliente** (página do cliente, coluna da direita): quem do
   cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
   e-mail de uma conta já criada no Supabase (Authentication → Users → Add

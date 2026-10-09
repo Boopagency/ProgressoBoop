@@ -3,12 +3,13 @@ import Link from "next/link"
 import type { PortalClient } from "@/features/portal/session"
 import { cn } from "@/lib/utils"
 
-export type PortalSection = "inicio" | "calendario" | "feed"
+export type PortalSection = "inicio" | "calendario" | "feed" | "projetos"
 
 const SECTIONS: { value: PortalSection; label: string; path: string }[] = [
   { value: "inicio", label: "Início", path: "/portal" },
   { value: "calendario", label: "Calendário", path: "/portal/calendario" },
   { value: "feed", label: "Feed", path: "/portal/feed" },
+  { value: "projetos", label: "Projetos", path: "/portal/projetos" },
 ]
 
 /** Endereço de uma tela do portal mantendo o cliente escolhido (quando a conta tem mais de um). */
@@ -49,14 +50,14 @@ export function PortalNav({
           ))}
         </nav>
       ) : null}
-      <nav aria-label="Seções" className="flex gap-1 border-b">
+      <nav aria-label="Seções" className="flex gap-1 overflow-x-auto border-b">
         {SECTIONS.map((item) => (
           <Link
             key={item.value}
             href={portalHref(item.path, client, clients)}
             aria-current={item.value === section ? "page" : undefined}
             className={cn(
-              "-mb-px border-b-2 border-transparent px-3 pb-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
+              "-mb-px shrink-0 border-b-2 border-transparent px-3 pb-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
               item.value === section && "border-brand font-medium text-foreground"
             )}
           >

@@ -185,7 +185,7 @@ processos (`docs` e `doc_versions`), as revisões de clientes
 gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
 `key_results`), a Central de Conteúdo (`content_posts` e `content_ideas`) e os
 canais das Comunicações (`channels`, `channel_members`, `messages` e
-`channel_reads`). O SQL está em `supabase/migrations/`, uma migration por etapa:
+`channel_reads`) e as notificações da equipe (`notifications`). O SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
@@ -202,8 +202,9 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`win_deal`](../supabase/migrations/20261007212513_win_deal.sql),
 [`content`](../supabase/migrations/20261008122847_content.sql),
 [`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql),
-[`channels`](../supabase/migrations/20261008195016_channels.sql) e
-[`portal_content`](../supabase/migrations/20261009000106_portal_content.sql).
+[`channels`](../supabase/migrations/20261008195016_channels.sql),
+[`portal_content`](../supabase/migrations/20261009000106_portal_content.sql) e
+[`notifications`](../supabase/migrations/20261009163255_notifications.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -237,6 +238,7 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 | `channel_members`  | `channel_id`, `user_id` (chave composta): quem participa dos canais internos e diretos |
 | `messages`         | `id`, `channel_id`, `post_id` (o post de que fala, do cliente do canal), `author_id` (`auth.users`), `kind`, `body`, `resolved_at`, `resolved_by` (pedido de ajuste resolvido), `task_id` (a tarefa em que virou), `created_at`, `edited_at` |
 | `channel_reads`    | `user_id` (`auth.users`), `channel_id` (chave composta), `last_read_at` |
+| `notifications`    | `id`, `user_id` (quem recebe, sempre da equipe), `kind`, `actor_id` (`auth.users`) e `actor_name` (quem fez, no momento), `client_id` (avisos do portal), `title` (canal, post, tarefa ou projeto), `body` (trecho da mensagem), `item_count` (tarefas atribuídas de uma vez), `link` (caminho no app), `channel_id`, `message_id`, `post_id`, `task_id`, `read_at` (vazio = não lida), `created_at` |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
@@ -272,8 +274,9 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `client_review`, `approved`, `scheduled`, `published`) e
 `content_front_status` (`not_needed`, `todo`, `in_progress`,
 `missing_material`, `in_review`, `changes`, `done`), `channel_kind` (`client`,
-`internal`, `direct`) e `message_kind` (`text`, `change_request`, `approval`,
-`system`).
+`internal`, `direct`), `message_kind` (`text`, `change_request`, `approval`,
+`system`) e `notification_kind` (`message`, `client_message`,
+`client_approval`, `client_change_request`, `task_assigned`).
 
 Funções expostas (só para `authenticated`): `public.win_deal(...)`
 (`security invoker`), que ganha um negócio numa transação (item 30);
@@ -623,7 +626,26 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     imagens: a política "cliente vê as imagens dos próprios posts" no bucket
     `content` libera só a foto do perfil e as capas e slides dos posts que
     ele vê (`private.portal_can_read_content_object`).
-48. **Conector do Claude (MCP) com o OAuth do Supabase, sem service role.**
+48. **Notificações gravadas pelo banco, uma linha por pessoa.** Triggers
+    criam os avisos em `notifications`, sem código no app: mensagem nova num
+    canal interno ou numa conversa direta (os participantes), mensagem de
+    conta de cliente no canal do cliente (a equipe toda; o assunto é o post
+    ou o projeto da mensagem, ou o canal), cliente aprovou ou
+    pediu ajuste (`portal_review_post`; a equipe toda) e tarefa atribuída
+    (`task_assignees`). Quem escreveu ou atribuiu não recebe; mensagem da
+    equipe no canal do cliente não avisa (o canal é de todos e já entra nas
+    não lidas); sem alguém da equipe logado (SQL do painel), tarefa não
+    avisa. Várias tarefas atribuídas no mesmo comando (modelo de projeto,
+    checklist, frentes do post) viram um aviso por pessoa, com a quantidade e
+    o link do projeto (quando é um só) ou das tarefas da pessoa. O texto é uma
+    cópia do momento (título, trecho e nome de quem fez); a frase é do app.
+    Excluir a mensagem, o canal, o post, a tarefa ou o cliente apaga os
+    avisos ligados; sair do canal apaga os avisos dele; tirar a pessoa da
+    tarefa apaga o aviso ainda não lido; ler o canal (`channel_reads`) marca
+    como lidos os avisos das mensagens vistas. Pela API só muda `read_at`
+    (com a hora do banco), e cada aviso novo apaga os de mais de 90 dias de
+    quem o recebeu.
+49. **Conector do Claude (MCP) com o OAuth do Supabase, sem service role.**
     Cada pessoa da equipe adiciona `https://admin.deumboop.com.br/api/mcp`
     como conector personalizado no próprio Claude. O login é o servidor
     OAuth 2.1 do Supabase Auth: o `401` do `/api/mcp` aponta para
@@ -678,6 +700,7 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 | `channel_members`  | ver os dos canais que vê; incluir e tirar pessoas (ou sair) nos canais internos de que participa. Os da conversa direta não mudam |
 | `messages`         | ver e escrever (como autor, nunca `system`) nos canais que vê; editar o texto e apagar só as próprias; marcar como pedido, resolver e ligar a tarefa em qualquer uma que vê |
 | `channel_reads`    | só a própria leitura, nos canais que vê                       |
+| `notifications`    | ver e marcar como lidas (só `read_at`) as próprias. Ninguém cria nem apaga pela API (só os triggers); a conta do cliente não tem nenhuma |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens. A conta do cliente lê, no `content`, só a foto do perfil e as imagens dos posts que vê no portal |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
@@ -1544,6 +1567,6 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 Do portal do cliente: a aba de mensagens fora dos posts, documentos,
 projetos, login por link no e-mail e avisos por e-mail. Tempo real, emissão de nota fiscal, conciliação bancária
 automática (o fechamento confere o saldo com o extrato à mão), aprovações
-formais, IA, notificações, automações, integrações (WhatsApp, e-mail, banco,
+formais, IA, notificações por push no celular e por e-mail, automações, integrações (WhatsApp, e-mail, banco,
 gateway de pagamento), permissões por cargo, várias moedas e importação de
 planilhas pela interface.

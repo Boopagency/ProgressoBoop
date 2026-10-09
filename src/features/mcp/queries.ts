@@ -62,7 +62,7 @@ export function namesOf(directory: Directory): Names {
 }
 
 const TASK_COLUMNS =
-  "id, title, description, client_id, project_id, meeting_id, doc_id, client_review_id, communication_id, content_post_id, area, status, priority, due_date, completed_at, created_by, created_at, updated_at, task_assignees(profile_id)"
+  "id, title, description, client_id, project_id, meeting_id, doc_id, client_review_id, communication_id, content_post_id, client_visible, area, status, priority, due_date, completed_at, created_by, created_at, updated_at, task_assignees(profile_id)"
 
 /** Todas as tarefas (o volume é pequeno, como na tela Tarefas). */
 export async function loadTasks(supabase: McpSupabase): Promise<Task[]> {

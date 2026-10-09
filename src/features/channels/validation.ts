@@ -38,6 +38,7 @@ export interface NewMessageInput {
   body: string
   kind: WritableKind
   post_id: string | null
+  project_id?: string | null
 }
 
 export function parseNewMessage(raw: unknown): Parsed<NewMessageInput> {
@@ -46,10 +47,19 @@ export function parseNewMessage(raw: unknown): Parsed<NewMessageInput> {
   if (!isUuid(input.channel_id)) return { ok: false, error: "Esse canal não existe mais." }
   if (!isWritableKind(input.kind)) return { ok: false, error: "Tipo de mensagem inválido." }
   if (input.post_id !== null && input.post_id !== undefined && !isUuid(input.post_id)) return { ok: false, error: "Post inválido." }
+  if (input.project_id !== null && input.project_id !== undefined && !isUuid(input.project_id)) {
+    return { ok: false, error: "Projeto inválido." }
+  }
   const body = parseBody(input.body)
   if (!body.ok) return body
   return {
     ok: true,
-    value: { channel_id: input.channel_id, body: body.value, kind: input.kind, post_id: (input.post_id as string | null) ?? null },
+    value: {
+      channel_id: input.channel_id,
+      body: body.value,
+      kind: input.kind,
+      post_id: (input.post_id as string | null) ?? null,
+      project_id: (input.project_id as string | null) ?? null,
+    },
   }
 }

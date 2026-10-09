@@ -107,7 +107,11 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
         </div>
 
         {/* Recomeça com as mensagens do servidor quando a página volta com novidade (ex.: depois de aprovar). */}
-        <PostChat key={`${messages.length}-${messages.at(-1)?.id ?? ""}`} postId={post.id} initialMessages={messages} />
+        <PostChat
+          key={`${messages.length}-${messages.at(-1)?.id ?? ""}`}
+          target={{ kind: "post", id: post.id }}
+          initialMessages={messages}
+        />
       </div>
     </div>
   )

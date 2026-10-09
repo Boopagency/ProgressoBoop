@@ -4,11 +4,12 @@ import Link from "next/link"
 
 import { ContentImage } from "@/features/content/content-image"
 import { publishLabel } from "@/features/content/logic"
-import { clientColor, FormatIcon } from "@/features/content/post-meta"
+import { FormatIcon } from "@/features/content/post-meta"
 import { PORTAL_STATUS_LABEL, portalFeed, portalStatus, postThumbnail } from "@/features/portal/content-logic"
 import { getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
 import { PortalNav, portalHref } from "@/features/portal/portal-nav"
 import { StatusDot } from "@/features/portal/post-meta"
+import { ProfilePhoto } from "@/features/portal/profile-photo"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
 import { CONTENT_FORMAT_LABEL } from "@/lib/labels"
@@ -24,17 +25,6 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   const today = todayKey()
   const tiles = portalFeed(posts)
 
-  const initial = (
-    <span
-      className={cn(
-        "absolute inset-0 flex items-center justify-center text-2xl font-semibold select-none",
-        clientColor(client.id)
-      )}
-    >
-      {client.name.trim().charAt(0).toLocaleUpperCase("pt-BR")}
-    </span>
-  )
-
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{client.name}</h1>
@@ -42,13 +32,7 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
 
       <div className="mx-auto w-full max-w-[600px]">
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="relative block size-16 shrink-0 overflow-hidden rounded-full border sm:size-20">
-            {profile?.avatar_path ? (
-              <ContentImage path={profile.avatar_path} alt={`Foto de ${client.name}`} fallback={initial} />
-            ) : (
-              initial
-            )}
-          </span>
+          <ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} />
           <div className="min-w-0 flex-1">
             {profile?.instagram_handle ? (
               <p className="truncate text-base font-semibold text-foreground">@{profile.instagram_handle}</p>

@@ -1547,6 +1547,106 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          body: string | null
+          channel_id: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          item_count: number
+          kind: Database["public"]["Enums"]["notification_kind"]
+          link: string
+          message_id: string | null
+          post_id: string | null
+          read_at: string | null
+          task_id: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          body?: string | null
+          channel_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          item_count?: number
+          kind: Database["public"]["Enums"]["notification_kind"]
+          link: string
+          message_id?: string | null
+          post_id?: string | null
+          read_at?: string | null
+          task_id?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          body?: string | null
+          channel_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          item_count?: number
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          link?: string
+          message_id?: string | null
+          post_id?: string | null
+          read_at?: string | null
+          task_id?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       objectives: {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
@@ -2126,6 +2226,12 @@ export type Database = {
       meeting_item_kind: "topic" | "agreement"
       meeting_status: "scheduled" | "done" | "canceled"
       message_kind: "text" | "change_request" | "approval" | "system"
+      notification_kind:
+        | "message"
+        | "client_message"
+        | "client_approval"
+        | "client_change_request"
+        | "task_assigned"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -2340,6 +2446,13 @@ export const Constants = {
       meeting_item_kind: ["topic", "agreement"],
       meeting_status: ["scheduled", "done", "canceled"],
       message_kind: ["text", "change_request", "approval", "system"],
+      notification_kind: [
+        "message",
+        "client_message",
+        "client_approval",
+        "client_change_request",
+        "task_assigned",
+      ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [
         "commercial",

@@ -874,6 +874,21 @@ pensado para o celular.
   do canal "Alterações" do cliente, só deste post, que atualiza sozinho
   a cada 10 segundos; Enter envia e Shift+Enter quebra a linha. A aprovação
   e o pedido de ajuste entram no fio, marcados.
+- **Projetos:** os projetos do cliente (menos os cancelados), cada um com
+  a situação, o modelo, quanto já foi feito (todas as tarefas contam, como
+  no admin), o prazo e a próxima etapa. O **projeto aberto** mostra o
+  andamento e, ao lado, as **etapas** que a equipe marcou como "o cliente
+  vê" (feita, próxima, em andamento ou a fazer, com a data) e a **conversa
+  do projeto**, no mesmo canal "Alterações" do cliente, marcada com o
+  projeto. Nada de descrição, responsável ou tarefa interna. Na equipe, a
+  página do projeto de cliente mostra a mesma **Conversa com o cliente**
+  (escrever, marcar pedido de ajuste, virar tarefa já com o projeto), e no
+  canal "Alterações" a mensagem aparece com a etiqueta do projeto.
+- **"O cliente vê" (equipe):** na tarefa de um projeto de cliente, a
+  opção "Portal: o cliente vê esta etapa". Nos modelos (site, identidade
+  visual, social media), as etapas com o cliente (briefing, aprovações,
+  revisão final, publicação e entrega) já vêm marcadas; na cópia de outro
+  projeto, a marca vem junto.
 - **Acesso do cliente** (página do cliente, coluna da direita): quem do
   cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
   e-mail de uma conta já criada no Supabase (Authentication → Users → Add
@@ -1163,7 +1178,7 @@ são uma sugestão para começar.
 | Projetos (lista, página, modelos, progresso) | `src/features/projects/` (`templates.ts` modelos, `logic.ts` regras), `src/app/(app)/projetos/` |
 | Histórico e comentários | `src/features/activity/` (`logic.ts` frases), triggers em `supabase/migrations/20261007144504_activity.sql` |
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
-| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009143009_notifications.sql` |
+| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009163255_notifications.sql` |
 | Comunicações (canais, mensagens, chat do post, não lidas) | `src/features/channels/` (`logic.ts` regras, `use-thread.ts` atualização, `actions.ts`), `src/app/(app)/comunicacoes/`; registros de contato em `src/features/communications/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |

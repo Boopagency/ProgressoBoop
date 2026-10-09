@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   CircleDashed,
+  Eye,
   Flag,
   FolderKanban,
   MoreHorizontal,
@@ -26,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -320,6 +322,18 @@ function TaskDetails({ task }: { task: Task }) {
               className={cn(PROPERTY_TRIGGER, "[&_[data-slot=select-value]]:truncate")}
             />
           </Property>
+
+          {project?.client_id ? (
+            <Property icon={<Eye />} label="Portal">
+              <label className="flex h-8 items-center gap-2 px-2 text-[13px] text-foreground">
+                <Checkbox
+                  checked={task.client_visible}
+                  onCheckedChange={(checked) => updateTask(task.id, { client_visible: checked === true })}
+                />
+                O cliente vê esta etapa
+              </label>
+            </Property>
+          ) : null}
         </dl>
 
         <div className="mt-5 border-t px-5 pt-5 pb-6">

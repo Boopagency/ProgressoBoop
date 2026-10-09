@@ -91,6 +91,32 @@ export async function loadPostThread(
   }
 }
 
+/** Conversa do projeto com o cliente: as mensagens do canal do cliente marcadas com o projeto. */
+export async function loadProjectThread(
+  projectId: string,
+  before?: string
+): Promise<ActionResult<ThreadData & { channelId: string | null }>> {
+  await requireUser()
+  if (!isUuid(projectId)) return { ok: false, error: "Esse projeto não existe mais." }
+  if (before !== undefined && !isTimestamp(before)) return { ok: false, error: "Data inválida." }
+  try {
+    const supabase = await createClient()
+    const { data: project, error } = await supabase.from("projects").select("client_id").eq("id", projectId).maybeSingle()
+    if (error) return dbFailure(error, "Não foi possível carregar a conversa.")
+    if (!project) return { ok: false, error: "Esse projeto não existe mais." }
+    const [channel, thread] = await Promise.all([
+      project.client_id
+        ? supabase.from("channels").select("id").eq("kind", "client").eq("client_id", project.client_id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      fetchThread(supabase, { projectId }, before),
+    ])
+    if (channel.error) return dbFailure(channel.error, "Não foi possível carregar a conversa.")
+    return { ok: true, data: { ...thread, channelId: channel.data?.id ?? null } }
+  } catch (error) {
+    return failure(error, "Não foi possível carregar a conversa.")
+  }
+}
+
 /** Contagens de cada canal (a lista da tela Comunicações pergunta de tempos em tempos). */
 export async function loadChannelCounts(): Promise<ActionResult<Record<string, ChannelCounts>>> {
   await requireUser()
@@ -193,8 +219,8 @@ export async function sendMessage(input: NewMessageInput): Promise<ActionResult<
   const { data, error } = await supabase.from("messages").insert(parsed.value).select(MESSAGE_COLUMNS).single()
   if (error) {
     if (error.message.includes("arquivado")) return { ok: false, error: "Este canal está arquivado." }
-    if (error.code === "23514") return { ok: false, error: "O post precisa ser do cliente deste canal." }
-    if (error.code === "23503") return { ok: false, error: "Esse canal (ou o post) não existe mais." }
+    if (error.code === "23514") return { ok: false, error: "O post ou o projeto precisa ser do cliente deste canal." }
+    if (error.code === "23503") return { ok: false, error: "Esse canal (ou o post, ou o projeto) não existe mais." }
     if (error.code === "42501") return CHANNEL_GONE
     return dbFailure(error, "Não foi possível enviar.")
   }
@@ -263,8 +289,9 @@ export interface MessageTaskInput {
 }
 
 /**
- * Pedido vira tarefa: com o cliente do canal, o post (e o projeto dele) e a
- * mensagem apontando para a tarefa. Concluir a tarefa resolve o pedido.
+ * Pedido vira tarefa: com o cliente do canal, o post, o projeto (o da
+ * mensagem ou o do post) e a mensagem apontando para a tarefa. Concluir a
+ * tarefa resolve o pedido.
  */
 export async function createTaskFromMessage(id: string, input: MessageTaskInput): Promise<ActionResult<{ id: string }>> {
   await requireUser()
@@ -279,7 +306,7 @@ export async function createTaskFromMessage(id: string, input: MessageTaskInput)
   const supabase = await createClient()
   const { data: message, error: readError } = await supabase
     .from("messages")
-    .select("id, body, kind, task_id, post_id, channel:channels(kind, client_id), post:content_posts(project_id)")
+    .select("id, body, kind, task_id, post_id, project_id, channel:channels(kind, client_id), post:content_posts(project_id)")
     .eq("id", id)
     .maybeSingle()
   if (readError) return dbFailure(readError, "Não foi possível criar a tarefa.")
@@ -294,7 +321,7 @@ export async function createTaskFromMessage(id: string, input: MessageTaskInput)
       description: message.body !== title ? message.body : null,
       due_date: input.due_date,
       client_id: message.channel.client_id,
-      project_id: message.post?.project_id ?? null,
+      project_id: message.project_id ?? message.post?.project_id ?? null,
       content_post_id: message.post_id,
       area: message.channel.kind === "client" ? "clients" : null,
     })

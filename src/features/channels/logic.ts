@@ -41,8 +41,15 @@ export interface MessagePost {
   publish_on: DateKey | null
 }
 
+/** Projeto de que a mensagem fala (o cartão no fio). */
+export interface MessageProject {
+  id: string
+  name: string
+}
+
 export interface ThreadMessage extends Message {
   post: MessagePost | null
+  project: MessageProject | null
 }
 
 export interface ChannelCounts {

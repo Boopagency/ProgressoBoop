@@ -691,6 +691,14 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
   equipe. As políticas de hoje são só da equipe: as do cliente (fase 3)
   entram numa migration própria, com `private.my_client_ids()`.
 
+- **Conector do Claude (tokens do OAuth do Supabase):** o token traz o claim
+  `client_id`, e `private.is_oauth_client()` responde isso para as políticas.
+  Políticas restritivas (migration `oauth_client_limits`) tiram desses tokens
+  o financeiro inteiro (`finance_entries`, `finance_recurrences`,
+  `finance_settings` e `finance_closings`) e qualquer exclusão, nas tabelas
+  da equipe e nas imagens do Storage. As sessões do app não têm `client_id`,
+  então nada muda para elas.
+
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale
   para tudo o que o app faz.

@@ -59,8 +59,8 @@ begin
     'client_reviews', 'clients', 'communications', 'content_ideas', 'content_posts',
     'deals', 'decisions', 'doc_versions', 'docs', 'events', 'finance_closings',
     'finance_entries', 'finance_recurrences', 'finance_settings', 'key_results',
-    'meeting_items', 'meetings', 'messages', 'objectives', 'plans', 'profiles',
-    'projects', 'saved_views', 'task_assignees', 'tasks', 'weekly_decisions'
+    'meeting_items', 'meetings', 'messages', 'notifications', 'objectives', 'plans',
+    'profiles', 'projects', 'saved_views', 'task_assignees', 'tasks', 'weekly_decisions'
   ]
   loop
     execute format(

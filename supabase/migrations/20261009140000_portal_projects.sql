@@ -54,7 +54,9 @@ begin
     return new;
   end if;
 
-  select * into ch from public.channels c where c.id = new.channel_id;
+  -- O canal não muda (set_message_fields), mas este trigger roda antes dele.
+  select * into ch from public.channels c
+   where c.id = case when tg_op = 'UPDATE' then old.channel_id else new.channel_id end;
   select p.client_id into project_client from public.projects p where p.id = new.project_id;
   if ch.kind is distinct from 'client' or project_client is distinct from ch.client_id then
     raise exception 'O projeto precisa ser do cliente deste canal.' using errcode = '23514';

@@ -9,11 +9,13 @@ import { signIn, type SignInState } from "@/features/auth/actions"
 
 const INITIAL_STATE: SignInState = { error: null, email: "" }
 
-export function LoginForm() {
+/** `next`: para onde voltar depois de entrar (já validado pela página). */
+export function LoginForm({ next }: { next: string | null }) {
   const [state, formAction, isPending] = useActionState(signIn, INITIAL_STATE)
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="space-y-1.5">
         <Label htmlFor="email">E-mail</Label>
         <Input

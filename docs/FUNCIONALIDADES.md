@@ -899,7 +899,33 @@ pensado para o celular.
   no Supabase.
 - Cliente desativado some do portal de quem o acompanhava.
 
-### 2.28 Notificações (sino no topo)
+### 2.28 Claude (conector do Boop Admin)
+
+Cada pessoa da equipe usa o Boop Admin de dentro do próprio Claude, com a
+própria conta.
+
+- **Painel Claude** (menu lateral, no rodapé, ícone de brilho): o endereço
+  do conector (`…/api/mcp`) com **Copiar**, o passo a passo e **Abrir o
+  Claude** (Configurações → Conectores).
+- **Conectar:** no Claude, "Adicionar conector personalizado" com o nome
+  Boop Admin e o endereço, sem preencher as configurações avançadas.
+  "Conectar" abre o login do Boop Admin (se ainda não estiver logado) e a
+  tela **Conectar o Claude ao Boop Admin**, com o que ele pode fazer,
+  **Permitir** e **Cancelar**. Conta de cliente não conecta, e um
+  aplicativo que não é o Claude só pode ser recusado. No plano Team ou
+  Enterprise, quem é Owner adiciona o conector uma vez na organização.
+- **O que o Claude faz:** busca geral (tarefas, projetos, clientes, posts,
+  ideias, decisões, processos e reuniões); as tarefas abertas da pessoa (ou
+  de outra) por prazo; clientes ativos e projetos em aberto com o
+  progresso; o conteúdo da semana dia a dia, com os atrasados e o que falta
+  em cada frente; os pedidos de ajuste pendentes; e criar tarefa, concluir
+  tarefa, criar ideia de post e escrever num canal (de cliente, interno ou
+  conversa direta; no de cliente, também como pedido de ajuste). As
+  respostas trazem os ids e os links das telas.
+- **Limites:** vê só o que a pessoa vê, não apaga nada e não acessa o
+  financeiro nem o comercial. Para desconectar, remove o conector no Claude.
+
+### 2.29 Notificações (sino no topo)
 
 O sino fica no canto superior direito de todas as telas da equipe, ao lado
 de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
@@ -1083,7 +1109,7 @@ como visão salva).
 - Não há atualização em tempo real (2.15). A conversa aberta pergunta ao
   servidor a cada 4 segundos; o sino, a cada 15; as não lidas da barra
   lateral, a cada 30.
-- Canais: sem menção (@pessoa) e sem anexos. O aviso fora da aba (2.28) só
+- Canais: sem menção (@pessoa) e sem anexos. O aviso fora da aba (2.29) só
   vem com o app aberto em alguma aba do navegador; push no celular e e-mail
   ficam para depois. A busca
   do canal procura nas mensagens carregadas (as mais recentes e as de "Ver
@@ -1197,6 +1223,7 @@ são uma sugestão para começar.
 | Clientes e revisões (checklist padrão, frentes sugeridas) | `src/features/clients/` (`logic.ts`), `src/app/(app)/clientes/` |
 | Modelos e sugestões de documentos | `src/features/docs/templates.ts` |
 | Login e sessão | `src/features/auth/`, `src/proxy.ts` |
+| Conector do Claude (MCP, OAuth, ferramentas, painel) | `src/features/mcp/` (`protocol.ts` JSON-RPC, `read-tools.ts` e `write-tools.ts` ferramentas, `oauth.ts` endereços), `src/app/api/mcp/`, `src/app/oauth/consent/`, `src/app/.well-known/` |
 | Menu lateral e cabeçalhos | `src/components/layout/` |
 | Cores e fontes | `src/app/globals.css`, `src/app/layout.tsx` |
 | Nomes de status, áreas e tipos | `src/lib/labels.ts` |

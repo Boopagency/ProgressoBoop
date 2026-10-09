@@ -645,6 +645,29 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     como lidos os avisos das mensagens vistas. Pela API só muda `read_at`
     (com a hora do banco), e cada aviso novo apaga os de mais de 90 dias de
     quem o recebeu.
+49. **Conector do Claude (MCP) com o OAuth do Supabase, sem service role.**
+    Cada pessoa da equipe adiciona `https://admin.deumboop.com.br/api/mcp`
+    como conector personalizado no próprio Claude. O login é o servidor
+    OAuth 2.1 do Supabase Auth: o `401` do `/api/mcp` aponta para
+    `/.well-known/oauth-protected-resource/api/mcp` (RFC 9728), que indica o
+    Supabase (`<projeto>.supabase.co/auth/v1`) como servidor de autorização;
+    o Claude se registra lá (registro dinâmico) e o Supabase manda a pessoa
+    para `/oauth/consent` (o "Authorization Path"). A tela usa o login atual
+    (o proxy leva a `/login?next=…` e volta), recusa conta de cliente e só
+    aprova o callback do Claude (`claude.ai`/`claude.com` e o loopback do
+    Claude Code): o registro dinâmico deixa qualquer aplicativo se
+    registrar, então a tela é quem barra os outros. Depois, o Claude manda
+    o token da pessoa e a rota cria o cliente do Supabase com ele e a chave
+    publicável: todas as consultas passam pelo RLS, como no app. Sem perfil
+    em `profiles`, a rota responde `403`. O servidor MCP é um JSON-RPC
+    mínimo sem dependência (`features/mcp/protocol.ts`), sem estado e sem
+    SSE (cada POST recebe JSON). Nove ferramentas: busca geral, minhas
+    tarefas, clientes e projetos, conteúdo da semana, ajustes pendentes,
+    criar tarefa, concluir tarefa, criar ideia de post e escrever num canal.
+    Nenhuma apaga nada e nenhuma lê o financeiro (nem o comercial); as
+    escritas usam as mesmas validações das Server Actions e os triggers de
+    sempre (autoria, histórico, pedidos resolvidos). O menu lateral tem o
+    item **Claude**, que abre o painel com o endereço e o passo a passo.
 
 ### 5.2 Segurança (RLS)
 
@@ -1525,6 +1548,11 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 - As URLs `*.vercel.app` ficam atrás da autenticação da Vercel (só quem é da
   conta na Vercel abre). O domínio próprio é público, e o app exige login.
 - O projeto do site (`boop`, com `deumboop.com.br` e `www`) não foi alterado.
+- **Conector do Claude:** no Supabase, Authentication → OAuth Server com o
+  servidor OAuth 2.1 ligado, o Authorization Path `/oauth/consent` e o
+  registro dinâmico de clientes permitido; o Site URL (Authentication → URL
+  Configuration) é `https://admin.deumboop.com.br`. Os aplicativos que se
+  registraram ficam em Authentication → OAuth Apps.
 - O Supabase gratuito pausa o projeto depois de 7 dias com pouca atividade.
   A visita diária faz quatro consultas sem sessão (o RLS devolve zero
   linhas, mas o banco conta o uso). A rota é pública porque não expõe nada

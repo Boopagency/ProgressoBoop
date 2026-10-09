@@ -1,19 +1,23 @@
 import type { Metadata } from "next"
-import Link from "next/link"
-import { redirect } from "next/navigation"
+import type { ReactNode } from "react"
 
-import { requirePortalUser } from "@/features/portal/session"
-import { greetingFor } from "@/lib/dates"
-import { cn } from "@/lib/utils"
+import { portalHome, UPCOMING_DAYS } from "@/features/portal/content-logic"
+import { getPortalPosts } from "@/features/portal/content-queries"
+import { PortalNav, portalHref } from "@/features/portal/portal-nav"
+import { PostListItem } from "@/features/portal/post-meta"
+import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
+import { greetingFor, todayKey } from "@/lib/dates"
 
 export const metadata: Metadata = { title: "Portal" }
 
-/** Início do portal. Nesta fase só recebe a pessoa; o conteúdo vem a seguir. */
+/** Início do portal: o que espera a aprovação do cliente, o que está em ajuste e o que vem por aí. */
 export default async function PortalPage(props: PageProps<"/portal">) {
   const [user, searchParams] = await Promise.all([requirePortalUser(), props.searchParams])
-  const requested = typeof searchParams.cliente === "string" ? searchParams.cliente : null
-  const client = user.clients.find((item) => item.id === requested) ?? user.clients[0]
-  if (!client) redirect("/login")
+  const client = pickPortalClient(user, searchParams.cliente)
+  const posts = await getPortalPosts(client.id)
+  const today = todayKey()
+  const home = portalHome(posts, today)
+  const postHref = (id: string) => portalHref(`/portal/posts/${id}`, client, user.clients)
 
   return (
     <div className="space-y-8">
@@ -22,33 +26,75 @@ export default async function PortalPage(props: PageProps<"/portal">) {
         <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">
           {greetingFor()}, {user.name}
         </h1>
+        <p className="text-sm text-muted-foreground">
+          {home.review.length === 0
+            ? "Nenhum post esperando a sua aprovação agora."
+            : home.review.length === 1
+              ? "Tem 1 post esperando a sua aprovação."
+              : `Tem ${home.review.length} posts esperando a sua aprovação.`}
+        </p>
       </div>
 
-      {user.clients.length > 1 ? (
-        <nav aria-label="Clientes" className="flex flex-wrap gap-1.5">
-          {user.clients.map((item) => (
-            <Link
-              key={item.id}
-              href={`/portal?cliente=${item.id}`}
-              aria-current={item.id === client.id ? "page" : undefined}
-              className={cn(
-                "rounded-full border px-3 py-1 text-[13px] transition-colors hover:bg-muted/60",
-                item.id === client.id && "border-brand bg-brand-soft font-medium text-brand-ink"
-              )}
-            >
-              {item.name}
-            </Link>
+      <PortalNav section="inicio" client={client} clients={user.clients} />
+
+      <Section title="Para aprovar" count={home.review.length} empty="Quando a equipe enviar um post para você, ele aparece aqui.">
+        {home.review.map((post) => (
+          <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
+        ))}
+      </Section>
+
+      {home.adjusting.length > 0 ? (
+        <Section
+          title="Em ajuste"
+          count={home.adjusting.length}
+          description="A equipe está fazendo os ajustes que você pediu. Quando voltar, o post aparece em Para aprovar."
+        >
+          {home.adjusting.map((post) => (
+            <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
           ))}
-        </nav>
+        </Section>
       ) : null}
 
-      <section className="rounded-xl border bg-card px-5 py-6">
-        <h2 className="text-sm font-semibold text-foreground">Seu espaço com a Boop</h2>
-        <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
-          Em breve, aqui você vai ver o calendário e o feed dos seus posts, aprovar ou pedir ajustes nas peças e
-          conversar com a equipe sobre cada uma.
-        </p>
-      </section>
+      <Section
+        title={`Próximos ${UPCOMING_DAYS} dias`}
+        count={home.upcoming.length}
+        empty="Nenhum post aprovado com data para os próximos dias."
+      >
+        {home.upcoming.map((post) => (
+          <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
+        ))}
+      </Section>
     </div>
+  )
+}
+
+function Section({
+  title,
+  count,
+  description,
+  empty,
+  children,
+}: {
+  title: string
+  count: number
+  description?: string
+  empty?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="space-y-2">
+      <div>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          {title}
+          {count > 0 ? <span className="text-xs font-normal text-muted-foreground tabular-nums">{count}</span> : null}
+        </h2>
+        {description ? <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{description}</p> : null}
+      </div>
+      {count === 0 ? (
+        <p className="rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="rounded-xl border bg-card p-1.5">{children}</ul>
+      )}
+    </section>
   )
 }

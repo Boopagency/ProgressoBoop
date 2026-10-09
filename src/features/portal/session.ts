@@ -49,3 +49,11 @@ export async function requirePortalUser(): Promise<PortalUser> {
   if (!user) redirect("/login")
   return user
 }
+
+/** Cliente escolhido em `?cliente=` (precisa ser da conta); senão, o primeiro. */
+export function pickPortalClient(user: PortalUser, requested: unknown): PortalClient {
+  const client = user.clients.find((item) => item.id === requested) ?? user.clients[0]
+  // `clients` nunca vem vazio (getPortalUser devolve null nesse caso).
+  if (!client) redirect("/login")
+  return client
+}

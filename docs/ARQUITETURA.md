@@ -74,10 +74,12 @@ src/
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
 │   │                           # para uma URL assinada e temporária do Storage)
 │   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
-│   │                           # (mesma regra, bucket `content`)
+│   │                           # (mesma regra, bucket `content`; a conta do cliente
+│   │                           # também entra e o Storage filtra o que ela vê)
 │   ├── login/                  # "/login" (sem "Criar conta")
 │   ├── portal/                 # "/portal": área do cliente (layout próprio, sem a
-│   │                           # sidebar; só contas de cliente)
+│   │                           # sidebar; só contas de cliente): início, calendário,
+│   │                           # feed e o post aberto (posts/[id])
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -120,8 +122,10 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
-│   ├── portal/                 # portal do cliente: sessão da conta de cliente e,
-│   │                           # na equipe, o cartão "Acesso do cliente"
+│   ├── portal/                 # portal do cliente: sessão da conta de cliente, o
+│   │                           # conteúdo (queries, actions e regras pelas funções
+│   │                           # `portal_*`, telas do post e chat) e, na equipe, o
+│   │                           # cartão "Acesso do cliente"
 │   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
 ├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
 │                               # diálogo de criar da tela)
@@ -1509,8 +1513,8 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ## 13. Fora do escopo (por enquanto)
 
-Chat com o cliente (os canais são só da equipe até a fase 3 do portal),
-portal do cliente, tempo real, emissão de nota fiscal, conciliação bancária
+Do portal do cliente: a aba de mensagens fora dos posts, documentos,
+projetos, login por link no e-mail e avisos por e-mail. Tempo real, emissão de nota fiscal, conciliação bancária
 automática (o fechamento confere o saldo com o extrato à mão), aprovações
 formais, IA, notificações, automações, integrações (WhatsApp, e-mail, banco,
 gateway de pagamento), permissões por cargo, várias moedas e importação de

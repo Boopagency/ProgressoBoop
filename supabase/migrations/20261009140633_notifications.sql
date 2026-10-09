@@ -5,7 +5,7 @@
 --   - message: mensagem nova num canal interno ou numa conversa direta de que
 --     a pessoa participa;
 --   - client_message: mensagem de uma conta de cliente (portal) no canal do
---     cliente, para a equipe toda;
+--     cliente (chat do post, conversa do projeto), para a equipe toda;
 --   - client_approval e client_change_request: o cliente aprovou o post ou
 --     pediu ajuste (portal_review_post), para a equipe toda;
 --   - task_assigned: tarefa atribuída à pessoa. Várias tarefas atribuídas de
@@ -19,7 +19,7 @@
 -- suas; o resto da linha não muda.
 --
 -- O texto é uma cópia do momento, como num e-mail: do que se trata (canal,
--- post, tarefa ou projeto), o trecho da mensagem e o nome de quem fez. A frase
+-- post, projeto ou tarefa), o trecho da mensagem e o nome de quem fez. A frase
 -- ("Jabez em Financeiro") é montada pelo app. Excluir a mensagem, o canal, o
 -- post, a tarefa ou o cliente apaga os avisos ligados; sair de um canal apaga
 -- os avisos dele; tirar a pessoa da tarefa apaga o aviso ainda não lido; ler o
@@ -121,7 +121,7 @@ as $$
 declare
   ch public.channels%rowtype;
   author_name text;
-  post_title text;
+  subject text;
   excerpt text := left(trim(regexp_replace(new.body, '\s+', ' ', 'g')), 280);
   notice public.notification_kind;
 begin
@@ -153,8 +153,11 @@ begin
   if author_name is null then
     return null;
   end if;
+  -- Do que se trata: o post ou o projeto da mensagem, ou o próprio canal.
   if new.post_id is not null then
-    select p.title into post_title from public.content_posts p where p.id = new.post_id;
+    select p.title into subject from public.content_posts p where p.id = new.post_id;
+  elsif new.project_id is not null then
+    select p.name into subject from public.projects p where p.id = new.project_id;
   end if;
   notice := case new.kind
     when 'approval' then 'client_approval'::public.notification_kind
@@ -165,7 +168,7 @@ begin
   insert into public.notifications (
     user_id, kind, actor_id, actor_name, client_id, title, body, link, channel_id, message_id, post_id
   )
-  select p.id, notice, new.author_id, author_name, ch.client_id, left(coalesce(post_title, ch.name), 300), excerpt,
+  select p.id, notice, new.author_id, author_name, ch.client_id, left(coalesce(subject, ch.name), 300), excerpt,
          case when new.post_id is not null then '/conteudo?post=' || new.post_id else '/comunicacoes?canal=' || ch.id end,
          ch.id, new.id, new.post_id
     from public.profiles p;

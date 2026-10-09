@@ -629,7 +629,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 48. **Notificações gravadas pelo banco, uma linha por pessoa.** Triggers
     criam os avisos em `notifications`, sem código no app: mensagem nova num
     canal interno ou numa conversa direta (os participantes), mensagem de
-    conta de cliente no canal do cliente (a equipe toda), cliente aprovou ou
+    conta de cliente no canal do cliente (a equipe toda; o assunto é o post
+    ou o projeto da mensagem, ou o canal), cliente aprovou ou
     pediu ajuste (`portal_review_post`; a equipe toda) e tarefa atribuída
     (`task_assignees`). Quem escreveu ou atribuiu não recebe; mensagem da
     equipe no canal do cliente não avisa (o canal é de todos e já entra nas

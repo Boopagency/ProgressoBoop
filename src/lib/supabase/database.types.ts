@@ -1972,6 +1972,16 @@ export type Database = {
         Returns: string
       }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
+      portal_client_profile: {
+        Args: { target_client: string }
+        Returns: {
+          avatar_path: string
+          client_id: string
+          client_name: string
+          instagram_bio: string
+          instagram_handle: string
+        }[]
+      }
       portal_my_clients: {
         Args: never
         Returns: {
@@ -1980,6 +1990,46 @@ export type Database = {
           client_name: string
           member_name: string
         }[]
+      }
+      portal_post_messages: {
+        Args: { target_post: string }
+        Returns: {
+          author_name: string
+          body: string
+          created_at: string
+          edited_at: string
+          from_team: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          mine: boolean
+          resolved: boolean
+        }[]
+      }
+      portal_posts: {
+        Args: { target_client: string }
+        Returns: {
+          caption: string
+          cover_path: string
+          format: Database["public"]["Enums"]["content_format"]
+          id: string
+          networks: Database["public"]["Enums"]["content_network"][]
+          pinned: boolean
+          publish_on: string
+          publish_time: string
+          published_at: string
+          slides: Json
+          stage: Database["public"]["Enums"]["content_stage"]
+          title: string
+          updated_at: string
+        }[]
+      }
+      portal_review_post: {
+        Args: { decision: string; note?: string; target_post: string }
+        Returns: string
+      }
+      portal_send_message: {
+        Args: { message_body: string; target_post: string }
+        Returns: string
       }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }

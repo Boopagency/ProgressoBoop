@@ -1163,7 +1163,7 @@ são uma sugestão para começar.
 | Projetos (lista, página, modelos, progresso) | `src/features/projects/` (`templates.ts` modelos, `logic.ts` regras), `src/app/(app)/projetos/` |
 | Histórico e comentários | `src/features/activity/` (`logic.ts` frases), triggers em `supabase/migrations/20261007144504_activity.sql` |
 | Decisões | `src/features/decisions/`, `src/app/(app)/decisoes/` |
-| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009140633_notifications.sql` |
+| Notificações (sino, som, aviso do navegador) | `src/features/notifications/` (`logic.ts` frases, `browser.ts` som e aviso, `notification-bell.tsx`), triggers em `supabase/migrations/20261009143009_notifications.sql` |
 | Comunicações (canais, mensagens, chat do post, não lidas) | `src/features/channels/` (`logic.ts` regras, `use-thread.ts` atualização, `actions.ts`), `src/app/(app)/comunicacoes/`; registros de contato em `src/features/communications/` |
 | Financeiro (meses, recorrências, atrasados, categorias) | `src/features/finance/` (`logic.ts` regras, `money.ts` valores), `src/app/(app)/financeiro/` |
 | Gestão financeira (DRE, MRR, projeção, divisão, receita necessária, fechamento) | `src/features/finance/management.ts`; abas em `src/features/finance/*-view.tsx` |

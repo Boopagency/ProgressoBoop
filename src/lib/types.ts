@@ -193,6 +193,8 @@ export interface Task {
   assignee_ids: string[]
   client_id: string | null
   project_id: string | null
+  /** Etapa que o cliente vê no portal, na página do projeto. */
+  client_visible: boolean
   area: TaskArea | null
   status: TaskStatus
   priority: TaskPriority
@@ -350,6 +352,8 @@ export interface Message {
   id: string
   channel_id: string
   post_id: string | null
+  /** Projeto de que a mensagem fala (só no canal do cliente do projeto). */
+  project_id: string | null
   /** Conta do Auth (na fase 3, também a do cliente); vazio se a conta saiu. */
   author_id: string | null
   kind: MessageKind

@@ -216,11 +216,9 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `profiles`         | `id` (= `auth.users.id`), `full_name`, `avatar_url`, `role`, `created_at`          |
 | `clients`          | `id`, `name` (único), `active`, `owner_id` (responsável da Boop), `services` (frentes), `since`, `contact_name`, `contact_email`, `contact_phone`, `notes`, `review_day` (dia do mês em que a revisão vence; vazio = sem revisão mensal), `instagram_handle` (sem @), `instagram_bio`, `avatar_path` (foto do perfil no Storage), `created_at`, `updated_at` |
-| `plans`            | `id`, `name`, `starts_on`, `ends_on`, `created_at`. **Obsoleta**: virou projeto (mesmo `id`); sai na migration de limpeza |
-| `tasks`            | `id`, `title`, `description`, `client_id`, `project_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` (e `plan_id`, obsoleta) |
+| `tasks`            | `id`, `title`, `description`, `client_id`, `project_id`, `area`, `status`, `priority`, `due_date`, `completed_at`, `created_by`, `created_at`, `updated_at` |
 | `task_assignees`   | `task_id`, `profile_id` (chave composta)                                           |
 | `events`           | `id`, `title`, `description`, `event_type`, `start_at`, `end_at`, `all_day`, `recurrence_rule`, `client_id`, `created_by`, `created_at` |
-| `weekly_decisions` | `id`, `content`, `week_start` (sempre segunda), `created_by`, `created_at`. Sem uso desde as Reuniões; sai numa migration de limpeza |
 | `meetings`         | `id`, `event_id`, `occurs_on`, `status`, `summary`, `transcript`, `transcript_length` (gerada), `agenda` (pauta congelada, jsonb), `closed_at`, `closed_by`, `created_by`, `created_at`, `updated_at`, `search` (tsvector gerado) |
 | `meeting_items`    | `id`, `meeting_id`, `kind` (assunto ou combinado), `content`, `owner_id`, `due_date`, `done`, `task_id`, `created_by`, `created_at` |
 | `docs`             | `id`, `title`, `kind`, `status`, `area`, `client_id`, `owner_id`, `summary` ("para que serve"), `content` (blocos do editor, jsonb), `content_text` (texto puro), `review_every_months`, `reviewed_on`, `next_review_on` (gerada), `pinned`, `created_by`, `updated_by`, `created_at`, `updated_at`, `content_updated_at`, `content_updated_by`, `search` (tsvector gerado) |
@@ -306,7 +304,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
    tarefas pertencem ao plano; filtrar por data misturaria tarefas avulsas de
    clientes com as do plano. Com `plans` + `tasks.plan_id`, o progresso sai de
    uma contagem, e o próximo plano é só uma nova linha. **Substituída pelos
-   projetos (item 19)**: o plano virou um projeto interno, "em foco".
+   projetos (item 19)**: o plano virou um projeto interno, "em foco", e
+   `plans` saiu do banco na limpeza de 13/10/2026.
 3. **`recurrence_rule`** no formato do padrão iCalendar (RFC 5545). Nesta
    versão só existe `FREQ=WEEKLY` (garantido por `check`): toda semana no
    mesmo dia e horário de `start_at`. `null` = evento único. Sem motor de
@@ -379,8 +378,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     ("Estruturação da Boop até 31/10"). O plano existente virou um projeto
     interno com o mesmo `id`, fixado ("em foco"), e as tarefas dele ganharam
     `project_id`. A tela Hoje e a weekly mostram os projetos em foco
-    (fixados e abertos). `plans` e `tasks.plan_id` ficam só até a migration
-    de limpeza; reuniões já encerradas guardam a pauta com o plano como
+    (fixados e abertos). `plans` e `tasks.plan_id` saíram na limpeza de
+    13/10/2026; reuniões já encerradas guardam a pauta com o plano como
     estava e continuam mostrando.
 20. **Modelos de projeto no código** (`features/projects/templates.ts`):
     listas de tarefas com prazo relativo ao começo (site institucional,
@@ -415,8 +414,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 24. **Decisão é entidade própria.** `decisions` guarda o que a Boop definiu e
     por quê, com status (em vigor ou revogada) e ligações opcionais com
     reunião, cliente e projeto. É diferente do combinado (`meeting_items`),
-    que é uma ação com dono e prazo. `weekly_decisions` (vazia) sai na
-    limpeza.
+    que é uma ação com dono e prazo. `weekly_decisions` (vazia) saiu na
+    limpeza de 13/10/2026.
 25. **Comunicação sempre de um cliente.** `communications.client_id` é
     obrigatório, e excluir o cliente apaga as comunicações dele. Um pedido
     vira tarefa (`tasks.communication_id`), e a lista conta os pedidos que
@@ -689,9 +688,8 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 | Tabela             | Quem é da equipe pode…                                        |
 | ------------------ | ------------------------------------------------------------- |
 | `profiles`         | ver a equipe; editar só o próprio perfil                      |
-| `clients`, `plans`, `task_assignees` | ver, criar, editar e excluir                  |
+| `clients`, `task_assignees` | ver, criar, editar e excluir                  |
 | `tasks`, `events`  | ver, criar (sempre como autor: `created_by = auth.uid()`), editar e excluir |
-| `weekly_decisions` | ver, registrar (como autor) e excluir                         |
 | `meetings`, `meeting_items` | ver, criar (como autor), editar e excluir            |
 | `docs`             | ver, criar (como autor), editar e excluir                     |
 | `doc_versions`     | só ver (quem grava é o banco, pelo trigger)                   |
@@ -1549,11 +1547,6 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 3. Se quiserem o histórico da planilha no sistema: importar os lançamentos
    de setembro e outubro (contratos, custos e recebimentos) em vez de
    recriá-los à mão.
-4. Limpeza: uma migration nova que apaga `plans`, `tasks.plan_id` (já
-   copiados para `projects` e `tasks.project_id`) e `weekly_decisions` (vazia
-   e sem uso), seguida da regeneração dos tipos. O Supabase pede confirmação
-   para apagar tabela e coluna, e a ferramenta usada no desenvolvimento não
-   consegue confirmar; por isso continuam no banco, sem uso pelo app.
 
 ## 12. Infraestrutura e variáveis de ambiente
 

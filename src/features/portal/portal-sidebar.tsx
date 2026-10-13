@@ -22,6 +22,7 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/sidebar"
 import { signOut } from "@/features/auth/actions"
 import { portalHref, selectedClient } from "@/features/portal/links"
+import { countLabel } from "@/features/portal/notification-logic"
+import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import { isPortalDetail, PORTAL_NAV, portalSectionOf } from "@/features/portal/portal-nav"
 import type { PortalClient } from "@/features/portal/session"
 import { cn } from "@/lib/utils"
@@ -51,6 +54,7 @@ export function PortalSidebar({
   const { isMobile, setOpenMobile } = useSidebar()
   const client = selectedClient(clients, searchParams.get("cliente"))
   const active = portalSectionOf(pathname)
+  const { counts } = usePortalAlerts()
 
   const closeOnMobile = () => {
     if (isMobile) setOpenMobile(false)
@@ -91,6 +95,18 @@ export function PortalSidebar({
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+                  {item.badge && counts[item.badge] > 0 ? (
+                    <SidebarMenuBadge
+                      aria-label={
+                        item.badge === "messages"
+                          ? `${counts.messages} ${counts.messages === 1 ? "mensagem não lida" : "mensagens não lidas"}`
+                          : `${counts.notifications} ${counts.notifications === 1 ? "aviso não lido" : "avisos não lidos"}`
+                      }
+                      className="rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[active=true]/menu-button:text-brand-navy"
+                    >
+                      {countLabel(counts[item.badge])}
+                    </SidebarMenuBadge>
+                  ) : null}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

@@ -14,6 +14,8 @@ export interface ProjectTemplateTask {
   area?: TaskArea
   /** Etapa que o cliente vive (aprovação, revisão, entrega): já vem marcada para o portal. */
   clientVisible?: boolean
+  /** Etapa que o cliente aprova no portal ao ser concluída (já é vista por ele). */
+  clientApproval?: boolean
 }
 
 export interface ProjectTemplate {
@@ -39,10 +41,10 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     tasks: [
       { title: "Kickoff com o cliente e briefing", offset: 0, area: "clients", clientVisible: true },
       { title: "Coletar acessos: domínio, hospedagem e redes", offset: 2 },
-      { title: "Mapa do site e lista de páginas aprovados", offset: 5, area: "clients", clientVisible: true },
+      { title: "Mapa do site e lista de páginas aprovados", offset: 5, area: "clients", clientVisible: true, clientApproval: true },
       { title: "Textos das páginas (rascunho)", offset: 10, area: "brand" },
       { title: "Layout da home", offset: 12, area: "brand" },
-      { title: "Aprovação do layout da home pelo cliente", offset: 15, area: "clients", clientVisible: true },
+      { title: "Aprovação do layout da home pelo cliente", offset: 15, area: "clients", clientVisible: true, clientApproval: true },
       { title: "Layout das páginas internas", offset: 20, area: "brand" },
       { title: "Desenvolvimento das páginas", offset: 30 },
       { title: "Formulários, WhatsApp e integrações", offset: 32 },
@@ -65,7 +67,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
       { title: "Briefing e referências com o cliente", offset: 0, area: "clients", clientVisible: true },
       { title: "Pesquisa de concorrentes e mercado", offset: 3 },
       { title: "Conceito e moodboard", offset: 6 },
-      { title: "Aprovação do conceito pelo cliente", offset: 8, area: "clients", clientVisible: true },
+      { title: "Aprovação do conceito pelo cliente", offset: 8, area: "clients", clientVisible: true, clientApproval: true },
       { title: "Proposta de logo (dois caminhos)", offset: 13 },
       { title: "Ajustes do logo", offset: 17 },
       { title: "Paleta, tipografia e elementos de apoio", offset: 21 },
@@ -88,7 +90,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
       { title: "Linha editorial e pilares de conteúdo", offset: 6, area: "brand" },
       { title: "Ajustes de bio, destaques e capa", offset: 7 },
       { title: "Calendário do primeiro mês", offset: 9 },
-      { title: "Aprovação do calendário pelo cliente", offset: 11, clientVisible: true },
+      { title: "Aprovação do calendário pelo cliente", offset: 11, clientVisible: true, clientApproval: true },
       { title: "Produção dos posts da primeira quinzena", offset: 14, area: "brand" },
       { title: "Primeiras publicações", offset: 15, clientVisible: true },
       { title: "Relatório do primeiro mês", offset: 30, clientVisible: true },

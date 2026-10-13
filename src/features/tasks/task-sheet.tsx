@@ -47,6 +47,7 @@ import { loadActivity } from "@/features/activity/actions"
 import { ActivityFeed } from "@/features/activity/activity-feed"
 import { ProjectSelect } from "@/features/projects/project-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
+import { ClientApprovalPanel } from "@/features/tasks/client-approval"
 import { DueDatePicker } from "@/features/tasks/due-date-picker"
 import { firstName } from "@/features/tasks/logic"
 import { TaskCheckbox } from "@/features/tasks/task-checkbox"
@@ -325,16 +326,29 @@ function TaskDetails({ task }: { task: Task }) {
 
           {project?.client_id ? (
             <Property icon={<Eye />} label="Portal">
-              <label className="flex h-8 items-center gap-2 px-2 text-[13px] text-foreground">
-                <Checkbox
-                  checked={task.client_visible}
-                  onCheckedChange={(checked) => updateTask(task.id, { client_visible: checked === true })}
-                />
-                O cliente vê esta etapa
-              </label>
+              <div className="flex flex-col">
+                <label className="flex h-8 items-center gap-2 px-2 text-[13px] text-foreground">
+                  <Checkbox
+                    checked={task.client_visible || task.client_approval_required}
+                    // Etapa que precisa de aprovação é sempre vista pelo cliente.
+                    disabled={task.client_approval_required}
+                    onCheckedChange={(checked) => updateTask(task.id, { client_visible: checked === true })}
+                  />
+                  O cliente vê esta etapa
+                </label>
+                <label className="flex h-8 items-center gap-2 px-2 text-[13px] text-foreground">
+                  <Checkbox
+                    checked={task.client_approval_required}
+                    onCheckedChange={(checked) => updateTask(task.id, { client_approval_required: checked === true })}
+                  />
+                  Precisa da aprovação do cliente
+                </label>
+              </div>
             </Property>
           ) : null}
         </dl>
+
+        {project?.client_id ? <ClientApprovalPanel task={task} /> : null}
 
         <div className="mt-5 border-t px-5 pt-5 pb-6">
           <label htmlFor="task-description" className="text-[13px] font-medium text-foreground">

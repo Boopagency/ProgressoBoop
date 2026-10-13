@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { loadPostThread, sendMessage } from "@/features/channels/actions"
-import { Composer } from "@/features/channels/composer"
+import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref } from "@/features/channels/logic"
 import { MessageItem } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
@@ -34,9 +34,9 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
   })
   const days = buildThread(thread.messages ?? [], [], today)
 
-  async function send(body: string, kind: "text" | "change_request" | "approval") {
+  async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
     if (!channelId) return false
-    const result = await sendMessage({ channel_id: channelId, body, kind, post_id: postId })
+    const result = await sendMessage({ channel_id: channelId, body, kind, post_id: postId, internal: options.internal })
     if (!result.ok) {
       toast.error(result.error)
       return false
@@ -107,6 +107,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
                   message={item.message}
                   continued={item.continued}
                   showPost={false}
+                  allowInternal
                   onChanged={thread.refresh}
                   onRemoved={thread.removeLocal}
                 />
@@ -114,11 +115,13 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
             }
           />
           <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
-            O cliente lê esta conversa (inclusive o que foi escrito antes). Assunto só da equipe vai em Interno.
+            O cliente lê esta conversa (inclusive o que foi escrito antes). Para falar só com a equipe, marque Interno
+            ao escrever (ou use a aba Interno).
           </p>
           <Composer
             onSend={send}
             allowRequest
+            allowInternal
             placeholder="Escreva para o cliente sobre este post…"
             disabledText={
               thread.messages === null

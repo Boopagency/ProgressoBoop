@@ -17,10 +17,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { reviewPortalPost } from "@/features/portal/content-actions"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
+import { reviewPortalStep } from "@/features/portal/project-actions"
+import type { ActionResult } from "@/lib/types"
 
 type Decision = "approve" | "changes"
 
-const COPY: Record<Decision, { title: string; description: string; label: string; placeholder: string; submit: string; done: string }> = {
+interface DecisionCopy {
+  title: string
+  description: string
+  label: string
+  placeholder: string
+  submit: string
+  done: string
+}
+
+const COPY: Record<Decision, DecisionCopy> = {
   approve: {
     title: "Aprovar este post?",
     description: "A equipe segue com a publicação na data combinada.",
@@ -38,6 +49,28 @@ const COPY: Record<Decision, { title: string; description: string; label: string
     done: "Pedido enviado para a equipe.",
   },
 }
+
+const STEP_COPY: Record<Decision, DecisionCopy> = {
+  approve: {
+    title: "Aprovar esta etapa?",
+    description: "A equipe segue para as próximas etapas do projeto.",
+    label: "Comentário (opcional)",
+    placeholder: "Ex.: Perfeito, pode seguir!",
+    submit: "Aprovar",
+    done: "Etapa aprovada. Obrigado!",
+  },
+  changes: {
+    title: "Pedir ajustes",
+    description: "Conte o que precisa mudar. A equipe faz os ajustes e a etapa volta para você aprovar.",
+    label: "O que ajustar",
+    placeholder: "Ex.: Trocar a foto do topo e aumentar o texto do botão.",
+    submit: "Enviar pedido",
+    done: "Pedido enviado para a equipe.",
+  },
+}
+
+/** Tamanho máximo da nota da etapa (o banco confere o mesmo). */
+const STEP_NOTE_MAX = 4000
 
 /** Resposta do cliente a um post "com o cliente": aprovar ou pedir ajuste (com o que mudar). */
 export function ReviewPanel({ postId }: { postId: string }) {
@@ -66,7 +99,44 @@ export function ReviewPanel({ postId }: { postId: string }) {
       </div>
       <DecisionDialog
         key={dialogKey}
-        postId={postId}
+        copy={COPY}
+        maxLength={MESSAGE_MAX}
+        onSubmit={(next, note) => reviewPortalPost(postId, { decision: next, note })}
+        decision={decision}
+        onOpenChange={(value) => (value ? null : setDecision(null))}
+      />
+    </div>
+  )
+}
+
+/**
+ * Resposta do cliente a uma etapa do projeto que espera a aprovação dele:
+ * os botões ficam na própria etapa, e o diálogo é o mesmo do post.
+ */
+export function StepReviewButtons({ stepId }: { stepId: string }) {
+  const [decision, setDecision] = useState<Decision | null>(null)
+  const [dialogKey, setDialogKey] = useState(0)
+
+  function open(next: Decision) {
+    setDialogKey((key) => key + 1)
+    setDecision(next)
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      <Button type="button" size="sm" onClick={() => open("approve")} className="h-8">
+        <Check />
+        Aprovar
+      </Button>
+      <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="h-8">
+        <PencilLine />
+        Pedir ajustes
+      </Button>
+      <DecisionDialog
+        key={dialogKey}
+        copy={STEP_COPY}
+        maxLength={STEP_NOTE_MAX}
+        onSubmit={(next, note) => reviewPortalStep(stepId, { decision: next, note })}
         decision={decision}
         onOpenChange={(value) => (value ? null : setDecision(null))}
       />
@@ -75,25 +145,29 @@ export function ReviewPanel({ postId }: { postId: string }) {
 }
 
 function DecisionDialog({
-  postId,
+  copy: copies,
+  maxLength,
+  onSubmit,
   decision,
   onOpenChange,
 }: {
-  postId: string
+  copy: Record<Decision, DecisionCopy>
+  maxLength: number
+  onSubmit: (decision: Decision, note: string) => Promise<ActionResult>
   decision: Decision | null
   onOpenChange: (open: boolean) => void
 }) {
   const [note, setNote] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  const copy = COPY[decision ?? "approve"]
+  const copy = copies[decision ?? "approve"]
   const needsNote = decision === "changes"
 
   function submit() {
     if (!decision) return
     setError(null)
     startTransition(async () => {
-      const result = await reviewPortalPost(postId, { decision, note })
+      const result = await onSubmit(decision, note)
       if (!result.ok) {
         setError(result.error)
         return
@@ -111,7 +185,7 @@ function DecisionDialog({
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
         <form
-          id="resposta-post"
+          id="resposta-cliente"
           className="space-y-1.5"
           noValidate
           onSubmit={(event) => {
@@ -125,7 +199,7 @@ function DecisionDialog({
             value={note}
             onChange={(event) => setNote(event.target.value)}
             placeholder={copy.placeholder}
-            maxLength={MESSAGE_MAX}
+            maxLength={maxLength}
             rows={needsNote ? 5 : 3}
             autoFocus={needsNote}
             required={needsNote}
@@ -141,7 +215,7 @@ function DecisionDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
-          <Button type="submit" form="resposta-post" disabled={isPending || (needsNote && !note.trim())}>
+          <Button type="submit" form="resposta-cliente" disabled={isPending || (needsNote && !note.trim())}>
             {isPending ? "Enviando…" : copy.submit}
           </Button>
         </DialogFooter>

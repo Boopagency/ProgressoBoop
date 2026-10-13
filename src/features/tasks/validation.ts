@@ -14,6 +14,8 @@ export interface TaskInput {
   project_id: string | null
   /** Etapa que o cliente vê no portal (padrão: não). */
   client_visible?: boolean
+  /** Etapa que precisa da aprovação do cliente (padrão: não; o banco a deixa visível). */
+  client_approval_required?: boolean
   priority: TaskPriority
   status: TaskStatus
 }
@@ -99,6 +101,11 @@ export function parseTaskPatch(raw: unknown): Parsed<TaskPatch> {
     patch.client_visible = raw.client_visible
   }
 
+  if ("client_approval_required" in raw) {
+    if (typeof raw.client_approval_required !== "boolean") return { ok: false, error: "Opção de aprovação inválida." }
+    patch.client_approval_required = raw.client_approval_required
+  }
+
   if ("priority" in raw) {
     if (!isTaskPriority(raw.priority)) return { ok: false, error: "Prioridade inválida." }
     patch.priority = raw.priority
@@ -130,6 +137,7 @@ export function parseTaskInput(raw: unknown): Parsed<TaskInput> {
       client_id: patch.client_id ?? null,
       project_id: patch.project_id ?? null,
       client_visible: patch.client_visible ?? false,
+      client_approval_required: patch.client_approval_required ?? false,
       priority: patch.priority ?? "normal",
       status: patch.status ?? "todo",
     },

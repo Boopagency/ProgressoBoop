@@ -3,6 +3,7 @@ import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js"
 import { getRealtimeToken } from "@/features/notifications/actions"
 import { jwtExpiry, TOKEN_MARGIN_MS } from "@/features/notifications/logic"
 import { supabaseEnv } from "@/lib/supabase/env"
+import type { ActionResult } from "@/lib/types"
 
 /*
  * Avisos na hora: o navegador escuta pelo Realtime do Supabase as linhas novas
@@ -23,8 +24,20 @@ interface Handlers {
   onStatus: (live: boolean) => void
 }
 
+/**
+ * De onde vêm os avisos: os da equipe (`notifications`, o padrão) ou os da
+ * conta do cliente no portal (`client_notifications`, com o token pedido pela
+ * action do portal).
+ */
+interface Source {
+  table: "notifications" | "client_notifications"
+  getToken: () => Promise<ActionResult<string>>
+}
+
+const TEAM_SOURCE: Source = { table: "notifications", getToken: getRealtimeToken }
+
 /** Começa a escutar os avisos da pessoa; devolve como parar. */
-export function listenToNotifications(userId: string, handlers: Handlers): () => void {
+export function listenToNotifications(userId: string, handlers: Handlers, source: Source = TEAM_SOURCE): () => void {
   let stopped = false
   let client: SupabaseClient | null = null
   let channel: RealtimeChannel | null = null
@@ -32,7 +45,7 @@ export function listenToNotifications(userId: string, handlers: Handlers): () =>
 
   async function accessToken(): Promise<string | null> {
     if (token && token.expiresAt - Date.now() > TOKEN_MARGIN_MS) return token.value
-    const result = await getRealtimeToken()
+    const result = await source.getToken()
     if (!result.ok) return null
     token = { value: result.data, expiresAt: jwtExpiry(result.data) ?? Date.now() + 5 * 60 * 1000 }
     return token.value
@@ -58,10 +71,11 @@ export function listenToNotifications(userId: string, handlers: Handlers): () =>
       return
     }
     const filter = `user_id=eq.${userId}`
+    const { table } = source
     channel = client
-      .channel(`notifications:${userId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter }, handlers.onChange)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter }, handlers.onChange)
+      .channel(`${table}:${userId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table, filter }, handlers.onChange)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter }, handlers.onChange)
       .subscribe((status) => {
         if (!stopped) handlers.onStatus(status === "SUBSCRIBED")
       })

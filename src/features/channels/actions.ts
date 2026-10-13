@@ -219,6 +219,7 @@ export async function sendMessage(input: NewMessageInput): Promise<ActionResult<
   const { data, error } = await supabase.from("messages").insert(parsed.value).select(MESSAGE_COLUMNS).single()
   if (error) {
     if (error.message.includes("arquivado")) return { ok: false, error: "Este canal está arquivado." }
+    if (error.message.includes("interna")) return { ok: false, error: "Mensagem interna só no canal do cliente." }
     if (error.code === "23514") return { ok: false, error: "O post ou o projeto precisa ser do cliente deste canal." }
     if (error.code === "23503") return { ok: false, error: "Esse canal (ou o post, ou o projeto) não existe mais." }
     if (error.code === "42501") return CHANNEL_GONE
@@ -251,6 +252,26 @@ export async function deleteMessage(id: string): Promise<ActionResult> {
   const { data, error } = await supabase.from("messages").delete().eq("id", id).eq("author_id", user.id).select("id")
   if (error) return dbFailure(error, "Não foi possível apagar.")
   if (data.length === 0) return { ok: false, error: "Só quem escreveu pode apagar a mensagem." }
+  return { ok: true, data: null }
+}
+
+/**
+ * Mensagem interna (só a equipe vê) ou visível ao cliente, no canal do
+ * cliente. Só quem escreveu troca (o banco confere); virar interna apaga os
+ * avisos que o cliente já tinha recebido dela.
+ */
+export async function setMessageInternal(id: string, internal: boolean): Promise<ActionResult> {
+  await requireUser()
+  if (!isUuid(id)) return MESSAGE_GONE
+  if (typeof internal !== "boolean") return { ok: false, error: "Opção inválida." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("messages").update({ internal }).eq("id", id).select("id")
+  if (error) {
+    if (error.code === "42501") return { ok: false, error: "Só quem escreveu pode mudar a mensagem." }
+    if (error.message.includes("interna")) return { ok: false, error: "Mensagem interna só no canal do cliente." }
+    return dbFailure(error, "Não foi possível mudar a mensagem.")
+  }
+  if (data.length === 0) return MESSAGE_GONE
   return { ok: true, data: null }
 }
 

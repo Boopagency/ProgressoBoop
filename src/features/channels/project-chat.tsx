@@ -6,7 +6,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 import { loadProjectThread, sendMessage } from "@/features/channels/actions"
-import { Composer } from "@/features/channels/composer"
+import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref } from "@/features/channels/logic"
 import { MessageItem } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
@@ -30,9 +30,16 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
   })
   const days = buildThread(thread.messages ?? [], [], today)
 
-  async function send(body: string, kind: "text" | "change_request" | "approval") {
+  async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
     if (!channelId) return false
-    const result = await sendMessage({ channel_id: channelId, body, kind, post_id: null, project_id: projectId })
+    const result = await sendMessage({
+      channel_id: channelId,
+      body,
+      kind,
+      post_id: null,
+      project_id: projectId,
+      internal: options.internal,
+    })
     if (!result.ok) {
       toast.error(result.error)
       return false
@@ -89,6 +96,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
               message={item.message}
               continued={item.continued}
               showProject={false}
+              allowInternal
               onChanged={thread.refresh}
               onRemoved={thread.removeLocal}
             />
@@ -96,11 +104,13 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
         }
       />
       <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
-        O cliente lê esta conversa no portal (inclusive o que foi escrito antes).
+        O cliente lê esta conversa no portal (inclusive o que foi escrito antes). Para falar só com a equipe, marque
+        Interno ao escrever.
       </p>
       <Composer
         onSend={send}
         allowRequest
+        allowInternal
         placeholder="Escreva para o cliente sobre este projeto…"
         disabledText={
           thread.messages === null

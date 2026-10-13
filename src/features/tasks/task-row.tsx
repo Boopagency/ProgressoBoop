@@ -1,5 +1,6 @@
 "use client"
 
+import { ClientApprovalBadge } from "@/features/tasks/client-approval"
 import { assigneesLabel, isDone } from "@/features/tasks/logic"
 import { TaskCheckbox } from "@/features/tasks/task-checkbox"
 import { DoingPill, HighPriorityIcon, TaskDateLabel } from "@/features/tasks/task-meta"
@@ -65,6 +66,7 @@ export function TaskRow({
             </span>
             {task.priority === "high" && !done ? <HighPriorityIcon /> : null}
             {task.status === "doing" ? <DoingPill /> : null}
+            <ClientApprovalBadge task={task} />
           </span>
           {meta.length > 0 || showDate ? (
             <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[13px] leading-5 text-muted-foreground">

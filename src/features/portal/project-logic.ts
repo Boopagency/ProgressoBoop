@@ -1,4 +1,5 @@
 import { PROJECT_TEMPLATES } from "@/features/projects/templates"
+import { formatShortDate, toDateKey } from "@/lib/dates"
 import type { ClientApprovalResult, DateKey, ProjectStatus, TaskStatus, Timestamp } from "@/lib/types"
 
 /*
@@ -62,4 +63,24 @@ export function templateName(key: string | null): string | null {
 /** Próxima etapa ainda aberta (a primeira da lista, que vem em ordem de prazo). */
 export function nextStep(steps: PortalStep[]): PortalStep | null {
   return steps.find((step) => step.status !== "done") ?? null
+}
+
+/** Situação da aprovação de uma etapa, para a linha dela no projeto. */
+export type StepApprovalState =
+  | { kind: "awaiting" }
+  | { kind: "approved"; text: string; note: string | null }
+  | { kind: "changes"; text: string; note: string | null }
+  | { kind: "pending" }
+
+/**
+ * Esperando a resposta, aprovada ("Aprovada por Bárbara em 12/10"), com
+ * ajustes pedidos ou, antes de a equipe concluir, só "pede sua aprovação".
+ */
+export function stepApprovalState(approval: PortalStepApproval, today: DateKey): StepApprovalState {
+  if (approval.awaiting) return { kind: "awaiting" }
+  const who = approval.decided_by_name ?? "você"
+  const when = approval.decided_at ? ` em ${formatShortDate(toDateKey(approval.decided_at), today)}` : ""
+  if (approval.approval === "approved") return { kind: "approved", text: `Aprovada por ${who}${when}`, note: approval.note }
+  if (approval.approval === "changes") return { kind: "changes", text: `Ajustes pedidos por ${who}${when}`, note: approval.note }
+  return { kind: "pending" }
 }

@@ -52,6 +52,7 @@ import { projectStats } from "@/features/projects/logic"
 import { ProjectDialog, type ProjectDialogState } from "@/features/projects/project-dialog"
 import { ProjectStatusBadge, ProjectTiming } from "@/features/projects/project-meta"
 import { templateLabel } from "@/features/projects/templates"
+import { ProjectApprovalsCard } from "@/features/tasks/client-approval"
 import { dayContext, firstName, groupTasks, TASK_GROUP_LABEL, type TaskGroupKey } from "@/features/tasks/logic"
 import { useNewTask } from "@/features/tasks/new-task-dialog"
 import { TaskBoard } from "@/features/tasks/task-board"
@@ -80,6 +81,7 @@ export function ProjectView({
   communications,
   finance,
   docs,
+  approvalNames,
 }: {
   project: Project
   activity: ActivityEntry[]
@@ -87,6 +89,8 @@ export function ProjectView({
   communications: Communication[]
   finance: { entries: FinanceEntry[]; recurrences: FinanceRecurrence[] }
   docs: DocSummary[]
+  /** Nome de quem do cliente respondeu cada etapa (por conta). */
+  approvalNames: Record<string, string>
 }) {
   const router = useRouter()
   const { tasks, today } = useTasks()
@@ -270,6 +274,7 @@ export function ProjectView({
             </PanelCard>
           </div>
           <aside aria-label="Sobre o projeto" className="min-w-0 space-y-6">
+            {project.client_id ? <ProjectApprovalsCard projectId={project.id} names={approvalNames} /> : null}
             {project.client_id ? <ProjectClientChat projectId={project.id} /> : null}
             <PanelCard
               id="sobre-projeto"

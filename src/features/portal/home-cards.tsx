@@ -111,7 +111,7 @@ export function ProjectsCard({ projects, href }: { projects: PortalProject[]; hr
 
 /**
  * As últimas mensagens com a equipe. A do post ou do projeto leva direto ao
- * chat dele; a geral, à Comunicação (com a tela, no PR 3 da issue #39).
+ * chat dele; a geral, à Comunicação.
  */
 export function MessagesCard({
   messages,
@@ -123,7 +123,7 @@ export function MessagesCard({
   today: DateKey
 }) {
   return (
-    <PanelCard id="mensagens" title="Últimas mensagens">
+    <PanelCard id="mensagens" title="Últimas mensagens" action={<SeeAll href={href("/portal/comunicacao")}>Abrir conversa</SeeAll>}>
       {messages.length === 0 ? (
         <Empty>Nenhuma mensagem ainda. As conversas dos posts e dos projetos com a equipe aparecem aqui.</Empty>
       ) : (
@@ -133,7 +133,7 @@ export function MessagesCard({
               ? { path: `/portal/posts/${message.post.id}`, label: message.post.title }
               : message.project
                 ? { path: `/portal/projetos/${message.project.id}`, label: message.project.name }
-                : null
+                : { path: "/portal/comunicacao", label: "Comunicação" }
             const content = (
               <>
                 <span
@@ -155,24 +155,18 @@ export function MessagesCard({
                     </span>
                   </p>
                   <p className="line-clamp-2 text-[13px] leading-5 text-muted-foreground">{messageExcerpt(message.body)}</p>
-                  {target ? (
-                    <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-subtle-foreground">
-                      <MessageSquare className="size-3 shrink-0" aria-hidden="true" />
-                      <span className="truncate">{target.label}</span>
-                    </p>
-                  ) : null}
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-subtle-foreground">
+                    <MessageSquare className="size-3 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{target.label}</span>
+                  </p>
                 </div>
               </>
             )
             return (
               <li key={message.id}>
-                {target ? (
-                  <Link href={href(target.path)} className={cn(ROW, "items-start")}>
-                    {content}
-                  </Link>
-                ) : (
-                  <div className="flex items-start gap-3 px-2 py-2">{content}</div>
-                )}
+                <Link href={href(target.path)} className={cn(ROW, "items-start")}>
+                  {content}
+                </Link>
               </li>
             )
           })}

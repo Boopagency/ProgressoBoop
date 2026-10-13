@@ -104,6 +104,8 @@ export interface SeedTask {
   priority?: Task["priority"]
   /** Etapa que o cliente vê no portal (só vale em projeto de cliente). */
   client_visible?: boolean
+  /** Etapa que precisa da aprovação do cliente (só vale em projeto de cliente). */
+  client_approval_required?: boolean
 }
 
 /** Tarefas de um modelo, com prazos a partir do começo do projeto. */
@@ -113,6 +115,7 @@ export function templateTasks(template: ProjectTemplate, startsOn: DateKey): See
     due_date: addDaysToKey(startsOn, task.offset),
     area: task.area ?? template.area,
     client_visible: task.clientVisible ?? false,
+    client_approval_required: task.clientApproval ?? false,
   }))
 }
 
@@ -122,7 +125,10 @@ export function templateTasks(template: ProjectTemplate, startsOn: DateKey): See
  */
 export function copiedTasks(
   source: Pick<Project, "starts_on">,
-  sourceTasks: Pick<Task, "title" | "due_date" | "area" | "priority" | "client_visible" | "created_at">[],
+  sourceTasks: Pick<
+    Task,
+    "title" | "due_date" | "area" | "priority" | "client_visible" | "client_approval_required" | "created_at"
+  >[],
   startsOn: DateKey
 ): SeedTask[] {
   return [...sourceTasks]
@@ -140,5 +146,6 @@ export function copiedTasks(
       area: task.area,
       priority: task.priority,
       client_visible: task.client_visible,
+      client_approval_required: task.client_approval_required,
     }))
 }

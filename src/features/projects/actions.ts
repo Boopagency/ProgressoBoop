@@ -46,7 +46,7 @@ async function seedTasks(
   if (source.type === "project") {
     const [{ data: project, error }, { data: tasks, error: tasksError }] = await Promise.all([
       supabase.from("projects").select("starts_on").eq("id", source.id).maybeSingle(),
-      supabase.from("tasks").select("title, due_date, area, priority, client_visible, created_at").eq("project_id", source.id),
+      supabase.from("tasks").select("title, due_date, area, priority, client_visible, client_approval_required, created_at").eq("project_id", source.id),
     ])
     if (error || tasksError) return dbFailure((error ?? tasksError)!, "Não foi possível copiar as tarefas.")
     if (!project) return { ok: false, error: "O projeto de origem não existe mais." }
@@ -102,6 +102,7 @@ export async function createProject(
           client_id: project.client_id,
           project_id: created.id,
           client_visible: project.client_id ? (seed.client_visible ?? false) : false,
+          client_approval_required: project.client_id ? (seed.client_approval_required ?? false) : false,
         }))
       )
       .select("id")

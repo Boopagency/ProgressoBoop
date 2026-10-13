@@ -72,3 +72,22 @@ export async function removeClientMember(clientId: string, memberId: string): Pr
   refreshClient(clientId)
   return { ok: true, data: null }
 }
+
+/**
+ * Nome de quem respondeu uma etapa pelo portal (aprovou ou pediu ajustes),
+ * para a equipe ver na tarefa. A conta pode ter perdido o acesso: aí volta
+ * "Conta removida".
+ */
+export async function loadClientMemberName(userId: string): Promise<ActionResult<string>> {
+  await requireUser()
+  if (!isUuid(userId)) return { ok: true, data: "Conta removida" }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("client_members")
+    .select("full_name")
+    .eq("user_id", userId)
+    .order("created_at")
+    .limit(1)
+  if (error) return dbFailure(error, "Não foi possível carregar quem respondeu.")
+  return { ok: true, data: data[0]?.full_name ?? "Conta removida" }
+}

@@ -2,11 +2,10 @@
 
 import { requireUser } from "@/features/auth/session"
 import type { NotificationFeed } from "@/features/notifications/logic"
+import { markRead } from "@/features/notifications/mutations"
 import { fetchNotifications } from "@/features/notifications/queries"
-import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
-import { isUuid } from "@/lib/utils"
 
 /*
  * Server Actions do sino. A lista vem sempre daqui, com a sessão da pessoa e
@@ -27,28 +26,12 @@ export async function loadNotifications(): Promise<ActionResult<NotificationFeed
 
 export async function markNotificationRead(id: string): Promise<ActionResult> {
   const user = await requireUser()
-  if (!isUuid(id)) return { ok: false, error: "Essa notificação não existe mais." }
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .is("read_at", null)
-  if (error) return dbFailure(error, "Não foi possível marcar como lida.")
-  return { ok: true, data: null }
+  return markRead(await createClient(), user.id, id)
 }
 
 export async function markAllNotificationsRead(): Promise<ActionResult> {
   const user = await requireUser()
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("user_id", user.id)
-    .is("read_at", null)
-  if (error) return dbFailure(error, "Não foi possível marcar as notificações como lidas.")
-  return { ok: true, data: null }
+  return markRead(await createClient(), user.id, null)
 }
 
 /**

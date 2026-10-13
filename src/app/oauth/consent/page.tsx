@@ -84,9 +84,9 @@ export default async function ConsentPage({ searchParams }: PageProps<"/oauth/co
       <div className="space-y-2 text-sm">
         <p className="font-medium">O que ele pode fazer</p>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-          <li>Buscar e ler tarefas, clientes, projetos, reuniões, conteúdo e pedidos de ajuste</li>
-          <li>Criar, editar e concluir tarefas, projetos, reuniões, decisões e eventos</li>
-          <li>Criar ideias de post e escrever nos canais das Comunicações</li>
+          <li>Buscar e ler tarefas, clientes, projetos, reuniões, conteúdo, conversas, processos e avisos</li>
+          <li>Criar, editar e concluir tarefas, projetos, reuniões, decisões, eventos, clientes, posts e processos</li>
+          <li>Escrever, editar e apagar as suas mensagens nos canais das Comunicações</li>
         </ul>
         <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar e não acessa o financeiro.</p>
       </div>

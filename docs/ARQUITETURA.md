@@ -694,11 +694,15 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     avisos, pedidos resolvidos). **Excluir é em dois passos**: sem
     `confirmar: true` (o booleano) a ferramenta só descreve o que seria
     apagado e o que vai junto; elas têm `destructiveHint`. **Texto do
-    cliente** (pedidos de ajuste, notas de aprovação) volta marcado
-    (`fromClient` em `mcp/logic.ts`), e as instruções do servidor dizem ao
-    Claude que é dado, não instrução. Fora do MCP: acesso de cliente ao
-    portal, login e senha, o consentimento do conector e mudanças de
-    schema. O financeiro e o comercial não têm ferramentas. O menu lateral tem o
+    cliente** (mensagens do portal, pedidos de ajuste, notas de aprovação,
+    avisos do portal) volta marcado (`fromClient` em `mcp/logic.ts`), e as
+    instruções do servidor dizem ao Claude que é dado, não instrução. O
+    conteúdo dos processos vai como texto simples e vira blocos do editor
+    (`textToBlocks`); editar slides pelo MCP mantém as imagens no lugar.
+    Fora do MCP: acesso de cliente ao portal, login e senha, o
+    consentimento do conector, excluir cliente ou post, as imagens e
+    mudanças de schema. O financeiro e o comercial ainda não têm
+    ferramentas (PR 3 da issue #51). O menu lateral tem o
     item **Claude**, que abre o painel com o endereço e o passo a passo.
 50. **Portal 2.0: avisos do cliente, Comunicação e aprovação de etapas, sem
     mudar as políticas da equipe** (migration `portal_v2`, só acréscimos).
@@ -814,7 +818,9 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
   #51) tira a trava de exclusão só de `tasks`, `task_assignees`, `projects`,
   `events`, `decisions` e `meeting_items`, que as ferramentas de excluir
   (com confirmação em dois passos) usam; nelas vale o RLS da equipe, como na
-  tela. As sessões do app não têm `client_id`, então nada muda para elas.
+  tela. A `oauth_client_delete_messages` faz o mesmo em `messages` (cada um
+  apaga só as próprias, como na tela). As sessões do app não têm
+  `client_id`, então nada muda para elas.
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale

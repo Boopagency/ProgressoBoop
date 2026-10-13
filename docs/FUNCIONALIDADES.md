@@ -989,18 +989,31 @@ própria conta.
     resumo e transcrição, encerrar, cancelar e reabrir;
   - **decisões e agenda:** listar, registrar/criar, editar (revogar) e
     excluir;
-  - o conteúdo da semana, os pedidos de ajuste pendentes, criar ideia de
-    post e escrever num canal (de cliente, interno ou conversa direta; no de
-    cliente, também como pedido de ajuste).
+  - **clientes:** ver a ficha (com a revisão do mês, tarefas e projetos),
+    cadastrar, editar, ativar/desativar e a revisão mensal (saúde,
+    checklist, notas, concluir e próximo passo, que vira tarefa);
+  - **conteúdo:** a semana, ver/criar/editar posts (etapa, frentes,
+    conteúdo, roteiro, slides, legenda, data e horário), tarefas das
+    frentes, o banco de ideias (listar, criar, editar, virar post) e o que
+    está aguardando o cliente (posts e etapas de projeto);
+  - **comunicações:** canais, ler a conversa, escrever (de cliente, interno
+    ou conversa direta; no de cliente, também interna, como pedido de ajuste
+    ou sobre um projeto), editar e apagar a própria mensagem, resolver
+    pedido, mensagem vira tarefa, pedidos pendentes e registrar comunicação
+    com o cliente;
+  - **processos:** buscar, ler, criar (com modelo), editar os dados e o
+    conteúdo (substituir ou acrescentar) e marcar como revisado;
+  - **notificações:** listar e marcar como lidas.
   As respostas trazem os ids e os links das telas.
 - **Excluir é em dois passos:** o Claude primeiro mostra o que seria apagado
   (e o que vai junto) e só apaga quando a pessoa confirma.
-- **Texto do cliente:** pedidos de ajuste e notas de
-  aprovação chegam ao Claude marcados como escritos pelo cliente; ele não
-  age por um pedido escrito ali sem a pessoa confirmar.
+- **Texto do cliente:** mensagens do portal, pedidos de ajuste, notas de
+  aprovação e avisos do portal chegam ao Claude marcados como escritos pelo
+  cliente; ele não age por um pedido escrito ali sem a pessoa confirmar.
 - **Limites:** vê e faz só o que a pessoa vê e faz; não acessa o financeiro
-  nem o comercial; não exclui cliente nem arquivo e não mexe no acesso ao
-  portal. Para desconectar, remove o conector no Claude.
+  nem o comercial; não exclui cliente, post nem arquivo, não mexe nas
+  imagens dos posts e não mexe no acesso ao portal. Para desconectar,
+  remove o conector no Claude.
 
 ### 2.29 Notificações (sino no topo)
 

@@ -11,7 +11,7 @@ import { CONFIRM, DESTRUCTIVE, EDIT, READ_ONLY, WRITE, confirmFirst, enumOptions
 import { fetchMeetingRecords } from "@/features/meetings/queries"
 import { addDaysToKey, formatRange, formatShortDate, formatWeekdayShort, isTimeLabel, toDateKey, toTimeLabel, weekRangeOf } from "@/lib/dates"
 import { EVENT_TYPES, EVENT_TYPE_LABEL } from "@/lib/labels"
-import type { CalendarEvent } from "@/lib/types"
+import type { CalendarEvent, DateKey } from "@/lib/types"
 
 /*
  * Agenda (eventos do calendário) pelo conector: listar, criar, editar e
@@ -89,8 +89,14 @@ const EVENT_FIELDS = {
   descricao: { type: "string", maxLength: 5000 },
 } as const
 
-function findEvent(events: CalendarEvent[], query: string): Parsed<CalendarEvent> {
-  return findByName(events, query, (event) => event.title, (event) => event.id, "evento")
+/** "toda segunda-feira às 07:00" ou "15/10 às 10:00", para diferenciar eventos de mesmo nome. */
+export function eventWhen(event: CalendarEvent, today: DateKey): string {
+  if (event.recurrence_rule === WEEKLY) return weeklyRecurrenceLabel(event)
+  return `${formatShortDate(toDateKey(event.start_at), today)}${event.all_day ? "" : ` às ${toTimeLabel(event.start_at)}`}`
+}
+
+function findEvent(events: CalendarEvent[], query: string, today: DateKey): Parsed<CalendarEvent> {
+  return findByName(events, query, (event) => event.title, (event) => event.id, "evento", (event) => eventWhen(event, today))
 }
 
 /* ------------------------------------------------------------------ */
@@ -184,7 +190,7 @@ const editEvent: Tool<McpContext> = {
   async run(args, context) {
     const query = readRequiredText(args, "evento", 200)
     if (!query.ok) return toolError(query.error)
-    const found = findEvent(await fetchEvents(context.supabase), query.value)
+    const found = findEvent(await fetchEvents(context.supabase), query.value, context.today)
     if (!found.ok) return toolError(found.error)
     const input = await readEventInput(args, context, found.value)
     if (!input.ok) return toolError(input.error)
@@ -210,7 +216,7 @@ const deleteEvent: Tool<McpContext> = {
     const query = readRequiredText(args, "evento", 200)
     if (!query.ok) return toolError(query.error)
     const [events, { records }] = await Promise.all([fetchEvents(context.supabase), fetchMeetingRecords(context.supabase)])
-    const found = findEvent(events, query.value)
+    const found = findEvent(events, query.value, context.today)
     if (!found.ok) return toolError(found.error)
     const event = found.value
     const own = records.filter((record) => record.event_id === event.id)

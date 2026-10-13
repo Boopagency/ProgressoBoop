@@ -26,6 +26,7 @@ import {
   EDIT,
   READ_ONLY,
   WRITE,
+  approvalLabel,
   confirmFirst,
   enumOptions,
   enumValue,
@@ -160,13 +161,6 @@ export function findTask(tasks: Task[], query: string): Parsed<Task> {
   if (open.ok) return open
   const any = findByName(tasks, query, (task) => task.title, (task) => task.id, "tarefa")
   return any.ok ? any : open
-}
-
-function approvalLabel(task: Task): string | null {
-  if (!task.client_approval_required) return null
-  if (task.client_approval === "approved") return "aprovada pelo cliente"
-  if (task.client_approval === "changes") return "o cliente pediu ajustes"
-  return isDone(task) ? "aguardando a aprovação do cliente" : "vai pedir a aprovação do cliente"
 }
 
 /* ------------------------------------------------------------------ */

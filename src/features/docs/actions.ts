@@ -4,20 +4,20 @@ import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
 import { blocksToText } from "@/features/docs/logic"
-import { SUGGESTIONS, templateById, type TemplateId } from "@/features/docs/templates"
 import {
-  parseContent,
-  parseDocPatch,
-  TEXT_MAX,
-  TITLE_MAX,
-  type DocPatch,
-} from "@/features/docs/validation"
+  insertDoc,
+  NOT_FOUND,
+  patchDoc,
+  writeDocContent,
+  writeDocReviewed,
+  type NewDocInput,
+  type SaveContentResult,
+} from "@/features/docs/mutations"
+import { TEXT_MAX, TITLE_MAX, type DocPatch } from "@/features/docs/validation"
 import { isDateKey, todayKey } from "@/lib/dates"
-import { isTaskArea } from "@/lib/labels"
-import type { Json } from "@/lib/supabase/database.types"
 import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
-import type { ActionResult, DateKey, DocKind, TaskArea } from "@/lib/types"
+import type { ActionResult, DateKey } from "@/lib/types"
 import { isUuid } from "@/lib/utils"
 
 /*
@@ -25,101 +25,31 @@ import { isUuid } from "@/lib/utils"
  * atualização e versões anteriores (trigger set_doc_fields) e RLS.
  */
 
-const NOT_FOUND = { ok: false, error: "Esse processo não existe mais." } as const
 const VERSION_NOT_FOUND = { ok: false, error: "Versão não encontrada." } as const
 const DOCS_BUCKET = "docs"
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"]
 const IMAGE_MAX = 5 * 1024 * 1024
 const TASKS_MAX = 50
 
-/** Revisão padrão: guias a cada 12 meses; o resto a cada 6. */
-function defaultReview(kind: DocKind): number {
-  return kind === "guide" ? 12 : 6
-}
-
 function refreshApp() {
   revalidatePath("/", "layout")
 }
 
-export interface NewDocInput {
-  title: string
-  /** Modelo, ou o índice de uma sugestão da lista "Para começar". */
-  template?: TemplateId
-  suggestion?: number
-  area?: TaskArea | null
-  client_id?: string | null
+function refreshed<T extends ActionResult<unknown>>(result: T): T {
+  if (result.ok) refreshApp()
+  return result
 }
 
 export async function createDoc(input: NewDocInput): Promise<ActionResult<{ id: string }>> {
   const user = await requireUser()
-  const suggestion =
-    typeof input?.suggestion === "number" ? SUGGESTIONS[input.suggestion] : undefined
-  const template = suggestion ? undefined : (templateById(input?.template) ?? templateById("blank"))
-  const kind = suggestion?.kind ?? template?.kind ?? "process"
-
-  const title = (suggestion?.title ?? (typeof input?.title === "string" ? input.title : ""))
-    .replace(/\s+/g, " ")
-    .trim()
-  if (!title) return { ok: false, error: "Dê um título ao documento." }
-  if (title.length > TITLE_MAX) return { ok: false, error: "Título muito longo." }
-
-  // Modelos do cliente pedem o cliente e, sem área escolhida, ficam em Clientes.
-  const area = suggestion?.area ?? (isTaskArea(input?.area) ? input.area : template?.client ? "clients" : null)
-  const clientId = input?.client_id == null ? null : isUuid(input.client_id) ? input.client_id : undefined
-  if (clientId === undefined) return { ok: false, error: "Cliente inválido." }
-  if (template?.client && !clientId) return { ok: false, error: "Escolha o cliente deste documento." }
-
-  const blocks = (suggestion ?? template)?.blocks() ?? []
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("docs")
-    .insert({
-      title,
-      kind,
-      area,
-      client_id: clientId,
-      owner_id: user.id,
-      summary: suggestion?.summary ?? template?.summary ?? null,
-      pinned: suggestion?.pinned ?? false,
-      content: blocks as unknown as Json,
-      content_text: blocksToText(blocks).slice(0, TEXT_MAX),
-      review_every_months: template?.reviewEveryMonths !== undefined ? template.reviewEveryMonths : defaultReview(kind),
-      reviewed_on: todayKey(),
-    })
-    .select("id")
-    .single()
-  if (error) return dbFailure(error, "Não foi possível criar o documento.")
-
-  refreshApp()
-  return { ok: true, data: { id: data.id } }
+  return refreshed(await insertDoc(await createClient(), user.id, input))
 }
 
 export async function updateDoc(id: string, patch: DocPatch): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return NOT_FOUND
-  const parsed = parseDocPatch(patch)
-  if (!parsed.ok) return parsed
-  if (Object.keys(parsed.value).length === 0) return { ok: true, data: null }
-
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("docs").update(parsed.value).eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível salvar.")
-  if (data.length === 0) return NOT_FOUND
-
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await patchDoc(await createClient(), id, patch))
 }
 
-export type SaveContentResult =
-  | { ok: true; data: { stamp: string } }
-  | { ok: false; error: string; conflict?: { by: string | null; at: string } }
-
-/**
- * Salva o conteúdo do editor. `baseStamp` é o carimbo (`content_updated_at`)
- * do conteúdo que a pessoa estava editando: se alguém salvou outro conteúdo
- * depois disso, devolve `conflict` em vez de sobrescrever (a não ser com
- * `force`; o texto da outra pessoa fica no histórico).
- */
 export async function saveDocContent(
   id: string,
   content: unknown,
@@ -127,36 +57,7 @@ export async function saveDocContent(
   force = false
 ): Promise<SaveContentResult> {
   await requireUser()
-  if (!isUuid(id) || typeof baseStamp !== "string") return NOT_FOUND
-  const parsed = parseContent(content)
-  if (!parsed.ok) return parsed
-
-  const supabase = await createClient()
-  let query = supabase
-    .from("docs")
-    .update({
-      content: parsed.value as unknown as Json,
-      content_text: blocksToText(parsed.value).slice(0, TEXT_MAX),
-    })
-    .eq("id", id)
-  if (!force) query = query.eq("content_updated_at", baseStamp)
-  const { data, error } = await query.select("content_updated_at")
-  if (error) return dbFailure(error, "Não foi possível salvar o documento.")
-
-  if (data.length === 0) {
-    const { data: current } = await supabase
-      .from("docs")
-      .select("content_updated_at, content_updated_by")
-      .eq("id", id)
-      .maybeSingle()
-    if (!current) return NOT_FOUND
-    return {
-      ok: false,
-      error: "O documento mudou enquanto você editava.",
-      conflict: { by: current.content_updated_by, at: current.content_updated_at },
-    }
-  }
-  return { ok: true, data: { stamp: data[0]!.content_updated_at } }
+  return writeDocContent(await createClient(), id, content, baseStamp, force)
 }
 
 /** Conteúdo atual (para recarregar o editor depois de um conflito). */
@@ -186,19 +87,7 @@ export async function getDocContent(
 /** Revisado hoje: a próxima revisão conta a partir de agora. */
 export async function markDocReviewed(id: string): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return NOT_FOUND
-
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("docs")
-    .update({ reviewed_on: todayKey(), status: "active" })
-    .eq("id", id)
-    .select("id")
-  if (error) return dbFailure(error, "Não foi possível marcar como revisado.")
-  if (data.length === 0) return NOT_FOUND
-
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await writeDocReviewed(await createClient(), id))
 }
 
 export async function duplicateDoc(id: string): Promise<ActionResult<{ id: string }>> {

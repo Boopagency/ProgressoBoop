@@ -77,14 +77,16 @@ export function readDate(args: Args, key: string, today: DateKey): Parsed<DateKe
 /**
  * Acha um item pelo id ou pelo nome, sem acento e sem diferença de
  * maiúsculas: nome igual primeiro, depois "começa com" e por fim "contém".
- * Mais de um no mesmo nível é ambíguo: a resposta lista as opções.
+ * Mais de um no mesmo nível é ambíguo: a resposta lista as opções com o id
+ * (e `detailOf`, ex.: a data, quando os nomes se repetem).
  */
 export function findByName<T>(
   items: readonly T[],
   query: string,
   nameOf: (item: T) => string,
   idOf: (item: T) => string,
-  what: string
+  what: string,
+  detailOf?: (item: T) => string | null
 ): Parsed<T> {
   const trimmed = query.trim()
   if (isUuid(trimmed)) {
@@ -102,7 +104,8 @@ export function findByName<T>(
   for (const level of levels) {
     if (level.length === 1) return { ok: true, value: level[0]!.item }
     if (level.length > 1) {
-      return { ok: false, error: `Mais de um(a) ${what} com "${trimmed}": ${namesList(level.map(({ item }) => nameOf(item)))}. Diga qual.` }
+      const labels = level.map(({ item }) => `${nameOf(item)} (${[detailOf?.(item), `id ${idOf(item)}`].filter(Boolean).join(", ")})`)
+      return { ok: false, error: `Mais de um(a) ${what} com "${trimmed}": ${namesList(labels)}. Use o id.` }
     }
   }
   const options = items.map(nameOf)
@@ -172,4 +175,39 @@ export function fromClient(text: string, max = 200): string {
 export function isClear(raw: unknown): boolean {
   if (raw === null || raw === "") return true
   return typeof raw === "string" && ["nenhum", "nenhuma", "sem", "-"].includes(foldText(raw.trim()))
+}
+
+/* ------------------------------------------------------------------ */
+/* Texto → blocos do editor                                            */
+/* ------------------------------------------------------------------ */
+
+export interface TextBlock {
+  type: string
+  props?: Record<string, unknown>
+  content: string
+}
+
+/**
+ * Texto do Claude (markdown simples) → blocos do editor dos Processos, no
+ * formato parcial dos modelos (o editor completa ids e propriedades):
+ * "# "/"## "/"### " títulos, "- " lista, "1. " passos, "[ ]"/"[x]" checklist,
+ * o resto parágrafo. Linhas em branco separam blocos.
+ */
+export function textToBlocks(text: string): TextBlock[] {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const heading = line.match(/^(#{1,3})\s+(.*)$/)
+      if (heading) return { type: "heading", props: { level: heading[1]!.length }, content: heading[2]! }
+      const check = line.match(/^(?:[-*]\s+)?\[( |x|X)\]\s+(.*)$/)
+      if (check) return { type: "checkListItem", props: { checked: check[1] !== " " }, content: check[2]! }
+      const item = line.match(/^[-*•]\s+(.*)$/)
+      if (item) return { type: "bulletListItem", content: item[1]! }
+      const step = line.match(/^\d+[.)]\s+(.*)$/)
+      if (step) return { type: "numberedListItem", content: step[1]! }
+      return { type: "paragraph", content: line }
+    })
 }

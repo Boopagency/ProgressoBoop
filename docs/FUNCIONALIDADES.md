@@ -459,7 +459,11 @@ passo), checklists, políticas (regras combinadas) e guias.
   - contadores e barras atualizam na hora;
   - a tarefa fica riscada no lugar até a página ser recarregada;
   - um aviso oferece "Desfazer" por 4 segundos.
-- **Carregando:** aparece um esqueleto da tela.
+- **Carregando:** aparece um esqueleto da tela, com o título, a descrição e
+  o primeiro bloco no mesmo lugar em que a tela vai mostrá-los.
+- **Trocar de tela:** o conteúdo entra com um fade curto (0,2 s); o menu e o
+  topo não se mexem. Mudar filtros ou o modo de ver não anima. Com "reduzir
+  movimento" ligado no sistema, a troca é direta.
 - **Erro:** "Não foi possível carregar esta tela", com o botão "Tentar de
   novo".
 - **Endereço inexistente:** "Página não encontrada".

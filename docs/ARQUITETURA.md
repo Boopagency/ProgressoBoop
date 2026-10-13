@@ -1286,7 +1286,10 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | Componente           | Papel                                                          |
 | -------------------- | -------------------------------------------------------------- |
 | `AppSidebar`         | navegação + usuário/sair (shadcn Sidebar, variante inset)      |
-| `PageHeader`         | título forte, subtítulo e ações da página                      |
+| `PageContainer`      | moldura da tela (largura, margens) e a entrada suave ao trocar de tela (8.1) |
+| `PageHeader`         | título, descrição e ações, com altura fixa (8.1)               |
+| `PageToolbar` / `PageBody` | linha de filtros e o conteúdo, sempre no mesmo lugar (8.1) |
+| `PageHeaderSkeleton` | o cabeçalho no `loading.tsx`, com a geometria do `PageHeader`  |
 | `TaskRow`            | linha de tarefa: checkbox, título e metadados compactos        |
 | `TaskSection`        | grupo de tarefas com título, contagem e estado vazio           |
 | `TaskSheet`          | detalhes e edição da tarefa no Sheet lateral                   |
@@ -1337,6 +1340,85 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `KpiTile`            | indicador: valor, variação colorida pelo sentido bom, tendência e alerta |
 | `ColumnChart` / `LineChart` / `Sparkline` / `BarList` | gráficos em HTML/SVG, com tooltip, teclado (setas), legenda e clique para o detalhe |
 | `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
+
+### 8.1 Esqueleto das telas e transição
+
+Toda tela do admin segue o mesmo esqueleto (`src/components/layout/page.tsx`),
+para que, ao trocar de tela, o título, a linha de filtros e o primeiro bloco
+fiquem sempre no mesmo lugar:
+
+```
+PageContainer   moldura: max. 1400px, centralizada; margens 16 / 24 / 40px
+│               (celular / sm / lg) e topo 24 / 32 / 40px (celular / md / lg)
+├─ PageHeader   altura fixa: título 24px (28px a partir de sm) numa linha só,
+│               linha da descrição sempre reservada (20px), ações à direita
+│               e alinhadas à base (no celular, abaixo do título)
+├─ PageToolbar  opcional: filtros, busca e modos de ver, 24px abaixo do
+│               cabeçalho, altura mínima de 36px; o grupo da direita usa ml-auto
+└─ PageBody     o conteúdo, 24px abaixo do cabeçalho (ou da linha de
+                filtros); 32px entre os blocos
+```
+
+Regras:
+
+- **Largura:** a moldura é a mesma em todas as telas (sem `max-w-*` por
+  tela). Um conteúdo de leitura (lista, formulário) limita a própria largura
+  dentro do `PageBody`, alinhado à esquerda; o cabeçalho ocupa a moldura toda,
+  então o título e as ações não mudam de lugar.
+- **Cabeçalho:** só o `PageHeader`, sem cabeçalho próprio nas telas. O título
+  é curto (o nome da tela, ou do item nas páginas de detalhe) e não quebra
+  linha. As ações são a criação da tela (ex.: "Nova tarefa") e, no máximo,
+  um atalho secundário; filtros e modos de ver vão no `PageToolbar`.
+- **Detalhe:** as páginas de dentro (cliente, projeto, reunião, processo)
+  usam o mesmo cabeçalho; o "voltar" fica no topo, ao lado do botão do menu,
+  para o título ficar na mesma altura das listas.
+- **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
+- **Carregamento:** o `loading.tsx` usa `PageContainer animate={false}`,
+  `PageHeaderSkeleton` e `PageBody`, com a geometria da tela; quando a tela
+  chega, nada muda de lugar.
+- **Transição:** o `PageContainer` entra com `motion-safe:animate-page-in`
+  (fade de 0 a 1 e subida de 4px em 200ms, `globals.css`). Anima quando a tela
+  monta: troca de tela pelo menu, abrir um detalhe e o fim do carregamento.
+  Filtros na URL, `router.refresh()` e mudanças dentro da tela não animam (a
+  moldura continua montada). O menu e o topo ficam no layout e não se mexem.
+  Com "reduzir movimento" no sistema, não há animação. Telas fora do
+  `PageContainer` (Comunicações, em tela cheia) usam a mesma classe na raiz.
+
+A base (componentes, animação e carregamento) entrou no PR 1 da issue #40;
+as telas passam para o esqueleto no PR 2 e o portal, no PR 3.
+
+Levantamento antes do esqueleto (13/10/2026, 1440 e 1920px de janela; medido
+no navegador, com o menu aberto). O título fica na mesma altura nas listas
+(y = 97px) e com o mesmo tamanho, mas a moldura muda de largura por tela, o
+primeiro bloco começa a uma distância diferente do cabeçalho e as páginas de
+detalhe descem o título com o "voltar":
+
+| Tela | Moldura | Título em 1920px (x) | Cabeçalho → 1º bloco | Filtros e modos de ver |
+| --- | --- | --- | --- | --- |
+| Hoje | 1240 | 504 | 32px (resumo) | Minhas/Todas nas ações |
+| Tarefas | 1320 | 464 | 16px (visões salvas) | linha própria, 16px abaixo das visões |
+| Projetos | 1240 | 504 | 28px | Em andamento/Todos em linha própria |
+| Projeto | 1280 | 484 (y = 163) | 24px | "voltar" acima do título; cabeçalho próprio |
+| Calendário | 1400 | 424 | 28px (semana) | Semana/Mês nas ações; navegação e legenda em linha própria |
+| Reuniões | 1080 | 584 | 32px | busca dentro do conteúdo |
+| Reunião | 1320 | — | — | "voltar" e anterior/próxima acima do título |
+| Comercial | 1400 | 424 | 24px (números) | Quadro/Lista abaixo dos números |
+| Conteúdo | 1400 | 424 | 24px (números) | modos e filtros abaixo dos números |
+| Clientes | 1180 | 534 | 32px | — |
+| Cliente | 1240 | 504 (y = 163) | 32px | "voltar" acima do título; cabeçalho próprio |
+| Comunicações | tela cheia | 273 (18px) | — | título pequeno na coluna dos canais |
+| Indicadores | 1320 | 464 | 24px | período em linha própria; Excel e relatório nas ações |
+| Metas | 1100 | 574 | 32px | trimestre em linha própria |
+| Financeiro | 1240 | 504 | 24px (abas) | abas; mês dentro de cada aba |
+| Relatórios | 920 | 664 | 24px | — (sem ações) |
+| Decisões | 1080 | 584 | 28px | busca e filtros em linha própria |
+| Processos | 1180 | 534 | 32px | filtro na coluna da esquerda |
+| Processo | 1240 | — | — | "voltar" com a área acima do título |
+
+Em 1440px a diferença horizontal aparece nas telas mais estreitas (Reuniões,
+Metas, Decisões e Relatórios: o título anda até 127px). O `loading.tsx`
+genérico tinha outra altura de título (32px) e de descrição (16px) e o
+primeiro bloco 32px abaixo.
 
 ## 9. Definições de negócio
 
@@ -1536,6 +1618,14 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     o app (o fio busca de novo); criar tarefa e mudar canais recarregam.
     Lido = a hora da mensagem mais nova que a pessoa viu, enviada como veio
     do banco (microssegundos).
+
+23. **Transição entre telas em CSS, não com View Transitions.** O Next 16
+    traz o `<ViewTransition>` do React, mas a foto da tela antiga não respeita
+    o recorte da área que rola: rolada, ela passaria por cima do topo durante
+    a animação, e a camada da transição segura os cliques. Uma animação de
+    entrada curta no `PageContainer` (montado de novo a cada tela) é mais
+    simples, funciona em todos os navegadores, também suaviza a chegada da
+    tela depois do esqueleto e não anima filtros nem `router.refresh()`.
 
 ## 11. Plano de implementação
 

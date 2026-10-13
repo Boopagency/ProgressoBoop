@@ -3,7 +3,7 @@ import "server-only"
 import { requireUser } from "@/features/auth/session"
 import type { Agenda } from "@/features/meetings/logic"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { MeetingItem, MeetingRecord } from "@/lib/types"
 import { foldText } from "@/lib/text"
 
@@ -22,8 +22,12 @@ export async function getMeetingRecords(): Promise<{
   items: MeetingItem[]
 }> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchMeetingRecords(await createClient())
+}
 
+export async function fetchMeetingRecords(
+  supabase: SupabaseServerClient
+): Promise<{ records: MeetingRecord[]; items: MeetingItem[] }> {
   const [records, items] = await Promise.all([
     supabase.from("meetings").select(RECORD_COLUMNS).order("occurs_on", { ascending: false }),
     supabase.from("meeting_items").select(ITEM_COLUMNS).order("created_at"),
@@ -44,8 +48,10 @@ export interface MeetingDetail {
 /** Um registro com a transcrição e a pauta guardada. `null` se não existir. */
 export async function getMeetingDetail(id: string): Promise<MeetingDetail | null> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchMeetingDetail(await createClient(), id)
+}
 
+export async function fetchMeetingDetail(supabase: SupabaseServerClient, id: string): Promise<MeetingDetail | null> {
   const { data, error } = await supabase
     .from("meetings")
     .select(`${RECORD_COLUMNS}, transcript, agenda`)

@@ -3,7 +3,7 @@ import "server-only"
 import { requireUser } from "@/features/auth/session"
 import { PROJECT_COLUMNS } from "@/features/projects/columns"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Client, Profile, Project, SavedView } from "@/lib/types"
 
 /** Dados de referência usados em quase todas as telas. */
@@ -18,8 +18,10 @@ export interface Workspace {
 
 export async function getWorkspace(): Promise<Workspace> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchWorkspace(await createClient())
+}
 
+export async function fetchWorkspace(supabase: SupabaseServerClient): Promise<Workspace> {
   const [profiles, clients, projects, savedViews] = await Promise.all([
     // A ordem de criação dos perfis é a ordem da equipe (Jabez, Renatha, Léo).
     supabase.from("profiles").select("id, full_name, avatar_url, role").order("created_at"),

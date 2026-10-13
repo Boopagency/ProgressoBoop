@@ -974,16 +974,33 @@ própria conta.
   **Permitir** e **Cancelar**. Conta de cliente não conecta, e um
   aplicativo que não é o Claude só pode ser recusado. No plano Team ou
   Enterprise, quem é Owner adiciona o conector uma vez na organização.
-- **O que o Claude faz:** busca geral (tarefas, projetos, clientes, posts,
-  ideias, decisões, processos e reuniões); as tarefas abertas da pessoa (ou
-  de outra) por prazo; clientes ativos e projetos em aberto com o
-  progresso; o conteúdo da semana dia a dia, com os atrasados e o que falta
-  em cada frente; os pedidos de ajuste pendentes; e criar tarefa, concluir
-  tarefa, criar ideia de post e escrever num canal (de cliente, interno ou
-  conversa direta; no de cliente, também como pedido de ajuste). As
-  respostas trazem os ids e os links das telas.
-- **Limites:** vê só o que a pessoa vê, não apaga nada e não acessa o
-  financeiro nem o comercial. Para desconectar, remove o conector no Claude.
+- **O que o Claude faz** (tudo o que se faz na tela, com as mesmas regras):
+  - busca geral (tarefas, projetos, clientes, posts, ideias, decisões,
+    processos e reuniões);
+  - **tarefas:** as da pessoa (ou de outra) por prazo, listar com filtros
+    (pessoa, cliente, projeto, status, prazo, área, texto), ver com os
+    comentários, criar, editar qualquer campo (inclusive "o cliente vê" e
+    "precisa de aprovação"), concluir, comentar e excluir;
+  - **projetos:** clientes e projetos com o progresso, ver as etapas e as
+    aprovações, criar (com modelo, copiando outro projeto ou o checklist de
+    um processo), editar, mudar status e excluir (com ou sem as tarefas);
+  - **reuniões:** próximas e recentes, a pauta montada, abrir, agendar,
+    assuntos e combinados (com responsável e prazo; combinado vira tarefa),
+    resumo e transcrição, encerrar, cancelar e reabrir;
+  - **decisões e agenda:** listar, registrar/criar, editar (revogar) e
+    excluir;
+  - o conteúdo da semana, os pedidos de ajuste pendentes, criar ideia de
+    post e escrever num canal (de cliente, interno ou conversa direta; no de
+    cliente, também como pedido de ajuste).
+  As respostas trazem os ids e os links das telas.
+- **Excluir é em dois passos:** o Claude primeiro mostra o que seria apagado
+  (e o que vai junto) e só apaga quando a pessoa confirma.
+- **Texto do cliente:** pedidos de ajuste e notas de
+  aprovação chegam ao Claude marcados como escritos pelo cliente; ele não
+  age por um pedido escrito ali sem a pessoa confirmar.
+- **Limites:** vê e faz só o que a pessoa vê e faz; não acessa o financeiro
+  nem o comercial; não exclui cliente nem arquivo e não mexe no acesso ao
+  portal. Para desconectar, remove o conector no Claude.
 
 ### 2.29 Notificações (sino no topo)
 
@@ -1284,7 +1301,7 @@ são uma sugestão para começar.
 | Clientes e revisões (checklist padrão, frentes sugeridas) | `src/features/clients/` (`logic.ts`), `src/app/(app)/clientes/` |
 | Modelos e sugestões de documentos | `src/features/docs/templates.ts` |
 | Login e sessão | `src/features/auth/`, `src/proxy.ts` |
-| Conector do Claude (MCP, OAuth, ferramentas, painel) | `src/features/mcp/` (`protocol.ts` JSON-RPC, `read-tools.ts` e `write-tools.ts` ferramentas, `oauth.ts` endereços), `src/app/api/mcp/`, `src/app/oauth/consent/`, `src/app/.well-known/` |
+| Conector do Claude (MCP, OAuth, ferramentas, painel) | `src/features/mcp/` (`protocol.ts` JSON-RPC, `tools.ts` registro e instruções, `tools/<área>.ts` ferramentas, `oauth.ts` endereços), `src/features/*/mutations.ts` (gravações comuns às Server Actions), `src/app/api/mcp/`, `src/app/oauth/consent/`, `src/app/.well-known/` |
 | Menu lateral e cabeçalhos | `src/components/layout/` |
 | Cores e fontes | `src/app/globals.css`, `src/app/layout.tsx` |
 | Nomes de status, áreas e tipos | `src/lib/labels.ts` |

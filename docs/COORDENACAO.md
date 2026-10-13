@@ -99,21 +99,37 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
   `tasks.plan_id` e `weekly_decisions` (#38, aplicada pela pessoa no SQL
   Editor); sistema zerado e contas de teste apagadas.
 
+## Em andamento (13/10/2026)
+
+- Issue #50 — modo escuro e mensagens de quem envia à direita (admin e
+  portal). Dois PRs: primeiro as mensagens, depois o modo escuro.
+- Issue #51 — conector do Claude completo (tudo o que se faz na tela). Três
+  PRs: base + operação; clientes e conteúdo; comercial, financeiro e metas.
+  Excluir e financeiro pelo MCP pedem migration que troque as políticas
+  `RESTRICTIVE` do conector (ver o comentário da coordenação na issue).
+
+## Revisão de segurança (13/10/2026)
+
+As 18 funções `SECURITY DEFINER` do `public` que o advisor aponta foram
+conferidas: `link_client_member` e `open_direct_channel` exigem equipe; as
+`portal_*` exigem membro daquele cliente (`private.my_client_ids()`) e cliente
+ativo, e escondem mensagens internas. Todas as tabelas têm RLS de equipe; o
+cliente só lê os próprios avisos e as imagens dos próprios posts. O aviso do
+advisor é esperado e fica. Os links das mensagens só aceitam http(s).
+
 ## Próximos passos
 
-1. **Verificar a segurança das funções do portal — pendente; a pessoa pediu
-   para não fazer ainda.** O advisor do Supabase aponta 18 funções
-   `SECURITY DEFINER` que qualquer usuário logado pode chamar (as `portal_*`,
-   `link_client_member` e `open_direct_channel`). É esperado no desenho, mas
-   cada uma precisa conferir quem chama (equipe ou membro daquele cliente); o
-   que estiver aberto demais se corrige com migration nova. Fazer antes de dar
-   acesso a clientes de verdade.
+1. Ligar a proteção de senhas vazadas no Supabase e trocar as senhas da
+   equipe — antes de dar acesso às clientes (Danielle e Bárbara, previsto
+   para 20/10).
 2. Apagar as 6 imagens que sobraram no bucket `content` do Storage (pelo
    painel: por SQL o arquivo não sai de verdade).
-3. Inserir os dados novos que a pessoa vai passar.
-4. Depois disso: proteção de senhas vazadas no Supabase, troca das senhas da
-   equipe e confirmação do imposto.
-5. Apagar a cópia `backup_20261013` quando a pessoa mandar.
+3. Confirmação do imposto.
+4. Apagar a cópia `backup_20261013` quando a pessoa mandar.
+
+Dados de 13/10: clientes, projetos, tarefas até 31/10, financeiro conferido
+com o extrato do Asaas e a weekly de 30/09 (com a análise) foram lançados pela
+coordenação. A weekly passa a ser às terças (a de 14/10 é na quarta).
 
 Testes na prévia: a ferramenta do Supabase não confirma `delete` nem `drop`
 (trava esperando confirmação). Criar os dados `E2E` pelo SQL funciona; a

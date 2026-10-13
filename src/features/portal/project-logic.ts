@@ -1,5 +1,5 @@
 import { PROJECT_TEMPLATES } from "@/features/projects/templates"
-import type { DateKey, ProjectStatus, TaskStatus, Timestamp } from "@/lib/types"
+import type { ClientApprovalResult, DateKey, ProjectStatus, TaskStatus, Timestamp } from "@/lib/types"
 
 /*
  * Projetos no portal: o que o cliente vê de cada projeto (sem descrição,
@@ -25,6 +25,26 @@ export interface PortalStep {
   status: TaskStatus
   due_date: DateKey | null
   completed_at: Timestamp | null
+}
+
+/**
+ * Etapa que pede a aprovação do cliente (`portal_step_approvals`): se espera a
+ * resposta dele agora e a última resposta (aprovado ou pediu ajustes, nota,
+ * quem e quando). Concluir de novo limpa a resposta e volta a esperar.
+ */
+export interface PortalStepApproval {
+  id: string
+  project_id: string
+  project_name: string
+  title: string
+  status: TaskStatus
+  due_date: DateKey | null
+  completed_at: Timestamp | null
+  awaiting: boolean
+  approval: ClientApprovalResult | null
+  note: string | null
+  decided_by_name: string | null
+  decided_at: Timestamp | null
 }
 
 /** Quanto do projeto já foi feito (0 a 100). */

@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
+import { portalHref } from "@/features/portal/links"
 import { nextStep, projectPercent, templateName } from "@/features/portal/project-logic"
 import { getPortalProjects, getPortalProjectSteps } from "@/features/portal/project-queries"
-import { PortalNav, portalHref } from "@/features/portal/portal-nav"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import { ProjectBar, ProjectStatusBadge, ProjectTiming } from "@/features/projects/project-meta"
 import { formatShortDate, todayKey } from "@/lib/dates"
@@ -19,10 +20,10 @@ export default async function PortalProjectsPage(props: PageProps<"/portal/proje
   const today = todayKey()
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{client.name}</h1>
-      <PortalNav section="projetos" client={client} clients={user.clients} />
+    <PageContainer>
+      <PageHeader title="Projetos" description={client.name} />
 
+      <PageBody width="reading">
       {projects.length === 0 ? (
         <p className="rounded-xl border border-dashed px-4 py-8 text-center text-[13px] text-muted-foreground">
           Nenhum projeto por aqui ainda. Quando a equipe começar um site, uma identidade visual ou outro projeto para
@@ -66,6 +67,7 @@ export default async function PortalProjectsPage(props: PageProps<"/portal/proje
           })}
         </ul>
       )}
-    </div>
+      </PageBody>
+    </PageContainer>
   )
 }

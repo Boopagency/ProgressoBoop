@@ -45,19 +45,21 @@ import { cn } from "@/lib/utils"
 
 /**
  * Cores suaves por cliente. Sem vermelho, verde e laranja, que no produto
- * dizem atrasado, concluído e atenção.
+ * dizem atrasado, concluído e atenção. Paleta só de identificação, sem
+ * significado: no tema escuro, o fundo vira o tom médio transparente e o
+ * texto, o tom claro.
  */
 const CLIENT_COLORS = [
-  { mark: "bg-sky-100 text-sky-900", dot: "bg-sky-400" },
-  { mark: "bg-indigo-100 text-indigo-900", dot: "bg-indigo-400" },
-  { mark: "bg-violet-100 text-violet-900", dot: "bg-violet-400" },
-  { mark: "bg-fuchsia-100 text-fuchsia-900", dot: "bg-fuchsia-400" },
-  { mark: "bg-cyan-100 text-cyan-900", dot: "bg-cyan-500" },
-  { mark: "bg-blue-100 text-blue-900", dot: "bg-blue-400" },
-  { mark: "bg-purple-100 text-purple-900", dot: "bg-purple-400" },
-  { mark: "bg-slate-200 text-slate-800", dot: "bg-slate-400" },
+  { mark: "bg-sky-100 text-sky-900 dark:bg-sky-400/20 dark:text-sky-100", dot: "bg-sky-400" },
+  { mark: "bg-indigo-100 text-indigo-900 dark:bg-indigo-400/20 dark:text-indigo-100", dot: "bg-indigo-400" },
+  { mark: "bg-violet-100 text-violet-900 dark:bg-violet-400/20 dark:text-violet-100", dot: "bg-violet-400" },
+  { mark: "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-400/20 dark:text-fuchsia-100", dot: "bg-fuchsia-400" },
+  { mark: "bg-cyan-100 text-cyan-900 dark:bg-cyan-400/20 dark:text-cyan-100", dot: "bg-cyan-500" },
+  { mark: "bg-blue-100 text-blue-900 dark:bg-blue-400/20 dark:text-blue-100", dot: "bg-blue-400" },
+  { mark: "bg-purple-100 text-purple-900 dark:bg-purple-400/20 dark:text-purple-100", dot: "bg-purple-400" },
+  { mark: "bg-slate-200 text-slate-800 dark:bg-slate-400/20 dark:text-slate-100", dot: "bg-slate-400" },
   { mark: "bg-brand-sand text-foreground", dot: "bg-stone-400" },
-  { mark: "bg-brand-mist text-brand-navy", dot: "bg-brand-slate" },
+  { mark: "bg-brand-mist text-tint-foreground", dot: "bg-brand-slate" },
 ] as const
 
 function clientColors(clientId: string) {

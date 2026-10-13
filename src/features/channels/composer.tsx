@@ -83,7 +83,7 @@ export function Composer({
       <div
         className={cn(
           "rounded-xl border bg-background transition-colors focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
-          request && "border-amber-600/30 bg-amber-50/30",
+          request && "border-attention-line/30 bg-attention-soft/30",
           allowInternal && internal && !request && "border-dashed border-foreground/25 bg-muted/50"
         )}
       >
@@ -118,7 +118,7 @@ export function Composer({
               className={cn(
                 "h-7 shrink-0 rounded-full border px-2.5 text-xs whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                 request
-                  ? "border-amber-600/25 bg-amber-50 font-medium text-amber-800"
+                  ? "border-attention-line/25 bg-attention-soft font-medium text-attention-ink"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >

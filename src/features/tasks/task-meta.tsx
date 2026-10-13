@@ -80,7 +80,7 @@ export function DoingPill({ className }: { className?: string }) {
     <Badge
       variant="outline"
       className={cn(
-        "gap-1.5 border-amber-600/15 bg-amber-50 px-2 text-[11px] leading-4 text-amber-800",
+        "gap-1.5 border-attention-line/15 bg-attention-soft px-2 text-[11px] leading-4 text-attention-ink",
         className
       )}
     >
@@ -92,7 +92,7 @@ export function DoingPill({ className }: { className?: string }) {
 
 export function HighPriorityIcon({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex shrink-0 text-orange-600", className)} title="Prioridade alta">
+    <span className={cn("inline-flex shrink-0 text-priority", className)} title="Prioridade alta">
       <ArrowUp className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
       <span className="sr-only">Prioridade alta</span>
     </span>

@@ -127,7 +127,7 @@ export function NewTaskButton({
     <Button onClick={() => openNewTask(defaults)} className={cn("gap-1.5", className)} {...props}>
       <Plus />
       Nova tarefa
-      <kbd className="ml-1 hidden rounded border border-white/20 px-1 font-sans text-[10px] leading-4 text-primary-foreground/70 sm:inline-block">
+      <kbd className="ml-1 hidden rounded border border-primary-foreground/20 px-1 font-sans text-[10px] leading-4 text-primary-foreground/70 sm:inline-block">
         N
       </kbd>
     </Button>
@@ -307,7 +307,7 @@ function NewTaskForm({
             aria-label="Prioridade"
             className={cn(CHIP, "gap-1.5 [&>svg:last-child]:hidden")}
           >
-            <Flag className={cn("size-3.5", priority === "high" && "text-orange-600")} />
+            <Flag className={cn("size-3.5", priority === "high" && "text-priority")} />
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" align="start">

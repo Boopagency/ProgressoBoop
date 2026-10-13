@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils"
  * marca (sem vermelho/verde/laranja, que têm significado no produto).
  */
 const PERSON_COLORS = [
-  "bg-brand-mist text-brand-navy",
+  "bg-brand-mist text-tint-foreground",
   "bg-brand-soft text-brand-ink",
   "bg-brand-sand text-foreground",
-  "bg-brand-sky text-brand-navy",
+  "bg-brand-sky text-tint-foreground",
 ]
 
 export function personColor(index: number): string {

@@ -31,8 +31,8 @@ import type { ClientDetail, ClientHealth, ClientReview, DateKey, ReviewCheckItem
 import { cn } from "@/lib/utils"
 
 const HEALTH_SELECTED: Record<ClientHealth, string> = {
-  healthy: "border-success/40 bg-success/10 text-[oklch(0.38_0.1_158)]",
-  attention: "border-amber-500/40 bg-amber-50 text-amber-900",
+  healthy: "border-success/40 bg-success/10 text-success-strong",
+  attention: "border-attention-line/40 bg-attention-soft text-attention-ink-strong",
   at_risk: "border-overdue/40 bg-overdue/10 text-overdue",
 }
 

@@ -66,8 +66,8 @@ export function effectiveStatus(
 
 const STATUS_STYLE: Record<EffectiveStatus, string> = {
   draft: "border-dashed border-border text-muted-foreground",
-  active: "border-success/25 bg-success/10 text-[oklch(0.42_0.1_158)]",
-  review: "border-amber-600/20 bg-amber-50 text-amber-800",
+  active: "border-success/25 bg-success/10 text-success-strong",
+  review: "border-attention-line/20 bg-attention-soft text-attention-ink",
 }
 
 export function DocStatusBadge({

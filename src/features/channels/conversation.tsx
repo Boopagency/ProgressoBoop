@@ -269,7 +269,7 @@ export function Conversation({
             >
               {label}
               {value === "pending" && pendingCount > 0 ? (
-                <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-medium text-amber-800 tabular-nums">{pendingCount}</span>
+                <span className="rounded-full bg-attention-muted px-1.5 text-[11px] font-medium text-attention-ink tabular-nums">{pendingCount}</span>
               ) : null}
             </button>
           ))}
@@ -384,7 +384,7 @@ export function Conversation({
       )}
 
       {view === "thread" && channel.kind === "client" && !channel.archived ? (
-        <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
+        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
           O cliente lê este canal no portal, em Comunicação. Para falar só com a equipe, marque Interno ao escrever.
         </p>
       ) : null}

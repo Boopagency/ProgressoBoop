@@ -57,21 +57,26 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
     <PageContainer>
       <PageHeader title="Calendário" description={client.name} />
 
+      {/* A mesma ordem da linha do Calendário do admin: setas, o mês e "Hoje". */}
       <PageToolbar>
-        <h2 className="mr-auto text-base font-semibold text-foreground">{formatMonthYear(anchor)}</h2>
-        <Button asChild variant="ghost" size="sm" className="h-8 px-2.5 text-[13px]">
-          <Link href={monthHref(today)}>Hoje</Link>
-        </Button>
-        <Button asChild variant="outline" size="icon" className="size-8">
-          <Link href={monthHref(addMonthsToKey(anchor, -1))} aria-label="Mês anterior">
-            <ChevronLeft />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="icon" className="size-8">
-          <Link href={monthHref(addMonthsToKey(anchor, 1))} aria-label="Próximo mês">
-            <ChevronRight />
-          </Link>
-        </Button>
+        <div className="flex items-center">
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link href={monthHref(addMonthsToKey(anchor, -1))} aria-label="Mês anterior">
+              <ChevronLeft />
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link href={monthHref(addMonthsToKey(anchor, 1))} aria-label="Próximo mês">
+              <ChevronRight />
+            </Link>
+          </Button>
+        </div>
+        <h2 className="text-base font-semibold tracking-tight text-foreground">{formatMonthYear(anchor)}</h2>
+        {anchor.slice(0, 7) !== today.slice(0, 7) ? (
+          <Button asChild variant="outline" size="sm" className="ml-1 h-7 px-2.5 text-xs shadow-none">
+            <Link href={monthHref(today)}>Hoje</Link>
+          </Button>
+        ) : null}
       </PageToolbar>
 
       <PageBody>

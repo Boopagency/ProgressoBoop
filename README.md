@@ -148,9 +148,8 @@ app **não usa** chave secreta nem `service_role`.
   `finance_management` (categorias gerenciais, taxa do gateway, parâmetros
   e fechamento do mês), `commercial` (negócios), `goals` (metas) e
   `win_deal` (ganhar um negócio numa transação).
-- Pendente: uma migration de limpeza que apaga `plans`, `tasks.plan_id` e
-  `weekly_decisions`, que não são mais usados pelo app (veja
-  [ARQUITETURA.md](docs/ARQUITETURA.md#próximos-passos)).
+- Limpeza (`drop_plans_weekly_decisions`): apagou `plans`, `tasks.plan_id` e
+  `weekly_decisions`, que o app não usava mais.
 - Imagens dos processos: bucket privado `docs` do Storage (criado pela
   migration `docs`), servidas pelo app em `/api/arquivos/…` só para quem está
   logado. As do conteúdo (capas, slides e foto do cliente), no bucket privado

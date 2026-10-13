@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1711,30 +1711,6 @@ export type Database = {
           },
         ]
       }
-      plans: {
-        Row: {
-          created_at: string
-          ends_on: string
-          id: string
-          name: string
-          starts_on: string
-        }
-        Insert: {
-          created_at?: string
-          ends_on: string
-          id?: string
-          name: string
-          starts_on: string
-        }
-        Update: {
-          created_at?: string
-          ends_on?: string
-          id?: string
-          name?: string
-          starts_on?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1913,7 +1889,6 @@ export type Database = {
           due_date: string | null
           id: string
           meeting_id: string | null
-          plan_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           project_id: string | null
           status: Database["public"]["Enums"]["task_status"]
@@ -1935,7 +1910,6 @@ export type Database = {
           due_date?: string | null
           id?: string
           meeting_id?: string | null
-          plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
@@ -1957,7 +1931,6 @@ export type Database = {
           due_date?: string | null
           id?: string
           meeting_id?: string | null
-          plan_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
@@ -2015,49 +1988,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      weekly_decisions: {
-        Row: {
-          content: string
-          created_at: string
-          created_by: string
-          id: string
-          week_start: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          created_by?: string
-          id?: string
-          week_start: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          created_by?: string
-          id?: string
-          week_start?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "weekly_decisions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2522,4 +2456,3 @@ export const Constants = {
     },
   },
 } as const
-

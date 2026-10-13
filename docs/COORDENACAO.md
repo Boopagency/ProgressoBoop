@@ -27,10 +27,11 @@ respeitando as restrições abaixo.
   boop10), produção https://admin.deumboop.com.br, prévia por branch
   `boop-admin-git-<branch>-boop10.vercel.app`.
 - Supabase: projeto `zqugfixszhfoochvaaol`.
-- Clientes reais usados nos testes: Hertmann
-  `af1fe7cf-6508-4b4e-8b7a-23b76008ac62`, Velmont
-  `37f2d6ad-e11f-44c3-9958-21a6a35d9cb0`. O único com vários projetos é a
-  Bárbara Fonseca (`9715ca1a-d051-49f1-a61e-552e2e76e67f`, 3 projetos).
+- Dados: o sistema foi zerado em 13/10/2026 (ficaram só as contas da equipe,
+  os Processos e os parâmetros do financeiro). A cópia de antes está no
+  schema `backup_20261013`, fora da API; apagar quando a pessoa mandar. Os
+  clientes de teste antigos (Hertmann, Velmont, Bárbara Fonseca) não existem
+  mais: os testes criam um cliente `E2E …` e o excluem no fim.
 
 ## Roteiro de cada PR de agente
 
@@ -86,14 +87,18 @@ Correção fora do plano: rolagem lateral do Hoje no celular (#9).
 Todas as migrations do repositório estão aplicadas no Supabase (a última é
 `20261009193411_notifications_realtime`).
 
+## Em andamento (13/10/2026)
+
+- Issue #39 (conta 2, Opus) — Portal do cliente 2.0: menu lateral, painel
+  resumido, Comunicação, Notificações do cliente e aprovação de etapas do
+  projeto (a equipe marca, por tarefa, o que pede aprovação).
+- Issue #40 (conta 3, Opus no PR 1 e Sonnet nos PRs 2 e 3) — consistência
+  visual e transições suaves no admin e, depois do PR 2 da #39, no portal.
+- A divisão de arquivos entre as duas está no fim de cada issue.
+
 ## Próximos passos
 
-1. Corrigir o "Link do Drive" do post (`post-dialog.tsx`): é `type="url"` e
-   mostra a mensagem do navegador em vez da do app (sobra da 4/4).
-2. Migration de limpeza de `plans`, `tasks.plan_id` e `weekly_decisions`
-   (autorizada pela pessoa em 13/10), seguida dos tipos regenerados. A
-   proteção de senhas, a troca de senhas e o imposto ficam para depois dela.
-3. **Verificar a segurança das funções do portal — pendente; a pessoa pediu
+1. **Verificar a segurança das funções do portal — pendente; a pessoa pediu
    para não fazer ainda.** O advisor do Supabase aponta 12 funções
    `SECURITY DEFINER` que qualquer usuário logado pode chamar
    (`link_client_member`, `open_direct_channel`, `portal_client_profile`,
@@ -102,13 +107,17 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
    `portal_review_post`, `portal_send_message`, `portal_send_project_message`).
    É esperado no desenho, mas cada uma precisa conferir quem chama (equipe ou
    membro daquele cliente); o que estiver aberto demais se corrige com
-   migration nova.
-4. Limpar as contas de teste que ficaram no Auth:
-   `e2e.claude.{a,b,c}.09101349@example.com` (de um teste de 09/10, sem
-   cliente) e `portal.teste@deumboop.com.br` (portal da Bárbara Fonseca, criada
-   em 13/10 para a pessoa conferir o portal com vários projetos; apagar quando
-   ela terminar, junto com a linha em `client_members`).
-5. Próximo escopo: a pessoa define.
+   migration nova. Revisar junto o PR de banco da #39, que acrescenta outras.
+2. Apagar as 6 imagens que sobraram no bucket `content` do Storage (pelo
+   painel: por SQL o arquivo não sai de verdade).
+3. Inserir os dados novos que a pessoa vai passar.
+4. Depois disso: proteção de senhas vazadas no Supabase, troca das senhas da
+   equipe e confirmação do imposto.
+
+Feito em 13/10: Link do Drive com a mensagem do app (#37); limpeza de `plans`,
+`tasks.plan_id` e `weekly_decisions` (#38, aplicada pela pessoa no SQL Editor,
+porque a ferramenta não confirma `drop`); sistema zerado e contas de teste
+apagadas.
 
 ## Acesso da sessão de coordenação
 

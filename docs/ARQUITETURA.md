@@ -190,7 +190,8 @@ processos (`docs` e `doc_versions`), as revisões de clientes
 gestão (`finance_settings`, `finance_closings`, `deals`, `objectives` e
 `key_results`), a Central de Conteúdo (`content_posts` e `content_ideas`) e os
 canais das Comunicações (`channels`, `channel_members`, `messages` e
-`channel_reads`) e as notificações da equipe (`notifications`). O SQL está em `supabase/migrations/`, uma migration por etapa:
+`channel_reads`), as notificações da equipe (`notifications`) e os avisos do
+cliente no portal (`client_notifications`). O SQL está em `supabase/migrations/`, uma migration por etapa:
 [`initial_schema`](../supabase/migrations/20260925162330_initial_schema.sql),
 [`meetings`](../supabase/migrations/20261006141627_meetings.sql),
 [`docs`](../supabase/migrations/20261006163448_docs.sql),
@@ -209,8 +210,9 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 [`client_portal_access`](../supabase/migrations/20261008185828_client_portal_access.sql),
 [`channels`](../supabase/migrations/20261008195016_channels.sql),
 [`portal_content`](../supabase/migrations/20261009000106_portal_content.sql),
-[`notifications`](../supabase/migrations/20261009163255_notifications.sql) e
-[`notifications_realtime`](../supabase/migrations/20261009193411_notifications_realtime.sql).
+[`notifications`](../supabase/migrations/20261009163255_notifications.sql),
+[`notifications_realtime`](../supabase/migrations/20261009193411_notifications_realtime.sql) e
+[`portal_v2`](../supabase/migrations/20261013120000_portal_v2.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |
@@ -243,13 +245,17 @@ canais das Comunicações (`channels`, `channel_members`, `messages` e
 | `messages`         | `id`, `channel_id`, `post_id` (o post de que fala, do cliente do canal), `author_id` (`auth.users`), `kind`, `body`, `resolved_at`, `resolved_by` (pedido de ajuste resolvido), `task_id` (a tarefa em que virou), `created_at`, `edited_at` |
 | `channel_reads`    | `user_id` (`auth.users`), `channel_id` (chave composta), `last_read_at` |
 | `notifications`    | `id`, `user_id` (quem recebe, sempre da equipe), `kind`, `actor_id` (`auth.users`) e `actor_name` (quem fez, no momento), `client_id` (avisos do portal), `title` (canal, post, tarefa ou projeto), `body` (trecho da mensagem), `item_count` (tarefas atribuídas de uma vez), `link` (caminho no app), `channel_id`, `message_id`, `post_id`, `task_id`, `read_at` (vazio = não lida), `created_at` |
+| `client_notifications` | `id`, `user_id` (conta de cliente que recebe, `auth.users`), `client_id`, `kind`, `actor_name` (quem da equipe fez, no momento), `title` (post, etapa ou projeto; vazio no canal), `body` (trecho da mensagem ou o projeto da etapa), `link` (caminho de `/portal`), `channel_id`, `message_id`, `post_id`, `project_id`, `task_id`, `read_at` (vazio = não lido), `created_at` |
 | `activity`         | `id`, `entity_type`, `entity_id`, `entity_title`, `project_id`, `client_id`, `action` (criou, mudou, excluiu, comentou), `changes` (jsonb `{campo: [antes, depois]}`), `body` (comentário), `actor_id`, `created_at`, `edited_at` |
 
 `tasks` ganhou `meeting_id` (a reunião em que a tarefa nasceu), `doc_id` (o
 processo de cujo checklist ela saiu), `client_review_id` (a revisão mensal
 de cliente em que ela virou próximo passo), `project_id` (o projeto) e
 `communication_id` (o pedido do cliente que ela atende) e `content_post_id`
-(o post de cuja frente ela saiu). Imagens dos processos ficam no bucket
+(o post de cuja frente ela saiu), `client_visible` (a etapa que o cliente vê no
+portal) e a aprovação do cliente: `client_approval_required` (a etapa pede a
+aprovação), `client_approval` (aprovado ou pediu ajustes), `client_approval_note`,
+`client_approval_by` (`auth.users`) e `client_approval_at`. Imagens dos processos ficam no bucket
 privado `docs` do Storage (até 5 MB; PNG, JPG, WebP e GIF); as de conteúdo
 (capas, slides e foto do perfil do cliente), no bucket privado `content`, em
 `<client_id>/<arquivo>` (até 5 MB; PNG, JPG e WebP). Dinheiro é sempre inteiro em centavos (`bigint`), sem arredondamento.
@@ -279,8 +285,10 @@ Enums: `task_status` (`todo`, `doing`, `done`), `task_priority` (`low`,
 `content_front_status` (`not_needed`, `todo`, `in_progress`,
 `missing_material`, `in_review`, `changes`, `done`), `channel_kind` (`client`,
 `internal`, `direct`), `message_kind` (`text`, `change_request`, `approval`,
-`system`) e `notification_kind` (`message`, `client_message`,
-`client_approval`, `client_change_request`, `task_assigned`).
+`system`), `notification_kind` (`message`, `client_message`,
+`client_approval`, `client_change_request`, `task_assigned`),
+`client_notification_kind` (`team_message`, `post_review`, `step_approval`,
+`step_done`) e `client_approval_result` (`approved`, `changes`).
 
 Funções expostas (só para `authenticated`): `public.win_deal(...)`
 (`security invoker`), que ganha um negócio numa transação (item 30);
@@ -291,7 +299,12 @@ abre ou cria a conversa direta com outra pessoa da equipe (item 46); e
 `public.channel_counts()` (`security invoker`), com as não lidas e os pedidos
 pendentes de cada canal (item 45); e as do conteúdo no portal
 (`security definer`, item 47): `portal_client_profile`, `portal_posts`,
-`portal_post_messages`, `portal_send_message` e `portal_review_post`.
+`portal_post_messages`, `portal_send_message` e `portal_review_post`; as dos
+projetos no portal: `portal_projects`, `portal_project_steps`,
+`portal_project_messages` e `portal_send_project_message`; e as do portal 2.0
+(`security definer`, item 50): `portal_channel`, `portal_channel_messages`,
+`portal_send_channel_message`, `portal_read_channel`, `portal_step_approvals` e
+`portal_review_step`.
 
 ### 5.1 Decisões sobre o schema
 
@@ -674,6 +687,59 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
     escritas usam as mesmas validações das Server Actions e os triggers de
     sempre (autoria, histórico, pedidos resolvidos). O menu lateral tem o
     item **Claude**, que abre o painel com o endereço e o passo a passo.
+50. **Portal 2.0: avisos do cliente, Comunicação e aprovação de etapas, sem
+    mudar as políticas da equipe** (migration `portal_v2`, só acréscimos).
+    - **Avisos do cliente numa tabela própria.** `notifications` continua só
+      da equipe (aponta para `profiles`, e o sino dela não muda);
+      `client_notifications` recebe as contas de cliente, uma linha por conta
+      e aviso, gravada só pelos triggers (`private.notify_client_members`
+      avisa todas as contas do cliente ativo, menos quem fez): a equipe
+      escreveu no canal do cliente (`team_message`; geral, no post que o
+      cliente já vê ou no projeto não cancelado; conversa da equipe sobre um
+      post que ainda não chegou a ele não avisa), um post entrou em
+      "Aguardando cliente" (`post_review`), uma etapa pede a aprovação
+      (`step_approval`) ou foi concluída (`step_done`, as que o cliente só
+      vê). O link é sempre um caminho do portal (`/portal/posts/<id>`,
+      `/portal/projetos/<id>` ou `/portal/comunicacao?cliente=<id>`). Quando
+      o post sai de "Aguardando cliente" ou a etapa deixa de esperar o
+      cliente, os avisos dela ficam lidos; reabrir a etapa apaga os ainda
+      não lidos; post ou projeto levado para outro cliente e acesso tirado
+      apagam os avisos que perderam o sentido; os de mais de 90 dias saem
+      sozinhos, como na equipe. Pela API só muda `read_at`. A tabela está na
+      publicação do Realtime, com o RLS de cada conta.
+    - **Comunicação = o canal do cliente pelo portal.** O cliente lê e
+      escreve no mesmo "Alterações – <cliente>" da equipe, sempre por
+      funções: `portal_channel` (nome, arquivado, não lidas, última mensagem
+      e até onde leu), `portal_channel_messages` (página do fio, da mais
+      nova para a mais antiga, com o nome de quem escreveu e o cartão do
+      post ou do projeto, até 200 por vez), `portal_send_channel_message`
+      (mensagem geral) e `portal_read_channel` (grava a leitura em
+      `channel_reads`, nunca para trás, e marca como lidos os avisos das
+      mensagens vistas). No fio do portal entram as mensagens gerais e as dos
+      posts e projetos que o cliente vê (`private.portal_channel_message_visible`);
+      as de um post que ainda não chegou a ele ficam só com a equipe. Daqui
+      em diante, o que a equipe escreve no canal do cliente (fora de um post
+      ainda interno) o cliente lê: comentário interno vai no histórico da
+      tarefa, do projeto ou do post. Quando a migration foi escrita, o banco
+      não tinha nenhuma mensagem, então nada antigo fica exposto.
+    - **Aprovação de etapas.** A equipe marca na tarefa
+      `client_approval_required` (o trigger `set_task_client_approval` a
+      deixa também `client_visible`). Concluir uma etapa dessas pede a
+      aprovação: a etapa espera o cliente enquanto está concluída e sem
+      resposta (`private.step_awaiting_client`). `portal_review_step` aprova
+      (a etapa continua concluída) ou pede ajustes com a nota (volta para
+      "Fazendo"), grava o resultado na tarefa (`client_approval`, nota, quem
+      e quando) e escreve a mensagem `approval` ou `change_request` na
+      conversa do projeto, com `task_id` da etapa: a equipe recebe o aviso de
+      sempre (`client_approval` ou `client_change_request`, com o projeto no
+      título), e o pedido fica pendente até a etapa ser concluída de novo
+      (`resolve_task_messages`). Só essa função grava o resultado: o trigger
+      devolve os valores antigos quando quem muda é da equipe, e concluir de
+      novo limpa a resposta (nova aprovação; o histórico fica na conversa).
+      A mudança de status pelo cliente entra no histórico como "O sistema".
+      `portal_step_approvals` lista as etapas que pedem aprovação nos
+      projetos do cliente, com a resposta e se esperam o cliente (painel e
+      página do projeto).
 
 ### 5.2 Segurança (RLS)
 
@@ -706,6 +772,7 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
 | `messages`         | ver e escrever (como autor, nunca `system`) nos canais que vê; editar o texto e apagar só as próprias; marcar como pedido, resolver e ligar a tarefa em qualquer uma que vê |
 | `channel_reads`    | só a própria leitura, nos canais que vê                       |
 | `notifications`    | ver e marcar como lidas (só `read_at`) as próprias. Ninguém cria nem apaga pela API (só os triggers); a conta do cliente não tem nenhuma. O Realtime aplica o mesmo RLS: cada um escuta só as próprias |
+| `client_notifications` | a equipe não tem nenhuma. A conta do cliente vê e marca como lidos (só `read_at`) os próprios avisos, dos clientes a que ainda tem acesso. Ninguém cria nem apaga pela API (só os triggers). O Realtime aplica o mesmo RLS |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens. A conta do cliente lê, no `content`, só a foto do perfil e as imagens dos posts que vê no portal |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
@@ -716,8 +783,9 @@ pendentes de cada canal (item 45); e as do conteúdo no portal
   `security definer` para não haver recursão entre canais e participantes.
   `open_direct_channel` é `security definer` porque é o único caminho para
   criar conversa direta; ela confere que quem chama e a outra pessoa são da
-  equipe. As políticas de hoje são só da equipe: as do cliente (fase 3)
-  entram numa migration própria, com `private.my_client_ids()`.
+  equipe. As políticas são só da equipe: o cliente lê e escreve no canal
+  dele só pelas funções `portal_*` (item 50), que conferem
+  `private.my_client_ids()`.
 
 - **Conector do Claude (tokens do OAuth do Supabase):** o token traz o claim
   `client_id`, e `private.is_oauth_client()` responde isso para as políticas.
@@ -1585,8 +1653,9 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 
 ## 13. Fora do escopo (por enquanto)
 
-Do portal do cliente: a aba de mensagens fora dos posts, documentos,
-projetos, login por link no e-mail e avisos por e-mail. Tempo real, emissão de nota fiscal, conciliação bancária
+Do portal do cliente: documentos, login por link no e-mail e avisos por
+e-mail (a Comunicação, os avisos no portal e a aprovação de etapas estão
+chegando pela issue #39). Tempo real, emissão de nota fiscal, conciliação bancária
 automática (o fechamento confere o saldo com o extrato à mão), aprovações
 formais, IA, notificações por push no celular e por e-mail, automações, integrações (WhatsApp, e-mail, banco,
 gateway de pagamento), permissões por cargo, várias moedas e importação de

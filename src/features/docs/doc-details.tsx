@@ -208,7 +208,7 @@ export function DocDetails({
           <p
             className={cn(
               "text-xs",
-              review.tone === "overdue" ? "font-medium text-amber-800" : "text-muted-foreground"
+              review.tone === "overdue" ? "font-medium text-attention-ink" : "text-muted-foreground"
             )}
           >
             {review.label}

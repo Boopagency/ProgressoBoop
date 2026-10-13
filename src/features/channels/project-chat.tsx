@@ -60,7 +60,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
         </h2>
         {thread.pending.length > 0 ? (
           <span
-            className="rounded-full bg-amber-100 px-1.5 text-[11px] font-medium text-amber-800 tabular-nums"
+            className="rounded-full bg-attention-muted px-1.5 text-[11px] font-medium text-attention-ink tabular-nums"
             title="Pedidos de ajuste pendentes"
           >
             {thread.pending.length}
@@ -103,7 +103,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
           ) : null
         }
       />
-      <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
+      <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
         O cliente lê esta conversa no portal (inclusive o que foi escrito antes). Para falar só com a equipe, marque
         Interno ao escrever.
       </p>

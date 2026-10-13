@@ -1654,8 +1654,19 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
    normalmente na máquina de vocês.
 8. **Região:** Supabase em São Paulo (`sa-east-1`) e funções da Vercel em
    `gru1` (`vercel.json`), para reduzir latência.
-9. **Tema escuro:** fora da v1. Os tokens de cor já estão centralizados, o que
-   facilita adicionar depois.
+9. **Tema claro e escuro:** Claro, Escuro ou Sistema no menu da pessoa
+   (admin e portal). A escolha fica no `localStorage` (`boop-theme`; sem
+   escolha, vale o do sistema). Um script no `<head>` do layout raiz
+   (`THEME_SCRIPT`, em `src/lib/theme.ts`) põe a classe `dark` no `<html>`
+   antes da primeira pintura, então a página não pisca; `useTheme`
+   (`src/hooks/use-theme.ts`) troca na hora e acompanha o sistema e as
+   outras abas (toasts e editor dos Processos seguem o tema). A paleta
+   escura está em `globals.css` (`.dark`), só nas telas: na impressão vale
+   sempre o claro. Cores sempre por token; os novos: `attention-*`
+   (avisos e pedidos de ajuste, em âmbar), `tint-foreground` (texto sobre os
+   fundos suaves da marca), `success-strong`, `priority` e `overlay`. A
+   paleta de identificação dos clientes (`post-meta.tsx`) usa as variantes
+   `dark:` do Tailwind.
 10. **Layout responsivo por container query.** A linha de tarefa e o
     calendário se adaptam à largura do próprio bloco, não à da tela. Por
     isso a mesma linha funciona na lista larga de Tarefas e na pauta das

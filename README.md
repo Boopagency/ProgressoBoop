@@ -219,7 +219,8 @@ npx shadcn@latest add <componente>
 
 Ajustes locais em relação ao código original do shadcn:
 
-- `sonner`: sem `next-themes` (a v1 só tem tema claro).
+- `sonner`: sem `next-themes`; o tema vem de `useTheme` (`src/hooks/use-theme.ts`).
+- `dialog`, `alert-dialog` e `sheet`: fundo escurecido pelo token `overlay`.
 - `use-mobile`: `useSyncExternalStore` no lugar de `setState` dentro de efeito.
 - `sidebar`: esqueleto com largura fixa em vez de `Math.random`.
 - `card`: espaçamento de 20px e sem sombra.

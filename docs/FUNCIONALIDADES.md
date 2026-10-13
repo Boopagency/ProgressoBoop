@@ -24,7 +24,8 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   Projetos, Calendário e Reuniões; em **Relacionamento**, Comercial,
   Conteúdo, Clientes e Comunicações; em **Gestão**, Indicadores, Metas, Financeiro,
   Relatórios, Decisões e Processos. No rodapé
-  ficam a pessoa logada e o "Sair". O menu pode ser recolhido pelo ícone no
+  ficam a pessoa logada e, no menu dela, o **Tema** (Claro, Escuro ou
+  Sistema, salvo no navegador; sem escolha, vale o do sistema) e o "Sair". O menu pode ser recolhido pelo ícone no
   topo ou com Ctrl/⌘+B, e a escolha fica salva. No celular ele abre pelo
   botão do topo.
 - **Busca geral:** "Buscar…" no topo de qualquer tela, ou Ctrl/⌘+K, acha
@@ -884,7 +885,8 @@ que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
 Início, Calendário, Feed, Projetos, **Comunicação** e **Notificações** (as
 duas últimas com o contador de não lidas; no celular, o mesmo menu
 recolhível, pelo botão no topo), a troca de cliente no topo do menu (para
-quem acompanha mais de um) e, no rodapé, quem está logado e **Sair**. No
+quem acompanha mais de um) e, no rodapé, quem está logado, o **Tema**
+(Claro, Escuro ou Sistema) e **Sair**. No
 post e no projeto aberto, o topo mostra o "voltar".
 
 - **O que o cliente vê:** os posts a partir de "Aguardando cliente"
@@ -1205,7 +1207,6 @@ como visão salva).
 - Não há lembretes nem avisos (e-mail ou WhatsApp).
 - O histórico de alterações começa em 07/10/2026 e não cobre eventos do
   Calendário, reuniões, processos (que têm versões próprias) nem clientes.
-- Não há tema escuro.
 - **Volume:** cada tela carrega todas as tarefas de uma vez, e o Supabase
   devolve no máximo 1.000 linhas por consulta. Antes de chegar a 1.000
   tarefas, será preciso arquivar ou paginar.
@@ -1269,7 +1270,7 @@ são uma sugestão para começar.
 | 25 | Integração com o Asaas (recebimentos e taxas automáticos) | sem baixa manual; a taxa entra sozinha |
 | 26 | Aviso semanal por e-mail com os indicadores e as metas | a gestão chega sem abrir o portal |
 | 19 | Arquivamento ou paginação de tarefas antigas | manter o portal rápido e abaixo do limite de 1.000 linhas |
-| 20 | Tema escuro | conforto de uso à noite |
+| 20 | ~~Tema escuro~~ | feito: Claro, Escuro ou Sistema no menu da pessoa (admin e portal) |
 
 ## 9. Onde mexer (mapa do código)
 

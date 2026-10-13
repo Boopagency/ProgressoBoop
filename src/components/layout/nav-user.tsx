@@ -3,6 +3,7 @@
 import { ChevronsUpDown, LogOut } from "lucide-react"
 import { useTransition } from "react"
 
+import { ThemeMenuItems } from "@/components/layout/theme-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +65,8 @@ export function NavUser() {
                 <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ThemeMenuItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={isSigningOut}

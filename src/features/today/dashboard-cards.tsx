@@ -262,7 +262,7 @@ export function DocsToReview({
           <li key={doc.id}>
             <Link href={`/processos/${doc.id}`} className="block rounded-lg px-3 py-2 transition-colors hover:bg-muted/60">
               <span className="block truncate text-sm font-medium text-foreground">{doc.title}</span>
-              <span className="block text-xs text-amber-800">
+              <span className="block text-xs text-attention-ink">
                 {doc.status === "review" ? "Marcado para revisar" : reviewInfo(doc, today).label}
               </span>
             </Link>

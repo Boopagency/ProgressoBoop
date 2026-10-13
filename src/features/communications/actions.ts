@@ -3,12 +3,8 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
-import {
-  parseCommunicationInput,
-  parseCommunicationPatch,
-  type CommunicationInput,
-  type CommunicationPatch,
-} from "@/features/communications/validation"
+import { parseCommunicationPatch, type CommunicationInput, type CommunicationPatch } from "@/features/communications/validation"
+import { insertCommunication } from "@/features/communications/mutations"
 import { setAssignees } from "@/features/tasks/assignees"
 import { isDateKey } from "@/lib/dates"
 import { dbFailure } from "@/lib/supabase/errors"
@@ -27,16 +23,9 @@ function refreshApp() {
 
 export async function createCommunication(input: CommunicationInput): Promise<ActionResult<{ id: string }>> {
   await requireUser()
-  const parsed = parseCommunicationInput(input)
-  if (!parsed.ok) return parsed
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("communications").insert(parsed.value).select("id").single()
-  if (error) {
-    if (error.code === "23503") return { ok: false, error: "Esse cliente não existe mais." }
-    return dbFailure(error, "Não foi possível registrar.")
-  }
-  refreshApp()
-  return { ok: true, data: { id: data.id } }
+  const result = await insertCommunication(await createClient(), input)
+  if (result.ok) refreshApp()
+  return result
 }
 
 export async function updateCommunication(id: string, patch: CommunicationPatch): Promise<ActionResult> {

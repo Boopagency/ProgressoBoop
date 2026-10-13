@@ -2,7 +2,7 @@ import "server-only"
 
 import { requireUser } from "@/features/auth/session"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { ClientDetail, ClientReview, ReviewCheckItem } from "@/lib/types"
 
 const CLIENT_COLUMNS =
@@ -26,7 +26,11 @@ function asChecklist(value: unknown): ReviewCheckItem[] {
 /** Cadastro completo de todos os clientes (ativos e inativos). */
 export async function getClients(): Promise<ClientDetail[]> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchClients(await createClient())
+}
+
+/** O mesmo com o cliente de quem chama (a sessão do app ou o token do conector do Claude), sob o RLS. */
+export async function fetchClients(supabase: SupabaseServerClient): Promise<ClientDetail[]> {
   const { data, error } = await supabase.from("clients").select(CLIENT_COLUMNS).order("name")
   if (error) throw loadError(error, "os clientes")
   return data
@@ -46,7 +50,10 @@ export async function getClient(id: string): Promise<ClientDetail | null> {
  */
 export async function getClientReviews(clientId?: string): Promise<ClientReview[]> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchClientReviews(await createClient(), clientId)
+}
+
+export async function fetchClientReviews(supabase: SupabaseServerClient, clientId?: string): Promise<ClientReview[]> {
   let query = supabase.from("client_reviews").select(REVIEW_COLUMNS).order("period", { ascending: false })
   if (clientId) query = query.eq("client_id", clientId)
   const { data, error } = await query

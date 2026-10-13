@@ -10,6 +10,7 @@ import {
   EDIT,
   READ_ONLY,
   WRITE,
+  approvalLabel,
   confirmFirst,
   enumOptions,
   enumValue,
@@ -203,13 +204,7 @@ const viewProject: Tool<McpContext> = {
       [
         taskLine(task, names, today),
         task.client_visible ? "cliente vê" : null,
-        task.client_approval_required
-          ? task.client_approval === "approved"
-            ? "aprovada pelo cliente"
-            : task.client_approval === "changes"
-              ? "cliente pediu ajustes (ver_tarefa mostra a nota)"
-              : "precisa de aprovação"
-          : null,
+        approvalLabel(task),
       ]
         .filter(Boolean)
         .join(" · ")

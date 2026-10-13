@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { loadClientMemberName } from "@/features/portal/access-actions"
+import { clientApprovalState, type ClientApprovalState } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { formatShortDate, todayKey, toDateKey } from "@/lib/dates"
 import type { DateKey, Task } from "@/lib/types"
@@ -17,16 +18,7 @@ import { cn } from "@/lib/utils"
  * o portal grava a resposta; concluir de novo pede outra aprovação.
  */
 
-export type ClientApprovalState = "none" | "on_done" | "awaiting" | "approved" | "changes"
-
 type ApprovalFields = Pick<Task, "status" | "client_visible" | "client_approval_required" | "client_approval">
-
-export function clientApprovalState(task: ApprovalFields): ClientApprovalState {
-  if (task.client_approval === "approved") return "approved"
-  if (task.client_approval === "changes") return "changes"
-  if (!task.client_approval_required) return "none"
-  return task.status === "done" ? "awaiting" : "on_done"
-}
 
 /** Etiqueta curta da etapa nas listas (só quando há algo a dizer). */
 export function ClientApprovalBadge({ task, className }: { task: ApprovalFields; className?: string }) {

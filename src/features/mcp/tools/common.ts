@@ -4,7 +4,7 @@ import type { McpContext } from "@/features/mcp/auth"
 import { bullet, dueLabel, findByName, isClear, readDate, readList, readText, type Parsed } from "@/features/mcp/logic"
 import { textResult, type ToolResult } from "@/features/mcp/protocol"
 import type { Directory, Names } from "@/features/mcp/queries"
-import { isDone } from "@/features/tasks/logic"
+import { clientApprovalState, isDone, type ClientApprovalState } from "@/features/tasks/logic"
 import { formatLongDate, formatShortDate, toDateKey } from "@/lib/dates"
 import { TASK_PRIORITY_LABEL } from "@/lib/labels"
 import { foldText } from "@/lib/text"
@@ -163,4 +163,17 @@ export function taskLine(task: Task, names: Names, today: DateKey, exceptPerson?
     others.length > 0 ? `${exceptPerson ? "com" : "de"} ${others.join(", ")}` : null,
     `id ${task.id}`
   )
+}
+
+const APPROVAL_LABEL: Record<ClientApprovalState, string | null> = {
+  none: null,
+  on_done: "vai pedir a aprovação do cliente ao concluir",
+  awaiting: "aguardando a aprovação do cliente",
+  approved: "aprovada pelo cliente",
+  changes: "o cliente pediu ajustes (ver_tarefa mostra a nota)",
+}
+
+/** A aprovação do cliente numa etapa, em palavras (null quando não pede). */
+export function approvalLabel(task: Task): string | null {
+  return APPROVAL_LABEL[clientApprovalState(task)]
 }

@@ -7,7 +7,7 @@ import { bullet, count, excerpt, findByName, isClear, joinSections, readBoolean,
 import { textResult, toolError, type Tool } from "@/features/mcp/protocol"
 import { loadDirectory, namesOf, type Names } from "@/features/mcp/queries"
 import { CONFIRM, DESTRUCTIVE, EDIT, READ_ONLY, WRITE, confirmFirst, findClient, findPerson, limited, readOptionalDate, todayLine } from "@/features/mcp/tools/common"
-import { readEventInput } from "@/features/mcp/tools/calendar"
+import { eventWhen, readEventInput } from "@/features/mcp/tools/calendar"
 import {
   MEETING_KIND_LABEL,
   agreementStatus,
@@ -86,7 +86,7 @@ async function resolveMeeting(args: Args, context: McpContext): Promise<Parsed<M
   }
 
   const meetings = events.filter(isMeetingEvent)
-  let found = findByName(meetings, query.value, (event) => event.title, (event) => event.id, "reunião")
+  let found = findByName(meetings, query.value, (event) => event.title, (event) => event.id, "reunião", (event) => eventWhen(event, today))
   if (!found.ok && !isUuid(query.value)) {
     // "a reunião da Velmont": pelo cliente.
     const directory = await loadDirectory(supabase)
@@ -94,7 +94,8 @@ async function resolveMeeting(args: Args, context: McpContext): Promise<Parsed<M
     const ofClient = client.ok ? meetings.filter((event) => event.client_id === client.value.id) : []
     if (ofClient.length === 1) found = { ok: true, value: ofClient[0]! }
     else if (ofClient.length > 1) {
-      return { ok: false, error: `Mais de uma reunião com ${client.ok ? client.value.name : "esse cliente"}: ${ofClient.map((event) => event.title).join(", ")}. Diga qual.` }
+      const options = ofClient.map((event) => `${event.title} (${eventWhen(event, today)}, id ${event.id})`).join(", ")
+      return { ok: false, error: `Mais de uma reunião com ${client.ok ? client.value.name : "esse cliente"}: ${options}. Use o id.` }
     }
   }
   if (!found.ok) return found

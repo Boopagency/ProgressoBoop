@@ -328,3 +328,20 @@ export function assigneesLabel(assigneeIds: string[], profiles: Profile[]): stri
   if (names.length <= 1) return names[0] ?? "Sem responsável"
   return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`
 }
+
+/* ------------------------------------------------------------------ */
+/* Aprovação do cliente                                                */
+/* ------------------------------------------------------------------ */
+
+export type ClientApprovalState = "none" | "on_done" | "awaiting" | "approved" | "changes"
+
+/**
+ * Aprovação do cliente numa etapa: não pede, vai pedir ao concluir, espera o
+ * cliente (concluída e sem resposta), aprovada ou com ajustes pedidos.
+ */
+export function clientApprovalState(task: Pick<Task, "status" | "client_approval_required" | "client_approval">): ClientApprovalState {
+  if (task.client_approval === "approved") return "approved"
+  if (task.client_approval === "changes") return "changes"
+  if (!task.client_approval_required) return "none"
+  return task.status === "done" ? "awaiting" : "on_done"
+}

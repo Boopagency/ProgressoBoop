@@ -98,7 +98,8 @@ function PanelBody() {
           <li>Buscar em tudo, listar e filtrar tarefas</li>
           <li>Criar, editar, comentar e concluir tarefas e projetos</li>
           <li>Reuniões (pauta, combinados, resumo), decisões e agenda</li>
-          <li>Ver o conteúdo da semana, criar ideias de post e escrever nos canais</li>
+          <li>Clientes e revisão mensal, posts, ideias e processos</li>
+          <li>Ler e escrever nos canais, resolver pedidos e ver os avisos do sino</li>
         </ul>
         <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar e não acessa o financeiro.</p>
       </section>

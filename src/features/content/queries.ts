@@ -7,7 +7,7 @@ import type { PostSummary } from "@/features/content/logic"
 import { addDaysToKey, todayKey } from "@/lib/dates"
 import type { Json } from "@/lib/supabase/database.types"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { ContentPost, ContentSlide } from "@/lib/types"
 
 /** Colunas das listas (sem os textos longos, lidos ao abrir o post). */
@@ -30,6 +30,13 @@ export function asSlides(value: Json): ContentSlide[] {
     if (typeof item !== "object" || item === null || Array.isArray(item) || typeof item.text !== "string") return []
     return [{ text: item.text, image_path: typeof item.image_path === "string" ? item.image_path : null }]
   })
+}
+
+/** O post inteiro, com os textos (sessão do app ou token do conector, sob o RLS). `null` se não existe. */
+export async function fetchPost(supabase: SupabaseServerClient, id: string): Promise<ContentPost | null> {
+  const { data, error } = await supabase.from("content_posts").select(POST_COLUMNS).eq("id", id).maybeSingle()
+  if (error) throw loadError(error, "o post")
+  return data ? { ...data, slides: asSlides(data.slides) } : null
 }
 
 /** Posts de todos os clientes (ou de um), sem os textos longos. */

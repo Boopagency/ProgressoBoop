@@ -1425,8 +1425,13 @@ Regras:
   Com "reduzir movimento" no sistema, não há animação. Telas fora do
   `PageContainer` (Comunicações, em tela cheia) usam a mesma classe na raiz.
 
-Aplicação (issue #40): a base entrou no PR 1 e as telas do admin no PR 2;
-o portal fica para o PR 3. Mudanças de lugar no PR 2: Minhas/Todas (Hoje) e
+Aplicação (issue #40): a base entrou no PR 1, as telas do admin no PR 2 e o
+portal no PR 3. No portal, as telas já vinham no esqueleto (#46); o PR 3
+trouxe os `loading.tsx` (`portal/` e `portal/calendario/`, antes a tela
+anterior ficava parada até a nova chegar), as telas de erro e de "não
+encontrado" na moldura e a linha do Calendário na ordem do admin (setas, mês
+e "Hoje", que só aparece fora do mês atual). Comunicação e Notificações do
+portal entram no esqueleto com as telas delas (PR 3 da issue #39). Mudanças de lugar no PR 2: Minhas/Todas (Hoje) e
 Semana/Mês (Calendário) saíram das ações para a linha de filtros; em Tarefas,
 as visões salvas ficam abaixo dos filtros; em Conteúdo e Comercial, os
 filtros vêm antes dos números; em Reuniões, a busca vem antes da próxima

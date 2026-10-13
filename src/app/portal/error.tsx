@@ -3,6 +3,7 @@
 import { RotateCw, TriangleAlert } from "lucide-react"
 import { useEffect } from "react"
 
+import { PageContainer } from "@/components/layout/page"
 import { Button } from "@/components/ui/button"
 
 export default function PortalError({
@@ -17,7 +18,7 @@ export default function PortalError({
   }, [error])
 
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
+    <PageContainer className="flex min-h-[60vh] items-center justify-center">
       <div className="max-w-sm text-center">
         <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-muted">
           <TriangleAlert className="size-5 text-muted-foreground" />
@@ -31,6 +32,6 @@ export default function PortalError({
           Tentar de novo
         </Button>
       </div>
-    </div>
+    </PageContainer>
   )
 }

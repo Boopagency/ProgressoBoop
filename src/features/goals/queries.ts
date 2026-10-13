@@ -2,13 +2,17 @@ import "server-only"
 
 import { requireUser } from "@/features/auth/session"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { KeyResult, Objective } from "@/lib/types"
 
 /** Objetivos e resultados-chave (o volume é pequeno). */
 export async function getGoals(): Promise<{ objectives: Objective[]; keyResults: KeyResult[] }> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchGoals(await createClient())
+}
+
+/** O mesmo com o cliente de quem chama (a sessão do app ou o token do conector do Claude), sob o RLS. */
+export async function fetchGoals(supabase: SupabaseServerClient): Promise<{ objectives: Objective[]; keyResults: KeyResult[] }> {
   const [objectives, keyResults] = await Promise.all([
     supabase
       .from("objectives")

@@ -4,7 +4,7 @@ import { cache } from "react"
 
 import { requireUser } from "@/features/auth/session"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Deal } from "@/lib/types"
 
 export const DEAL_COLUMNS =
@@ -13,8 +13,12 @@ export const DEAL_COLUMNS =
 /** Todos os negócios (os números do comercial saem deles). */
 export const getDeals = cache(async (): Promise<Deal[]> => {
   await requireUser()
-  const supabase = await createClient()
+  return fetchDeals(await createClient())
+})
+
+/** O mesmo com o cliente de quem chama (a sessão do app ou o token do conector do Claude), sob o RLS. */
+export async function fetchDeals(supabase: SupabaseServerClient): Promise<Deal[]> {
   const { data, error } = await supabase.from("deals").select(DEAL_COLUMNS).order("updated_at", { ascending: false }).limit(5000)
   if (error) throw loadError(error, "os negócios")
   return data
-})
+}

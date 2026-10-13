@@ -5,115 +5,57 @@ import { revalidatePath } from "next/cache"
 import { requireUser } from "@/features/auth/session"
 import { defaultBaseline, metricValue, periodShortcuts, suggestTargets, type TargetSuggestion } from "@/features/goals/logic"
 import {
-  parseKeyResultInput,
-  parseKeyResultPatch,
-  parseObjectiveInput,
-  parseObjectivePatch,
-  type KeyResultInput,
-  type ObjectiveInput,
-} from "@/features/goals/validation"
+  insertKeyResult,
+  insertObjective,
+  patchKeyResult,
+  patchObjective,
+  removeKeyResult,
+  removeObjective,
+} from "@/features/goals/mutations"
+import type { KeyResultInput, ObjectiveInput } from "@/features/goals/validation"
 import { METRIC_BY_KEY } from "@/features/metrics/catalog"
 import { buildContext } from "@/features/metrics/dashboard"
 import { getMetricsSource } from "@/features/metrics/queries"
 import { isDateKey, todayKey } from "@/lib/dates"
-import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
 import { isUuid } from "@/lib/utils"
 
-/* Server Actions das metas (objetivos e resultados-chave). */
+/* Server Actions das metas: a sessão e a tela; a regra fica em mutations.ts. */
 
-const OBJECTIVE_NOT_FOUND = { ok: false, error: "Esse objetivo não existe mais." } as const
-const KEY_RESULT_NOT_FOUND = { ok: false, error: "Esse resultado-chave não existe mais." } as const
-
-function refreshApp() {
-  revalidatePath("/", "layout")
+function refreshed<T extends ActionResult<unknown>>(result: T): T {
+  if (result.ok) revalidatePath("/", "layout")
+  return result
 }
 
 export async function createObjective(input: ObjectiveInput): Promise<ActionResult<{ id: string }>> {
   await requireUser()
-  const parsed = parseObjectiveInput(input)
-  if (!parsed.ok) return parsed
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("objectives").insert(parsed.value).select("id").single()
-  if (error) return dbFailure(error, "Não foi possível criar o objetivo.")
-  refreshApp()
-  return { ok: true, data: { id: data.id } }
+  return refreshed(await insertObjective(await createClient(), input))
 }
 
 export async function updateObjective(id: string, patch: Partial<ObjectiveInput>): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return OBJECTIVE_NOT_FOUND
-  const parsed = parseObjectivePatch(patch)
-  if (!parsed.ok) return parsed
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("objectives").update(parsed.value).eq("id", id).select("id")
-  if (error) {
-    if (error.code === "23514") return { ok: false, error: "O fim não pode ser antes do começo." }
-    return dbFailure(error, "Não foi possível salvar o objetivo.")
-  }
-  if (data.length === 0) return OBJECTIVE_NOT_FOUND
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await patchObjective(await createClient(), id, patch))
 }
 
 export async function deleteObjective(id: string): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return OBJECTIVE_NOT_FOUND
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("objectives").delete().eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível excluir o objetivo.")
-  if (data.length === 0) return OBJECTIVE_NOT_FOUND
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await removeObjective(await createClient(), id))
 }
 
 export async function createKeyResult(input: KeyResultInput): Promise<ActionResult<{ id: string }>> {
   await requireUser()
-  const parsed = parseKeyResultInput(input)
-  if (!parsed.ok) return parsed
-  const supabase = await createClient()
-  // Vai para o fim da lista do objetivo.
-  const { count, error: countError } = await supabase
-    .from("key_results")
-    .select("id", { count: "exact", head: true })
-    .eq("objective_id", parsed.value.objective_id)
-  if (countError) return dbFailure(countError, "Não foi possível criar o resultado-chave.")
-  const { data, error } = await supabase
-    .from("key_results")
-    .insert({ ...parsed.value, position: Math.min(count ?? 0, 32000) })
-    .select("id")
-    .single()
-  if (error) {
-    if (error.code === "23503") return OBJECTIVE_NOT_FOUND
-    return dbFailure(error, "Não foi possível criar o resultado-chave.")
-  }
-  refreshApp()
-  return { ok: true, data: { id: data.id } }
+  return refreshed(await insertKeyResult(await createClient(), input))
 }
 
 export async function updateKeyResult(id: string, patch: Partial<Omit<KeyResultInput, "objective_id">>): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return KEY_RESULT_NOT_FOUND
-  const parsed = parseKeyResultPatch(patch)
-  if (!parsed.ok) return parsed
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("key_results").update(parsed.value).eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível salvar o resultado-chave.")
-  if (data.length === 0) return KEY_RESULT_NOT_FOUND
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await patchKeyResult(await createClient(), id, patch))
 }
 
 export async function deleteKeyResult(id: string): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return KEY_RESULT_NOT_FOUND
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("key_results").delete().eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível excluir o resultado-chave.")
-  if (data.length === 0) return KEY_RESULT_NOT_FOUND
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await removeKeyResult(await createClient(), id))
 }
 
 export interface KeyResultPreview {

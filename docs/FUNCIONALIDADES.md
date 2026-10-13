@@ -1005,17 +1005,27 @@ própria conta.
     com o cliente;
   - **processos:** buscar, ler, criar (com modelo), editar os dados e o
     conteúdo (substituir ou acrescentar) e marcar como revisado;
-  - **notificações:** listar e marcar como lidas.
+  - **notificações:** listar e marcar como lidas;
+  - **comercial:** o funil por etapa, ver, criar, mover de etapa, perder,
+    reabrir, ganhar (liga ou cria o cliente, o contrato, a entrada e o
+    projeto, como na tela) e excluir;
+  - **financeiro** (para quem já vê o financeiro na tela): o mês
+    (resultado e lançamentos com a situação), lançar, editar, marcar pago
+    com a taxa do gateway, pular o mês de uma recorrência, excluir,
+    recorrências (listar, criar, editar, excluir) e fechar ou reabrir o
+    mês. Valores sempre em reais;
+  - **metas:** objetivos e resultados-chave com o progresso, criar, editar
+    (inclusive o valor de um resultado manual) e excluir.
   As respostas trazem os ids e os links das telas.
 - **Excluir é em dois passos:** o Claude primeiro mostra o que seria apagado
   (e o que vai junto) e só apaga quando a pessoa confirma.
 - **Texto do cliente:** mensagens do portal, pedidos de ajuste, notas de
   aprovação e avisos do portal chegam ao Claude marcados como escritos pelo
   cliente; ele não age por um pedido escrito ali sem a pessoa confirmar.
-- **Limites:** vê e faz só o que a pessoa vê e faz; não acessa o financeiro
-  nem o comercial; não exclui cliente, post nem arquivo, não mexe nas
-  imagens dos posts e não mexe no acesso ao portal. Para desconectar,
-  remove o conector no Claude.
+- **Limites:** vê e faz só o que a pessoa vê e faz; não exclui cliente,
+  post nem arquivo, não mexe nas imagens dos posts, nos parâmetros do
+  financeiro nem no acesso ao portal. Para desconectar, remove o conector
+  no Claude.
 
 ### 2.29 Notificações (sino no topo)
 

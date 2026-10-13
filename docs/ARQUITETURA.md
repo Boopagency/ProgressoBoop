@@ -701,8 +701,12 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     (`textToBlocks`); editar slides pelo MCP mantém as imagens no lugar.
     Fora do MCP: acesso de cliente ao portal, login e senha, o
     consentimento do conector, excluir cliente ou post, as imagens e
-    mudanças de schema. O financeiro e o comercial ainda não têm
-    ferramentas (PR 3 da issue #51). O menu lateral tem o
+    mudanças de schema; também os parâmetros do financeiro. O financeiro
+    vale pelo conector para quem já o vê na tela (mesmo RLS), com os
+    valores sempre em reais (entrada e saída), e as leituras dele, do
+    comercial e das metas usam `fetchFinance`, `fetchDeals`, `fetchGoals` e
+    `fetchMetricsSource` (o progresso das metas sai do mesmo cálculo da
+    tela). O menu lateral tem o
     item **Claude**, que abre o painel com o endereço e o passo a passo.
 50. **Portal 2.0: avisos do cliente, Comunicação e aprovação de etapas, sem
     mudar as políticas da equipe** (migration `portal_v2`, só acréscimos).
@@ -819,8 +823,12 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
   `events`, `decisions` e `meeting_items`, que as ferramentas de excluir
   (com confirmação em dois passos) usam; nelas vale o RLS da equipe, como na
   tela. A `oauth_client_delete_messages` faz o mesmo em `messages` (cada um
-  apaga só as próprias, como na tela). As sessões do app não têm
-  `client_id`, então nada muda para elas.
+  apaga só as próprias, como na tela). A `oauth_client_finance` tira as
+  políticas "sem financeiro" das quatro tabelas do financeiro e a trava de
+  exclusão de `deals`, `finance_entries`, `finance_recurrences`,
+  `finance_closings` (reabrir o mês), `objectives` e `key_results`; com
+  ela, a `oauth_client_limits` só barra exclusões. As sessões do app não
+  têm `client_id`, então nada muda para elas.
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale

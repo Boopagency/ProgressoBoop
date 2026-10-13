@@ -17,11 +17,10 @@ import {
 } from "@/features/portal/channel-logic"
 import type { PortalChannelMessage } from "@/features/portal/channel-queries"
 import { portalHref } from "@/features/portal/links"
+import { PortalMessageBubble } from "@/features/portal/message-bubble"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import type { PortalClient } from "@/features/portal/session"
 import { todayKey, toTimeLabel } from "@/lib/dates"
-import { MESSAGE_KIND_LABEL } from "@/lib/labels"
-import { cn } from "@/lib/utils"
 
 /**
  * Comunicação no portal: o canal do cliente com a equipe, como a conversa da
@@ -160,7 +159,7 @@ export function PortalChannel({
   )
 }
 
-/** Uma mensagem do fio: quem escreveu (a equipe com "Boop"), a hora, o tipo e, se houver, o post ou projeto. */
+/** Uma mensagem do fio, com o post ou o projeto de que fala (se houver). */
 function PortalMessageRow({ item, href }: { item: PortalThreadItem; href: (path: string) => string }) {
   const { message, continued } = item
   const context = message.post
@@ -170,40 +169,16 @@ function PortalMessageRow({ item, href }: { item: PortalThreadItem; href: (path:
       : null
 
   return (
-    <li className={cn("flex flex-col px-4", message.mine ? "items-end" : "items-start", continued ? "pt-1" : "pt-3")}>
-      {continued ? null : (
-        <p className="mb-0.5 text-[11px] text-muted-foreground">
-          {message.mine ? "Você" : message.author_name}
-          {message.from_team ? " · Boop" : ""} · {toTimeLabel(message.created_at)}
-        </p>
-      )}
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-5 break-words whitespace-pre-line text-foreground",
-          message.mine ? "bg-brand-soft" : "bg-muted"
-        )}
-      >
-        {message.kind === "change_request" || message.kind === "approval" ? (
-          <span
-            className={cn(
-              "mb-1 block text-[11px] font-semibold",
-              message.kind === "approval" ? "text-success-ink" : "text-warning-ink"
-            )}
-          >
-            {MESSAGE_KIND_LABEL[message.kind]}
-          </span>
-        ) : null}
-        {message.body}
-        {context ? (
-          <Link
-            href={href(context.path)}
-            className="mt-1.5 flex items-center gap-1.5 rounded-md border bg-background/70 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <context.icon className="size-3.5 shrink-0" aria-hidden="true" />
-            <span className="truncate">{context.label}</span>
-          </Link>
-        ) : null}
-      </div>
-    </li>
+    <PortalMessageBubble message={message} time={toTimeLabel(message.created_at)} continued={continued}>
+      {context ? (
+        <Link
+          href={href(context.path)}
+          className="mt-1.5 flex items-center gap-1.5 rounded-md border bg-background/70 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <context.icon className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{context.label}</span>
+        </Link>
+      ) : null}
+    </PortalMessageBubble>
   )
 }

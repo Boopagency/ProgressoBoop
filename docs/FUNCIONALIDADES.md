@@ -561,7 +561,9 @@ menos nas mensagens internas.
     Com "Arquivados" recolhido, o título do grupo mostra as não lidas e os
     pendentes dos clientes inativos (que também contam na barra lateral).
 - **Conversa** à direita: as mensagens por dia, quem escreveu e a hora
-  (mensagens seguidas da mesma pessoa ficam juntas), links clicáveis e
+  (mensagens seguidas da mesma pessoa ficam juntas). As suas ficam à
+  direita, num balão azul-claro, sem foto nem nome; as dos outros, à
+  esquerda com foto e nome; os avisos do sistema, no meio. Links clicáveis e
   "(editada)". A conversa aberta se atualiza sozinha a cada 4 segundos e
   marca o canal como lido enquanto a pessoa olha.
 - **Escrever:** Enter envia, Shift + Enter quebra a linha. No canal de
@@ -942,7 +944,9 @@ post e no projeto aberto, o topo mostra o "voltar".
   mensagem clara. O "x" tira o acesso (com confirmação); a conta continua
   no Supabase.
 - **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
-  do cliente: mensagens por dia, as seguidas da mesma pessoa juntas,
+  do cliente: mensagens por dia, as seguidas da mesma pessoa juntas (as
+  do cliente à direita; as da equipe à esquerda, com as iniciais e o nome;
+  o mesmo vale no chat do post e do projeto),
   "Ver mensagens anteriores", o cartão do post ou do projeto de que a
   mensagem fala (abre o chat dele) e Enter envia. Atualiza sozinha a cada 5
   segundos e, com a conversa na tela, marca como lida (o contador do menu

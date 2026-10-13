@@ -4,7 +4,7 @@ import { Download, FileText } from "lucide-react"
 import Link from "next/link"
 import { useState, type ReactNode } from "react"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -55,10 +55,10 @@ export function ReportBuilder({
   const ready = sections.length > 0
 
   return (
-    <PageContainer className="max-w-[920px]">
+    <PageContainer>
       <PageHeader title="Relatórios" description="Os números do sistema em Excel ou num relatório para apresentar, no período e recorte que você escolher" />
 
-      <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
+      <PageBody width="reading" className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
         <div className="space-y-6">
           <PanelCard id="relatorio-periodo" title="Período e recorte">
             <div className="space-y-4 px-4 py-4">
@@ -188,7 +188,7 @@ export function ReportBuilder({
             fórmulas da planilha (margens, resultado e totais) e as premissas editáveis.
           </p>
         </aside>
-      </div>
+      </PageBody>
     </PageContainer>
   )
 }

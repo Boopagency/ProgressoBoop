@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { updateProject } from "@/features/projects/actions"
@@ -63,7 +63,7 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
   const late = active.filter((project) => project.due_on !== null && project.due_on < today).length
 
   return (
-    <PageContainer className="max-w-[1240px]">
+    <PageContainer>
       <PageHeader
         title="Projetos"
         description={[
@@ -80,14 +80,16 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
         }
       />
 
-      <div className="mt-7 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <PageToolbar>
         <SegmentedControl aria-label="Quais projetos" value={scope} onValueChange={setScope} options={SCOPE_OPTIONS} />
-      </div>
+      </PageToolbar>
 
       {open.length === 0 && closed.length === 0 ? (
-        <EmptyState onCreate={() => setDialog((current) => ({ open: true, key: current.key + 1 }))} />
+        <PageBody>
+          <EmptyState onCreate={() => setDialog((current) => ({ open: true, key: current.key + 1 }))} />
+        </PageBody>
       ) : (
-        <div className="mt-8 space-y-9">
+        <PageBody>
           {OPEN_GROUPS.map((group) => {
             const list = open.filter((project) => project.status === group.status)
             if (list.length === 0) return null
@@ -130,7 +132,7 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
               ) : null}
             </section>
           ) : null}
-        </div>
+        </PageBody>
       )}
 
       <ProjectDialog
@@ -226,7 +228,7 @@ function ProjectCard({ project, stats }: { project: Project; stats: ReturnType<t
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+    <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
       <div className="flex size-10 items-center justify-center rounded-full bg-muted">
         <FolderKanban className="size-5 text-muted-foreground" />
       </div>

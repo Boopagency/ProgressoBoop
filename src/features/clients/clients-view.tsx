@@ -4,7 +4,7 @@ import { CalendarClock, ChevronDown, ListTodo, Plus } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
-import { PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ClientDialog, type ClientDialogState } from "@/features/clients/client-dialog"
@@ -51,7 +51,7 @@ export function ClientsView({
   const period = periodOf(today)
 
   return (
-    <PageContainer className="max-w-[1180px]">
+    <PageContainer>
       <PageHeader
         title="Clientes"
         description="Quem a Boop atende: saúde, revisão do mês, tarefas e próximos compromissos."
@@ -63,84 +63,86 @@ export function ClientsView({
         }
       />
 
-      {withReview.length > 0 ? (
-        <section
-          aria-labelledby="revisoes-do-mes"
-          className="relative mt-8 overflow-hidden rounded-xl border bg-card px-5 py-4 pl-6"
-        >
-          <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-brand" />
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <h2 id="revisoes-do-mes" className="text-sm font-semibold text-foreground">
-                Revisões de {monthName(period)}
-              </h2>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
-                {doneCount === withReview.length
-                  ? "Todas feitas. Bom trabalho."
-                  : `${withReview.length - doneCount} por fazer${overdueCount > 0 ? `, ${overdueCount} ${overdueCount === 1 ? "atrasada" : "atrasadas"}` : ""}.`}
-              </p>
-            </div>
-            <div className="w-full sm:w-64">
-              <Progress
-                value={(doneCount / withReview.length) * 100}
-                aria-label="Revisões feitas"
-                className="h-1.5"
-              />
-              <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
-                {doneCount} de {withReview.length} {withReview.length === 1 ? "feita" : "feitas"}
-              </p>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      <section aria-labelledby="ativos" className="mt-8">
-        <SectionTitle id="ativos" count={active.length}>
-          Ativos
-        </SectionTitle>
-        {active.length === 0 ? (
-          <div className="mt-3 rounded-xl border border-dashed px-6 py-10 text-center">
-            <p className="text-sm font-medium text-foreground">Nenhum cliente ativo</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">Cadastre o primeiro em “Novo cliente”.</p>
-          </div>
-        ) : (
-          <ul className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {active.map((client, index) => (
-              <ClientCard key={client.id} client={client} reviews={reviews} events={events} status={statuses[index]!} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {inactive.length > 0 ? (
-        <section aria-labelledby="inativos" className="mt-10">
-          <button
-            type="button"
-            aria-expanded={showInactive}
-            onClick={() => setShowInactive((current) => !current)}
-            className="flex items-center gap-2 rounded-md text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      <PageBody>
+        {withReview.length > 0 ? (
+          <section
+            aria-labelledby="revisoes-do-mes"
+            className="relative overflow-hidden rounded-xl border bg-card px-5 py-4 pl-6"
           >
-            <span id="inativos">Inativos</span>
-            <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{inactive.length}</span>
-            <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showInactive && "rotate-180")} />
-          </button>
-          {showInactive ? (
-            <ul className="mt-2 -mx-3">
-              {inactive.map((client) => (
-                <li key={client.id}>
-                  <Link
-                    href={`/clientes/${client.id}`}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-                  >
-                    <HealthDot health={null} />
-                    {client.name}
-                  </Link>
-                </li>
+            <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-brand" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h2 id="revisoes-do-mes" className="text-sm font-semibold text-foreground">
+                  Revisões de {monthName(period)}
+                </h2>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  {doneCount === withReview.length
+                    ? "Todas feitas. Bom trabalho."
+                    : `${withReview.length - doneCount} por fazer${overdueCount > 0 ? `, ${overdueCount} ${overdueCount === 1 ? "atrasada" : "atrasadas"}` : ""}.`}
+                </p>
+              </div>
+              <div className="w-full sm:w-64">
+                <Progress
+                  value={(doneCount / withReview.length) * 100}
+                  aria-label="Revisões feitas"
+                  className="h-1.5"
+                />
+                <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
+                  {doneCount} de {withReview.length} {withReview.length === 1 ? "feita" : "feitas"}
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section aria-labelledby="ativos">
+          <SectionTitle id="ativos" count={active.length}>
+            Ativos
+          </SectionTitle>
+          {active.length === 0 ? (
+            <div className="mt-3 rounded-xl border border-dashed px-6 py-10 text-center">
+              <p className="text-sm font-medium text-foreground">Nenhum cliente ativo</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">Cadastre o primeiro em “Novo cliente”.</p>
+            </div>
+          ) : (
+            <ul className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {active.map((client, index) => (
+                <ClientCard key={client.id} client={client} reviews={reviews} events={events} status={statuses[index]!} />
               ))}
             </ul>
-          ) : null}
+          )}
         </section>
-      ) : null}
+
+        {inactive.length > 0 ? (
+          <section aria-labelledby="inativos">
+            <button
+              type="button"
+              aria-expanded={showInactive}
+              onClick={() => setShowInactive((current) => !current)}
+              className="flex items-center gap-2 rounded-md text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <span id="inativos">Inativos</span>
+              <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{inactive.length}</span>
+              <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showInactive && "rotate-180")} />
+            </button>
+            {showInactive ? (
+              <ul className="mt-2 -mx-3">
+                {inactive.map((client) => (
+                  <li key={client.id}>
+                    <Link
+                      href={`/clientes/${client.id}`}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                    >
+                      <HealthDot health={null} />
+                      {client.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        ) : null}
+      </PageBody>
 
       <ClientDialog state={dialog} onOpenChange={(open) => setDialog((current) => ({ ...current, open }))} />
     </PageContainer>

@@ -4,7 +4,7 @@ import { Gavel, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,7 +69,7 @@ export function DecisionsView({
     .sort(compareProjects)
 
   return (
-    <PageContainer className="max-w-[1080px]">
+    <PageContainer>
       <PageHeader
         title="Decisões"
         description={`${active} em vigor · o que a Boop definiu, por quê e onde`}
@@ -81,7 +81,7 @@ export function DecisionsView({
         }
       />
 
-      <div className="mt-7 flex flex-col gap-3 md:flex-row md:items-center">
+      <PageToolbar className="flex-col items-stretch gap-3 md:flex-row md:items-center">
         <div className="relative md:w-72">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -146,97 +146,99 @@ export function DecisionsView({
             </Select>
           ) : null}
         </div>
-      </div>
+      </PageToolbar>
 
-      {decisions.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-            <Gavel className="size-5 text-muted-foreground" />
+      <PageBody>
+        {decisions.length === 0 ? (
+          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+            <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+              <Gavel className="size-5 text-muted-foreground" />
+            </div>
+            <h2 className="mt-4 text-sm font-semibold">Nenhuma decisão registrada</h2>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              Preço mínimo, política de prazos, a escolha de um fornecedor: registre o que ficou definido e o porquê,
+              para ninguém precisar lembrar de cabeça. Na reunião, use o cartão “Decisões”.
+            </p>
+            <Button size="sm" className="mt-5" onClick={() => setDialog((current) => ({ open: true, key: current.key + 1 }))}>
+              Registrar a primeira
+            </Button>
           </div>
-          <h2 className="mt-4 text-sm font-semibold">Nenhuma decisão registrada</h2>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Preço mínimo, política de prazos, a escolha de um fornecedor: registre o que ficou definido e o porquê,
-            para ninguém precisar lembrar de cabeça. Na reunião, use o cartão “Decisões”.
-          </p>
-          <Button size="sm" className="mt-5" onClick={() => setDialog((current) => ({ open: true, key: current.key + 1 }))}>
-            Registrar a primeira
-          </Button>
-        </div>
-      ) : groups.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma decisão com esses filtros.</p>
-      ) : (
-        <div className="mt-8 space-y-8">
-          {groups.map((group) => (
-            <section key={group.month} aria-label={formatMonthYear(`${group.month}-01`)}>
-              <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {formatMonthYear(`${group.month}-01`)}
-              </h2>
-              <ul className="mt-2 divide-y rounded-xl border bg-card">
-                {group.decisions.map((decision) => {
-                  const client = decision.client_id ? clientById.get(decision.client_id) : undefined
-                  const project = decision.project_id ? projectById.get(decision.project_id) : undefined
-                  const author = profileById.get(decision.created_by)
-                  const meetingDay = decision.meeting_id ? meetingDate.get(decision.meeting_id) : undefined
-                  const revoked = decision.status === "revoked"
-                  return (
-                    <li key={decision.id} className="group relative px-4 py-3.5 transition-colors hover:bg-muted/40">
-                      <button
-                        type="button"
-                        onClick={() => setDialog((current) => ({ open: true, key: current.key + 1, decision }))}
-                        className="w-full text-left outline-none after:absolute after:inset-0 focus-visible:underline"
-                      >
-                        <span
-                          className={cn(
-                            "block text-[14px] leading-6 font-medium text-foreground",
-                            revoked && "text-muted-foreground line-through"
-                          )}
+        ) : groups.length === 0 ? (
+          <p className="pt-4 text-center text-sm text-muted-foreground">Nenhuma decisão com esses filtros.</p>
+        ) : (
+          <>
+            {groups.map((group) => (
+              <section key={group.month} aria-label={formatMonthYear(`${group.month}-01`)}>
+                <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  {formatMonthYear(`${group.month}-01`)}
+                </h2>
+                <ul className="mt-2 divide-y rounded-xl border bg-card">
+                  {group.decisions.map((decision) => {
+                    const client = decision.client_id ? clientById.get(decision.client_id) : undefined
+                    const project = decision.project_id ? projectById.get(decision.project_id) : undefined
+                    const author = profileById.get(decision.created_by)
+                    const meetingDay = decision.meeting_id ? meetingDate.get(decision.meeting_id) : undefined
+                    const revoked = decision.status === "revoked"
+                    return (
+                      <li key={decision.id} className="group relative px-4 py-3.5 transition-colors hover:bg-muted/40">
+                        <button
+                          type="button"
+                          onClick={() => setDialog((current) => ({ open: true, key: current.key + 1, decision }))}
+                          className="w-full text-left outline-none after:absolute after:inset-0 focus-visible:underline"
                         >
-                          <Highlight text={decision.title} query={filters.query} />
-                        </span>
-                      </button>
-                      {decision.context ? (
-                        <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 whitespace-pre-line text-muted-foreground">
-                          <Highlight text={decision.context} query={filters.query} />
+                          <span
+                            className={cn(
+                              "block text-[14px] leading-6 font-medium text-foreground",
+                              revoked && "text-muted-foreground line-through"
+                            )}
+                          >
+                            <Highlight text={decision.title} query={filters.query} />
+                          </span>
+                        </button>
+                        {decision.context ? (
+                          <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 whitespace-pre-line text-muted-foreground">
+                            <Highlight text={decision.context} query={filters.query} />
+                          </p>
+                        ) : null}
+                        <p className="relative z-10 mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                          <span className="tabular-nums">{formatShortDate(decision.decided_on, today)}</span>
+                          {revoked ? <span className="rounded-full border border-dashed px-1.5">revogada</span> : null}
+                          {decision.area ? <><span aria-hidden="true">·</span>{TASK_AREA_LABEL[decision.area]}</> : null}
+                          {client ? (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <Link href={`/clientes/${client.id}`} className="hover:text-foreground hover:underline">
+                                {client.name}
+                              </Link>
+                            </>
+                          ) : null}
+                          {project ? (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <Link href={`/projetos/${project.id}`} className="hover:text-foreground hover:underline">
+                                {project.name}
+                              </Link>
+                            </>
+                          ) : null}
+                          {decision.meeting_id ? (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <Link href={`/reunioes/${decision.meeting_id}`} className="hover:text-foreground hover:underline">
+                                reunião{meetingDay ? ` de ${formatShortDate(meetingDay, today)}` : ""}
+                              </Link>
+                            </>
+                          ) : null}
+                          {author ? <><span aria-hidden="true">·</span>{firstName(author.full_name)}</> : null}
                         </p>
-                      ) : null}
-                      <p className="relative z-10 mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-                        <span className="tabular-nums">{formatShortDate(decision.decided_on, today)}</span>
-                        {revoked ? <span className="rounded-full border border-dashed px-1.5">revogada</span> : null}
-                        {decision.area ? <><span aria-hidden="true">·</span>{TASK_AREA_LABEL[decision.area]}</> : null}
-                        {client ? (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <Link href={`/clientes/${client.id}`} className="hover:text-foreground hover:underline">
-                              {client.name}
-                            </Link>
-                          </>
-                        ) : null}
-                        {project ? (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <Link href={`/projetos/${project.id}`} className="hover:text-foreground hover:underline">
-                              {project.name}
-                            </Link>
-                          </>
-                        ) : null}
-                        {decision.meeting_id ? (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <Link href={`/reunioes/${decision.meeting_id}`} className="hover:text-foreground hover:underline">
-                              reunião{meetingDay ? ` de ${formatShortDate(meetingDay, today)}` : ""}
-                            </Link>
-                          </>
-                        ) : null}
-                        {author ? <><span aria-hidden="true">·</span>{firstName(author.full_name)}</> : null}
-                      </p>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ))}
+          </>
+        )}
+      </PageBody>
 
       <DecisionDialog state={dialog} onOpenChange={(open) => setDialog((current) => ({ ...current, open }))} />
     </PageContainer>

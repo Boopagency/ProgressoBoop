@@ -14,7 +14,7 @@ import {
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, type ReactNode } from "react"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -182,12 +182,10 @@ export function TasksView() {
   const isEmpty = view === "list" ? sections.length === 0 : visible.length === 0
 
   return (
-    <PageContainer className="max-w-[1320px]">
+    <PageContainer>
       <PageHeader title="Tarefas" description={summary} actions={<NewTaskButton defaults={newTaskDefaults} />} />
 
-      <SavedViewsBar query={query} onApply={navigate} className="mt-6" />
-
-      <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <PageToolbar className="flex-col items-stretch xl:flex-row xl:items-center xl:justify-between">
         <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:px-0">
           <SegmentedControl
             aria-label="Pessoa"
@@ -246,21 +244,22 @@ export function TasksView() {
           ) : null}
           <ViewSwitch value={view} onChange={(next) => update({}, next)} />
         </div>
-      </div>
+        <SavedViewsBar query={query} onApply={navigate} className="xl:basis-full" />
+      </PageToolbar>
 
-      {isEmpty ? (
-        <EmptyState
-          filtered={filtered}
-          onClear={() => update({ ...DEFAULT_FILTERS })}
-          onCreate={() => openNewTask(newTaskDefaults)}
-        />
-      ) : view === "table" ? (
-        <TaskTable tasks={visible} className="mt-6" />
-      ) : view === "board" ? (
-        <TaskBoard tasks={visible} className="mt-6" />
-      ) : (
-        <div className="mt-8 space-y-9">
-          {sections.map((key) => (
+      <PageBody>
+        {isEmpty ? (
+          <EmptyState
+            filtered={filtered}
+            onClear={() => update({ ...DEFAULT_FILTERS })}
+            onCreate={() => openNewTask(newTaskDefaults)}
+          />
+        ) : view === "table" ? (
+          <TaskTable tasks={visible} />
+        ) : view === "board" ? (
+          <TaskBoard tasks={visible} />
+        ) : (
+          sections.map((key) => (
             <TaskSection
               key={key}
               id={key}
@@ -269,9 +268,9 @@ export function TasksView() {
               tasks={groups[key]}
               showDue={key !== "today"}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </PageBody>
     </PageContainer>
   )
 }
@@ -359,7 +358,7 @@ function EmptyState({
   onCreate: () => void
 }) {
   return (
-    <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+    <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
       <div className="flex size-10 items-center justify-center rounded-full bg-muted">
         <ListChecks className="size-5 text-muted-foreground" />
       </div>

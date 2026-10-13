@@ -278,7 +278,7 @@ export function ChannelsView({
   const withUnread = entries.filter((channel) => !channel.archived && channel.counts.unread > 0)
 
   return (
-    <div className="flex h-[calc(100svh-3rem)] min-h-0 md:h-full">
+    <div className="flex h-[calc(100svh-3rem)] min-h-0 motion-safe:animate-page-in md:h-full">
       <nav
         aria-label="Canais"
         className={cn("flex w-full shrink-0 flex-col border-r bg-sidebar/40 md:w-72", selected && "max-md:hidden")}

@@ -1289,7 +1289,8 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `PageContainer`      | moldura da tela (largura, margens) e a entrada suave ao trocar de tela (8.1) |
 | `PageHeader`         | título, descrição e ações, com altura fixa (8.1)               |
 | `PageToolbar` / `PageBody` | linha de filtros e o conteúdo, sempre no mesmo lugar (8.1) |
-| `PageHeaderSkeleton` | o cabeçalho no `loading.tsx`, com a geometria do `PageHeader`  |
+| `PageMeta`           | etiquetas e dados curtos na linha da descrição (páginas de detalhe) |
+| `PageSkeleton` / `PageHeaderSkeleton` | os `loading.tsx`, com a geometria do cabeçalho e da linha de filtros |
 | `TaskRow`            | linha de tarefa: checkbox, título e metadados compactos        |
 | `TaskSection`        | grupo de tarefas com título, contagem e estado vazio           |
 | `TaskSheet`          | detalhes e edição da tarefa no Sheet lateral                   |
@@ -1369,13 +1370,23 @@ Regras:
   é curto (o nome da tela, ou do item nas páginas de detalhe) e não quebra
   linha. As ações são a criação da tela (ex.: "Nova tarefa") e, no máximo,
   um atalho secundário; filtros e modos de ver vão no `PageToolbar`.
-- **Detalhe:** as páginas de dentro (cliente, projeto, reunião, processo)
-  usam o mesmo cabeçalho; o "voltar" fica no topo, ao lado do botão do menu,
-  para o título ficar na mesma altura das listas.
+- **Detalhe:** as páginas de dentro (cliente, projeto, reunião) usam o mesmo
+  cabeçalho, com as etiquetas (status, saúde, em foco) e os dados curtos na
+  linha da descrição (`PageMeta`). O "voltar" fica no topo, ao lado do botão
+  do menu (`AppTopbar`: a seção vira link nas sub-rotas, menos nas abas do
+  Financeiro), para o título ficar na mesma altura das listas.
+- **Exceções:** Processo (o título é editável no próprio texto; a linha de
+  cima tem a área, o salvamento e as ações, na altura do título das outras
+  telas) e Comunicações (tela cheia, com a lista de canais; só a entrada
+  suave). Indicadores e Financeiro têm, abaixo da linha de filtros, as abas
+  das áreas e das seções.
 - **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
-- **Carregamento:** o `loading.tsx` usa `PageContainer animate={false}`,
-  `PageHeaderSkeleton` e `PageBody`, com a geometria da tela; quando a tela
-  chega, nada muda de lugar.
+- **Carregamento:** cada `loading.tsx` usa `PageSkeleton`
+  (`components/layout/page-skeleton.tsx`: moldura sem animação, cabeçalho,
+  linha de filtros opcional e corpo) com a geometria da tela; quando a tela
+  chega, nada muda de lugar. O genérico de `(app)` tem linha de filtros;
+  Hoje, Tarefas, Calendário e Conteúdo têm o próprio; Clientes, Processos,
+  Relatórios e as páginas de projeto e reunião, o sem linha de filtros.
 - **Transição:** o `PageContainer` entra com `motion-safe:animate-page-in`
   (fade de 0 a 1 e subida de 4px em 200ms, `globals.css`). Anima quando a tela
   monta: troca de tela pelo menu, abrir um detalhe e o fim do carregamento.
@@ -1384,8 +1395,12 @@ Regras:
   Com "reduzir movimento" no sistema, não há animação. Telas fora do
   `PageContainer` (Comunicações, em tela cheia) usam a mesma classe na raiz.
 
-A base (componentes, animação e carregamento) entrou no PR 1 da issue #40;
-as telas passam para o esqueleto no PR 2 e o portal, no PR 3.
+Aplicação (issue #40): a base entrou no PR 1 e as telas do admin no PR 2;
+o portal fica para o PR 3. Mudanças de lugar no PR 2: Minhas/Todas (Hoje) e
+Semana/Mês (Calendário) saíram das ações para a linha de filtros; em Tarefas,
+as visões salvas ficam abaixo dos filtros; em Conteúdo e Comercial, os
+filtros vêm antes dos números; em Reuniões, a busca vem antes da próxima
+reunião. Reuniões, Metas e Relatórios usam `PageBody width="reading"`.
 
 Levantamento antes do esqueleto (13/10/2026, 1440 e 1920px de janela; medido
 no navegador, com o menu aberto). O título fica na mesma altura nas listas
@@ -1419,6 +1434,10 @@ Em 1440px a diferença horizontal aparece nas telas mais estreitas (Reuniões,
 Metas, Decisões e Relatórios: o título anda até 127px). O `loading.tsx`
 genérico tinha outra altura de título (32px) e de descrição (16px) e o
 primeiro bloco 32px abaixo.
+
+Depois do PR 2, em todas as telas (menos Comunicações e Processo): título
+em x = 297px (1440) / 424px (1920), y = 97px, e o bloco seguinte em y =
+181px.
 
 ## 9. Definições de negócio
 

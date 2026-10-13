@@ -56,7 +56,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
 
   return (
     <FinanceDialogContext value={api}>
-      <PageContainer className="max-w-[1240px]">
+      <PageContainer>
         <PageHeader
           title="Financeiro"
           description="Caixa, resultado e contratos da Boop, com a mesma lógica da planilha"

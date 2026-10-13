@@ -99,10 +99,42 @@ export function PageToolbar({ className, ...props }: ComponentProps<"div">) {
 
 /**
  * O conteúdo da tela: começa sempre 24px abaixo do cabeçalho (ou da linha de
- * filtros) e separa os blocos por 32px.
+ * filtros) e separa os blocos por 32px. `width="reading"` limita a largura a
+ * 1080px (listas e formulários), alinhado à esquerda: o cabeçalho continua
+ * na moldura toda.
  */
-export function PageBody({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("mt-6 flex flex-col gap-8", className)} {...props} />
+export function PageBody({
+  className,
+  width = "full",
+  ...props
+}: ComponentProps<"div"> & { width?: "full" | "reading" }) {
+  return (
+    <div
+      className={cn("mt-6 flex flex-col gap-8", width === "reading" && "max-w-[1080px]", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Descrição das páginas de detalhe: etiquetas e dados curtos na linha da
+ * descrição do PageHeader, separados por "·" (os vazios somem).
+ */
+export function PageMeta({ items }: { items: ReactNode[] }) {
+  return (
+    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+      {items.filter(Boolean).map((item, index) => (
+        <span key={index} className="flex items-center gap-1.5">
+          {index > 0 ? (
+            <span aria-hidden="true" className="text-subtle-foreground">
+              ·
+            </span>
+          ) : null}
+          {item}
+        </span>
+      ))}
+    </span>
+  )
 }
 
 /** Título de seção dentro de uma tela (altura fixa, com a contagem ao lado). */

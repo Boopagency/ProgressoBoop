@@ -64,7 +64,7 @@ export function IdeasBoard({
   }
 
   return (
-    <div className="mt-6">
+    <div>
       <div className="flex items-center justify-between gap-3">
         <SectionTitle id="ideias-livres" count={open.length}>
           Ideias

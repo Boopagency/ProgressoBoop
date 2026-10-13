@@ -7,7 +7,7 @@ import { useOptimistic, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { KpiTile } from "@/components/kpi-tile"
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -112,7 +112,7 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
   }
 
   return (
-    <PageContainer className="max-w-[1400px]">
+    <PageContainer>
       <PageHeader
         title="Comercial"
         description="Leads, propostas e negócios, do primeiro contato ao contrato"
@@ -132,36 +132,7 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
         }
       />
 
-      <section aria-label="Números do funil" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiTile
-          label="Em aberto"
-          value={`${funnel.count} ${funnel.count === 1 ? "negócio" : "negócios"}`}
-          hint={`${formatMoneyShort(funnel.recurring)}/mês em potencial${funnel.oneTime > 0 ? ` + ${formatMoneyShort(funnel.oneTime)} pontual` : ""}`}
-        />
-        <KpiTile
-          label="Valor ponderado"
-          value={formatMoney(funnel.weighted)}
-          hint={`de ${formatMoneyShort(funnel.value)} em contratos, pela chance de cada um`}
-        />
-        <KpiTile
-          label="Ganhos no mês"
-          value={`${month.won.length} ${month.won.length === 1 ? "negócio" : "negócios"}`}
-          hint={`${formatMoneyShort(month.wonRecurring)}/mês${month.wonOneTime > 0 ? ` + ${formatMoneyShort(month.wonOneTime)} pontual` : ""} · ${month.leads.length} leads novos`}
-          href="/indicadores?area=comercial"
-        />
-        <KpiTile
-          label="Taxa de ganho (90 dias)"
-          value={formatPercent(quarter.winRate, true)}
-          hint={
-            quarter.cycleDays !== null
-              ? `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos · ciclo de ${Math.round(quarter.cycleDays)} dias`
-              : `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos`
-          }
-          href="/indicadores?area=comercial"
-        />
-      </section>
-
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <PageToolbar>
         <SegmentedControl
           aria-label="Visualização"
           value={view}
@@ -204,28 +175,59 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
             ]}
           />
         ) : null}
-      </div>
+      </PageToolbar>
 
-      {deals.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-          <h2 className="text-sm font-semibold">Cadastre os leads que estão chegando</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
-            cliente, contrato no financeiro e projeto, sem digitar de novo.
-          </p>
-          <Button size="sm" className="mt-5" onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))}>
-            Primeiro negócio
-          </Button>
-        </div>
-      ) : view === "board" ? (
-        <Board deals={visible} today={today} onOpen={openDeal} onMove={move} />
-      ) : (
-        <DealList
-          deals={visible.filter((deal) => (listFilter === "all" ? true : listFilter === "open" ? isOpenDeal(deal) : deal.stage === listFilter))}
-          today={today}
-          onOpen={openDeal}
-        />
-      )}
+      <PageBody>
+        <section aria-label="Números do funil" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            label="Em aberto"
+            value={`${funnel.count} ${funnel.count === 1 ? "negócio" : "negócios"}`}
+            hint={`${formatMoneyShort(funnel.recurring)}/mês em potencial${funnel.oneTime > 0 ? ` + ${formatMoneyShort(funnel.oneTime)} pontual` : ""}`}
+          />
+          <KpiTile
+            label="Valor ponderado"
+            value={formatMoney(funnel.weighted)}
+            hint={`de ${formatMoneyShort(funnel.value)} em contratos, pela chance de cada um`}
+          />
+          <KpiTile
+            label="Ganhos no mês"
+            value={`${month.won.length} ${month.won.length === 1 ? "negócio" : "negócios"}`}
+            hint={`${formatMoneyShort(month.wonRecurring)}/mês${month.wonOneTime > 0 ? ` + ${formatMoneyShort(month.wonOneTime)} pontual` : ""} · ${month.leads.length} leads novos`}
+            href="/indicadores?area=comercial"
+          />
+          <KpiTile
+            label="Taxa de ganho (90 dias)"
+            value={formatPercent(quarter.winRate, true)}
+            hint={
+              quarter.cycleDays !== null
+                ? `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos · ciclo de ${Math.round(quarter.cycleDays)} dias`
+                : `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos`
+            }
+            href="/indicadores?area=comercial"
+          />
+        </section>
+
+        {deals.length === 0 ? (
+          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+            <h2 className="text-sm font-semibold">Cadastre os leads que estão chegando</h2>
+            <p className="mt-1 max-w-md text-sm text-muted-foreground">
+              Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
+              cliente, contrato no financeiro e projeto, sem digitar de novo.
+            </p>
+            <Button size="sm" className="mt-5" onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))}>
+              Primeiro negócio
+            </Button>
+          </div>
+        ) : view === "board" ? (
+          <Board deals={visible} today={today} onOpen={openDeal} onMove={move} />
+        ) : (
+          <DealList
+            deals={visible.filter((deal) => (listFilter === "all" ? true : listFilter === "open" ? isOpenDeal(deal) : deal.stage === listFilter))}
+            today={today}
+            onOpen={openDeal}
+          />
+        )}
+      </PageBody>
 
       <DealDialog state={dialog} onOpenChange={(open) => setDialog((state) => ({ ...state, open }))} onWin={setWinning} />
       <WinDialog deal={winning} onOpenChange={(open) => !open && setWinning(null)} />
@@ -313,7 +315,7 @@ function Board({
   const columns = boardColumns(deals, today)
   const column = "w-[78%] shrink-0 snap-start sm:w-64 xl:w-auto xl:min-w-0 xl:flex-1"
   return (
-    <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0 lg:snap-none">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0 lg:snap-none">
       {OPEN_DEAL_STAGES.map((stage) => {
         const items = columns[stage]
         const total = items.reduce((sum, deal) => sum + deal.recurring_cents, 0)
@@ -414,9 +416,9 @@ function DealList({ deals, today, onOpen }: { deals: Deal[]; today: DateKey; onO
     if (isOpenDeal(a) && isOpenDeal(b) && order !== 0) return order
     return b.updated_at.localeCompare(a.updated_at)
   })
-  if (sorted.length === 0) return <p className="mt-6 text-center text-[13px] text-muted-foreground">Nenhum negócio com esses filtros.</p>
+  if (sorted.length === 0) return <p className="pt-4 text-center text-[13px] text-muted-foreground">Nenhum negócio com esses filtros.</p>
   return (
-    <div className="mt-4 overflow-x-auto rounded-xl border bg-card">
+    <div className="overflow-x-auto rounded-xl border bg-card">
       <table className="w-full min-w-[900px] text-[13px] tabular-nums">
         <thead>
           <tr className="text-left text-xs text-muted-foreground">

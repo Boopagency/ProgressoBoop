@@ -61,8 +61,8 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
 
 - Saudação conforme o horário ("Bom dia", "Boa tarde" ou "Boa noite",
   seguida do nome) e a data por extenso.
-- A alternância **Minhas / Todas**. O padrão é Minhas, e a escolha fica salva
-  no navegador por um ano.
+- A alternância **Minhas / Todas**, na linha logo abaixo do título. O padrão
+  é Minhas, e a escolha fica salva no navegador por um ano.
 - Quatro indicadores: Atrasadas, Para hoje, Esta semana e Concluídas na
   semana. Clicar em um deles leva à lista correspondente. Atrasadas fica
   vermelho quando o número é maior que zero.
@@ -131,7 +131,7 @@ Minhas, os posts da pessoa e os sem responsável.
     aparece.
 - **Visões salvas:** "Salvar visão" guarda os filtros e o modo atuais com um
   nome (ex.: "Velmont", "Minhas atrasadas", "Quadro da semana"). As visões
-  ficam no topo da tela e no menu lateral, abaixo de Tarefas, e valem para a
+  ficam logo abaixo dos filtros e no menu lateral, abaixo de Tarefas, e valem para a
   equipe toda. Pelo "⋯" de cada visão dá para renomear e excluir; depois de
   mudar os filtros a partir de uma visão, "Salvar visão" também oferece
   atualizá-la.
@@ -185,8 +185,8 @@ ali mesmo e salvo na hora.
 
 ### 2.6 Calendário (`/calendario`)
 
-- **Visões Semana e Mês.** As setas navegam e o botão "Hoje" volta ao período
-  atual. A visão e a data ficam no endereço, então o link pode ser salvo.
+- **Visões Semana e Mês**, na linha abaixo do título, junto das setas, do
+  período e do botão "Hoje", que volta ao período atual. A visão e a data ficam no endereço, então o link pode ser salvo.
 - **O que aparece:** tarefas no dia do prazo, eventos de três tipos: Reunião
   (ciano), Evento interno (azul acinzentado) e Entrega (laranja), e os posts
   da Central de Conteúdo no dia de publicação (com a foto ou a inicial do
@@ -251,7 +251,8 @@ segunda, 07:00).
 - **Encerrar reunião** (a partir do dia dela): guarda a pauta como estava,
   para o histórico. Também dá para reabrir, marcar como cancelada, editar
   data/horário/nome e excluir o registro.
-- Setas no topo levam à reunião anterior e à próxima da mesma série.
+- Setas ao lado dos botões da reunião levam à anterior e à próxima da mesma
+  série.
 - No celular: antes de encerrar aparecem assuntos, combinados e pauta;
   depois, combinados e resumo primeiro.
 
@@ -461,6 +462,11 @@ passo), checklists, políticas (regras combinadas) e guias.
   - um aviso oferece "Desfazer" por 4 segundos.
 - **Carregando:** aparece um esqueleto da tela, com o título, a descrição e
   o primeiro bloco no mesmo lugar em que a tela vai mostrá-los.
+- **Mesmo lugar em toda tela:** o título, a descrição e os botões ficam na
+  mesma posição em todas as telas; filtros e modos de ver ficam na linha logo
+  abaixo, e o conteúdo começa sempre à mesma distância. Nas páginas de
+  dentro (cliente, projeto, reunião), as etiquetas ficam na linha da
+  descrição e o "voltar" fica no topo, ao lado do botão do menu ("‹ Clientes").
 - **Trocar de tela:** o conteúdo entra com um fade curto (0,2 s); o menu e o
   topo não se mexem. Mudar filtros ou o modo de ver não anima. Com "reduzir
   movimento" ligado no sistema, a troca é direta.

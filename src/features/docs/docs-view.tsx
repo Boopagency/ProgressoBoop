@@ -19,7 +19,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
 import { Button } from "@/components/ui/button"
 import { createDoc } from "@/features/docs/actions"
 import {
@@ -242,7 +242,7 @@ export function DocsView({
             : null
 
   return (
-    <PageContainer className="max-w-[1180px]">
+    <PageContainer>
       <PageHeader
         title="Processos"
         description="Como a Boop trabalha: processos, checklists, políticas e guias, num lugar só."
@@ -254,118 +254,120 @@ export function DocsView({
         }
       />
 
-      {docs.length === 0 ? (
-        <EmptyLibrary suggestions={suggestions} onNew={() => openNewDoc()} />
-      ) : (
-        <div className="mt-8 lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start lg:gap-10">
-          <FilterNav groups={navGroups} current={filter} onChange={changeFilter} />
+      <PageBody>
+        {docs.length === 0 ? (
+          <EmptyLibrary suggestions={suggestions} onNew={() => openNewDoc()} />
+        ) : (
+          <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start lg:gap-10">
+            <FilterNav groups={navGroups} current={filter} onChange={changeFilter} />
 
-          <div className="min-w-0">
-            <form
-              role="search"
-              className="relative w-full sm:max-w-md"
-              onSubmit={(event) => {
-                event.preventDefault()
-                search(draft)
-              }}
-            >
-              <Search
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <input
-                type="search"
-                value={draft}
-                onChange={(event) => {
-                  setDraft(event.target.value)
-                  if (event.target.value === "" && query) search("")
+            <div className="min-w-0">
+              <form
+                role="search"
+                className="relative w-full sm:max-w-md"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  search(draft)
                 }}
-                placeholder="Buscar nos processos (título e texto)"
-                aria-label="Buscar processos"
-                className="h-9 w-full rounded-lg border border-input bg-background pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-              />
-              {draft ? (
-                <button
-                  type="button"
-                  aria-label="Limpar busca"
-                  onClick={() => {
-                    setDraft("")
-                    search("")
+              >
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  value={draft}
+                  onChange={(event) => {
+                    setDraft(event.target.value)
+                    if (event.target.value === "" && query) search("")
                   }}
-                  className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 place-content-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <X className="size-3.5" />
-                </button>
-              ) : null}
-            </form>
+                  placeholder="Buscar nos processos (título e texto)"
+                  aria-label="Buscar processos"
+                  className="h-9 w-full rounded-lg border border-input bg-background pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+                />
+                {draft ? (
+                  <button
+                    type="button"
+                    aria-label="Limpar busca"
+                    onClick={() => {
+                      setDraft("")
+                      search("")
+                    }}
+                    className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 place-content-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
+              </form>
 
-            <div className={cn("transition-opacity", isSearching && "opacity-60")}>
-              {searching ? (
-                <section aria-label="Resultados da busca" className="mt-6">
-                  <p className="text-[13px] text-muted-foreground" aria-live="polite">
-                    {results.length === 0
-                      ? `Nada encontrado para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}.`
-                      : `${results.length} ${results.length === 1 ? "resultado" : "resultados"} para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}`}
-                  </p>
-                  <ul className="mt-2 -mx-3">
-                    {results.map((doc) => (
-                      <DocRow
-                        key={doc.id}
-                        doc={doc}
-                        today={today}
-                        query={query}
-                        snippet={snippetById.get(doc.id) ?? null}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              ) : (
-                <>
-                  {pinned.length > 0 ? (
-                    <section aria-labelledby="comece-por-aqui" className="mt-8">
-                      <SectionTitle id="comece-por-aqui">Comece por aqui</SectionTitle>
-                      <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {pinned.map((doc) => (
-                          <PinnedCard key={doc.id} doc={doc} today={today} />
-                        ))}
-                      </ul>
-                    </section>
-                  ) : null}
-
-                  {filterTitle ? (
-                    <h2 className="mt-8 font-display text-lg font-semibold tracking-tight text-foreground">
-                      {filterTitle}
-                    </h2>
-                  ) : null}
-
-                  {grouped.length === 0 ? (
-                    <EmptyFilter filter={filter} onNew={() => openNewDoc(defaultsForFilter)} />
-                  ) : (
-                    grouped.map((group) => (
-                      <section key={group.area ?? NO_AREA} aria-label={group.area ? TASK_AREA_LABEL[group.area] : "Sem área"} className="mt-8">
-                        {filter.kind === "area" ? null : (
-                          <SectionTitle count={group.docs.length}>
-                            {group.area ? TASK_AREA_LABEL[group.area] : "Sem área"}
-                          </SectionTitle>
-                        )}
-                        <ul className="mt-2 -mx-3">
-                          {group.docs.map((doc) => (
-                            <DocRow key={doc.id} doc={doc} today={today} />
+              <div className={cn("transition-opacity", isSearching && "opacity-60")}>
+                {searching ? (
+                  <section aria-label="Resultados da busca" className="mt-6">
+                    <p className="text-[13px] text-muted-foreground" aria-live="polite">
+                      {results.length === 0
+                        ? `Nada encontrado para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}.`
+                        : `${results.length} ${results.length === 1 ? "resultado" : "resultados"} para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}`}
+                    </p>
+                    <ul className="mt-2 -mx-3">
+                      {results.map((doc) => (
+                        <DocRow
+                          key={doc.id}
+                          doc={doc}
+                          today={today}
+                          query={query}
+                          snippet={snippetById.get(doc.id) ?? null}
+                        />
+                      ))}
+                    </ul>
+                  </section>
+                ) : (
+                  <>
+                    {pinned.length > 0 ? (
+                      <section aria-labelledby="comece-por-aqui" className="mt-8">
+                        <SectionTitle id="comece-por-aqui">Comece por aqui</SectionTitle>
+                        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {pinned.map((doc) => (
+                            <PinnedCard key={doc.id} doc={doc} today={today} />
                           ))}
                         </ul>
                       </section>
-                    ))
-                  )}
+                    ) : null}
 
-                  {filter.kind === "all" && suggestions.length > 0 ? (
-                    <SuggestionsSection suggestions={suggestions} startOpen={docs.length < 4} />
-                  ) : null}
-                </>
-              )}
+                    {filterTitle ? (
+                      <h2 className="mt-8 font-display text-lg font-semibold tracking-tight text-foreground">
+                        {filterTitle}
+                      </h2>
+                    ) : null}
+
+                    {grouped.length === 0 ? (
+                      <EmptyFilter filter={filter} onNew={() => openNewDoc(defaultsForFilter)} />
+                    ) : (
+                      grouped.map((group) => (
+                        <section key={group.area ?? NO_AREA} aria-label={group.area ? TASK_AREA_LABEL[group.area] : "Sem área"} className="mt-8">
+                          {filter.kind === "area" ? null : (
+                            <SectionTitle count={group.docs.length}>
+                              {group.area ? TASK_AREA_LABEL[group.area] : "Sem área"}
+                            </SectionTitle>
+                          )}
+                          <ul className="mt-2 -mx-3">
+                            {group.docs.map((doc) => (
+                              <DocRow key={doc.id} doc={doc} today={today} />
+                            ))}
+                          </ul>
+                        </section>
+                      ))
+                    )}
+
+                    {filter.kind === "all" && suggestions.length > 0 ? (
+                      <SuggestionsSection suggestions={suggestions} startOpen={docs.length < 4} />
+                    ) : null}
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </PageBody>
 
       <NewDocDialog state={dialog} onOpenChange={(open) => setDialog((current) => ({ ...current, open }))} />
     </PageContainer>
@@ -605,7 +607,7 @@ function useCreateFromSuggestion() {
 function EmptyLibrary({ suggestions, onNew }: { suggestions: IndexedSuggestion[]; onNew: () => void }) {
   const { create, pendingIndex } = useCreateFromSuggestion()
   return (
-    <section aria-labelledby="comecar" className="mt-8">
+    <section aria-labelledby="comecar">
       <div className="relative overflow-hidden rounded-xl border bg-card px-5 py-6 pl-6 sm:px-7">
         <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-brand" />
         <h2 id="comecar" className="font-display text-xl leading-7 font-semibold tracking-tight text-foreground">

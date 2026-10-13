@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { createStarterGoal } from "@/features/goals/actions"
@@ -96,7 +96,7 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
   }
 
   return (
-    <PageContainer className="max-w-[1100px]">
+    <PageContainer>
       <PageHeader
         title="Metas"
         description="Objetivos e resultados-chave que acompanham os números do sistema sozinhos"
@@ -109,7 +109,7 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
       />
 
       {goals.length > 0 ? (
-        <div className="-mx-4 mt-6 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <PageToolbar className="-mx-4 flex-nowrap overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <SegmentedControl
             aria-label="Período das metas"
             value={filter}
@@ -122,46 +122,48 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
               { value: "all", label: "Todas" },
             ]}
           />
-        </div>
+        </PageToolbar>
       ) : null}
 
-      {goals.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-            <Target className="size-5 text-muted-foreground" />
+      <PageBody width="reading">
+        {goals.length === 0 ? (
+          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+            <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+              <Target className="size-5 text-muted-foreground" />
+            </div>
+            <h2 className="mt-4 text-sm font-semibold">Defina o que a Boop quer alcançar</h2>
+            <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+              Um objetivo tem período e resultados-chave. Ligue cada resultado a um indicador (MRR, faturamento, leads,
+              entregas no prazo…) e o progresso se atualiza com os dados, sem planilha paralela.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <Button size="sm" onClick={starter} disabled={isPending}>
+                Começar pela meta de MRR da planilha
+              </Button>
+              <Button size="sm" variant="outline" onClick={newObjective}>
+                Criar do zero
+              </Button>
+            </div>
           </div>
-          <h2 className="mt-4 text-sm font-semibold">Defina o que a Boop quer alcançar</h2>
-          <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-            Um objetivo tem período e resultados-chave. Ligue cada resultado a um indicador (MRR, faturamento, leads,
-            entregas no prazo…) e o progresso se atualiza com os dados, sem planilha paralela.
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            <Button size="sm" onClick={starter} disabled={isPending}>
-              Começar pela meta de MRR da planilha
-            </Button>
-            <Button size="sm" variant="outline" onClick={newObjective}>
-              Criar do zero
-            </Button>
+        ) : visible.length === 0 ? (
+          <p className="pt-4 text-center text-[13px] text-muted-foreground">Nenhum objetivo neste filtro.</p>
+        ) : (
+          <div className="space-y-5">
+            {visible.map((goal) => (
+              <ObjectiveCard
+                key={goal.objective.id}
+                goal={goal}
+                today={today}
+                onEdit={() => setObjectiveDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective }))}
+                onAddKeyResult={() => setKeyResultDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective }))}
+                onEditKeyResult={(row) =>
+                  setKeyResultDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective, keyResult: row.keyResult }))
+                }
+              />
+            ))}
           </div>
-        </div>
-      ) : visible.length === 0 ? (
-        <p className="mt-8 text-center text-[13px] text-muted-foreground">Nenhum objetivo neste filtro.</p>
-      ) : (
-        <div className="mt-6 space-y-5">
-          {visible.map((goal) => (
-            <ObjectiveCard
-              key={goal.objective.id}
-              goal={goal}
-              today={today}
-              onEdit={() => setObjectiveDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective }))}
-              onAddKeyResult={() => setKeyResultDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective }))}
-              onEditKeyResult={(row) =>
-                setKeyResultDialog((state) => ({ open: true, key: state.key + 1, objective: goal.objective, keyResult: row.keyResult }))
-              }
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </PageBody>
 
       <ObjectiveDialog
         state={objectiveDialog}

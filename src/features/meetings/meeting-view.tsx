@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,19 +117,8 @@ export function MeetingView({
   const hasTaskAgenda = kind !== "internal"
 
   return (
-    <PageContainer className="max-w-[1320px]">
-      <nav aria-label="Navegação" className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
-        <Link
-          href="/reunioes"
-          className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="size-3.5" aria-hidden="true" />
-          Reuniões
-        </Link>
-        <SeriesNav siblings={siblings} />
-      </nav>
-
-      <MeetingHeader entry={entry} kind={kind} clientName={clientName} />
+    <PageContainer>
+      <MeetingHeader entry={entry} kind={kind} clientName={clientName} siblings={siblings} />
 
       {/*
         Desktop: pauta e transcrição à esquerda; combinados e resumo fixos à
@@ -138,7 +127,7 @@ export function MeetingView({
         a sua ordem). Aberta: assuntos, combinados e a pauta. Encerrada:
         combinados e resumo primeiro.
       */}
-      <div className="mt-8 flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+      <PageBody className="gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
         <div className="contents xl:block xl:min-w-0 xl:space-y-6">
           <div className={cn("min-w-0", closed ? "order-3" : "order-1")}>
             <TopicsCard api={api} closed={closed} />
@@ -172,7 +161,7 @@ export function MeetingView({
             <SummaryCard meetingId={record.id} initial={record.summary} />
           </div>
         </div>
-      </div>
+      </PageBody>
     </PageContainer>
   )
 }
@@ -184,7 +173,7 @@ function SeriesNav({ siblings }: { siblings: MeetingViewProps["siblings"] }) {
     "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 text-[13px]">
       {siblings.previous ? (
         <MeetingLink
           meetingId={siblings.previous.record?.id ?? null}
@@ -217,10 +206,12 @@ function MeetingHeader({
   entry,
   kind,
   clientName,
+  siblings,
 }: {
   entry: MeetingViewProps["entry"]
   kind: ReturnType<typeof meetingKind>
   clientName: string | null
+  siblings: MeetingViewProps["siblings"]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -253,95 +244,99 @@ function MeetingHeader({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {kind === "client" && event.client_id ? (
-            <Link
-              href={`/clientes/${event.client_id}`}
-              aria-label={`Ver o cliente ${clientName ?? ""}`.trim()}
-              className="rounded-full outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              <MeetingKindBadge kind={kind} clientName={clientName} />
-            </Link>
-          ) : (
-            <MeetingKindBadge kind={kind} clientName={clientName} />
-          )}
-          <EntryStateBadge state={state} />
-        </div>
-        <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground sm:text-[28px] sm:leading-9">
-          {event.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {formatLongDate(date)} · <span className="tabular-nums">{timeLabel(entry)}</span>
-          {record.status === "scheduled" && date >= today ? ` · ${relativeDays(date, today)}` : null}
-        </p>
-        {record.status === "done" && record.closed_at ? (
-          <p className="text-xs text-muted-foreground">
-            Encerrada{closer ? ` por ${firstName(closer.full_name)}` : ""} em{" "}
-            {formatShortDate(toDateKey(record.closed_at), today)} às {toTimeLabel(record.closed_at)}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
-        {record.status === "scheduled" && date > today ? null : record.status === "scheduled" ? (
-          <Button
-            disabled={isPending}
-            onClick={() =>
-              changeStatus("done", "Reunião encerrada", "A pauta ficou guardada no histórico.")
-            }
-          >
-            <CheckCheck />
-            Encerrar reunião
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            disabled={isPending}
-            onClick={() => changeStatus("scheduled", "Reunião reaberta")}
-          >
-            <RotateCcw />
-            Reabrir
-          </Button>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Mais ações da reunião" disabled={isPending}>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuItem
-              onSelect={() => setDialog((current) => ({ open: true, event, key: current.key + 1 }))}
-            >
-              <CalendarCog />
-              Editar data, horário ou nome
-            </DropdownMenuItem>
-            {record.status === "scheduled" && date > today ? (
-              <DropdownMenuItem
-                onSelect={() =>
+    <>
+      <PageHeader
+        title={event.title}
+        description={
+          <PageMeta
+            items={[
+              kind === "client" && event.client_id ? (
+                <Link
+                  href={`/clientes/${event.client_id}`}
+                  aria-label={`Ver o cliente ${clientName ?? ""}`.trim()}
+                  className="rounded-full outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  <MeetingKindBadge kind={kind} clientName={clientName} />
+                </Link>
+              ) : (
+                <MeetingKindBadge kind={kind} clientName={clientName} />
+              ),
+              <EntryStateBadge key="state" state={state} />,
+              <span key="date">
+                {formatLongDate(date)} · <span className="tabular-nums">{timeLabel(entry)}</span>
+                {record.status === "scheduled" && date >= today ? ` · ${relativeDays(date, today)}` : null}
+              </span>,
+              record.status === "done" && record.closed_at ? (
+                <span key="closed">
+                  Encerrada{closer ? ` por ${firstName(closer.full_name)}` : ""} em{" "}
+                  {formatShortDate(toDateKey(record.closed_at), today)} às {toTimeLabel(record.closed_at)}
+                </span>
+              ) : null,
+            ]}
+          />
+        }
+        actions={
+          <>
+            <SeriesNav siblings={siblings} />
+            {record.status === "scheduled" && date > today ? null : record.status === "scheduled" ? (
+              <Button
+                disabled={isPending}
+                onClick={() =>
                   changeStatus("done", "Reunião encerrada", "A pauta ficou guardada no histórico.")
                 }
               >
                 <CheckCheck />
-                Encerrar agora
-              </DropdownMenuItem>
-            ) : null}
-            {record.status === "scheduled" ? (
-              <DropdownMenuItem onSelect={() => changeStatus("canceled", "Reunião marcada como cancelada")}>
-                <Ban />
-                Marcar como cancelada
-              </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
-              <Trash2 />
-              Excluir registro
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+                Encerrar reunião
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={isPending}
+                onClick={() => changeStatus("scheduled", "Reunião reaberta")}
+              >
+                <RotateCcw />
+                Reabrir
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Mais ações da reunião" disabled={isPending}>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem
+                  onSelect={() => setDialog((current) => ({ open: true, event, key: current.key + 1 }))}
+                >
+                  <CalendarCog />
+                  Editar data, horário ou nome
+                </DropdownMenuItem>
+                {record.status === "scheduled" && date > today ? (
+                  <DropdownMenuItem
+                    onSelect={() =>
+                      changeStatus("done", "Reunião encerrada", "A pauta ficou guardada no histórico.")
+                    }
+                  >
+                    <CheckCheck />
+                    Encerrar agora
+                  </DropdownMenuItem>
+                ) : null}
+                {record.status === "scheduled" ? (
+                  <DropdownMenuItem onSelect={() => changeStatus("canceled", "Reunião marcada como cancelada")}>
+                    <Ban />
+                    Marcar como cancelada
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
+                  <Trash2 />
+                  Excluir registro
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
       <EventDialog
         state={dialog}
@@ -366,6 +361,6 @@ function MeetingHeader({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }

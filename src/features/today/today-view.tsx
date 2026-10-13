@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import type { PendingRequest } from "@/features/channels/logic"
 import { TodayRequestsCard } from "@/features/channels/today-requests-card"
@@ -101,79 +101,80 @@ export function TodayView({
     }))
 
   return (
-    <PageContainer className="max-w-[1240px]">
+    <PageContainer>
       <PageHeader
         title={`${greeting}, ${firstName(currentUser.full_name)}`}
         description={formatLongDate(today)}
-        actions={
-          <>
-            <SegmentedControl
-              aria-label="Quais tarefas mostrar"
-              value={scope}
-              onValueChange={changeScope}
-              options={SCOPE_OPTIONS}
-            />
-            <NewTaskButton />
-          </>
-        }
+        actions={<NewTaskButton />}
       />
 
-      <SummaryStats summary={summary} className="mt-8" />
-
-      {/*
-        Celular: resumo → progresso → listas → agenda.
-        Desktop: listas à esquerda; progresso e agenda na coluna da direita.
-      */}
-      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <ProgressCard
-          focus={focus}
-          week={week}
-          weekRange={ctx.week}
-          today={today}
-          className="lg:col-start-2 lg:row-start-1"
+      <PageToolbar>
+        <SegmentedControl
+          aria-label="Quais tarefas mostrar"
+          value={scope}
+          onValueChange={changeScope}
+          options={SCOPE_OPTIONS}
         />
+      </PageToolbar>
 
-        <div className="min-w-0 space-y-9 lg:col-start-1 lg:row-span-2 lg:row-start-1">
-          <TaskSection
-            id="atrasadas"
-            title="Atrasadas"
-            tone="danger"
-            tasks={groups.overdue}
-            emptyText="Nada atrasado."
-          />
-          <TaskSection
-            id="hoje"
-            title="Hoje"
-            tone="brand"
-            tasks={groups.today}
-            showDue={false}
-            emptyText="Nenhuma tarefa com prazo para hoje."
-          />
-          <TaskSection
-            id="esta-semana"
-            title="Esta semana"
-            tasks={groups.week}
-            emptyText="Nada mais previsto até domingo."
-          />
-          <OpenAgreements
-            items={meetingItems}
-            records={meetingRecords}
-            events={events}
-            scope={scope}
-          />
-        </div>
+      <PageBody>
+        <SummaryStats summary={summary} />
 
-        <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
-          <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
-          <ReviewsDueCard clients={clients} reviews={reviews} />
-          <TodayContentCard posts={posts} today={today} scope={scope} />
-          <TodayRequestsCard requests={requests} today={today} />
-          <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
-          <ManagementCard finance={finance} deals={deals} today={today} />
-          <DocsToReview docs={docs} scope={scope} />
-          <Agenda events={events} today={today} />
+        {/*
+          Celular: resumo → progresso → listas → agenda.
+          Desktop: listas à esquerda; progresso e agenda na coluna da direita.
+        */}
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <ProgressCard
+            focus={focus}
+            week={week}
+            weekRange={ctx.week}
+            today={today}
+            className="lg:col-start-2 lg:row-start-1"
+          />
+
+          <div className="min-w-0 space-y-9 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <TaskSection
+              id="atrasadas"
+              title="Atrasadas"
+              tone="danger"
+              tasks={groups.overdue}
+              emptyText="Nada atrasado."
+            />
+            <TaskSection
+              id="hoje"
+              title="Hoje"
+              tone="brand"
+              tasks={groups.today}
+              showDue={false}
+              emptyText="Nenhuma tarefa com prazo para hoje."
+            />
+            <TaskSection
+              id="esta-semana"
+              title="Esta semana"
+              tasks={groups.week}
+              emptyText="Nada mais previsto até domingo."
+            />
+            <OpenAgreements
+              items={meetingItems}
+              records={meetingRecords}
+              events={events}
+              scope={scope}
+            />
+          </div>
+
+          <div className="space-y-6 lg:col-start-2 lg:row-start-2 lg:self-start">
+            <NextMeetingCompact events={events} records={meetingRecords} items={meetingItems} />
+            <ReviewsDueCard clients={clients} reviews={reviews} />
+            <TodayContentCard posts={posts} today={today} scope={scope} />
+            <TodayRequestsCard requests={requests} today={today} />
+            <FinanceAlertCard entries={finance.entries} recurrences={finance.recurrences} today={today} />
+            <ManagementCard finance={finance} deals={deals} today={today} />
+            <DocsToReview docs={docs} scope={scope} />
+            <Agenda events={events} today={today} />
+          </div>
         </div>
-      </div>
+      </PageBody>
     </PageContainer>
   )
 }

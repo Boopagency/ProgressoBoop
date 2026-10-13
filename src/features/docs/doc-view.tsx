@@ -3,7 +3,6 @@
 import {
   AlarmClock,
   Check,
-  ChevronLeft,
   Copy,
   History,
   Link2,
@@ -15,7 +14,6 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import dynamic from "next/dynamic"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useOptimistic, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -169,24 +167,15 @@ export function DocView({ doc: serverDoc, versions }: { doc: Doc; versions: DocV
   const author = doc.content_updated_by ? profileById.get(doc.content_updated_by) : undefined
 
   return (
-    <PageContainer className="max-w-[1240px]">
-      <nav aria-label="Navegação" className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
-        <div className="flex min-w-0 items-center gap-1 text-muted-foreground">
-          <Link
-            href="/processos"
-            className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
-          >
-            <ChevronLeft className="size-3.5" aria-hidden="true" />
-            Processos
-          </Link>
-          {doc.area ? (
-            <>
-              <span aria-hidden="true" className="text-subtle-foreground">
-                /
-              </span>
-              <span className="truncate">{TASK_AREA_LABEL[doc.area]}</span>
-            </>
-          ) : null}
+    <PageContainer>
+      {/*
+        O título do processo é editável no próprio texto (DocHeader), então a
+        página não usa o PageHeader: a linha de cima tem a área, o estado do
+        salvamento e as ações, na altura do título das outras telas.
+      */}
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 text-[13px]">
+        <div className="min-w-0 truncate text-muted-foreground">
+          {doc.area ? TASK_AREA_LABEL[doc.area] : null}
         </div>
         <div className="flex items-center gap-1">
           <span
@@ -219,7 +208,7 @@ export function DocView({ doc: serverDoc, versions }: { doc: Doc; versions: DocV
             onDeleted={() => router.push("/processos")}
           />
         </div>
-      </nav>
+      </div>
 
       {/*
         Telas grandes: texto à esquerda, detalhes e lateral à direita (fixos).

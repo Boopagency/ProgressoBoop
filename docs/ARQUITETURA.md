@@ -212,7 +212,7 @@ cliente no portal (`client_notifications`). O SQL está em `supabase/migrations/
 [`portal_content`](../supabase/migrations/20261009000106_portal_content.sql),
 [`notifications`](../supabase/migrations/20261009163255_notifications.sql),
 [`notifications_realtime`](../supabase/migrations/20261009193411_notifications_realtime.sql) e
-[`portal_v2`](../supabase/migrations/20261013120000_portal_v2.sql).
+[`portal_v2`](../supabase/migrations/20261013125215_portal_v2.sql).
 
 | Tabela             | Colunas principais                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------- |

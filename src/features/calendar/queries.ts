@@ -3,14 +3,16 @@ import "server-only"
 import { requireUser } from "@/features/auth/session"
 import { WEEKLY } from "@/features/calendar/recurrence"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { CalendarEvent } from "@/lib/types"
 
 /** Todos os eventos; os recorrentes são expandidos no cliente para o período visível. */
 export async function getEvents(): Promise<CalendarEvent[]> {
   await requireUser()
-  const supabase = await createClient()
+  return fetchEvents(await createClient())
+}
 
+export async function fetchEvents(supabase: SupabaseServerClient): Promise<CalendarEvent[]> {
   const { data, error } = await supabase
     .from("events")
     .select(

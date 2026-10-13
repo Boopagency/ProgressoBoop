@@ -61,19 +61,6 @@ export function namesOf(directory: Directory): Names {
   }
 }
 
-const TASK_COLUMNS =
-  "id, title, description, client_id, project_id, meeting_id, doc_id, client_review_id, communication_id, content_post_id, client_visible, client_approval_required, client_approval, client_approval_note, client_approval_by, client_approval_at, area, status, priority, due_date, completed_at, created_by, created_at, updated_at, task_assignees(profile_id)"
-
-/** Todas as tarefas (o volume é pequeno, como na tela Tarefas). */
-export async function loadTasks(supabase: McpSupabase): Promise<Task[]> {
-  const { data, error } = await supabase.from("tasks").select(TASK_COLUMNS).order("due_date", { nullsFirst: false }).order("created_at")
-  if (error) throw loadError(error, "as tarefas")
-  return data.map(({ task_assignees, ...task }) => ({
-    ...task,
-    assignee_ids: task_assignees.map((assignee) => assignee.profile_id),
-  }))
-}
-
 export type PostRow = Pick<
   ContentPost,
   | "id"

@@ -230,6 +230,103 @@ export type Database = {
           },
         ]
       }
+      client_notifications: {
+        Row: {
+          actor_name: string | null
+          body: string | null
+          channel_id: string | null
+          client_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["client_notification_kind"]
+          link: string
+          message_id: string | null
+          post_id: string | null
+          project_id: string | null
+          read_at: string | null
+          task_id: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_name?: string | null
+          body?: string | null
+          channel_id?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["client_notification_kind"]
+          link: string
+          message_id?: string | null
+          post_id?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          task_id?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_name?: string | null
+          body?: string | null
+          channel_id?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["client_notification_kind"]
+          link?: string
+          message_id?: string | null
+          post_id?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          task_id?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notifications_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_reviews: {
         Row: {
           checklist: Json
@@ -1491,6 +1588,7 @@ export type Database = {
           created_at: string
           edited_at: string | null
           id: string
+          internal: boolean
           kind: Database["public"]["Enums"]["message_kind"]
           post_id: string | null
           project_id: string | null
@@ -1505,6 +1603,7 @@ export type Database = {
           created_at?: string
           edited_at?: string | null
           id?: string
+          internal?: boolean
           kind?: Database["public"]["Enums"]["message_kind"]
           post_id?: string | null
           project_id?: string | null
@@ -1519,6 +1618,7 @@ export type Database = {
           created_at?: string
           edited_at?: string | null
           id?: string
+          internal?: boolean
           kind?: Database["public"]["Enums"]["message_kind"]
           post_id?: string | null
           project_id?: string | null
@@ -1876,6 +1976,13 @@ export type Database = {
       tasks: {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
+          client_approval:
+            | Database["public"]["Enums"]["client_approval_result"]
+            | null
+          client_approval_at: string | null
+          client_approval_by: string | null
+          client_approval_note: string | null
+          client_approval_required: boolean
           client_id: string | null
           client_review_id: string | null
           client_visible: boolean
@@ -1897,6 +2004,13 @@ export type Database = {
         }
         Insert: {
           area?: Database["public"]["Enums"]["task_area"] | null
+          client_approval?:
+            | Database["public"]["Enums"]["client_approval_result"]
+            | null
+          client_approval_at?: string | null
+          client_approval_by?: string | null
+          client_approval_note?: string | null
+          client_approval_required?: boolean
           client_id?: string | null
           client_review_id?: string | null
           client_visible?: boolean
@@ -1918,6 +2032,13 @@ export type Database = {
         }
         Update: {
           area?: Database["public"]["Enums"]["task_area"] | null
+          client_approval?:
+            | Database["public"]["Enums"]["client_approval_result"]
+            | null
+          client_approval_at?: string | null
+          client_approval_by?: string | null
+          client_approval_note?: string | null
+          client_approval_required?: boolean
           client_id?: string | null
           client_review_id?: string | null
           client_visible?: boolean
@@ -2019,6 +2140,39 @@ export type Database = {
         Returns: string
       }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
+      portal_channel: {
+        Args: { target_client: string }
+        Returns: {
+          archived: boolean
+          channel_id: string
+          last_message_at: string
+          last_read_at: string
+          name: string
+          unread: number
+        }[]
+      }
+      portal_channel_messages: {
+        Args: { max_count?: number; older_than?: string; target_client: string }
+        Returns: {
+          author_name: string
+          body: string
+          created_at: string
+          edited_at: string
+          from_team: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          mine: boolean
+          post_cover_path: string
+          post_format: Database["public"]["Enums"]["content_format"]
+          post_id: string
+          post_publish_on: string
+          post_stage: Database["public"]["Enums"]["content_stage"]
+          post_title: string
+          project_id: string
+          project_name: string
+          resolved: boolean
+        }[]
+      }
       portal_client_profile: {
         Args: { target_client: string }
         Returns: {
@@ -2108,8 +2262,20 @@ export type Database = {
           template: string
         }[]
       }
+      portal_read_channel: {
+        Args: { read_until: string; target_client: string }
+        Returns: undefined
+      }
       portal_review_post: {
         Args: { decision: string; note?: string; target_post: string }
+        Returns: string
+      }
+      portal_review_step: {
+        Args: { decision: string; note?: string; target_step: string }
+        Returns: string
+      }
+      portal_send_channel_message: {
+        Args: { message_body: string; target_client: string }
         Returns: string
       }
       portal_send_message: {
@@ -2119,6 +2285,23 @@ export type Database = {
       portal_send_project_message: {
         Args: { message_body: string; target_project: string }
         Returns: string
+      }
+      portal_step_approvals: {
+        Args: { target_client: string }
+        Returns: {
+          approval: Database["public"]["Enums"]["client_approval_result"]
+          awaiting: boolean
+          completed_at: string
+          decided_at: string
+          decided_by_name: string
+          due_date: string
+          id: string
+          note: string
+          project_id: string
+          project_name: string
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+        }[]
       }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
@@ -2141,7 +2324,13 @@ export type Database = {
     Enums: {
       activity_action: "created" | "updated" | "deleted" | "comment"
       channel_kind: "client" | "internal" | "direct"
+      client_approval_result: "approved" | "changes"
       client_health: "healthy" | "attention" | "at_risk"
+      client_notification_kind:
+        | "team_message"
+        | "post_review"
+        | "step_approval"
+        | "step_done"
       communication_channel: "whatsapp" | "email" | "call" | "meeting" | "other"
       communication_kind:
         | "update"
@@ -2360,7 +2549,14 @@ export const Constants = {
     Enums: {
       activity_action: ["created", "updated", "deleted", "comment"],
       channel_kind: ["client", "internal", "direct"],
+      client_approval_result: ["approved", "changes"],
       client_health: ["healthy", "attention", "at_risk"],
+      client_notification_kind: [
+        "team_message",
+        "post_review",
+        "step_approval",
+        "step_done",
+      ],
       communication_channel: ["whatsapp", "email", "call", "meeting", "other"],
       communication_kind: [
         "update",

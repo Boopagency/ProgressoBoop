@@ -800,8 +800,11 @@ function PostForm({
             <div className="flex gap-2">
               <Input
                 id={`${ids}-drive`}
-                type="url"
+                type="text"
                 inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={fields.drive_url}
                 maxLength={DRIVE_URL_MAX}
                 onChange={(event) => set("drive_url", event.target.value)}

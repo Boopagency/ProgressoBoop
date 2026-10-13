@@ -38,7 +38,7 @@ export function ContentBoard({
 
   // relative: os textos só para leitores de tela (sr-only) ficam presos à rolagem do quadro.
   return (
-    <div className="relative -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0 xl:snap-none">
+    <div className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0 xl:snap-none">
       {CONTENT_STAGES.map((stage) => (
         <section
           key={stage}

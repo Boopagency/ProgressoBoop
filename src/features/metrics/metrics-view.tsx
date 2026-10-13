@@ -9,7 +9,7 @@ import { BarList } from "@/components/charts/bar-list"
 import { ColumnChart } from "@/components/charts/column-chart"
 import { LineChart } from "@/components/charts/line-chart"
 import { KpiTile } from "@/components/kpi-tile"
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -42,7 +42,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
   const compareShort = `vs ${dashboard.comparison.short}`
 
   return (
-    <PageContainer className="max-w-[1320px]">
+    <PageContainer>
       <PageHeader
         title="Indicadores"
         description="Financeiro, comercial e operação, calculados a partir dos dados do sistema"
@@ -64,7 +64,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
         }
       />
 
-      <div className="mt-6 flex flex-wrap items-center gap-2" role="group" aria-label="Período">
+      <PageToolbar role="group" aria-label="Período">
         <nav aria-label="Tipo de período" className="inline-flex rounded-lg bg-muted p-0.5">
           {links.kinds.map((kind) => (
             <Link
@@ -117,7 +117,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </PageToolbar>
 
       <nav aria-label="Áreas" className="-mx-4 mt-5 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
         <ul className="flex min-w-max gap-1">

@@ -26,7 +26,7 @@ export function UpcomingList({ posts, today, onOpen }: { posts: PostSummary[]; t
     )
   }
   return (
-    <div className="mt-6 space-y-8">
+    <div className="space-y-8">
       {late.length > 0 ? <DaySection id="atrasados" title="Atrasados" danger posts={late} today={today} onOpen={onOpen} /> : null}
       {days.map(({ day, posts: list }) => (
         <DaySection key={day} id={`dia-${day}`} title={dayTitle(day, today)} brand={day === today} posts={list} today={today} onOpen={onOpen} />

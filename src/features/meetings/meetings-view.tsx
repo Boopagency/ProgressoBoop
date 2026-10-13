@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar, SectionTitle } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
@@ -152,7 +152,7 @@ export function MeetingsView({
   const nothingAtAll = overview.upcoming.length === 0 && overview.history.length === 0
 
   return (
-    <PageContainer className="max-w-[1080px]">
+    <PageContainer>
       <PageHeader
         title="Reuniões"
         description="Weeklies e reuniões com clientes: pauta, combinados e transcrição."
@@ -169,17 +169,7 @@ export function MeetingsView({
         }
       />
 
-      {next ? (
-        <NextMeetingCard
-          entry={next}
-          events={events}
-          records={records}
-          items={items}
-          className="mt-8"
-        />
-      ) : null}
-
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <PageToolbar className="flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <form
           role="search"
           className="relative w-full sm:max-w-sm"
@@ -223,60 +213,71 @@ export function MeetingsView({
           onValueChange={changeKind}
           options={KIND_OPTIONS}
         />
-      </div>
+      </PageToolbar>
 
-      {searching ? (
-        <p className={cn("mt-4 text-[13px] text-muted-foreground", isSearching && "opacity-60")} aria-live="polite">
-          {visibleUpcoming.length + visibleHistory.length === 0
-            ? `Nada encontrado para “${query}”.`
-            : `Resultados para “${query}”`}
-        </p>
-      ) : null}
-
-      {nothingAtAll ? (
-        <div className="mt-10 rounded-xl border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium text-foreground">Nenhuma reunião por enquanto</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Crie uma reunião aqui ou marque um evento do tipo “Reunião” no Calendário.
+      <PageBody width="reading">
+        {searching ? (
+          <p className={cn("-mb-4 text-[13px] text-muted-foreground", isSearching && "opacity-60")} aria-live="polite">
+            {visibleUpcoming.length + visibleHistory.length === 0
+              ? `Nada encontrado para “${query}”.`
+              : `Resultados para “${query}”`}
           </p>
-        </div>
-      ) : null}
-
-      <div className={cn("space-y-10", isSearching && "opacity-60 transition-opacity")}>
-        {visibleUpcoming.length > 0 ? (
-          <section aria-labelledby="proximas" className="mt-8">
-            <SectionTitle id="proximas" count={visibleUpcoming.length}>
-              {next ? "Depois dessa" : "Próximas"}
-            </SectionTitle>
-            <ul className="mt-2 -mx-3">
-              {visibleUpcoming.map((entry) => (
-                <MeetingRow
-                  key={entry.key}
-                  entry={entry}
-                  items={entry.record ? (itemsByMeeting.get(entry.record.id) ?? []) : []}
-                  match={matchOf(entry)}
-                />
-              ))}
-            </ul>
-          </section>
         ) : null}
 
-        {months.map(([month, entries]) => (
-          <section key={month} aria-label={formatMonthYear(`${month}-01`)} className="mt-8">
-            <SectionTitle count={entries.length}>{formatMonthYear(`${month}-01`)}</SectionTitle>
-            <ul className="mt-2 -mx-3">
-              {entries.map((entry) => (
-                <MeetingRow
-                  key={entry.key}
-                  entry={entry}
-                  items={entry.record ? (itemsByMeeting.get(entry.record.id) ?? []) : []}
-                  match={matchOf(entry)}
-                />
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+        {next ? (
+          <NextMeetingCard
+            entry={next}
+            events={events}
+            records={records}
+            items={items}
+          />
+        ) : null}
+
+        {nothingAtAll ? (
+          <div className="rounded-xl border border-dashed px-6 py-10 text-center">
+            <p className="text-sm font-medium text-foreground">Nenhuma reunião por enquanto</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Crie uma reunião aqui ou marque um evento do tipo “Reunião” no Calendário.
+            </p>
+          </div>
+        ) : null}
+
+        <div className={cn("space-y-8", isSearching && "opacity-60 transition-opacity")}>
+          {visibleUpcoming.length > 0 ? (
+            <section aria-labelledby="proximas">
+              <SectionTitle id="proximas" count={visibleUpcoming.length}>
+                {next ? "Depois dessa" : "Próximas"}
+              </SectionTitle>
+              <ul className="mt-2 -mx-3">
+                {visibleUpcoming.map((entry) => (
+                  <MeetingRow
+                    key={entry.key}
+                    entry={entry}
+                    items={entry.record ? (itemsByMeeting.get(entry.record.id) ?? []) : []}
+                    match={matchOf(entry)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {months.map(([month, entries]) => (
+            <section key={month} aria-label={formatMonthYear(`${month}-01`)}>
+              <SectionTitle count={entries.length}>{formatMonthYear(`${month}-01`)}</SectionTitle>
+              <ul className="mt-2 -mx-3">
+                {entries.map((entry) => (
+                  <MeetingRow
+                    key={entry.key}
+                    entry={entry}
+                    items={entry.record ? (itemsByMeeting.get(entry.record.id) ?? []) : []}
+                    match={matchOf(entry)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </PageBody>
 
       <EventDialog
         state={dialog}

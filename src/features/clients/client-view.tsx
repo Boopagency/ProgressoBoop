@@ -3,7 +3,6 @@
 import {
   CalendarPlus,
   ChevronDown,
-  ChevronLeft,
   FilePlus2,
   Mail,
   MoreHorizontal,
@@ -19,7 +18,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
-import { PageContainer } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -164,96 +163,80 @@ export function ClientView({
   }
 
   return (
-    <PageContainer className="max-w-[1240px]">
-      <nav aria-label="Navegação" className="text-[13px]">
-        <Link
-          href="/clientes"
-          className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="size-3.5" aria-hidden="true" />
-          Clientes
-        </Link>
-      </nav>
-
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <HealthBadge health={health?.health ?? null} />
-            {!client.active ? (
-              <span className="inline-flex h-5 items-center rounded-full border border-dashed px-2 text-[11.5px] font-medium text-muted-foreground">
-                Inativo
-              </span>
-            ) : null}
-          </div>
-          <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground sm:text-[28px] sm:leading-9">
-            {client.name}
-          </h1>
-          <p className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
-            {[
+    <PageContainer>
+      <PageHeader
+        title={client.name}
+        description={
+          <PageMeta
+            items={[
+              <HealthBadge key="health" health={health?.health ?? null} />,
+              !client.active ? (
+                <span
+                  key="inactive"
+                  className="inline-flex h-5 items-center rounded-full border border-dashed px-2 text-[11.5px] font-medium text-muted-foreground"
+                >
+                  Inativo
+                </span>
+              ) : null,
               owner ? `Responsável: ${firstName(owner.full_name)}` : null,
               client.since ? `Cliente desde ${formatMonthYear(client.since).toLocaleLowerCase("pt-BR")}` : null,
               client.services.length > 0 ? client.services.join(", ") : null,
-            ]
-              .filter(Boolean)
-              .map((part, index) => (
-                <span key={index} className="flex items-center gap-1.5">
-                  {index > 0 ? <span aria-hidden="true" className="text-subtle-foreground">·</span> : null}
-                  {part}
-                </span>
-              ))}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => openNewTask({ client_id: client.id, area: "clients" })}
-            className="gap-1.5 shadow-none"
-          >
-            <Plus />
-            Tarefa
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setClientDialog((current) => ({ open: true, key: current.key + 1, client }))}
-            className="gap-1.5 shadow-none"
-          >
-            <Pencil />
-            Editar
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Mais ações">
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem
-                onSelect={() =>
-                  setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))
-                }
-              >
-                <CalendarPlus />
-                Nova reunião
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => openNewDoc()}>
-                <FilePlus2 />
-                Novo documento do cliente
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={toggleActive} disabled={isPending}>
-                <Power />
-                {client.active ? "Desativar cliente" : "Reativar cliente"}
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
-                <Trash2 />
-                Excluir…
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
+            ]}
+          />
+        }
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => openNewTask({ client_id: client.id, area: "clients" })}
+              className="gap-1.5 shadow-none"
+            >
+              <Plus />
+              Tarefa
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setClientDialog((current) => ({ open: true, key: current.key + 1, client }))}
+              className="gap-1.5 shadow-none"
+            >
+              <Pencil />
+              Editar
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Mais ações">
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  onSelect={() =>
+                    setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))
+                  }
+                >
+                  <CalendarPlus />
+                  Nova reunião
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => openNewDoc()}>
+                  <FilePlus2 />
+                  Novo documento do cliente
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={toggleActive} disabled={isPending}>
+                  <Power />
+                  {client.active ? "Desativar cliente" : "Reativar cliente"}
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
+                  <Trash2 />
+                  Excluir…
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
-      <div className="mt-8 flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-x-10">
+      <PageBody className="gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-x-10">
         <div className="min-w-0 space-y-6">
           <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
           <ClientProjectsCard clientId={client.id} docs={templateDocs} />
@@ -279,7 +262,7 @@ export function ClientView({
             emptyText="Combinados de preço, escopo ou prazo com este cliente ficam aqui."
           />
         </aside>
-      </div>
+      </PageBody>
 
       <ClientDialog state={clientDialog} onOpenChange={(open) => setClientDialog((current) => ({ ...current, open }))} />
       <EventDialog

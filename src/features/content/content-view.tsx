@@ -6,7 +6,7 @@ import { useEffect, useEffectEvent, useOptimistic, useTransition, type ReactNode
 import { toast } from "sonner"
 
 import { KpiTile } from "@/components/kpi-tile"
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -181,35 +181,7 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
         }
       />
 
-      <section aria-label="Números do conteúdo" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiTile
-          label="Nesta semana"
-          value={`${week.length} ${week.length === 1 ? "post" : "posts"}`}
-          hint={`${publishedThisWeek} ${publishedThisWeek === 1 ? "publicado" : "publicados"}`}
-          onSelect={() => navigate({ ...state, view: "calendar", calendar: "week", anchor: null })}
-        />
-        <KpiTile
-          label="Atrasados"
-          value={late.length}
-          alert={late.length > 0}
-          hint="a data passou e não foi programado"
-          onSelect={() => navigate({ ...state, view: "list" })}
-        />
-        <KpiTile
-          label="Aguardando cliente"
-          value={awaiting.length}
-          hint="para aprovar"
-          onSelect={() => navigate({ ...state, view: "board" })}
-        />
-        <KpiTile
-          label="Falta material"
-          value={blocked.length}
-          hint="alguma frente parada pelo cliente"
-          onSelect={() => navigate({ ...state, view: "board" })}
-        />
-      </section>
-
-      <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <PageToolbar className="flex-col items-stretch xl:flex-row xl:items-center xl:justify-between">
         <SegmentedControl
           aria-label="Visualização"
           value={state.view}
@@ -286,52 +258,82 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
             </Button>
           ) : null}
         </div>
-      </div>
+      </PageToolbar>
 
-      {state.view === "ideas" ? (
-        <IdeasBoard
-          ideas={filterIdeas(ideas, filters.clients)}
-          posts={optimistic}
-          today={today}
-          onOpenIdea={ideaDialog.openIdea}
-          onNewIdea={() => ideaDialog.openNew({ client_id: singleClient })}
-          onOpenPost={dialog.openPost}
-        />
-      ) : posts.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-          <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram
-            tarefas com prazo antes da publicação.
-          </p>
-          <Button size="sm" className="mt-5" onClick={() => openNew()}>
-            Primeiro post
-          </Button>
-        </div>
-      ) : state.view === "board" ? (
-        <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
-      ) : state.view === "list" ? (
-        <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
-      ) : state.view === "feed" ? (
-        feedClient ? (
-          <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} className="mt-6" />
-        ) : (
-          <FeedClientPicker
-            clients={clients.filter((client) => client.active)}
-            onPick={(id) => navigate({ ...state, filters: { ...filters, clients: [id] } })}
+      <PageBody>
+        <section aria-label="Números do conteúdo" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            label="Nesta semana"
+            value={`${week.length} ${week.length === 1 ? "post" : "posts"}`}
+            hint={`${publishedThisWeek} ${publishedThisWeek === 1 ? "publicado" : "publicados"}`}
+            onSelect={() => navigate({ ...state, view: "calendar", calendar: "week", anchor: null })}
           />
-        )
-      ) : (
-        <ContentCalendar
-          posts={visible}
-          today={today}
-          mode={state.calendar}
-          anchor={state.anchor}
-          onNavigate={(next) => navigate({ ...state, calendar: next.mode ?? state.calendar, anchor: next.anchor === undefined ? state.anchor : next.anchor })}
-          onOpen={dialog.openPost}
-          onCreate={(day) => openNew(day)}
-        />
-      )}
+          <KpiTile
+            label="Atrasados"
+            value={late.length}
+            alert={late.length > 0}
+            hint="a data passou e não foi programado"
+            onSelect={() => navigate({ ...state, view: "list" })}
+          />
+          <KpiTile
+            label="Aguardando cliente"
+            value={awaiting.length}
+            hint="para aprovar"
+            onSelect={() => navigate({ ...state, view: "board" })}
+          />
+          <KpiTile
+            label="Falta material"
+            value={blocked.length}
+            hint="alguma frente parada pelo cliente"
+            onSelect={() => navigate({ ...state, view: "board" })}
+          />
+        </section>
+
+        {state.view === "ideas" ? (
+          <IdeasBoard
+            ideas={filterIdeas(ideas, filters.clients)}
+            posts={optimistic}
+            today={today}
+            onOpenIdea={ideaDialog.openIdea}
+            onNewIdea={() => ideaDialog.openNew({ client_id: singleClient })}
+            onOpenPost={dialog.openPost}
+          />
+        ) : posts.length === 0 ? (
+          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+            <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
+            <p className="mt-1 max-w-md text-sm text-muted-foreground">
+              Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram
+              tarefas com prazo antes da publicação.
+            </p>
+            <Button size="sm" className="mt-5" onClick={() => openNew()}>
+              Primeiro post
+            </Button>
+          </div>
+        ) : state.view === "board" ? (
+          <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
+        ) : state.view === "list" ? (
+          <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
+        ) : state.view === "feed" ? (
+          feedClient ? (
+            <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} />
+          ) : (
+            <FeedClientPicker
+              clients={clients.filter((client) => client.active)}
+              onPick={(id) => navigate({ ...state, filters: { ...filters, clients: [id] } })}
+            />
+          )
+        ) : (
+          <ContentCalendar
+            posts={visible}
+            today={today}
+            mode={state.calendar}
+            anchor={state.anchor}
+            onNavigate={(next) => navigate({ ...state, calendar: next.mode ?? state.calendar, anchor: next.anchor === undefined ? state.anchor : next.anchor })}
+            onOpen={dialog.openPost}
+            onCreate={(day) => openNew(day)}
+          />
+        )}
+      </PageBody>
 
       <PostDialog state={dialog.state} onOpenChange={dialog.onOpenChange} />
       <IdeaDialog state={ideaDialog.state} onOpenChange={ideaDialog.onOpenChange} posts={optimistic} onOpenPost={dialog.openPost} />
@@ -342,7 +344,7 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
 /** O feed é de um cliente só: sem um (ou com vários) filtrado, escolha qual. */
 function FeedClientPicker({ clients, onPick }: { clients: { id: string; name: string }[]; onPick: (id: string) => void }) {
   return (
-    <div className="mt-6 rounded-xl border border-dashed px-6 py-10 text-center">
+    <div className="rounded-xl border border-dashed px-6 py-10 text-center">
       <h2 className="text-sm font-semibold">De qual cliente é o feed?</h2>
       <p className="mt-1 text-sm text-muted-foreground">O preview mostra o perfil do Instagram de um cliente, com os posts planejados.</p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">

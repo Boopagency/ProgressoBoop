@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { deleteEvent } from "@/features/calendar/actions"
@@ -133,22 +133,20 @@ export function CalendarView({
         title="Calendário"
         description="Prazos das tarefas, reuniões, eventos internos, entregas e posts."
         actions={
-          <>
-            <SegmentedControl
-              aria-label="Visualização"
-              value={view}
-              onValueChange={(next) => navigate({ view: next })}
-              options={VIEW_OPTIONS}
-            />
-            <Button onClick={() => createEventOn(showsToday ? undefined : anchor)} className="gap-1.5">
-              <Plus />
-              Novo evento
-            </Button>
-          </>
+          <Button onClick={() => createEventOn(showsToday ? undefined : anchor)} className="gap-1.5">
+            <Plus />
+            Novo evento
+          </Button>
         }
       />
 
-      <div className="mt-7 mb-4 flex flex-wrap items-center justify-between gap-3">
+      <PageToolbar className="gap-x-3">
+        <SegmentedControl
+          aria-label="Visualização"
+          value={view}
+          onValueChange={(next) => navigate({ view: next })}
+          options={VIEW_OPTIONS}
+        />
         <div className="flex items-center gap-2">
           <div className="flex items-center">
             <Button
@@ -181,27 +179,29 @@ export function CalendarView({
           </Button>
         </div>
         <Legend />
-      </div>
+      </PageToolbar>
 
-      {view === "week" ? (
-        <WeekView
-          days={days}
-          today={today}
-          items={items}
-          onOpenEvent={openEvent}
-          onOpenPost={postDialog.openPost}
-          onCreateEvent={createEventOn}
-        />
-      ) : (
-        <MonthView
-          days={days}
-          month={monthRangeOf(anchor).start.slice(0, 7)}
-          today={today}
-          items={items}
-          onOpenEvent={openEvent}
-          onOpenPost={postDialog.openPost}
-        />
-      )}
+      <PageBody>
+        {view === "week" ? (
+          <WeekView
+            days={days}
+            today={today}
+            items={items}
+            onOpenEvent={openEvent}
+            onOpenPost={postDialog.openPost}
+            onCreateEvent={createEventOn}
+          />
+        ) : (
+          <MonthView
+            days={days}
+            month={monthRangeOf(anchor).start.slice(0, 7)}
+            today={today}
+            items={items}
+            onOpenEvent={openEvent}
+            onOpenPost={postDialog.openPost}
+          />
+        )}
+      </PageBody>
 
       <EventSheet
         occurrence={selectedOccurrence}
@@ -224,7 +224,7 @@ export function CalendarView({
 
 function Legend() {
   return (
-    <ul className="hidden items-center gap-4 text-xs text-muted-foreground @3xl:flex">
+    <ul className="ml-auto hidden items-center gap-4 text-xs text-muted-foreground @3xl:flex">
       {EVENT_TYPES.map((type) => (
         <li key={type} className="flex items-center gap-1.5">
           <span className={cn("size-2 rounded-full", EVENT_TYPE_STYLE[type].dot)} />

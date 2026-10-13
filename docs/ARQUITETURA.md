@@ -1056,7 +1056,9 @@ o cliente lê e escreve nele, menos nas mensagens internas.
   diretas; cada um com as não lidas e os pedidos de ajuste pendentes. Os
   arquivados e os de clientes inativos ficam recolhidos.
 - À direita, a conversa: mensagens por dia, as seguidas da mesma pessoa
-  juntas, o cartão do post nas mensagens que falam de um post, e o campo de
+  juntas (as da própria pessoa à direita, num balão `brand-soft`, sem foto
+  nem nome; as dos outros à esquerda, com foto e nome; os avisos do sistema
+  no meio), o cartão do post nas mensagens que falam de um post, e o campo de
   escrever (Enter envia; no canal de cliente, "Pedido de ajuste" e
   **Interno**, que grava `messages.internal`: só a equipe vê). No canal de
   cliente, um aviso acima do campo lembra que o cliente lê o canal. A
@@ -1311,7 +1313,9 @@ rodapé tem quem está logado e "Sair".
 - **Comunicação** (`/portal/comunicacao`, `PortalChannel`): o canal do
   cliente com a equipe, com o `ThreadView` e o `Composer` da equipe (sem
   "Pedido de ajuste" nem "Interno"): fio por dia, as seguidas da mesma
-  pessoa juntas, "Ver mensagens anteriores", o cartão do post ou do projeto
+  pessoa juntas (as do cliente logado à direita; as dos outros à esquerda,
+  com as iniciais e o nome; balão comum em `PortalMessageBubble`, também
+  no chat do post e do projeto), "Ver mensagens anteriores", o cartão do post ou do projeto
   (abre o chat dele) e Enter envia. Lê por `portal_channel_messages` e
   escreve por `portal_send_channel_message`; busca de novo a cada 5
   segundos com a aba visível e, com o fio na tela, grava a leitura

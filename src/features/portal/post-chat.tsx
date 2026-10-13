@@ -10,9 +10,8 @@ import { loadPortalMessages, sendPortalMessage } from "@/features/portal/content
 import { loadPortalProjectMessages, sendPortalProjectMessage } from "@/features/portal/project-actions"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import type { PortalMessage } from "@/features/portal/content-queries"
+import { PortalMessageBubble } from "@/features/portal/message-bubble"
 import { formatShortDate, todayKey, toDateKey, toTimeLabel } from "@/lib/dates"
-import { MESSAGE_KIND_LABEL } from "@/lib/labels"
-import { cn } from "@/lib/utils"
 
 /** De quanto em quanto tempo o chat busca mensagens novas (só com a aba visível). */
 const POLL_MS = 10000
@@ -111,33 +110,9 @@ export function PostChat({ target, initialMessages }: { target: ChatTarget; init
           {CHAT_COPY[kind].empty}
         </p>
       ) : (
-        <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
+        <ol ref={listRef} className="flex-1 overflow-y-auto pt-1 pb-4" aria-live="polite">
           {messages.map((message) => (
-            <li key={message.id} className={cn("flex flex-col", message.mine ? "items-end" : "items-start")}>
-              <p className="mb-0.5 text-[11px] text-muted-foreground">
-                {message.mine ? "Você" : message.author_name}
-                {message.from_team ? " · Boop" : ""} · {sentAt(message.created_at, today)}
-              </p>
-              <div
-                className={cn(
-                  "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-5 break-words whitespace-pre-line",
-                  message.mine ? "bg-brand-soft text-foreground" : "bg-muted text-foreground"
-                )}
-              >
-                {message.kind === "change_request" || message.kind === "approval" ? (
-                  <span
-                    className={cn(
-                      "mb-1 block text-[11px] font-semibold",
-                      message.kind === "approval" ? "text-success-ink" : "text-warning-ink"
-                    )}
-                  >
-                    {MESSAGE_KIND_LABEL[message.kind]}
-                    {message.kind === "change_request" && message.resolved ? " · resolvido" : ""}
-                  </span>
-                ) : null}
-                {message.body}
-              </div>
-            </li>
+            <PortalMessageBubble key={message.id} message={message} time={sentAt(message.created_at, today)} />
           ))}
         </ol>
       )}

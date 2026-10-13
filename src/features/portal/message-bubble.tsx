@@ -1,0 +1,103 @@
+import type { ReactNode } from "react"
+
+import { PersonAvatar } from "@/features/workspace/person-avatar"
+import { MESSAGE_KIND_LABEL } from "@/lib/labels"
+import type { MessageKind, Timestamp } from "@/lib/types"
+import { cn } from "@/lib/utils"
+
+/** O que o balão precisa da mensagem (do canal do cliente ou da conversa do post/projeto). */
+interface BubbleMessage {
+  kind: MessageKind
+  body: string
+  author_name: string
+  from_team: boolean
+  mine: boolean
+  created_at: Timestamp
+  /** Pedido de ajuste já resolvido pela equipe. */
+  resolved?: boolean
+}
+
+/**
+ * Uma mensagem no portal: as do cliente logado à direita, num balão com a cor
+ * de destaque, sem foto nem nome; as dos outros à esquerda, com as iniciais e
+ * o nome; os avisos do sistema no meio.
+ */
+export function PortalMessageBubble({
+  message,
+  time,
+  continued = false,
+  children,
+}: {
+  message: BubbleMessage
+  /** Hora (ou dia e hora) já formatada. */
+  time: string
+  /** Continua a mensagem anterior da mesma pessoa: sem nome nem foto de novo. */
+  continued?: boolean
+  /** Dentro do balão, depois do texto (ex.: o post ou projeto de que fala). */
+  children?: ReactNode
+}) {
+  if (message.kind === "system") {
+    return (
+      <li className={cn("flex justify-center px-4 text-center", continued ? "pt-1" : "pt-3")}>
+        <p className="max-w-[85%] text-[12px] leading-5 text-muted-foreground">
+          <span className="italic">{message.body}</span>
+          <time dateTime={message.created_at} className="ml-1.5 text-[11px] tabular-nums">
+            {time}
+          </time>
+        </p>
+      </li>
+    )
+  }
+
+  const { mine } = message
+  return (
+    <li className={cn("flex gap-2 px-4", mine && "justify-end", continued ? "pt-1" : "pt-3")}>
+      {mine ? null : (
+        <div className="w-7 shrink-0">
+          {continued ? null : (
+            <PersonAvatar
+              name={message.author_name}
+              colorIndex={message.from_team ? 0 : 2}
+              className="mt-4 size-7 [&_[data-slot=avatar-fallback]]:text-[11px]"
+            />
+          )}
+        </div>
+      )}
+      <div className={cn("flex min-w-0 max-w-[85%] flex-col", mine ? "items-end" : "items-start")}>
+        {continued ? null : (
+          <p className="mb-0.5 text-[11px] text-muted-foreground">
+            {mine ? null : (
+              <>
+                <span className="font-medium text-foreground">{message.author_name}</span>
+                {message.from_team ? " · Boop" : ""} ·{" "}
+              </>
+            )}
+            <time dateTime={message.created_at} className="tabular-nums">
+              {time}
+            </time>
+          </p>
+        )}
+        <div
+          className={cn(
+            "max-w-full rounded-2xl px-3 py-2 text-sm leading-5 break-words whitespace-pre-line text-foreground",
+            mine ? "rounded-tr-md bg-brand-soft" : "rounded-tl-md bg-muted"
+          )}
+        >
+          {message.kind === "change_request" || message.kind === "approval" ? (
+            <span
+              className={cn(
+                "mb-1 block text-[11px] font-semibold",
+                message.kind === "approval" ? "text-success-ink" : "text-warning-ink"
+              )}
+            >
+              {MESSAGE_KIND_LABEL[message.kind]}
+              {message.kind === "change_request" && message.resolved ? " · resolvido" : ""}
+            </span>
+          ) : null}
+          {message.body}
+          {children}
+        </div>
+      </div>
+    </li>
+  )
+}

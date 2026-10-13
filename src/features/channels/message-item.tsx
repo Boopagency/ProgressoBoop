@@ -281,193 +281,258 @@ export function MessageItem({
   }
 
   const pending = isPending(message)
+  /** A própria mensagem: à direita, num balão, sem foto nem nome. */
+  const own = mine && !system
+
+  /** Ações da mensagem: no alto, do lado oposto ao balão (no celular, ao lado dele). */
+  const actions = editing ? null : (
+    <div
+      className={cn(
+        "absolute top-0 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100",
+        own ? "left-3 max-md:mr-1" : "right-3 max-md:ml-1",
+        "max-md:static max-md:translate-y-0 max-md:self-start max-md:border-0 max-md:p-0 max-md:opacity-100 max-md:shadow-none"
+      )}
+    >
+      {pending ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={saving}
+          onClick={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}
+          className="h-7 gap-1 px-2 text-xs max-md:hidden"
+        >
+          <Check className="size-3.5" />
+          Resolver
+        </Button>
+      ) : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Ações da mensagem" className="size-7 text-muted-foreground">
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          {message.task_id ? null : (
+            <DropdownMenuItem onSelect={() => setTaskOpen(true)}>
+              <ListPlus />
+              Virar tarefa
+            </DropdownMenuItem>
+          )}
+          {message.kind === "change_request" ? (
+            message.resolved_at ? (
+              <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, false), "Pedido reaberto")}>
+                <RotateCcw />
+                Reabrir o pedido
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}>
+                <Check />
+                Marcar como resolvido
+              </DropdownMenuItem>
+            )
+          ) : null}
+          {message.kind === "text" ? (
+            <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "change_request"))}>
+              Marcar como pedido de ajuste
+            </DropdownMenuItem>
+          ) : message.kind === "change_request" ? (
+            <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "text"))}>
+              Não é pedido de ajuste
+            </DropdownMenuItem>
+          ) : null}
+          {mine && canWrite && (allowInternal || message.internal) ? (
+            message.internal ? (
+              <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, false), "O cliente passa a ver a mensagem")}>
+                <Eye />
+                Mostrar ao cliente
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, true), "Mensagem interna: o cliente não vê")}>
+                <Lock />
+                Deixar interna
+              </DropdownMenuItem>
+            )
+          ) : null}
+          {mine && canWrite ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => {
+                  setDraft(message.body)
+                  setEditing(true)
+                }}
+              >
+                <Pencil />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
+                <Trash2 />
+                Apagar
+              </DropdownMenuItem>
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+
+  const body = editing ? (
+    <div className="mt-1 w-full space-y-1.5">
+      <textarea
+        autoFocus
+        value={draft}
+        maxLength={BODY_MAX}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            saveEdit()
+          }
+          if (event.key === "Escape") {
+            event.preventDefault()
+            setDraft(message.body)
+            setEditing(false)
+          }
+        }}
+        aria-label="Editar mensagem"
+        className="field-sizing-content max-h-60 min-h-16 w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-[14px] leading-6 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+      />
+      <div className={cn("flex gap-1.5 text-xs text-muted-foreground", own && "flex-row-reverse")}>
+        <Button type="button" size="sm" className="h-7" disabled={saving} onClick={saveEdit}>
+          Salvar
+        </Button>
+        <Button type="button" variant="ghost" size="sm" className="h-7" onClick={() => setEditing(false)}>
+          Cancelar
+        </Button>
+        <span className="self-center">Enter salva · Esc cancela</span>
+      </div>
+    </div>
+  ) : (
+    <p className={cn("text-[14px] leading-6 break-words whitespace-pre-wrap text-foreground", system && "text-muted-foreground italic")}>
+      <MessageText text={message.body} />
+      {message.edited_at ? <span className="ml-1 text-[11px] text-muted-foreground">(editada)</span> : null}
+    </p>
+  )
+
+  const details = (
+    <>
+      {message.kind === "change_request" || message.kind === "approval" || message.task_id || extra ? (
+        <div className={cn("mt-1 flex flex-wrap items-center gap-x-3 gap-y-1", own && "justify-end")}>
+          <RequestStatus message={message} />
+          {message.kind === "approval" ? (
+            <span className="inline-flex h-5 items-center rounded-full border border-success/20 bg-success/10 px-2 text-[11px] font-medium text-success">
+              {MESSAGE_KIND_LABEL.approval}
+            </span>
+          ) : null}
+          {message.task_id ? <TaskLink taskId={message.task_id} /> : null}
+          {extra}
+        </div>
+      ) : null}
+
+      {showPost && message.post ? <PostCard post={message.post} today={today} onOpen={onOpenPost} /> : null}
+      {showProject && message.project ? <ProjectChip project={message.project} /> : null}
+
+      {taskOpen ? (
+        <MessageTaskForm
+          message={message}
+          onDone={(created) => {
+            setTaskOpen(false)
+            if (created) onChanged()
+          }}
+        />
+      ) : null}
+    </>
+  )
+
+  if (system) {
+    return (
+      <li className="flex flex-col items-center px-4 py-1.5 text-center" aria-label={`Aviso, ${messageTime(message)}`}>
+        <p className="max-w-[85%] text-[12px] leading-5 text-muted-foreground">
+          <span className="italic">{message.body}</span>
+          <time dateTime={message.created_at} className="ml-1.5 text-[11px] tabular-nums">
+            {toTimeLabel(message.created_at)}
+          </time>
+        </p>
+        {details}
+      </li>
+    )
+  }
 
   return (
     <li
       className={cn(
         "group/message relative flex gap-2.5 px-4 py-1 transition-colors hover:bg-muted/40",
+        own && "justify-end",
         !continued && "mt-2 pt-1.5",
         pending && "bg-amber-50/40",
         message.internal && !pending && "bg-muted/30"
       )}
-      aria-label={`${author.name}, ${messageTime(message)}`}
+      aria-label={`${own ? "Você" : author.name}, ${messageTime(message)}`}
     >
-      <div className="w-8 shrink-0">
-        {continued ? (
-          <span className="invisible block pt-0.5 text-right text-[10px] text-muted-foreground tabular-nums group-hover/message:visible">
+      {own ? (
+        continued ? (
+          <span className="invisible shrink-0 self-center text-[10px] text-muted-foreground tabular-nums group-hover/message:visible max-md:hidden">
             {messageTime(message)}
           </span>
-        ) : (
-          <MessageAvatar authorId={message.author_id} />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        {continued ? null : (
-          <p className="flex items-baseline gap-2">
-            <span className="text-[13px] font-semibold text-foreground">{system ? "Aviso" : author.name}</span>
-            <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
-              {toTimeLabel(message.created_at)}
-            </time>
-            {message.internal ? <InternalBadge className="self-center" /> : null}
-          </p>
-        )}
-        {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
-
-        {editing ? (
-          <div className="mt-1 space-y-1.5">
-            <textarea
-              autoFocus
-              value={draft}
-              maxLength={BODY_MAX}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-                  event.preventDefault()
-                  saveEdit()
-                }
-                if (event.key === "Escape") {
-                  event.preventDefault()
-                  setDraft(message.body)
-                  setEditing(false)
-                }
-              }}
-              aria-label="Editar mensagem"
-              className="field-sizing-content max-h-60 min-h-16 w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-[14px] leading-6 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
-            />
-            <div className="flex gap-1.5 text-xs text-muted-foreground">
-              <Button type="button" size="sm" className="h-7" disabled={saving} onClick={saveEdit}>
-                Salvar
-              </Button>
-              <Button type="button" variant="ghost" size="sm" className="h-7" onClick={() => setEditing(false)}>
-                Cancelar
-              </Button>
-              <span className="self-center">Enter salva · Esc cancela</span>
-            </div>
-          </div>
-        ) : (
-          <p className={cn("text-[14px] leading-6 break-words whitespace-pre-wrap text-foreground", system && "text-muted-foreground italic")}>
-            <MessageText text={message.body} />
-            {message.edited_at ? <span className="ml-1 text-[11px] text-muted-foreground">(editada)</span> : null}
-          </p>
-        )}
-
-        {message.kind === "change_request" || message.kind === "approval" || message.task_id || extra ? (
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <RequestStatus message={message} />
-            {message.kind === "approval" ? (
-              <span className="inline-flex h-5 items-center rounded-full border border-success/20 bg-success/10 px-2 text-[11px] font-medium text-success">
-                {MESSAGE_KIND_LABEL.approval}
-              </span>
-            ) : null}
-            {message.task_id ? <TaskLink taskId={message.task_id} /> : null}
-            {extra}
-          </div>
-        ) : null}
-
-        {showPost && message.post ? <PostCard post={message.post} today={today} onOpen={onOpenPost} /> : null}
-        {showProject && message.project ? <ProjectChip project={message.project} /> : null}
-
-        {taskOpen ? (
-          <MessageTaskForm
-            message={message}
-            onDone={(created) => {
-              setTaskOpen(false)
-              if (created) onChanged()
-            }}
-          />
-        ) : null}
-      </div>
-
-      {system || editing ? null : (
-        <div
-          className={cn(
-            "absolute top-0 right-3 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100",
-            "max-md:static max-md:ml-1 max-md:translate-y-0 max-md:self-start max-md:border-0 max-md:p-0 max-md:opacity-100 max-md:shadow-none"
+        ) : null
+      ) : (
+        <div className="w-8 shrink-0">
+          {continued ? (
+            <span className="invisible block pt-0.5 text-right text-[10px] text-muted-foreground tabular-nums group-hover/message:visible">
+              {messageTime(message)}
+            </span>
+          ) : (
+            <MessageAvatar authorId={message.author_id} />
           )}
-        >
-          {pending ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={saving}
-              onClick={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}
-              className="h-7 gap-1 px-2 text-xs max-md:hidden"
-            >
-              <Check className="size-3.5" />
-              Resolver
-            </Button>
-          ) : null}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label="Ações da mensagem" className="size-7 text-muted-foreground">
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {message.task_id ? null : (
-                <DropdownMenuItem onSelect={() => setTaskOpen(true)}>
-                  <ListPlus />
-                  Virar tarefa
-                </DropdownMenuItem>
-              )}
-              {message.kind === "change_request" ? (
-                message.resolved_at ? (
-                  <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, false), "Pedido reaberto")}>
-                    <RotateCcw />
-                    Reabrir o pedido
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}>
-                    <Check />
-                    Marcar como resolvido
-                  </DropdownMenuItem>
-                )
-              ) : null}
-              {message.kind === "text" ? (
-                <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "change_request"))}>
-                  Marcar como pedido de ajuste
-                </DropdownMenuItem>
-              ) : message.kind === "change_request" ? (
-                <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "text"))}>
-                  Não é pedido de ajuste
-                </DropdownMenuItem>
-              ) : null}
-              {mine && canWrite && (allowInternal || message.internal) ? (
-                message.internal ? (
-                  <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, false), "O cliente passa a ver a mensagem")}>
-                    <Eye />
-                    Mostrar ao cliente
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, true), "Mensagem interna: o cliente não vê")}>
-                    <Lock />
-                    Deixar interna
-                  </DropdownMenuItem>
-                )
-              ) : null}
-              {mine && canWrite ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => {
-                      setDraft(message.body)
-                      setEditing(true)
-                    }}
-                  >
-                    <Pencil />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
-                    <Trash2 />
-                    Apagar
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       )}
+
+      {own ? actions : null}
+
+      {own ? (
+        <div className={cn("flex min-w-0 max-w-[85%] flex-col items-end md:max-w-[75%]", (editing || taskOpen) && "w-full")}>
+          {continued ? null : (
+            <p className="mb-0.5 flex items-center gap-2">
+              {message.internal ? <InternalBadge /> : null}
+              <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
+                {toTimeLabel(message.created_at)}
+              </time>
+            </p>
+          )}
+          {continued && message.internal ? <InternalBadge className="mb-0.5" /> : null}
+          {editing ? (
+            body
+          ) : (
+            <div
+              className={cn(
+                "max-w-full rounded-2xl rounded-tr-md px-3 py-1.5",
+                message.internal ? "border border-dashed border-foreground/20 bg-muted" : "bg-brand-soft"
+              )}
+            >
+              {body}
+            </div>
+          )}
+          {details}
+        </div>
+      ) : (
+        <div className="min-w-0 flex-1">
+          {continued ? null : (
+            <p className="flex items-baseline gap-2">
+              <span className="text-[13px] font-semibold text-foreground">{author.name}</span>
+              <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
+                {toTimeLabel(message.created_at)}
+              </time>
+              {message.internal ? <InternalBadge className="self-center" /> : null}
+            </p>
+          )}
+          {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
+          {body}
+          {details}
+        </div>
+      )}
+
+      {own ? null : actions}
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

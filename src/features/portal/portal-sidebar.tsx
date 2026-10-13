@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useTransition } from "react"
 
 import { BoopMark } from "@/components/layout/boop-mark"
+import { ThemeMenuItems } from "@/components/layout/theme-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -184,7 +185,7 @@ function ClientSwitcher({
   )
 }
 
-/** Quem está logado no portal (o nome dado pela equipe e o e-mail) e "Sair". */
+/** Quem está logado no portal (o nome dado pela equipe e o e-mail), o tema e "Sair". */
 function PortalUserMenu({ user }: { user: { name: string; email: string } }) {
   const { isMobile } = useSidebar()
   const [isSigningOut, startSignOut] = useTransition()
@@ -226,6 +227,8 @@ function PortalUserMenu({ user }: { user: { name: string; email: string } }) {
                 <span className="truncate text-xs text-muted-foreground">{user.email}</span>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ThemeMenuItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={isSigningOut} onSelect={() => startSignOut(() => signOut())}>
               <LogOut />

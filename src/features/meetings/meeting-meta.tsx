@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 const KIND_STYLE: Record<MeetingKind, string> = {
   weekly: "bg-brand-soft text-brand-ink",
   client: "bg-brand-sand text-foreground",
-  internal: "bg-brand-mist/70 text-brand-navy",
+  internal: "bg-brand-mist/70 text-tint-foreground",
 }
 
 /** "Weekly", "Velmont" (reunião com cliente) ou "Interna". */
@@ -63,8 +63,8 @@ const STATE_LABEL: Record<EntryState, string> = {
 
 const STATE_STYLE: Record<EntryState, string> = {
   upcoming: "border-border text-muted-foreground",
-  open: "border-amber-600/20 bg-amber-50 text-amber-800",
-  done: "border-success/25 bg-success/10 text-[oklch(0.42_0.1_158)]",
+  open: "border-attention-line/20 bg-attention-soft text-attention-ink",
+  done: "border-success/25 bg-success/10 text-success-strong",
   canceled: "border-border bg-muted text-muted-foreground line-through decoration-muted-foreground/50",
   unrecorded: "border-dashed border-border text-subtle-foreground",
 }

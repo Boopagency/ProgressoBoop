@@ -29,8 +29,8 @@ export function HealthDot({ health, className }: { health: ClientHealth | null; 
 }
 
 const HEALTH_BADGE: Record<ClientHealth | "none", string> = {
-  healthy: "border-success/25 bg-success/10 text-[oklch(0.42_0.1_158)]",
-  attention: "border-amber-600/20 bg-amber-50 text-amber-800",
+  healthy: "border-success/25 bg-success/10 text-success-strong",
+  attention: "border-attention-line/20 bg-attention-soft text-attention-ink",
   at_risk: "border-overdue/25 bg-overdue/10 text-overdue",
   none: "border-dashed border-border text-muted-foreground",
 }
@@ -69,7 +69,7 @@ export function reviewStateLabel(status: ReviewStatus, today: DateKey): string {
 }
 
 const STATE_STYLE: Record<ReviewState, string> = {
-  done: "text-[oklch(0.42_0.1_158)]",
+  done: "text-success-strong",
   overdue: "font-medium text-overdue",
   in_progress: "text-foreground",
   pending: "text-muted-foreground",

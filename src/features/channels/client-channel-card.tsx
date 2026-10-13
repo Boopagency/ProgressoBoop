@@ -56,7 +56,7 @@ export function ClientChannelCard({ clientId }: { clientId: string }) {
         <>
           Canal do cliente
           {data && data.pending.length > 0 ? (
-            <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-medium text-amber-800 tabular-nums">
+            <span className="rounded-full bg-attention-muted px-1.5 text-[11px] font-medium text-attention-ink tabular-nums">
               {data.pending.length} {data.pending.length === 1 ? "pendente" : "pendentes"}
             </span>
           ) : null}

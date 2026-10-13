@@ -141,7 +141,7 @@ export function RequestStatus({ message, className }: { message: ThreadMessage; 
   if (message.kind !== "change_request") return null
   return (
     <span className={cn("inline-flex flex-wrap items-center gap-1.5 text-xs", className)}>
-      <span className="inline-flex h-5 items-center rounded-full border border-amber-600/15 bg-amber-50 px-2 text-[11px] font-medium text-amber-800">
+      <span className="inline-flex h-5 items-center rounded-full border border-attention-line/15 bg-attention-soft px-2 text-[11px] font-medium text-attention-ink">
         {MESSAGE_KIND_LABEL.change_request}
       </span>
       {message.resolved_at ? (
@@ -465,7 +465,7 @@ export function MessageItem({
         "group/message relative flex gap-2.5 px-4 py-1 transition-colors hover:bg-muted/40",
         own && "justify-end",
         !continued && "mt-2 pt-1.5",
-        pending && "bg-amber-50/40",
+        pending && "bg-attention-soft/40",
         message.internal && !pending && "bg-muted/30"
       )}
       aria-label={`${own ? "Você" : author.name}, ${messageTime(message)}`}

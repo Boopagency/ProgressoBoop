@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 const STATUS_STYLE: Record<ProjectStatus, string> = {
   planned: "border-border bg-background text-muted-foreground",
   active: "border-brand/25 bg-brand-soft/60 text-brand-ink",
-  paused: "border-amber-600/15 bg-amber-50 text-amber-800",
+  paused: "border-attention-line/15 bg-attention-soft text-attention-ink",
   done: "border-success/20 bg-success/10 text-success",
   canceled: "border-dashed border-border bg-background text-subtle-foreground",
 }

@@ -4,7 +4,14 @@
 /* Componentes do editor dos Processos (BlockNote) usam classes do Tailwind. */
 @source "../../node_modules/@blocknote/shadcn/dist";
 
-@custom-variant dark (&:is(.dark *));
+/* Tema escuro: classe `dark` no <html> (src/lib/theme.ts). Na impressão, sempre o claro. */
+@custom-variant dark {
+  @media screen {
+    &:is(.dark *) {
+      @slot;
+    }
+  }
+}
 
 /*
  * Boop Admin — tokens do design system.
@@ -62,6 +69,25 @@
   /* Versões para texto (contraste ≥ 4,5:1 no branco): variação boa e atenção. */
   --success-ink: oklch(0.5 0.11 158);
   --warning-ink: oklch(0.55 0.12 70);
+  /* Texto do "concluído" sobre o fundo verde claro dos badges. */
+  --success-strong: oklch(0.42 0.1 158);
+  /* Prioridade alta (a bandeira laranja). */
+  --priority: #ea580c;
+
+  /*
+   * Atenção (pedidos de ajuste, pausado, em revisão, avisos): fundo âmbar
+   * claro, contagem, traço e texto.
+   */
+  --attention-soft: #fffbeb;
+  --attention-muted: #fef3c7;
+  --attention-line: #d97706;
+  --attention-ink: #92400e;
+  --attention-ink-strong: #78350f;
+
+  /* Texto sobre os fundos suaves da marca (brand-soft, brand-mist, brand-sky, brand-sand). */
+  --tint-foreground: var(--brand-navy);
+  /* Fundo escurecido atrás de diálogos e painéis. */
+  --overlay: rgb(0 0 0 / 0.2);
 
   /*
    * Gráficos (validados contra a superfície branca: contraste e daltonismo).
@@ -84,6 +110,77 @@
   --sidebar-accent-foreground: oklch(0.185 0.004 75);
   --sidebar-border: oklch(0.925 0.004 90);
   --sidebar-ring: var(--brand);
+}
+
+/*
+ * Tema escuro. Mesma base levemente quente, invertida: fundo geral quase
+ * preto, painel e cartões um passo mais claros, bordas discretas. A marca
+ * continua só em detalhes: `brand` (#00C2FF) igual, como preenchimento (com
+ * `brand-navy` por cima); `brand-ink` vira um ciano claro, legível (AA) como
+ * texto no fundo escuro; os fundos suaves da marca escurecem.
+ */
+@media screen {
+  .dark {
+    --brand-ink: #4fcbf7;
+    --brand-soft: #0f2b37;
+    --brand-sky: #164559;
+    --brand-mist: #233039;
+    --brand-slate: #7f9db4;
+    --brand-sand: #312d26;
+
+    --canvas: oklch(0.175 0.003 75);
+    --background: oklch(0.205 0.004 75);
+    --foreground: oklch(0.935 0.004 90);
+    --card: oklch(0.205 0.004 75);
+    --card-foreground: oklch(0.935 0.004 90);
+    --popover: oklch(0.235 0.004 75);
+    --popover-foreground: oklch(0.935 0.004 90);
+
+    --primary: oklch(0.93 0.012 95);
+    --primary-foreground: var(--brand-navy);
+    --secondary: oklch(0.265 0.004 80);
+    --secondary-foreground: oklch(0.935 0.004 90);
+    --muted: oklch(0.255 0.004 80);
+    --muted-foreground: oklch(0.71 0.006 85);
+    --subtle-foreground: oklch(0.57 0.005 85);
+    --accent: oklch(0.275 0.004 80);
+    --accent-foreground: oklch(0.935 0.004 90);
+    --destructive: oklch(0.64 0.2 25);
+
+    --border: oklch(0.3 0.004 80);
+    --input: oklch(0.34 0.005 80);
+
+    --overdue: oklch(0.7 0.17 25);
+    --success: oklch(0.66 0.13 158);
+    --warning: oklch(0.78 0.14 75);
+    --success-ink: oklch(0.76 0.12 158);
+    --warning-ink: oklch(0.8 0.12 75);
+    --success-strong: oklch(0.8 0.11 158);
+    --priority: #fb923c;
+
+    --attention-soft: #2a2213;
+    --attention-muted: #3d3014;
+    --attention-line: #f0a830;
+    --attention-ink: #f6c66f;
+    --attention-ink-strong: #fad796;
+
+    --tint-foreground: oklch(0.93 0.012 230);
+    --overlay: rgb(0 0 0 / 0.55);
+
+    --chart-1: #2fb6ea;
+    --chart-1-light: #1f6d8e;
+    --chart-2: #f0874f;
+    --chart-muted: oklch(0.42 0.004 85);
+    --chart-grid: oklch(0.29 0.004 85);
+
+    --sidebar: oklch(0.175 0.003 75);
+    --sidebar-foreground: oklch(0.78 0.006 85);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: oklch(0.245 0.004 80);
+    --sidebar-accent-foreground: oklch(0.935 0.004 90);
+    --sidebar-border: oklch(0.27 0.004 80);
+  }
 }
 
 @theme inline {
@@ -127,6 +224,15 @@
   --color-warning: var(--warning);
   --color-success-ink: var(--success-ink);
   --color-warning-ink: var(--warning-ink);
+  --color-success-strong: var(--success-strong);
+  --color-priority: var(--priority);
+  --color-attention-soft: var(--attention-soft);
+  --color-attention-muted: var(--attention-muted);
+  --color-attention-line: var(--attention-line);
+  --color-attention-ink: var(--attention-ink);
+  --color-attention-ink-strong: var(--attention-ink-strong);
+  --color-tint-foreground: var(--tint-foreground);
+  --color-overlay: var(--overlay);
 
   --color-chart-1: var(--chart-1);
   --color-chart-1-light: var(--chart-1-light);
@@ -182,8 +288,8 @@
   }
 
   ::selection {
-    background-color: #b4e8fb; /* ciano-200 */
-    color: var(--brand-navy);
+    background-color: var(--brand-sky);
+    color: var(--tint-foreground);
   }
 }
 
@@ -202,8 +308,8 @@
   --bn-colors-hovered-background: var(--accent);
   --bn-colors-menu-background: var(--popover);
   --bn-colors-menu-text: var(--popover-foreground);
-  --bn-colors-tooltip-background: var(--brand-navy);
-  --bn-colors-tooltip-text: var(--brand-paper);
+  --bn-colors-tooltip-background: var(--primary);
+  --bn-colors-tooltip-text: var(--primary-foreground);
 }
 
 .boop-editor .bn-editor {
@@ -261,7 +367,7 @@
 }
 
 .boop-editor .bn-block-content[data-content-type="checkListItem"] > div > input {
-  accent-color: var(--brand-navy);
+  accent-color: var(--primary);
 }
 
 

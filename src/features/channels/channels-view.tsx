@@ -55,7 +55,7 @@ function CountBadges({ pending, unread }: { pending: number; unread: number }) {
       {pending > 0 ? (
         <span
           title={`${pending} ${pending === 1 ? "pedido de ajuste pendente" : "pedidos de ajuste pendentes"}`}
-          className="rounded-full bg-amber-100 px-1.5 text-[11px] font-medium text-amber-800 tabular-nums"
+          className="rounded-full bg-attention-muted px-1.5 text-[11px] font-medium text-attention-ink tabular-nums"
         >
           {pending}
           <span className="sr-only"> {pending === 1 ? "pendente" : "pendentes"}</span>

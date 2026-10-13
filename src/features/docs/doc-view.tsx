@@ -183,7 +183,7 @@ export function DocView({ doc: serverDoc, versions }: { doc: Doc; versions: DocV
             className={cn(
               "mr-2 inline-flex items-center gap-1 text-xs text-muted-foreground",
               saveState === "error" && "text-destructive",
-              saveState === "conflict" && "text-amber-800"
+              saveState === "conflict" && "text-attention-ink"
             )}
           >
             {saveState === "saved" ? <Check className="size-3.5" aria-hidden="true" /> : null}
@@ -411,9 +411,9 @@ function ReviewBanner({
   const review = reviewInfo(doc, today)
   const manual = doc.status === "review"
   return (
-    <div className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-600/20 bg-amber-50/70 px-4 py-3 sm:flex-row sm:items-center">
-      <AlarmClock className="hidden size-4 shrink-0 text-amber-700 sm:block" aria-hidden="true" />
-      <p className="min-w-0 flex-1 text-[13px] leading-5 text-amber-900">
+    <div className="mb-6 flex flex-col gap-3 rounded-xl border border-attention-line/20 bg-attention-soft/70 px-4 py-3 sm:flex-row sm:items-center">
+      <AlarmClock className="hidden size-4 shrink-0 text-attention-ink sm:block" aria-hidden="true" />
+      <p className="min-w-0 flex-1 text-[13px] leading-5 text-attention-ink-strong">
         <span className="font-medium">Hora de revisar.</span>{" "}
         {manual ? "Este documento foi marcado para revisão." : `${review.label}.`} Leia, ajuste o que mudou e
         registre a revisão.
@@ -442,9 +442,9 @@ function ConflictBanner({
   const name = person ? firstName(person.full_name) : "Alguém"
 
   return (
-    <div role="alert" className="mb-6 rounded-xl border border-amber-600/25 bg-amber-50 px-4 py-3">
-      <p className="flex items-start gap-2 text-[13px] leading-5 text-amber-950">
-        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
+    <div role="alert" className="mb-6 rounded-xl border border-attention-line/25 bg-attention-soft px-4 py-3">
+      <p className="flex items-start gap-2 text-[13px] leading-5 text-attention-ink-strong">
+        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-attention-ink" aria-hidden="true" />
         <span>
           {mine ? (
             <>
@@ -478,7 +478,7 @@ function ConflictBanner({
           {mine ? "Descartar e carregar a outra" : `Descartar e ver a de ${name}`}
         </Button>
       </div>
-      <p className="mt-2 pl-6 text-xs text-amber-900/80">
+      <p className="mt-2 pl-6 text-xs text-attention-ink-strong/80">
         {mine
           ? "Salvando por cima, o texto salvo na outra aba é substituído por este."
           : `Salvando por cima, a versão de ${name} continua no histórico.`}

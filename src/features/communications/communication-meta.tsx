@@ -5,7 +5,7 @@ import type { CommunicationChannel, CommunicationKind } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const KIND_STYLE: Record<CommunicationKind, string> = {
-  request: "border-amber-600/15 bg-amber-50 text-amber-800",
+  request: "border-attention-line/15 bg-attention-soft text-attention-ink",
   approval: "border-success/20 bg-success/10 text-success",
   feedback: "border-brand/25 bg-brand-soft/60 text-brand-ink",
   update: "border-border bg-background text-muted-foreground",

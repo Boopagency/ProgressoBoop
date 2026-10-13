@@ -22,6 +22,7 @@ import { toast } from "sonner"
 import { getDocContent, saveDocContent } from "@/features/docs/actions"
 import { uploadDocImage } from "@/features/docs/image-upload"
 import { checklistItems, headings, type ChecklistItem, type Heading } from "@/features/docs/logic"
+import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
 
 /*
@@ -131,6 +132,7 @@ export function DocEditor({
   controller: RefObject<EditorController | null>
   className?: string
 }) {
+  const { resolved } = useTheme()
   const editor = useCreateBlockNote({
     initialContent: asBlocks(content),
     dictionary: DICTIONARY,
@@ -328,7 +330,7 @@ export function DocEditor({
   return (
     <BlockNoteView
       editor={editor}
-      theme="light"
+      theme={resolved}
       slashMenu={false}
       onChange={handleChange}
       className={cn("boop-editor", className)}
@@ -348,6 +350,7 @@ export function DocEditor({
 
 /** Visualização somente leitura (versões anteriores). */
 export function DocPreview({ content, className }: { content: unknown[]; className?: string }) {
+  const { resolved } = useTheme()
   const editor = useCreateBlockNote({
     initialContent: asBlocks(content),
     dictionary: DICTIONARY,
@@ -356,7 +359,7 @@ export function DocPreview({ content, className }: { content: unknown[]; classNa
   return (
     <BlockNoteView
       editor={editor}
-      theme="light"
+      theme={resolved}
       editable={false}
       formattingToolbar={false}
       linkToolbar={false}

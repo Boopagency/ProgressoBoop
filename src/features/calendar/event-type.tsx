@@ -10,15 +10,15 @@ import { cn } from "@/lib/utils"
 export const EVENT_TYPE_STYLE: Record<EventType, { dot: string; block: string }> = {
   meeting: {
     dot: "bg-brand",
-    block: "border-brand bg-brand-soft text-brand-navy hover:bg-brand-sky/60",
+    block: "border-brand bg-brand-soft text-tint-foreground hover:bg-brand-sky/60",
   },
   internal: {
     dot: "bg-brand-slate",
-    block: "border-brand-slate/70 bg-brand-mist/60 text-brand-navy hover:bg-brand-mist",
+    block: "border-brand-slate/70 bg-brand-mist/60 text-tint-foreground hover:bg-brand-mist",
   },
   delivery: {
-    dot: "bg-orange-500",
-    block: "border-orange-500/70 bg-orange-50 text-orange-950 hover:bg-orange-100/80",
+    dot: "bg-priority",
+    block: "border-priority/70 bg-priority/10 text-foreground hover:bg-priority/15",
   },
 }
 

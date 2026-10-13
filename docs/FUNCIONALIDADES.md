@@ -901,7 +901,8 @@ pensado para o celular.
 - **Portal 2.0 (em preparação, issue #39):** o banco já está pronto para os
   avisos do cliente (resposta da equipe no post, no projeto ou no canal; post
   para aprovar; etapa para aprovar ou concluída), a Comunicação (o cliente lê
-  e escreve no canal "Alterações" dele, com as não lidas) e a aprovação de
+  e escreve no canal "Alterações" dele, com as não lidas; a equipe também
+  escreve mensagens internas nesse canal, que o cliente não vê) e a aprovação de
   etapas (a equipe marca na tarefa que a etapa precisa da aprovação do
   cliente; ao concluir, o cliente aprova ou pede ajustes, e o pedido volta a
   etapa para "Fazendo" e entra nos pendentes da equipe). As telas chegam nos

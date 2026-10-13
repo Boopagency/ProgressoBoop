@@ -242,7 +242,7 @@ cliente no portal (`client_notifications`). O SQL está em `supabase/migrations/
 | `client_members`   | `id`, `client_id`, `user_id` (conta do Auth **sem** perfil), `full_name` (quem acessa), `email` (guardado ao dar o acesso), `created_by`, `created_at`. Único por cliente e conta |
 | `channels`         | `id`, `kind` (cliente, interno ou direto), `client_id` (só no de cliente; um por cliente), `name` (no de cliente, "Alterações – <cliente>"; vazio na conversa direta), `archived`, `created_by`, `created_at` |
 | `channel_members`  | `channel_id`, `user_id` (chave composta): quem participa dos canais internos e diretos |
-| `messages`         | `id`, `channel_id`, `post_id` (o post de que fala, do cliente do canal), `author_id` (`auth.users`), `kind`, `body`, `resolved_at`, `resolved_by` (pedido de ajuste resolvido), `task_id` (a tarefa em que virou), `created_at`, `edited_at` |
+| `messages`         | `id`, `channel_id`, `post_id` (o post de que fala, do cliente do canal), `author_id` (`auth.users`), `kind`, `body`, `resolved_at`, `resolved_by` (pedido de ajuste resolvido), `task_id` (a tarefa em que virou), `project_id` (o projeto, na conversa do projeto), `internal` (só a equipe vê; só no canal do cliente), `created_at`, `edited_at` |
 | `channel_reads`    | `user_id` (`auth.users`), `channel_id` (chave composta), `last_read_at` |
 | `notifications`    | `id`, `user_id` (quem recebe, sempre da equipe), `kind`, `actor_id` (`auth.users`) e `actor_name` (quem fez, no momento), `client_id` (avisos do portal), `title` (canal, post, tarefa ou projeto), `body` (trecho da mensagem), `item_count` (tarefas atribuídas de uma vez), `link` (caminho no app), `channel_id`, `message_id`, `post_id`, `task_id`, `read_at` (vazio = não lida), `created_at` |
 | `client_notifications` | `id`, `user_id` (conta de cliente que recebe, `auth.users`), `client_id`, `kind`, `actor_name` (quem da equipe fez, no momento), `title` (post, etapa ou projeto; vazio no canal), `body` (trecho da mensagem ou o projeto da etapa), `link` (caminho de `/portal`), `channel_id`, `message_id`, `post_id`, `project_id`, `task_id`, `read_at` (vazio = não lido), `created_at` |
@@ -717,11 +717,16 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
       `channel_reads`, nunca para trás, e marca como lidos os avisos das
       mensagens vistas). No fio do portal entram as mensagens gerais e as dos
       posts e projetos que o cliente vê (`private.portal_channel_message_visible`);
-      as de um post que ainda não chegou a ele ficam só com a equipe. Daqui
-      em diante, o que a equipe escreve no canal do cliente (fora de um post
-      ainda interno) o cliente lê: comentário interno vai no histórico da
-      tarefa, do projeto ou do post. Quando a migration foi escrita, o banco
-      não tinha nenhuma mensagem, então nada antigo fica exposto.
+      as de um post que ainda não chegou a ele ficam só com a equipe.
+    - **Conversa interna no canal do cliente.** `messages.internal` marca a
+      mensagem que só a equipe vê: nenhuma função do portal a devolve (nem o
+      fio, nem o chat do post, nem a conversa do projeto, que ganharam o
+      filtro), ela não conta nas não lidas do cliente e não o avisa. Só a
+      equipe escreve mensagem interna, só no canal do cliente, e só quem
+      escreveu troca (`check_message_internal`); virar interna apaga os avisos
+      que o cliente já tinha recebido dela. O padrão é falso, para o chat do
+      post e a conversa do projeto, que falam com o cliente, continuarem
+      iguais; a equipe escolhe "Interno" ao escrever (telas no PR 3).
     - **Aprovação de etapas.** A equipe marca na tarefa
       `client_approval_required` (o trigger `set_task_client_approval` a
       deixa também `client_visible`). Concluir uma etapa dessas pede a

@@ -19,7 +19,9 @@
 --      que conferem private.my_client_ids() e devolvem só os campos
 --      liberados. No fio do portal entram as mensagens gerais do canal e as
 --      do chat dos posts e dos projetos que o cliente vê; a conversa sobre um
---      post que ainda não chegou a ele fica só com a equipe.
+--      post que ainda não chegou a ele fica só com a equipe. A equipe também
+--      conversa no canal do cliente sem que ele veja: a mensagem interna
+--      (`messages.internal`) nunca sai pelo portal nem avisa o cliente.
 --
 --   3. Aprovação de etapas. A equipe marca, por tarefa, se a etapa precisa da
 --      aprovação do cliente (e ela passa a ser vista por ele). Concluir uma
@@ -43,6 +45,60 @@ create type public.client_notification_kind as enum (
 );
 
 create type public.client_approval_result as enum ('approved', 'changes');
+
+-- Conversa interna no canal do cliente --------------------------------------
+
+-- A equipe escreve no canal do cliente o que ele não deve ver (ex.: "ele pediu
+-- isso por WhatsApp, vale cobrar à parte?"). Só a equipe escreve mensagem
+-- interna, só no canal do cliente (nos internos e diretos não faz sentido), e
+-- só quem escreveu troca (virar interna apaga os avisos que o cliente já
+-- recebeu dela). Padrão falso: o chat do post e a conversa do projeto, que já
+-- falam com o cliente, continuam iguais.
+alter table public.messages
+  add column internal boolean not null default false;
+
+comment on column public.messages.internal is
+  'Mensagem interna no canal do cliente: só a equipe vê (o portal nunca devolve nem avisa).';
+
+create function private.check_message_internal()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  channel_kind public.channel_kind;
+begin
+  if tg_op = 'UPDATE' then
+    if new.internal is not distinct from old.internal or pg_trigger_depth() > 1 then
+      return new;
+    end if;
+    if old.author_id is distinct from (select auth.uid()) then
+      raise exception 'Só quem escreveu pode editar a mensagem.' using errcode = '42501';
+    end if;
+  end if;
+  if not new.internal then
+    return new;
+  end if;
+
+  select c.kind into channel_kind from public.channels c
+   where c.id = case when tg_op = 'UPDATE' then old.channel_id else new.channel_id end;
+  if channel_kind is distinct from 'client' then
+    raise exception 'Só o canal do cliente tem mensagem interna.' using errcode = '23514';
+  end if;
+  if not exists (select 1 from public.profiles p where p.id = coalesce(new.author_id, old.author_id)) then
+    raise exception 'Só a equipe escreve mensagem interna.' using errcode = '42501';
+  end if;
+  if tg_op = 'UPDATE' then
+    delete from public.client_notifications n where n.message_id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger check_message_internal
+  before insert or update of internal on public.messages
+  for each row execute function private.check_message_internal();
 
 -- Aprovação de etapas ---------------------------------------------------------
 
@@ -229,8 +285,8 @@ revoke all on function private.notify_client_members(
 ) from public;
 
 -- Mensagem da equipe no canal do cliente: avisa as contas do cliente, se ele
--- vê a mensagem no portal (geral, de um post que já chegou a ele ou de um
--- projeto não cancelado).
+-- vê a mensagem no portal (não interna; geral, de um post que já chegou a ele
+-- ou de um projeto não cancelado).
 create function private.notify_client_message()
 returns trigger
 language plpgsql
@@ -244,7 +300,7 @@ declare
   subject text;
   target text;
 begin
-  if new.kind = 'system' or new.author_id is null then
+  if new.kind = 'system' or new.author_id is null or new.internal then
     return null;
   end if;
   select * into ch from public.channels c where c.id = new.channel_id;
@@ -465,8 +521,9 @@ $$;
 
 revoke all on function private.portal_client_channel(uuid) from public;
 
--- Mensagem do canal do cliente que aparece no portal: geral, de um post que
--- já chegou ao cliente ou de um projeto dele não cancelado.
+-- Mensagem (não interna) do canal do cliente que aparece no portal: geral, de
+-- um post que já chegou ao cliente ou de um projeto dele não cancelado. Quem
+-- chama confere `internal`.
 create function private.portal_channel_message_visible(target_client uuid, message_post uuid, message_project uuid)
 returns boolean
 language sql
@@ -518,10 +575,12 @@ as $$
            where m.channel_id = ch.id
              and m.author_id is distinct from (select auth.uid())
              and m.created_at > coalesce(r.last_read_at, '-infinity'::timestamptz)
+             and not m.internal
              and private.portal_channel_message_visible(ch.client_id, m.post_id, m.project_id)),
          (select max(m.created_at)
             from public.messages m
            where m.channel_id = ch.id
+             and not m.internal
              and private.portal_channel_message_visible(ch.client_id, m.post_id, m.project_id)),
          r.last_read_at
     from public.channels ch
@@ -586,6 +645,7 @@ as $$
     left join public.client_members cm on cm.user_id = m.author_id and cm.client_id = ch.client_id
    where m.channel_id = private.portal_client_channel(target_client)
      and (older_than is null or m.created_at < older_than)
+     and not m.internal
      and private.portal_channel_message_visible(ch.client_id, m.post_id, m.project_id)
    order by m.created_at desc, m.id desc
    limit least(greatest(coalesce(max_count, 101), 1), 200);
@@ -638,7 +698,7 @@ begin
   end if;
 
   insert into public.channel_reads (user_id, channel_id, last_read_at)
-  values (me, target_channel, least(read_until, now()))
+  values (me, target_channel, least(read_until, clock_timestamp()))
   on conflict (user_id, channel_id)
     do update set last_read_at = greatest(public.channel_reads.last_read_at, excluded.last_read_at)
   returning last_read_at into stamp;
@@ -652,6 +712,82 @@ begin
      and m.id = n.message_id
      and m.created_at <= stamp;
 end;
+$$;
+
+-- O chat do post e a conversa do projeto no portal deixam de fora as
+-- mensagens internas (mesma assinatura; só o filtro é novo).
+create or replace function public.portal_post_messages(target_post uuid)
+returns table (
+  id uuid,
+  kind public.message_kind,
+  body text,
+  author_name text,
+  from_team boolean,
+  mine boolean,
+  resolved boolean,
+  created_at timestamptz,
+  edited_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select m.id,
+         m.kind,
+         m.body,
+         coalesce(pr.full_name, cm.full_name, 'Conta removida'),
+         pr.id is not null,
+         m.author_id is not distinct from (select auth.uid()),
+         m.resolved_at is not null,
+         m.created_at,
+         m.edited_at
+    from public.messages m
+    join public.channels ch on ch.id = m.channel_id and ch.kind = 'client'
+    join public.content_posts p on p.id = m.post_id and p.client_id = ch.client_id
+    left join public.profiles pr on pr.id = m.author_id
+    left join public.client_members cm on cm.user_id = m.author_id and cm.client_id = ch.client_id
+   where m.post_id = target_post
+     and not m.internal
+     and private.portal_can_see_post(target_post)
+   order by m.created_at;
+$$;
+
+create or replace function public.portal_project_messages(target_project uuid)
+returns table (
+  id uuid,
+  kind public.message_kind,
+  body text,
+  author_name text,
+  from_team boolean,
+  mine boolean,
+  resolved boolean,
+  created_at timestamptz,
+  edited_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select m.id,
+         m.kind,
+         m.body,
+         coalesce(pr.full_name, cm.full_name, 'Conta removida'),
+         pr.id is not null,
+         m.author_id is not distinct from (select auth.uid()),
+         m.resolved_at is not null,
+         m.created_at,
+         m.edited_at
+    from public.messages m
+    join public.channels ch on ch.id = m.channel_id and ch.kind = 'client'
+    join public.projects p on p.id = m.project_id and p.client_id = ch.client_id
+    left join public.profiles pr on pr.id = m.author_id
+    left join public.client_members cm on cm.user_id = m.author_id and cm.client_id = ch.client_id
+   where m.project_id = target_project
+     and not m.internal
+     and private.portal_can_see_project(target_project)
+   order by m.created_at;
 $$;
 
 -- Aprovação de etapas no portal -----------------------------------------------

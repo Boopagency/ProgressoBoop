@@ -13,15 +13,18 @@ import { cn } from "@/lib/utils"
 /** Tela carregando: cabeçalho, linha de filtros (opcional) e o corpo. */
 export function PageSkeleton({
   toolbar = false,
+  actions = true,
   children,
 }: {
   /** A tela tem PageToolbar (filtros ou modos de ver). */
   toolbar?: boolean
+  /** A tela tem botões no cabeçalho (no portal, não tem). */
+  actions?: boolean
   children: ReactNode
 }) {
   return (
     <PageContainer animate={false} aria-busy="true" aria-label="Carregando">
-      <PageHeaderSkeleton />
+      <PageHeaderSkeleton actions={actions} />
       {toolbar ? (
         <div className="mt-6 flex min-h-9 items-center gap-2">
           <Skeleton className="h-8 w-48" />

@@ -468,7 +468,7 @@ passo), checklists, políticas (regras combinadas) e guias.
   dentro (cliente, projeto, reunião), as etiquetas ficam na linha da
   descrição e o "voltar" fica no topo, ao lado do botão do menu ("‹ Clientes").
 - **Trocar de tela:** o conteúdo entra com um fade curto (0,2 s); o menu e o
-  topo não se mexem. Mudar filtros ou o modo de ver não anima. Com "reduzir
+  topo não se mexem. Vale também no portal do cliente (2.27). Mudar filtros ou o modo de ver não anima. Com "reduzir
   movimento" ligado no sistema, a troca é direta.
 - **Erro:** "Não foi possível carregar esta tela", com o botão "Tentar de
   novo".

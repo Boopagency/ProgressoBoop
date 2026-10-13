@@ -79,8 +79,8 @@ src/
 │   ├── login/                  # "/login" (sem "Criar conta")
 │   ├── portal/                 # "/portal": área do cliente (layout próprio, com o
 │   │                           # menu lateral do portal; só contas de cliente): início
-│   │                           # (painel), calendário, feed, projetos (projetos/[id])
-│   │                           # e o post aberto (posts/[id])
+│   │                           # (painel), calendário, feed, projetos (projetos/[id]),
+│   │                           # comunicação, notificações e o post aberto (posts/[id])
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -729,7 +729,7 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
       escreveu troca (`check_message_internal`); virar interna apaga os avisos
       que o cliente já tinha recebido dela. O padrão é falso, para o chat do
       post e a conversa do projeto, que falam com o cliente, continuarem
-      iguais; a equipe escolhe "Interno" ao escrever (telas no PR 3).
+      iguais; a equipe escolhe "Interno" ao escrever (`Composer`).
     - **Aprovação de etapas.** A equipe marca na tarefa
       `client_approval_required` (o trigger `set_task_client_approval` a
       deixa também `client_visible`). Concluir uma etapa dessas pede a
@@ -927,6 +927,14 @@ página limpa do relatório para apresentar ou imprimir.
   então dá para compartilhar uma visão.
 - O Sheet da tarefa ganhou **Projeto** (leva o cliente do projeto junto) e
   **Atividade**: o histórico da tarefa e os comentários.
+- Em projeto de cliente, **Portal**: "O cliente vê esta etapa" e "Precisa da
+  aprovação do cliente" (`client_approval_required`; marcar deixa a etapa
+  vista pelo cliente, como o banco faz). O bloco **Aprovação do cliente**
+  mostra o que vale agora: vai para o cliente ao concluir, esperando o
+  cliente, aprovada ou ajustes pedidos, com a nota, quem e quando
+  (`client_approval*`; o nome vem de `client_members`). Nas listas, a etapa
+  que espera o cliente e a que voltou com ajustes ganham uma etiqueta
+  (`ClientApprovalBadge`).
 
 ### Projetos (`/projetos`)
 
@@ -938,7 +946,9 @@ página limpa do relatório para apresentar ou imprimir.
   status, "em foco", descrição e as **tarefas iniciais**: em branco, um
   modelo da Boop (site institucional, identidade visual, social media,
   tráfego pago, plano interno), as tarefas de outro projeto ou o checklist de
-  um processo.
+  um processo. Nos modelos, as etapas de aprovação (mapa do site, layout da
+  home, conceito da identidade, calendário de social media) já vêm com
+  "Precisa da aprovação do cliente"; a cópia de outro projeto leva a marca.
 
 ### Projeto (`/projetos/[id]`)
 
@@ -949,8 +959,11 @@ página limpa do relatório para apresentar ou imprimir.
   **Tarefas** do projeto em lista ou quadro.
 - **Atividade**: tudo o que mudou no projeto e nos itens dele, com
   comentários.
-- Lateral: **Sobre o projeto**, **Decisões**, **Comunicações** (projetos de
-  cliente) e **Financeiro** (receita, custos e resultado do projeto).
+- Lateral: **Aprovação do cliente** (projetos de cliente com etapas que
+  pedem aprovação: as que esperam o cliente primeiro, com a resposta; clicar
+  abre a tarefa), **Conversa com o cliente**, **Sobre o projeto**,
+  **Decisões**, **Comunicações** (projetos de cliente) e **Financeiro**
+  (receita, custos e resultado do projeto).
 
 ### Calendário (`/calendario`)
 
@@ -1035,8 +1048,8 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
 
 ### Comunicações (`/comunicacoes`)
 
-Canais estilo Slack, só para a equipe por enquanto (o cliente entra na fase 3
-do portal).
+Canais estilo Slack. O canal de cliente também é a Comunicação do portal:
+o cliente lê e escreve nele, menos nas mensagens internas.
 
 - À esquerda, os canais: **Clientes** (um "Alterações – cliente" por
   cliente), **Canais** por assunto (só quem participa) e **Conversas**
@@ -1044,7 +1057,12 @@ do portal).
   arquivados e os de clientes inativos ficam recolhidos.
 - À direita, a conversa: mensagens por dia, as seguidas da mesma pessoa
   juntas, o cartão do post nas mensagens que falam de um post, e o campo de
-  escrever (Enter envia; no canal de cliente, "Pedido de ajuste").
+  escrever (Enter envia; no canal de cliente, "Pedido de ajuste" e
+  **Interno**, que grava `messages.internal`: só a equipe vê). No canal de
+  cliente, um aviso acima do campo lembra que o cliente lê o canal. A
+  mensagem interna aparece marcada ("Interno", fundo cinza) no fio; quem
+  escreveu troca pelo menu ("Deixar interna" ou "Mostrar ao cliente"). O
+  chat do post e a conversa do projeto têm a mesma opção.
 - Cada mensagem: **Virar tarefa** (cliente, post e projeto do post junto),
   **Resolver**/**Reabrir**, marcar como pedido de ajuste e, nas próprias,
   editar e apagar. Aba **Pendentes**: os pedidos ainda não resolvidos.
@@ -1267,8 +1285,8 @@ A área da conta de cliente, com a mesma lógica visual do admin: menu lateral
 celular, o mesmo Sheet), topo com o botão do menu e a seção
 (`PortalTopbar`; no post ou no projeto aberto, a seção vira o "voltar") e as
 telas no esqueleto do admin (`PageContainer`, `PageHeader`, `PageToolbar`,
-`PageBody`). O menu tem Início, Calendário, Feed e Projetos (Comunicação e
-Notificações entram com as telas delas, no PR 3 da issue #39); quem
+`PageBody`). O menu tem Início, Calendário, Feed, Projetos, Comunicação e
+Notificações, as duas últimas com o contador (`PortalAlertsProvider`); quem
 acompanha mais de um cliente troca de cliente no topo do menu (o escolhido
 vai em `?cliente=` em todos os links, `features/portal/links.ts`), e o
 rodapé tem quem está logado e "Sair".
@@ -1284,6 +1302,29 @@ rodapé tem quem está logado e "Sair".
 - **Calendário**, **Feed**, **Projetos** e as páginas do post e do projeto:
   as mesmas de antes, agora no esqueleto (o mês e as setas do calendário na
   linha de filtros; status, formato e datas na linha da descrição).
+- **Projeto aberto**: as etapas que esperam a aprovação do cliente pedem a
+  resposta ali mesmo (**Aprovar**, com comentário opcional, ou **Pedir
+  ajustes**, com o que mudar; `StepReviewButtons`, o mesmo diálogo do post,
+  por `portal_review_step`); as respondidas mostram "Aprovada por … em …"
+  ou "Ajustes pedidos por … em …" com a nota, e as que ainda não foram
+  concluídas, "pede sua aprovação".
+- **Comunicação** (`/portal/comunicacao`, `PortalChannel`): o canal do
+  cliente com a equipe, com o `ThreadView` e o `Composer` da equipe (sem
+  "Pedido de ajuste" nem "Interno"): fio por dia, as seguidas da mesma
+  pessoa juntas, "Ver mensagens anteriores", o cartão do post ou do projeto
+  (abre o chat dele) e Enter envia. Lê por `portal_channel_messages` e
+  escreve por `portal_send_channel_message`; busca de novo a cada 5
+  segundos com a aba visível e, com o fio na tela, grava a leitura
+  (`portal_read_channel`, que também marca os avisos dessas mensagens) e
+  atualiza o contador. Canal arquivado vira só leitura.
+- **Notificações** (`/portal/notificacoes`, `PortalNotificationList`): os
+  avisos da conta (`client_notifications`, até 50, de todos os clientes que
+  ela acompanha), não lidos marcados, "Marcar todas como lidas"; abrir um
+  aviso o marca como lido e leva ao post, ao projeto ou à Comunicação. O
+  contador do menu e a lista se atualizam pelo Realtime: o mesmo
+  `listenToNotifications` do sino, na tabela `client_notifications`, com o
+  token da sessão do portal (`getPortalRealtimeToken`); sem o Realtime, o
+  menu pergunta a cada 30 segundos.
 
 ### Busca geral (Ctrl/⌘ + K)
 
@@ -1369,7 +1410,11 @@ rodapé tem quem está logado e "Sair".
 | `KpiTile`            | indicador: valor, variação colorida pelo sentido bom, tendência e alerta |
 | `ColumnChart` / `LineChart` / `Sparkline` / `BarList` | gráficos em HTML/SVG, com tooltip, teclado (setas), legenda e clique para o detalhe |
 | `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
-| `PortalSidebar` / `PortalTopbar` | menu lateral do portal (troca de cliente, telas, "Sair") e o topo com a seção ou o "voltar" |
+| `PortalSidebar` / `PortalTopbar` | menu lateral do portal (troca de cliente, telas, contadores, "Sair") e o topo com a seção ou o "voltar" |
+| `PortalAlertsProvider` | contadores do menu do portal (não lidas da Comunicação e avisos), pelo Realtime e por consulta |
+| `PortalChannel` / `PortalNotificationList` / `StepReviewButtons` | Comunicação, Notificações e a resposta às etapas no portal |
+| `ClientApprovalPanel` / `ClientApprovalBadge` / `ProjectApprovalsCard` | aprovação do cliente na tarefa, nas listas e na página do projeto (equipe) |
+| `InternalBadge` | marca da mensagem interna no fio da equipe (o cliente não vê) |
 | `PendingCard` / `ProjectsCard` / `MessagesCard` / `UpcomingCard` | quadros do Início do portal: o que espera o cliente, projetos, últimas mensagens e próximos posts |
 
 ### 8.1 Esqueleto das telas e transição
@@ -1666,7 +1711,11 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     (`localStorage`). Escrever, editar e resolver não recarregam
     o app (o fio busca de novo); criar tarefa e mudar canais recarregam.
     Lido = a hora da mensagem mais nova que a pessoa viu, enviada como veio
-    do banco (microssegundos).
+    do banco (microssegundos). O portal segue a mesma regra: a Comunicação pergunta a
+    cada 5 segundos com a aba visível, e os contadores do menu escutam os
+    avisos da conta pelo Realtime (`client_notifications`, mesmo
+    `listenToNotifications`, com o token do portal) e, sem ele, perguntam a
+    cada 30 segundos.
 
 23. **Transição entre telas em CSS, não com View Transitions.** O Next 16
     traz o `<ViewTransition>` do React, mas a foto da tela antiga não respeita
@@ -1798,8 +1847,7 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 ## 13. Fora do escopo (por enquanto)
 
 Do portal do cliente: documentos, login por link no e-mail e avisos por
-e-mail (a Comunicação, os avisos no portal e a aprovação de etapas estão
-chegando pela issue #39). Tempo real, emissão de nota fiscal, conciliação bancária
+e-mail. Tempo real, emissão de nota fiscal, conciliação bancária
 automática (o fechamento confere o saldo com o extrato à mão), aprovações
 formais, IA, notificações por push no celular e por e-mail, automações, integrações (WhatsApp, e-mail, banco,
 gateway de pagamento), permissões por cargo, várias moedas e importação de

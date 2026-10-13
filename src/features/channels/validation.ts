@@ -39,6 +39,8 @@ export interface NewMessageInput {
   kind: WritableKind
   post_id: string | null
   project_id?: string | null
+  /** Só a equipe vê (só no canal do cliente; o banco confere). Padrão: não. */
+  internal?: boolean
 }
 
 export function parseNewMessage(raw: unknown): Parsed<NewMessageInput> {
@@ -50,6 +52,7 @@ export function parseNewMessage(raw: unknown): Parsed<NewMessageInput> {
   if (input.project_id !== null && input.project_id !== undefined && !isUuid(input.project_id)) {
     return { ok: false, error: "Projeto inválido." }
   }
+  if (input.internal !== undefined && typeof input.internal !== "boolean") return { ok: false, error: "Opção inválida." }
   const body = parseBody(input.body)
   if (!body.ok) return body
   return {
@@ -60,6 +63,7 @@ export function parseNewMessage(raw: unknown): Parsed<NewMessageInput> {
       kind: input.kind,
       post_id: (input.post_id as string | null) ?? null,
       project_id: (input.project_id as string | null) ?? null,
+      internal: input.internal === true,
     },
   }
 }

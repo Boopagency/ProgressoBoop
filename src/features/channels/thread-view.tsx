@@ -4,17 +4,25 @@ import { Loader2 } from "lucide-react"
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
-import type { ThreadDay, ThreadItem } from "@/features/channels/logic"
+import type { ThreadItem } from "@/features/channels/logic"
 import { cn } from "@/lib/utils"
 
 /** Perto do fim (em px): uma mensagem nova rola o fio até ela. */
 const STICK_DISTANCE = 96
 
+/** Um dia do fio com itens de qualquer forma (o da equipe é o `ThreadDay`). */
+interface ThreadViewDay<Item extends { key: string }> {
+  day: string
+  label: string
+  items: Item[]
+}
+
 /**
  * Fio rolável, por dia, do mais antigo (em cima) para o mais novo. Fica no
- * fim enquanto a pessoa está no fim; se ela subiu para ler, não pula.
+ * fim enquanto a pessoa está no fim; se ela subiu para ler, não pula. Os
+ * itens são da equipe (`ThreadItem`) por padrão; o portal passa os dele.
  */
-export function ThreadView({
+export function ThreadView<Item extends { key: string } = ThreadItem>({
   days,
   loaded,
   error,
@@ -25,13 +33,13 @@ export function ThreadView({
   scrollToEndKey,
   className,
 }: {
-  days: ThreadDay[]
+  days: ThreadViewDay<Item>[]
   loaded: boolean
   error: string | null
   hasMore: boolean
   onLoadOlder: () => Promise<void>
   empty: ReactNode
-  renderItem: (item: ThreadItem) => ReactNode
+  renderItem: (item: Item) => ReactNode
   /** Muda quando a própria pessoa envia: rola até o fim mesmo se ela tinha subido. */
   scrollToEndKey?: number
   className?: string

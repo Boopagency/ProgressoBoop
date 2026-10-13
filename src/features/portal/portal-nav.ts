@@ -1,14 +1,16 @@
-import { CalendarDays, FolderKanban, House, LayoutGrid, type LucideIcon } from "lucide-react"
+import { Bell, CalendarDays, FolderKanban, House, LayoutGrid, MessagesSquare, type LucideIcon } from "lucide-react"
 
 /*
  * Menu lateral do portal, no padrão do admin (`components/layout/nav-items.ts`).
- * Comunicação e Notificações entram com as telas delas (PR 3 da issue #39).
+ * Comunicação e Notificações levam o contador (não lidas e avisos não lidos).
  */
 
 export interface PortalNavItem {
   title: string
   href: string
   icon: LucideIcon
+  /** Contador ao lado do item. */
+  badge?: "messages" | "notifications"
 }
 
 export const PORTAL_NAV: PortalNavItem[] = [
@@ -16,6 +18,8 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { title: "Calendário", href: "/portal/calendario", icon: CalendarDays },
   { title: "Feed", href: "/portal/feed", icon: LayoutGrid },
   { title: "Projetos", href: "/portal/projetos", icon: FolderKanban },
+  { title: "Comunicação", href: "/portal/comunicacao", icon: MessagesSquare, badge: "messages" },
+  { title: "Notificações", href: "/portal/notificacoes", icon: Bell, badge: "notifications" },
 ]
 
 /**

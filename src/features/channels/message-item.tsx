@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, FolderKanban, ListPlus, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
+import { Check, Eye, FolderKanban, ListPlus, Lock, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Fragment, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -27,6 +27,7 @@ import {
   createTaskFromMessage,
   deleteMessage,
   editMessage,
+  setMessageInternal,
   setMessageKind,
   setMessageResolved,
 } from "@/features/channels/actions"
@@ -177,10 +178,27 @@ function TaskLink({ taskId }: { taskId: string }) {
   )
 }
 
+/** Mensagem interna no canal do cliente: só a equipe vê. */
+export function InternalBadge({ className }: { className?: string }) {
+  return (
+    <span
+      title="Só a equipe vê: a mensagem não aparece no portal do cliente"
+      className={cn(
+        "inline-flex h-5 items-center gap-1 rounded-full border border-dashed border-foreground/25 bg-muted px-1.5 text-[11px] font-medium text-muted-foreground",
+        className
+      )}
+    >
+      <Lock className="size-3" aria-hidden="true" />
+      Interno
+    </span>
+  )
+}
+
 /**
  * Uma mensagem do fio: quem, quando, o texto, o tipo (pedido de ajuste ou
  * aprovação), o post, a tarefa e as ações (virar tarefa, resolver, marcar
- * como pedido, editar e apagar as próprias).
+ * como pedido, editar e apagar as próprias e, no canal do cliente, deixar
+ * interna ou mostrar ao cliente).
  */
 export function MessageItem({
   message,
@@ -188,6 +206,7 @@ export function MessageItem({
   showPost = true,
   showProject = true,
   canWrite = true,
+  allowInternal = false,
   onChanged,
   onRemoved,
   onOpenPost,
@@ -201,6 +220,8 @@ export function MessageItem({
   showProject?: boolean
   /** Canal arquivado: só leitura das ações que mudam o texto. */
   canWrite?: boolean
+  /** Canal do cliente: quem escreveu pode deixar a mensagem interna (ou mostrar ao cliente). */
+  allowInternal?: boolean
   onChanged: () => void
   onRemoved: (id: string) => void
   onOpenPost?: (postId: string) => void
@@ -266,7 +287,8 @@ export function MessageItem({
       className={cn(
         "group/message relative flex gap-2.5 px-4 py-1 transition-colors hover:bg-muted/40",
         !continued && "mt-2 pt-1.5",
-        pending && "bg-amber-50/40"
+        pending && "bg-amber-50/40",
+        message.internal && !pending && "bg-muted/30"
       )}
       aria-label={`${author.name}, ${messageTime(message)}`}
     >
@@ -286,8 +308,10 @@ export function MessageItem({
             <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
               {toTimeLabel(message.created_at)}
             </time>
+            {message.internal ? <InternalBadge className="self-center" /> : null}
           </p>
         )}
+        {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
 
         {editing ? (
           <div className="mt-1 space-y-1.5">
@@ -408,6 +432,19 @@ export function MessageItem({
                 <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "text"))}>
                   Não é pedido de ajuste
                 </DropdownMenuItem>
+              ) : null}
+              {mine && canWrite && (allowInternal || message.internal) ? (
+                message.internal ? (
+                  <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, false), "O cliente passa a ver a mensagem")}>
+                    <Eye />
+                    Mostrar ao cliente
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, true), "Mensagem interna: o cliente não vê")}>
+                    <Lock />
+                    Deixar interna
+                  </DropdownMenuItem>
+                )
               ) : null}
               {mine && canWrite ? (
                 <>

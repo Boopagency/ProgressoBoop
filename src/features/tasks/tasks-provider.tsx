@@ -34,7 +34,16 @@ function applyChange(tasks: Task[], change: OptimisticChange): Task[] {
           : task.status === "done"
             ? task.completed_at
             : new Date().toISOString()
+      // Concluir de novo pede outra aprovação: o banco limpa a resposta do cliente.
+      if (change.patch.status === "done" && task.status !== "done") {
+        next.client_approval = null
+        next.client_approval_note = null
+        next.client_approval_by = null
+        next.client_approval_at = null
+      }
     }
+    // Etapa que precisa da aprovação do cliente é sempre vista por ele (trigger do banco).
+    if (next.client_approval_required) next.client_visible = true
     return next
   })
 }

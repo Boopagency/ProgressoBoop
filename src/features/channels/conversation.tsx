@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { loadThread, markChannelRead, sendMessage } from "@/features/channels/actions"
-import { Composer } from "@/features/channels/composer"
+import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import {
   buildThread,
   directPartner,
@@ -178,8 +178,8 @@ export function Conversation({
     })
   }, [active, newest, channel.id, onRead])
 
-  async function send(body: string, kind: "text" | "change_request" | "approval") {
-    const result = await sendMessage({ channel_id: channel.id, body, kind, post_id: null })
+  async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
+    const result = await sendMessage({ channel_id: channel.id, body, kind, post_id: null, internal: options.internal })
     if (!result.ok) {
       toast.error(result.error)
       return false
@@ -223,6 +223,7 @@ export function Conversation({
         message={item.message}
         continued={item.continued}
         canWrite={!channel.archived}
+        allowInternal={channel.kind === "client"}
         onChanged={changed}
         onRemoved={thread.removeLocal}
         onOpenPost={onOpenPost}
@@ -348,6 +349,7 @@ export function Conversation({
                   key={message.id}
                   message={message}
                   canWrite={!channel.archived}
+                  allowInternal={channel.kind === "client"}
                   onChanged={changed}
                   onRemoved={thread.removeLocal}
                   onOpenPost={onOpenPost}
@@ -381,14 +383,21 @@ export function Conversation({
         />
       )}
 
+      {view === "thread" && channel.kind === "client" && !channel.archived ? (
+        <p className="shrink-0 border-t bg-amber-50/60 px-4 py-2 text-xs text-amber-900">
+          O cliente lê este canal no portal, em Comunicação. Para falar só com a equipe, marque Interno ao escrever.
+        </p>
+      ) : null}
       {view === "thread" ? (
         <Composer
           key={channel.id}
           onSend={send}
           allowRequest={channel.kind === "client"}
+          allowInternal={channel.kind === "client"}
           autoFocus
           placeholder={channel.kind === "direct" ? `Mensagem para ${title}` : `Mensagem em ${title}`}
           disabledText={channel.archived ? "Canal arquivado. Desarquive pelo menu para voltar a escrever." : null}
+          className={channel.kind === "client" && !channel.archived ? "border-t-0" : undefined}
         />
       ) : null}
     </section>

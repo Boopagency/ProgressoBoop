@@ -17,7 +17,7 @@ export const CHANNEL_COLUMNS = "id, kind, client_id, name, archived, created_by,
 
 /** Mensagem com o cartão do post (capa, título, etapa) e o do projeto. */
 export const MESSAGE_COLUMNS =
-  "id, channel_id, post_id, project_id, author_id, kind, body, resolved_at, resolved_by, task_id, created_at, edited_at, post:content_posts(id, client_id, title, stage, format, cover_path, publish_on), project:projects(id, name)"
+  "id, channel_id, post_id, project_id, author_id, kind, body, resolved_at, resolved_by, task_id, internal, created_at, edited_at, post:content_posts(id, client_id, title, stage, format, cover_path, publish_on), project:projects(id, name)"
 
 
 export async function fetchCounts(supabase: SupabaseServerClient): Promise<Map<string, ChannelCounts>> {

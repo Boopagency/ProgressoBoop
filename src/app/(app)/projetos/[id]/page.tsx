@@ -6,6 +6,7 @@ import { getCommunications } from "@/features/communications/queries"
 import { getDecisions } from "@/features/decisions/queries"
 import { getDocs } from "@/features/docs/queries"
 import { getFinance } from "@/features/finance/queries"
+import { getClientMemberNames } from "@/features/portal/access-queries"
 import { getProject } from "@/features/projects/queries"
 import { ProjectView } from "@/features/projects/project-view"
 import { getTasks } from "@/features/tasks/queries"
@@ -33,6 +34,12 @@ export default async function ProjectPage(props: PageProps<"/projetos/[id]">) {
     getDocs(),
   ])
   if (!project) notFound()
+  // Quem do cliente respondeu as etapas do projeto (aprovou ou pediu ajustes).
+  const approvalNames = project.client_id
+    ? await getClientMemberNames(
+        tasks.flatMap((task) => (task.project_id === project.id && task.client_approval_by ? [task.client_approval_by] : []))
+      )
+    : new Map<string, string>()
 
   return (
     <TasksProvider tasks={tasks} today={todayKey()}>
@@ -44,6 +51,7 @@ export default async function ProjectPage(props: PageProps<"/projetos/[id]">) {
         communications={communications.filter((item) => item.project_id === project.id)}
         finance={finance}
         docs={docs}
+        approvalNames={Object.fromEntries(approvalNames)}
       />
     </TasksProvider>
   )

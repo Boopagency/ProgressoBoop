@@ -197,6 +197,14 @@ export interface Task {
   project_id: string | null
   /** Etapa que o cliente vê no portal, na página do projeto. */
   client_visible: boolean
+  /** Etapa que precisa da aprovação do cliente no portal (o banco a deixa visível). */
+  client_approval_required: boolean
+  /** Resposta do cliente à última conclusão (só o portal grava; concluir de novo limpa). */
+  client_approval: ClientApprovalResult | null
+  client_approval_note: string | null
+  /** Conta do cliente que respondeu (`client_members.user_id`). */
+  client_approval_by: string | null
+  client_approval_at: Timestamp | null
   area: TaskArea | null
   status: TaskStatus
   priority: TaskPriority
@@ -365,6 +373,8 @@ export interface Message {
   resolved_by: string | null
   /** Tarefa em que o pedido virou. */
   task_id: string | null
+  /** Mensagem interna no canal do cliente: só a equipe vê (o portal nunca mostra). */
+  internal: boolean
   created_at: Timestamp
   edited_at: Timestamp | null
 }

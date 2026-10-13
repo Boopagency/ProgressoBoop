@@ -162,7 +162,16 @@ ali mesmo e salvo na hora.
   - prioridade: Alta, Normal ou Baixa;
   - área, cliente e projeto (escolher um projeto de cliente leva o cliente
     junto, se a tarefa ainda não tem);
-  - descrição (salva ao sair do campo).
+  - descrição (salva ao sair do campo);
+  - em projeto de cliente, **Portal**: "O cliente vê esta etapa" e
+    **"Precisa da aprovação do cliente"** (marcar deixa a etapa vista pelo
+    cliente; ao concluir, ela vai para o cliente aprovar no portal).
+- **Aprovação do cliente** (quando a etapa pede aprovação): "Ao concluir…",
+  **Esperando o cliente**, **Aprovada por … em …** ou **Ajustes pedidos por
+  … em …**, com a nota do cliente. Os ajustes voltam a etapa para Fazendo e
+  entram na conversa do projeto como pedido pendente; concluir de novo
+  resolve o pedido e manda a etapa de novo para o cliente. Nas listas, a
+  etapa esperando o cliente ou com ajustes pedidos ganha uma etiqueta.
 - No topo, o projeto da tarefa leva à página dele. No rodapé, quando a
   tarefa nasceu de uma reunião, de uma revisão de cliente, de um processo ou
   de um pedido do cliente, aparece o link para a origem.
@@ -520,6 +529,12 @@ visual da Hertmann) ou de um ciclo interno ("Estruturação da Boop até
   comunicações e lançamentos dele ("Léo mudou o status para Fazendo ·
   'Fechar cronograma'"), com comentários. Tarefas criadas em sequência (um
   modelo, por exemplo) aparecem juntas ("criou 15 tarefas").
+- **Aprovação do cliente** (lateral, em projeto de cliente com etapas que
+  pedem aprovação): as que esperam o cliente primeiro, depois as com
+  ajustes pedidos, as que vão ao cliente ao concluir e as aprovadas, com
+  quem respondeu, quando e a nota. Clicar abre a tarefa. Nos modelos de
+  site, identidade visual e social media, as etapas de aprovação já vêm
+  marcadas.
 - **Lateral:** Sobre o projeto (descrição), **Decisões**, **Comunicações**
   (projeto de cliente) e **Financeiro**: receita e custos (recebido/pago de
   quanto previsto), resultado previsto e os lançamentos do projeto.
@@ -528,8 +543,9 @@ visual da Hertmann) ou de um ciclo interno ("Estruturação da Boop até
 
 ### 2.18 Comunicações (`/comunicacoes`)
 
-A conversa da equipe em canais, como no Slack (por enquanto, só a equipe; o
-cliente entra na fase 3 do portal).
+A conversa da equipe em canais, como no Slack. O canal "Alterações" de cada
+cliente é também a **Comunicação** do portal: o cliente lê e escreve nele,
+menos nas mensagens internas.
 
 - **Lista de canais** à esquerda:
   - **Clientes:** todo cliente tem o canal "Alterações – cliente", criado
@@ -550,7 +566,13 @@ cliente entra na fase 3 do portal).
   marca o canal como lido enquanto a pessoa olha.
 - **Escrever:** Enter envia, Shift + Enter quebra a linha. No canal de
   cliente, **Pedido de ajuste** marca a mensagem como pedido (fica
-  pendente).
+  pendente) e **Interno** deixa a mensagem só para a equipe (o cliente não
+  vê no portal nem recebe aviso; a opção continua marcada para as próximas
+  mensagens). Um aviso acima do campo lembra que o cliente lê o canal. O
+  chat do post e a conversa do projeto têm a mesma opção.
+- **Mensagem interna:** aparece com a etiqueta "Interno" e o fundo cinza.
+  Quem escreveu troca pelo menu ("Deixar interna" ou "Mostrar ao
+  cliente"); virar interna apaga o aviso que o cliente já tinha recebido.
 - **Mensagem com post:** o que é escrito no chat do post (2.26) aparece no
   canal do cliente com o cartão do post (capa, título, etapa e data);
   clicar no cartão abre o post.
@@ -857,11 +879,11 @@ juntos**, sem entrar cliente por cliente.
 
 A área em que a pessoa de um cliente entra com a própria conta e vê só o
 que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
-Início, Calendário, Feed e Projetos (no celular, o mesmo menu recolhível,
-pelo botão no topo), a troca de cliente no topo do menu (para quem
-acompanha mais de um) e, no rodapé, quem está logado e **Sair**. No post e no
-projeto aberto, o topo mostra o "voltar". Comunicação e Notificações entram
-no menu com as telas delas.
+Início, Calendário, Feed, Projetos, **Comunicação** e **Notificações** (as
+duas últimas com o contador de não lidas; no celular, o mesmo menu
+recolhível, pelo botão no topo), a troca de cliente no topo do menu (para
+quem acompanha mais de um) e, no rodapé, quem está logado e **Sair**. No
+post e no projeto aberto, o topo mostra o "voltar".
 
 - **O que o cliente vê:** os posts a partir de "Aguardando cliente"
   (aguardando, aprovado, programado e publicado) e os que voltaram para a
@@ -874,7 +896,7 @@ no menu com as telas delas.
   etapas de projeto que pedem a aprovação); **Projetos** (os em aberto, até
   quatro, com a porcentagem concluída e "Ver todos"); **Últimas mensagens**
   (as cinco mais novas da conversa com a equipe; a de um post ou projeto
-  abre o chat dele); e **Próximos posts** (aprovados e programados nos
+  abre o chat dele, a geral abre a Comunicação); e **Próximos posts** (aprovados e programados nos
   próximos 14 dias, até cinco, com o link para o Calendário). Os posts em
   ajuste continuam no Calendário e no Feed, com a situação "Em ajuste".
 - **Calendário:** o mês, de segunda a domingo, com os posts em cada dia
@@ -898,7 +920,11 @@ no menu com as telas delas.
   andamento e, ao lado, as **etapas** que a equipe marcou como "o cliente
   vê" (feita, próxima, em andamento ou a fazer, com a data) e a **conversa
   do projeto**, no mesmo canal "Alterações" do cliente, marcada com o
-  projeto. Nada de descrição, responsável ou tarefa interna. Na equipe, a
+  projeto. A etapa que a equipe concluiu e espera a aprovação aparece com
+  **Aprovar** (comentário opcional) e **Pedir ajustes** (o que mudar,
+  obrigatório); depois, "Aprovada por … em …" ou "Ajustes pedidos por …
+  em …" com a nota. Antes de ser concluída, a etapa mostra "pede sua
+  aprovação". Nada de descrição, responsável ou tarefa interna. Na equipe, a
   página do projeto de cliente mostra a mesma **Conversa com o cliente**
   (escrever, marcar pedido de ajuste, virar tarefa já com o projeto), e no
   canal "Alterações" a mensagem aparece com a etiqueta do projeto.
@@ -915,16 +941,19 @@ no menu com as telas delas.
   e-mail sem conta ou de alguém da equipe é recusado com uma
   mensagem clara. O "x" tira o acesso (com confirmação); a conta continua
   no Supabase.
+- **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
+  do cliente: mensagens por dia, as seguidas da mesma pessoa juntas,
+  "Ver mensagens anteriores", o cartão do post ou do projeto de que a
+  mensagem fala (abre o chat dele) e Enter envia. Atualiza sozinha a cada 5
+  segundos e, com a conversa na tela, marca como lida (o contador do menu
+  zera). As mensagens internas da equipe não aparecem. Canal arquivado pela
+  equipe vira só leitura.
+- **Notificações:** os avisos da conta, do mais novo para o mais antigo,
+  com os não lidos marcados e **Marcar todas como lidas**: a equipe
+  respondeu (num post, num projeto ou na Comunicação), post para aprovar,
+  etapa para aprovar e etapa concluída. Abrir um aviso o marca como lido e
+  leva ao item. O contador do menu chega na hora (Realtime).
 - Cliente desativado some do portal de quem o acompanhava.
-- **Portal 2.0 (em preparação, issue #39):** o banco já está pronto para os
-  avisos do cliente (resposta da equipe no post, no projeto ou no canal; post
-  para aprovar; etapa para aprovar ou concluída), a Comunicação (o cliente lê
-  e escreve no canal "Alterações" dele, com as não lidas; a equipe também
-  escreve mensagens internas nesse canal, que o cliente não vê) e a aprovação de
-  etapas (a equipe marca na tarefa que a etapa precisa da aprovação do
-  cliente; ao concluir, o cliente aprova ou pede ajustes, e o pedido volta a
-  etapa para "Fazendo" e entra nos pendentes da equipe). As telas chegam nos
-  próximos PRs.
 
 ### 2.28 Claude (conector do Boop Admin)
 
@@ -985,8 +1014,8 @@ de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
   lista, valem para aquele navegador (o som começa ligado; o aviso, desligado).
   No celular só aparece o som: push no celular fica para depois.
 - Com o app aberto em várias abas, só uma toca o som e mostra o aviso.
-- Avisos com mais de 90 dias somem sozinhos. O cliente do portal não tem
-  sino nem avisos.
+- Avisos com mais de 90 dias somem sozinhos. O cliente do portal não usa o
+  sino: tem os próprios avisos, em Notificações no menu do portal (2.27).
 
 ## 3. Regras: como os números são calculados
 

@@ -1,5 +1,6 @@
 import "server-only"
 
+import { parseMoney } from "@/features/finance/money"
 import type { McpContext } from "@/features/mcp/auth"
 import { bullet, dueLabel, findByName, isClear, readDate, readList, readText, type Parsed } from "@/features/mcp/logic"
 import { textResult, type ToolResult } from "@/features/mcp/protocol"
@@ -176,4 +177,20 @@ const APPROVAL_LABEL: Record<ClientApprovalState, string | null> = {
 /** A aprovação do cliente numa etapa, em palavras (null quando não pede). */
 export function approvalLabel(task: Task): string | null {
   return APPROVAL_LABEL[clientApprovalState(task)]
+}
+
+/**
+ * Valor em reais → centavos: 3500, 3500.5, "3.500,00", "R$ 3.500". Zero vale
+ * (taxa, valor de negócio); negativo não. `undefined` = não veio.
+ */
+export function readMoney(args: Args, key: string): Parsed<number | undefined> {
+  if (!(key in args)) return { ok: true, value: undefined }
+  const raw = args[key]
+  if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0) return { ok: true, value: Math.round(raw * 100) }
+  if (typeof raw === "string") {
+    if (/^\s*(R\$)?\s*0+([.,]0{1,2})?\s*$/.test(raw)) return { ok: true, value: 0 }
+    const cents = parseMoney(raw)
+    if (cents !== null) return { ok: true, value: cents }
+  }
+  return { ok: false, error: `Valor inválido em "${key}": use reais (ex.: 3500 ou "3.500,00").` }
 }

@@ -100,8 +100,9 @@ function PanelBody() {
           <li>Reuniões (pauta, combinados, resumo), decisões e agenda</li>
           <li>Clientes e revisão mensal, posts, ideias e processos</li>
           <li>Ler e escrever nos canais, resolver pedidos e ver os avisos do sino</li>
+          <li>Comercial, financeiro (em reais) e metas</li>
         </ul>
-        <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar e não acessa o financeiro.</p>
+        <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar.</p>
       </section>
 
       <Button asChild className="w-full">

@@ -5,7 +5,7 @@ import { cache } from "react"
 import { requireUser } from "@/features/auth/session"
 import { DEFAULT_SETTINGS, type FinanceData } from "@/features/finance/management"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 
 const ENTRY_COLUMNS =
   "id, kind, account, description, amount_cents, fee_cents, due_on, paid_on, skipped, category, client_id, project_id, recurrence_id, period, notes, created_by, created_at, updated_at"
@@ -22,7 +22,11 @@ export type { FinanceData }
  */
 export const getFinance = cache(async (): Promise<FinanceData> => {
   await requireUser()
-  const supabase = await createClient()
+  return fetchFinance(await createClient())
+})
+
+/** O mesmo com o cliente de quem chama (a sessão do app ou o token do conector do Claude), sob o RLS. */
+export async function fetchFinance(supabase: SupabaseServerClient): Promise<FinanceData> {
   const [entries, recurrences, settings, closings] = await Promise.all([
     supabase.from("finance_entries").select(ENTRY_COLUMNS).order("due_on").limit(10000),
     supabase.from("finance_recurrences").select(RECURRENCE_COLUMNS).order("created_at"),
@@ -39,4 +43,4 @@ export const getFinance = cache(async (): Promise<FinanceData> => {
     settings: settings.data ?? DEFAULT_SETTINGS,
     closings: closings.data,
   }
-})
+}

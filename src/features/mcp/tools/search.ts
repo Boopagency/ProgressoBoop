@@ -22,7 +22,7 @@ const search: Tool<McpContext> = {
   name: "buscar",
   title: "Busca geral",
   description:
-    "Busca no Boop Admin, sem acento: tarefas, projetos, clientes, posts (título e legenda), ideias de conteúdo, decisões, processos e reuniões (inclusive resumo e transcrição). Devolve até 6 resultados por grupo, com id e link. Não inclui o financeiro nem o comercial.",
+    "Busca no Boop Admin, sem acento: tarefas, projetos, clientes, posts (título e legenda), ideias de conteúdo, decisões, processos e reuniões (inclusive resumo e transcrição). Devolve até 6 resultados por grupo, com id e link. Para o financeiro, o comercial e as metas, use as ferramentas deles.",
   inputSchema: {
     type: "object",
     properties: { texto: { type: "string", description: "O que procurar (pelo menos 2 letras).", minLength: 2, maxLength: 120 } },

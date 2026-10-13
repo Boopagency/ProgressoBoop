@@ -87,8 +87,9 @@ export default async function ConsentPage({ searchParams }: PageProps<"/oauth/co
           <li>Buscar e ler tarefas, clientes, projetos, reuniões, conteúdo, conversas, processos e avisos</li>
           <li>Criar, editar e concluir tarefas, projetos, reuniões, decisões, eventos, clientes, posts e processos</li>
           <li>Escrever, editar e apagar as suas mensagens nos canais das Comunicações</li>
+          <li>Comercial, financeiro e metas, como você vê na tela</li>
         </ul>
-        <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar e não acessa o financeiro.</p>
+        <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar.</p>
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg bg-muted/60 px-3 py-2.5 text-[13px]">
         <dt className="text-muted-foreground">Aplicativo</dt>

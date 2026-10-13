@@ -87,37 +87,38 @@ Correção fora do plano: rolagem lateral do Hoje no celular (#9).
 Todas as migrations do repositório estão aplicadas no Supabase (a última é
 `20261009193411_notifications_realtime`).
 
-## Em andamento (13/10/2026)
+## Concluído em 13/10/2026
 
-- Issue #39 (conta 2, Opus) — Portal do cliente 2.0: menu lateral, painel
-  resumido, Comunicação, Notificações do cliente e aprovação de etapas do
-  projeto (a equipe marca, por tarefa, o que pede aprovação).
-- Issue #40 (conta 3, Opus no PR 1 e Sonnet nos PRs 2 e 3) — consistência
-  visual e transições suaves no admin e, depois do PR 2 da #39, no portal.
-- A divisão de arquivos entre as duas está no fim de cada issue.
+- Issue #39 — Portal do cliente 2.0: banco (#42, tipos em #44), menu lateral e
+  painel resumido (#46), Comunicação, Notificações, aprovação de etapas e o
+  lado da equipe ("Precisa da aprovação do cliente" na tarefa, a resposta do
+  cliente e "Interno" ao escrever no canal do cliente) (#48).
+- Issue #40 — consistência visual e transição suave: esqueleto das telas
+  (#43), todas as telas do admin (#45) e o portal (#47).
+- Antes disso: Link do Drive com a mensagem do app (#37); limpeza de `plans`,
+  `tasks.plan_id` e `weekly_decisions` (#38, aplicada pela pessoa no SQL
+  Editor); sistema zerado e contas de teste apagadas.
 
 ## Próximos passos
 
 1. **Verificar a segurança das funções do portal — pendente; a pessoa pediu
-   para não fazer ainda.** O advisor do Supabase aponta 12 funções
-   `SECURITY DEFINER` que qualquer usuário logado pode chamar
-   (`link_client_member`, `open_direct_channel`, `portal_client_profile`,
-   `portal_my_clients`, `portal_post_messages`, `portal_posts`,
-   `portal_project_messages`, `portal_project_steps`, `portal_projects`,
-   `portal_review_post`, `portal_send_message`, `portal_send_project_message`).
-   É esperado no desenho, mas cada uma precisa conferir quem chama (equipe ou
-   membro daquele cliente); o que estiver aberto demais se corrige com
-   migration nova. Revisar junto o PR de banco da #39, que acrescenta outras.
+   para não fazer ainda.** O advisor do Supabase aponta 18 funções
+   `SECURITY DEFINER` que qualquer usuário logado pode chamar (as `portal_*`,
+   `link_client_member` e `open_direct_channel`). É esperado no desenho, mas
+   cada uma precisa conferir quem chama (equipe ou membro daquele cliente); o
+   que estiver aberto demais se corrige com migration nova. Fazer antes de dar
+   acesso a clientes de verdade.
 2. Apagar as 6 imagens que sobraram no bucket `content` do Storage (pelo
    painel: por SQL o arquivo não sai de verdade).
 3. Inserir os dados novos que a pessoa vai passar.
 4. Depois disso: proteção de senhas vazadas no Supabase, troca das senhas da
    equipe e confirmação do imposto.
+5. Apagar a cópia `backup_20261013` quando a pessoa mandar.
 
-Feito em 13/10: Link do Drive com a mensagem do app (#37); limpeza de `plans`,
-`tasks.plan_id` e `weekly_decisions` (#38, aplicada pela pessoa no SQL Editor,
-porque a ferramenta não confirma `drop`); sistema zerado e contas de teste
-apagadas.
+Testes na prévia: a ferramenta do Supabase não confirma `delete` nem `drop`
+(trava esperando confirmação). Criar os dados `E2E` pelo SQL funciona; a
+limpeza vai num arquivo `.sql` para a pessoa rodar no SQL Editor, apagando só
+o que o teste criou (a equipe já usa os canais de verdade).
 
 ## Acesso da sessão de coordenação
 

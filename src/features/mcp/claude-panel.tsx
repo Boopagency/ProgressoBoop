@@ -95,12 +95,12 @@ function PanelBody() {
       <section className="space-y-2">
         <h3 className="text-[13px] font-medium">O que o Claude consegue fazer</h3>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-          <li>Buscar em tudo e listar as suas tarefas</li>
-          <li>Ver clientes, projetos, o conteúdo da semana e os ajustes pendentes</li>
-          <li>Criar e concluir tarefas e criar ideias de post</li>
-          <li>Escrever nos canais das Comunicações</li>
+          <li>Buscar em tudo, listar e filtrar tarefas</li>
+          <li>Criar, editar, comentar e concluir tarefas e projetos</li>
+          <li>Reuniões (pauta, combinados, resumo), decisões e agenda</li>
+          <li>Ver o conteúdo da semana, criar ideias de post e escrever nos canais</li>
         </ul>
-        <p className="text-muted-foreground">Ele não apaga nada e não acessa o financeiro.</p>
+        <p className="text-muted-foreground">Ele só apaga algo depois de você confirmar e não acessa o financeiro.</p>
       </section>
 
       <Button asChild className="w-full">

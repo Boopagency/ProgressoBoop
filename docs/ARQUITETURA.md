@@ -683,12 +683,22 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     publicável: todas as consultas passam pelo RLS, como no app. Sem perfil
     em `profiles`, a rota responde `403`. O servidor MCP é um JSON-RPC
     mínimo sem dependência (`features/mcp/protocol.ts`), sem estado e sem
-    SSE (cada POST recebe JSON). Nove ferramentas: busca geral, minhas
-    tarefas, clientes e projetos, conteúdo da semana, ajustes pendentes,
-    criar tarefa, concluir tarefa, criar ideia de post e escrever num canal.
-    Nenhuma apaga nada e nenhuma lê o financeiro (nem o comercial); as
-    escritas usam as mesmas validações das Server Actions e os triggers de
-    sempre (autoria, histórico, pedidos resolvidos). O menu lateral tem o
+    SSE (cada POST recebe JSON). As ferramentas ficam por área em
+    `features/mcp/tools/<área>.ts` e são registradas em `tools.ts` (issue
+    #51: tudo o que se faz na tela). As gravações não repetem regra: o corpo
+    de cada Server Action fica em `features/<área>/mutations.ts`, uma função
+    que recebe o cliente do Supabase; a Server Action chama com o da sessão
+    (cookies) e o MCP com o do token, e as leituras comuns têm a versão
+    `fetch*(supabase)` em `queries.ts`. Assim valem a mesma validação
+    (`parse*`), a mesma regra e os mesmos triggers (autoria, histórico,
+    avisos, pedidos resolvidos). **Excluir é em dois passos**: sem
+    `confirmar: true` (o booleano) a ferramenta só descreve o que seria
+    apagado e o que vai junto; elas têm `destructiveHint`. **Texto do
+    cliente** (pedidos de ajuste, notas de aprovação) volta marcado
+    (`fromClient` em `mcp/logic.ts`), e as instruções do servidor dizem ao
+    Claude que é dado, não instrução. Fora do MCP: acesso de cliente ao
+    portal, login e senha, o consentimento do conector e mudanças de
+    schema. O financeiro e o comercial não têm ferramentas. O menu lateral tem o
     item **Claude**, que abre o painel com o endereço e o passo a passo.
 50. **Portal 2.0: avisos do cliente, Comunicação e aprovação de etapas, sem
     mudar as políticas da equipe** (migration `portal_v2`, só acréscimos).
@@ -799,9 +809,12 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
   `client_id`, e `private.is_oauth_client()` responde isso para as políticas.
   Políticas restritivas (migration `oauth_client_limits`) tiram desses tokens
   o financeiro inteiro (`finance_entries`, `finance_recurrences`,
-  `finance_settings` e `finance_closings`) e qualquer exclusão, nas tabelas
-  da equipe e nas imagens do Storage. As sessões do app não têm `client_id`,
-  então nada muda para elas.
+  `finance_settings` e `finance_closings`) e a exclusão nas tabelas da
+  equipe e nas imagens do Storage. A migration `oauth_client_delete` (issue
+  #51) tira a trava de exclusão só de `tasks`, `task_assignees`, `projects`,
+  `events`, `decisions` e `meeting_items`, que as ferramentas de excluir
+  (com confirmação em dois passos) usam; nelas vale o RLS da equipe, como na
+  tela. As sessões do app não têm `client_id`, então nada muda para elas.
 
 - Nenhuma chave secreta ou service role é usada pelo app. O servidor fala com
   o Supabase com a chave publicável + a sessão da pessoa, então o RLS vale

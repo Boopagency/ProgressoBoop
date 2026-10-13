@@ -2,7 +2,7 @@ import "server-only"
 
 import { requireUser } from "@/features/auth/session"
 import { loadError } from "@/lib/supabase/errors"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Decision } from "@/lib/types"
 
 export const DECISION_COLUMNS =
@@ -11,8 +11,10 @@ export const DECISION_COLUMNS =
 /** Todas as decisões, a mais recente primeiro (o volume é pequeno). */
 export async function getDecisions(): Promise<Decision[]> {
   await requireUser()
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  return fetchDecisions(await createClient())
+}
+
+export async function fetchDecisions(supabase: SupabaseServerClient): Promise<Decision[]> {  const { data, error } = await supabase
     .from("decisions")
     .select(DECISION_COLUMNS)
     .order("decided_on", { ascending: false })

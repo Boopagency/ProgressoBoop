@@ -1,100 +1,66 @@
 import type { Metadata } from "next"
-import type { ReactNode } from "react"
 
-import { portalHome, UPCOMING_DAYS } from "@/features/portal/content-logic"
+import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
+import { getPortalLatestMessages } from "@/features/portal/channel-queries"
+import { portalHome } from "@/features/portal/content-logic"
 import { getPortalPosts } from "@/features/portal/content-queries"
-import { PortalNav, portalHref } from "@/features/portal/portal-nav"
-import { PostListItem } from "@/features/portal/post-meta"
+import { MessagesCard, PendingCard, ProjectsCard, UpcomingCard } from "@/features/portal/home-cards"
+import { HOME_MESSAGES, HOME_UPCOMING, homeProjects, pendingApprovals } from "@/features/portal/home-logic"
+import { portalHref } from "@/features/portal/links"
+import { getPortalProjects, getPortalStepApprovals } from "@/features/portal/project-queries"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import { greetingFor, todayKey } from "@/lib/dates"
 
 export const metadata: Metadata = { title: "Portal" }
 
-/** Início do portal: o que espera a aprovação do cliente, o que está em ajuste e o que vem por aí. */
+/**
+ * Início do portal, um painel resumido: o que espera a resposta do cliente
+ * (posts e etapas), os projetos com o andamento, as últimas mensagens e os
+ * próximos posts.
+ */
 export default async function PortalPage(props: PageProps<"/portal">) {
   const [user, searchParams] = await Promise.all([requirePortalUser(), props.searchParams])
   const client = pickPortalClient(user, searchParams.cliente)
-  const posts = await getPortalPosts(client.id)
+  const [posts, steps, projects, messages] = await Promise.all([
+    getPortalPosts(client.id),
+    getPortalStepApprovals(client.id),
+    getPortalProjects(client.id),
+    getPortalLatestMessages(client.id, HOME_MESSAGES),
+  ])
   const today = todayKey()
-  const home = portalHome(posts, today)
-  const postHref = (id: string) => portalHref(`/portal/posts/${id}`, client, user.clients)
+  const pending = pendingApprovals(posts, steps)
+  const upcoming = portalHome(posts, today).upcoming.slice(0, HOME_UPCOMING)
+  const href = (path: string) => portalHref(path, client, user.clients)
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">{client.name}</p>
-        <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">
-          {greetingFor()}, {user.name}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {home.review.length === 0
-            ? "Nenhum post esperando a sua aprovação agora."
-            : home.review.length === 1
-              ? "Tem 1 post esperando a sua aprovação."
-              : `Tem ${home.review.length} posts esperando a sua aprovação.`}
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={`${greetingFor()}, ${user.name}`}
+        description={`${client.name} · ${
+          pending.length === 0
+            ? "nada esperando a sua aprovação"
+            : pending.length === 1
+              ? "1 item esperando a sua aprovação"
+              : `${pending.length} itens esperando a sua aprovação`
+        }`}
+      />
 
-      <PortalNav section="inicio" client={client} clients={user.clients} />
-
-      <Section title="Para aprovar" count={home.review.length} empty="Quando a equipe enviar um post para você, ele aparece aqui.">
-        {home.review.map((post) => (
-          <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
-        ))}
-      </Section>
-
-      {home.adjusting.length > 0 ? (
-        <Section
-          title="Em ajuste"
-          count={home.adjusting.length}
-          description="A equipe está fazendo os ajustes que você pediu. Quando voltar, o post aparece em Para aprovar."
-        >
-          {home.adjusting.map((post) => (
-            <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
-          ))}
-        </Section>
-      ) : null}
-
-      <Section
-        title={`Próximos ${UPCOMING_DAYS} dias`}
-        count={home.upcoming.length}
-        empty="Nenhum post aprovado com data para os próximos dias."
-      >
-        {home.upcoming.map((post) => (
-          <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
-        ))}
-      </Section>
-    </div>
-  )
-}
-
-function Section({
-  title,
-  count,
-  description,
-  empty,
-  children,
-}: {
-  title: string
-  count: number
-  description?: string
-  empty?: string
-  children: ReactNode
-}) {
-  return (
-    <section className="space-y-2">
-      <div>
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          {title}
-          {count > 0 ? <span className="text-xs font-normal text-muted-foreground tabular-nums">{count}</span> : null}
-        </h2>
-        {description ? <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{description}</p> : null}
-      </div>
-      {count === 0 ? (
-        <p className="rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground">{empty}</p>
-      ) : (
-        <ul className="rounded-xl border bg-card p-1.5">{children}</ul>
-      )}
-    </section>
+      <PageBody>
+        {/*
+          Celular: esperando → projetos → mensagens → próximos.
+          Computador: o que pede ação à esquerda; conversa e agenda à direita.
+        */}
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-x-10">
+          <div className="flex min-w-0 flex-col gap-8">
+            <PendingCard items={pending} href={href} today={today} />
+            <ProjectsCard projects={homeProjects(projects)} href={href} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-8">
+            <MessagesCard messages={messages} href={href} today={today} />
+            <UpcomingCard posts={upcoming} href={href} today={today} />
+          </div>
+        </div>
+      </PageBody>
+    </PageContainer>
   )
 }

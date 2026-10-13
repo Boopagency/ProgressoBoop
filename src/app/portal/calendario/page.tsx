@@ -2,10 +2,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { Button } from "@/components/ui/button"
 import { groupByDay } from "@/features/content/logic"
 import { getPortalPosts } from "@/features/portal/content-queries"
-import { PortalNav, portalHref } from "@/features/portal/portal-nav"
+import { portalHref } from "@/features/portal/links"
 import { PostListItem, StatusDot } from "@/features/portal/post-meta"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import {
@@ -53,11 +54,10 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
   const monthHref = (key: DateKey) => href("/portal/calendario", `mes=${key.slice(0, 7)}`)
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{client.name}</h1>
-      <PortalNav section="calendario" client={client} clients={user.clients} />
+    <PageContainer>
+      <PageHeader title="Calendário" description={client.name} />
 
-      <div className="flex items-center gap-2">
+      <PageToolbar>
         <h2 className="mr-auto text-base font-semibold text-foreground">{formatMonthYear(anchor)}</h2>
         <Button asChild variant="ghost" size="sm" className="h-8 px-2.5 text-[13px]">
           <Link href={monthHref(today)}>Hoje</Link>
@@ -72,8 +72,9 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
             <ChevronRight />
           </Link>
         </Button>
-      </div>
+      </PageToolbar>
 
+      <PageBody>
       {/* Telas largas: o mês em grade, de segunda a domingo. */}
       <div className="hidden overflow-hidden rounded-xl border bg-card sm:block">
         <div className="grid grid-cols-7 border-b bg-muted/40">
@@ -153,6 +154,7 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
           </ul>
         </section>
       ) : null}
-    </div>
+      </PageBody>
+    </PageContainer>
   )
 }

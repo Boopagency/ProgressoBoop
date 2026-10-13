@@ -77,9 +77,10 @@ src/
 │   │                           # (mesma regra, bucket `content`; a conta do cliente
 │   │                           # também entra e o Storage filtra o que ela vê)
 │   ├── login/                  # "/login" (sem "Criar conta")
-│   ├── portal/                 # "/portal": área do cliente (layout próprio, sem a
-│   │                           # sidebar; só contas de cliente): início, calendário,
-│   │                           # feed e o post aberto (posts/[id])
+│   ├── portal/                 # "/portal": área do cliente (layout próprio, com o
+│   │                           # menu lateral do portal; só contas de cliente): início
+│   │                           # (painel), calendário, feed, projetos (projetos/[id])
+│   │                           # e o post aberto (posts/[id])
 │   ├── layout.tsx              # raiz: fonte, <html lang="pt-BR">, Toaster
 │   └── globals.css             # Tailwind v4 + tokens do design system
 ├── components/
@@ -125,10 +126,12 @@ src/
 │   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
 │   │                           # navegador (browser.ts), avisos na hora pelo Realtime
 │   │                           # (realtime.ts)
-│   ├── portal/                 # portal do cliente: sessão da conta de cliente, o
-│   │                           # conteúdo (queries, actions e regras pelas funções
-│   │                           # `portal_*`, telas do post e chat) e, na equipe, o
-│   │                           # cartão "Acesso do cliente"
+│   ├── portal/                 # portal do cliente: sessão da conta de cliente, menu
+│   │                           # lateral e topo (portal-sidebar, portal-topbar,
+│   │                           # portal-nav), o painel do início (home-*), o
+│   │                           # conteúdo, os projetos e o canal (queries, actions e
+│   │                           # regras pelas funções `portal_*`, telas do post e
+│   │                           # chat) e, na equipe, o cartão "Acesso do cliente"
 │   └── search/                 # busca geral (Ctrl/⌘ + K): janela, ações e resultados
 ├── hooks/                      # use-mobile (shadcn), use-url-trigger (?novo= abre o
 │                               # diálogo de criar da tela)
@@ -1257,6 +1260,31 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   seção, fórmulas (margens, resultado, totais, imposto pela premissa
   editável) e uma aba "Sobre" explicando os números.
 
+### Portal do cliente (`/portal`)
+
+A área da conta de cliente, com a mesma lógica visual do admin: menu lateral
+à esquerda (`PortalSidebar`, no padrão do `AppSidebar`, recolhível; no
+celular, o mesmo Sheet), topo com o botão do menu e a seção
+(`PortalTopbar`; no post ou no projeto aberto, a seção vira o "voltar") e as
+telas no esqueleto do admin (`PageContainer`, `PageHeader`, `PageToolbar`,
+`PageBody`). O menu tem Início, Calendário, Feed e Projetos (Comunicação e
+Notificações entram com as telas delas, no PR 3 da issue #39); quem
+acompanha mais de um cliente troca de cliente no topo do menu (o escolhido
+vai em `?cliente=` em todos os links, `features/portal/links.ts`), e o
+rodapé tem quem está logado e "Sair".
+
+- **Início** (painel resumido, `features/portal/home-*`): **Esperando você**
+  (posts em "Para aprovar" e as etapas que esperam a aprovação, por
+  `portal_step_approvals`), **Projetos** (os em aberto, até quatro, com a
+  porcentagem concluída), **Últimas mensagens** (as cinco mais novas do
+  canal do cliente, por `portal_channel_messages`; a do post ou do projeto
+  leva direto ao chat dele) e **Próximos posts** (aprovados e programados
+  nos próximos 14 dias, até cinco). Nada interno: sem financeiro,
+  responsáveis ou prazos internos.
+- **Calendário**, **Feed**, **Projetos** e as páginas do post e do projeto:
+  as mesmas de antes, agora no esqueleto (o mês e as setas do calendário na
+  linha de filtros; status, formato e datas na linha da descrição).
+
 ### Busca geral (Ctrl/⌘ + K)
 
 - Abre em qualquer tela, pelo atalho ou pelo botão **Buscar…** do topo (no
@@ -1341,6 +1369,8 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 | `KpiTile`            | indicador: valor, variação colorida pelo sentido bom, tendência e alerta |
 | `ColumnChart` / `LineChart` / `Sparkline` / `BarList` | gráficos em HTML/SVG, com tooltip, teclado (setas), legenda e clique para o detalhe |
 | `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
+| `PortalSidebar` / `PortalTopbar` | menu lateral do portal (troca de cliente, telas, "Sair") e o topo com a seção ou o "voltar" |
+| `PendingCard` / `ProjectsCard` / `MessagesCard` / `UpcomingCard` | quadros do Início do portal: o que espera o cliente, projetos, últimas mensagens e próximos posts |
 
 ### 8.1 Esqueleto das telas e transição
 

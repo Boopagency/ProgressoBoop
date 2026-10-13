@@ -1,8 +1,7 @@
-import { ChevronLeft } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
 import { canReview, portalStatus, postGallery, type PortalPost } from "@/features/portal/content-logic"
@@ -10,7 +9,6 @@ import { getPortalPostMessages, getPortalPosts } from "@/features/portal/content
 import { PostChat } from "@/features/portal/post-chat"
 import { PostGallery } from "@/features/portal/post-gallery"
 import { StatusBadge } from "@/features/portal/post-meta"
-import { portalHref } from "@/features/portal/portal-nav"
 import { ReviewPanel } from "@/features/portal/review-panel"
 import { pickPortalClient, requirePortalUser, type PortalClient } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
@@ -45,29 +43,26 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
   const slideTexts = post.slides.filter((slide) => slide.text.trim())
 
   return (
-    <div className="space-y-6">
-      <Link
-        href={portalHref("/portal", client, user.clients)}
-        className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" />
-        {client.name}
-      </Link>
+    <PageContainer>
+      <PageHeader
+        title={post.title}
+        description={
+          <PageMeta
+            items={[
+              <StatusBadge key="status" stage={post.stage} />,
+              <span key="format" className="flex items-center gap-1.5">
+                <FormatIcon format={post.format} />
+                {CONTENT_FORMAT_LABEL[post.format]}
+              </span>,
+              post.networks.map((network) => CONTENT_NETWORK_LABEL[network]).join(", "),
+              publishLabel(post, today),
+              user.clients.length > 1 ? client.name : null,
+            ]}
+          />
+        }
+      />
 
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge stage={post.stage} />
-          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-            <FormatIcon format={post.format} />
-            {CONTENT_FORMAT_LABEL[post.format]}
-            <span aria-hidden>·</span>
-            {post.networks.map((network) => CONTENT_NETWORK_LABEL[network]).join(", ")}
-            <span aria-hidden>·</span>
-            {publishLabel(post, today)}
-          </span>
-        </div>
-        <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{post.title}</h1>
-      </div>
+      <PageBody>
 
       {canReview(post) ? (
         <ReviewPanel postId={post.id} />
@@ -113,6 +108,7 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
           initialMessages={messages}
         />
       </div>
-    </div>
+      </PageBody>
+    </PageContainer>
   )
 }

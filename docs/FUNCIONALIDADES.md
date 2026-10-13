@@ -856,8 +856,12 @@ juntos**, sem entrar cliente por cliente.
 ### 2.27 Portal do cliente (`/portal`)
 
 A área em que a pessoa de um cliente entra com a própria conta e vê só o
-que é daquele cliente. Layout próprio (sem a barra lateral da equipe),
-pensado para o celular.
+que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
+Início, Calendário, Feed e Projetos (no celular, o mesmo menu recolhível,
+pelo botão no topo), a troca de cliente no topo do menu (para quem
+acompanha mais de um) e, no rodapé, quem está logado e **Sair**. No post e no
+projeto aberto, o topo mostra o "voltar". Comunicação e Notificações entram
+no menu com as telas delas.
 
 - **O que o cliente vê:** os posts a partir de "Aguardando cliente"
   (aguardando, aprovado, programado e publicado) e os que voltaram para a
@@ -865,10 +869,14 @@ pensado para o celular.
   ideia, orientação de design, roteiro, frentes, responsável e link do
   Drive ficam de fora. Para o cliente, as etapas aparecem como Para
   aprovar, Em ajuste, Aprovado, Programado e Publicado.
-- **Início:** a saudação com o nome de quem acessa e quantos posts esperam
-  a aprovação; as listas "Para aprovar", "Em ajuste" (só quando há) e
-  "Próximos 14 dias" (aprovados e programados com data). Um seletor de
-  cliente quando a conta acompanha mais de um. "Sair" no topo.
+- **Início (painel):** a saudação com o nome de quem acessa e quantos itens
+  esperam a aprovação; **Esperando você** (posts em "Para aprovar" e as
+  etapas de projeto que pedem a aprovação); **Projetos** (os em aberto, até
+  quatro, com a porcentagem concluída e "Ver todos"); **Últimas mensagens**
+  (as cinco mais novas da conversa com a equipe; a de um post ou projeto
+  abre o chat dele); e **Próximos posts** (aprovados e programados nos
+  próximos 14 dias, até cinco, com o link para o Calendário). Os posts em
+  ajuste continuam no Calendário e no Feed, com a situação "Em ajuste".
 - **Calendário:** o mês, de segunda a domingo, com os posts em cada dia
   (ponto da situação e título); setas para mudar de mês e "Hoje". No
   celular, só os dias que têm post, em lista. Os sem data ficam abaixo.

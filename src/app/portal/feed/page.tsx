@@ -2,12 +2,13 @@ import { Pin } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { ContentImage } from "@/features/content/content-image"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
 import { PORTAL_STATUS_LABEL, portalFeed, portalStatus, postThumbnail } from "@/features/portal/content-logic"
 import { getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
-import { PortalNav, portalHref } from "@/features/portal/portal-nav"
+import { portalHref } from "@/features/portal/links"
 import { StatusDot } from "@/features/portal/post-meta"
 import { ProfilePhoto } from "@/features/portal/profile-photo"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
@@ -26,11 +27,11 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   const tiles = portalFeed(posts)
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{client.name}</h1>
-      <PortalNav section="feed" client={client} clients={user.clients} />
+    <PageContainer>
+      <PageHeader title="Feed" description={client.name} />
 
-      <div className="mx-auto w-full max-w-[600px]">
+      <PageBody>
+      <div className="w-full max-w-[600px]">
         <div className="flex items-center gap-4 sm:gap-6">
           <ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} />
           <div className="min-w-0 flex-1">
@@ -117,6 +118,7 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
           </ul>
         )}
       </div>
-    </div>
+      </PageBody>
+    </PageContainer>
   )
 }

@@ -34,6 +34,8 @@ export type CommunicationChannel = "whatsapp" | "email" | "call" | "meeting" | "
 export type ChannelKind = "client" | "internal" | "direct"
 /** Mensagem, Pedido de ajuste, Aprovação ou aviso do sistema. */
 export type MessageKind = "text" | "change_request" | "approval" | "system"
+/** Resposta do cliente a uma etapa que pede aprovação: aprovou ou pediu ajustes. */
+export type ClientApprovalResult = "approved" | "changes"
 /** Receita ou despesa. */
 export type FinanceKind = "income" | "expense"
 /**

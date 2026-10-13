@@ -3,7 +3,7 @@ import "server-only"
 import { cache } from "react"
 
 import { toPortalMessage, type PortalMessage } from "@/features/portal/content-queries"
-import type { PortalProject, PortalStep } from "@/features/portal/project-logic"
+import type { PortalProject, PortalStep, PortalStepApproval } from "@/features/portal/project-logic"
 import { requirePortalUser } from "@/features/portal/session"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
@@ -54,4 +54,29 @@ export const getPortalProjectMessages = cache(async (projectId: string): Promise
   const { data, error } = await supabase.rpc("portal_project_messages", { target_project: projectId })
   if (error) throw loadError(error, "as mensagens")
   return (data ?? []).map(toPortalMessage)
+})
+
+/**
+ * Etapas que pedem a aprovação do cliente, em todos os projetos dele: as que
+ * esperam a resposta vêm primeiro. Cliente de outra conta volta vazio.
+ */
+export const getPortalStepApprovals = cache(async (clientId: string): Promise<PortalStepApproval[]> => {
+  await requirePortalUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("portal_step_approvals", { target_client: clientId })
+  if (error) throw loadError(error, "as etapas para aprovar")
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    project_id: row.project_id,
+    project_name: row.project_name,
+    title: row.title,
+    status: row.status,
+    due_date: row.due_date ?? null,
+    completed_at: row.completed_at ?? null,
+    awaiting: row.awaiting ?? false,
+    approval: row.approval ?? null,
+    note: row.note ?? null,
+    decided_by_name: row.decided_by_name ?? null,
+    decided_at: row.decided_at ?? null,
+  }))
 })

@@ -1,10 +1,9 @@
-import { Check, ChevronLeft } from "lucide-react"
+import { Check } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
 import { PostChat } from "@/features/portal/post-chat"
-import { portalHref } from "@/features/portal/portal-nav"
 import { projectPercent, templateName, type PortalProject } from "@/features/portal/project-logic"
 import {
   getPortalProjectMessages,
@@ -47,33 +46,27 @@ export default async function PortalProjectPage(props: PageProps<"/portal/projet
   const nextId = steps.find((step) => step.status !== "done")?.id
 
   return (
-    <div className="space-y-6">
-      <Link
-        href={portalHref("/portal/projetos", client, user.clients)}
-        className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" />
-        Projetos
-      </Link>
+    <PageContainer>
+      <PageHeader
+        title={project.name}
+        description={
+          <PageMeta
+            items={[
+              <ProjectStatusBadge key="status" status={project.status} />,
+              kind,
+              `Começou ${formatShortDate(project.starts_on, today)}`,
+              project.due_on ? `prazo ${formatShortDate(project.due_on, today)}` : null,
+              <ProjectTiming key="timing" project={project} today={today} />,
+              user.clients.length > 1 ? client.name : null,
+            ]}
+          />
+        }
+      />
 
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <ProjectStatusBadge status={project.status} />
-            {kind ? <span className="text-[13px] text-muted-foreground">{kind}</span> : null}
-          </div>
-          <h1 className="font-display text-2xl leading-8 font-semibold tracking-tight text-foreground">{project.name}</h1>
-          <p className="text-[13px] text-muted-foreground">
-            Começou {formatShortDate(project.starts_on, today)}
-            {project.due_on ? ` · prazo ${formatShortDate(project.due_on, today)}` : ""}
-            {" · "}
-            <ProjectTiming project={project} today={today} />
-          </p>
-        </div>
-        <div className="flex max-w-md items-center gap-3">
-          <ProjectBar percent={percent} className="flex-1" />
-          <span className="text-[13px] font-medium text-foreground tabular-nums">{percent}% concluído</span>
-        </div>
+      <PageBody>
+      <div className="flex max-w-md items-center gap-3">
+        <ProjectBar percent={percent} className="flex-1" />
+        <span className="text-[13px] font-medium text-foreground tabular-nums">{percent}% concluído</span>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -141,6 +134,7 @@ export default async function PortalProjectPage(props: PageProps<"/portal/projet
           initialMessages={messages}
         />
       </div>
-    </div>
+      </PageBody>
+    </PageContainer>
   )
 }

@@ -26,7 +26,7 @@ function toBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
  * consegue gerar, senão JPEG (com fundo branco, que JPEG não tem
  * transparência). GIF e outros formatos viram uma imagem parada.
  */
-async function prepareImage(file: File, maxSide: number): Promise<File> {
+export async function prepareImage(file: File, maxSide: number): Promise<File> {
   const bitmap = await createImageBitmap(file).catch(() => null)
   if (!bitmap) {
     if (accepted(file.type)) return file

@@ -3,6 +3,8 @@ import "server-only"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 
+import { avatarPublicUrl } from "@/features/account/logic"
+import { supabaseEnv } from "@/lib/supabase/env"
 import { createClient } from "@/lib/supabase/server"
 
 /** Um cliente que a conta do portal acompanha. */
@@ -17,6 +19,8 @@ export interface PortalUser {
   email: string
   /** Nome dado pela equipe ao liberar o acesso (ex.: "Barbara"). */
   name: string
+  /** Foto escolhida pela pessoa em Minha conta. */
+  avatarUrl: string | null
   /** Clientes ativos da conta, em ordem alfabética. Nunca vazio. */
   clients: PortalClient[]
 }
@@ -31,7 +35,11 @@ export const getPortalUser = cache(async (): Promise<PortalUser | null> => {
   const { data, error } = await supabase.auth.getClaims()
   if (error || !data?.claims) return null
 
-  const { data: rows } = await supabase.rpc("portal_my_clients")
+  const [{ data: rows }, { data: me }] = await Promise.all([
+    supabase.rpc("portal_my_clients"),
+    // A foto é só um detalhe: se não vier, o portal mostra a inicial.
+    supabase.from("client_members").select("avatar_path").eq("user_id", data.claims.sub).limit(1).maybeSingle(),
+  ])
   const first = rows?.[0]
   if (!rows || !first) return null
 
@@ -39,6 +47,7 @@ export const getPortalUser = cache(async (): Promise<PortalUser | null> => {
     id: data.claims.sub,
     email: typeof data.claims.email === "string" ? data.claims.email : "",
     name: first.member_name,
+    avatarUrl: me?.avatar_path ? avatarPublicUrl(supabaseEnv().url, me.avatar_path) : null,
     clients: rows.map((row) => ({ id: row.client_id, name: row.client_name })),
   }
 })

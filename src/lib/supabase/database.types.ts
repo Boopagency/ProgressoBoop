@@ -187,6 +187,7 @@ export type Database = {
       }
       client_members: {
         Row: {
+          avatar_path: string | null
           client_id: string
           created_at: string
           created_by: string
@@ -196,6 +197,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_path?: string | null
           client_id: string
           created_at?: string
           created_by?: string
@@ -205,6 +207,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_path?: string | null
           client_id?: string
           created_at?: string
           created_by?: string
@@ -2302,6 +2305,10 @@ export type Database = {
           status: Database["public"]["Enums"]["task_status"]
           title: string
         }[]
+      }
+      portal_update_me: {
+        Args: { new_avatar_path: string; new_name: string }
+        Returns: undefined
       }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }

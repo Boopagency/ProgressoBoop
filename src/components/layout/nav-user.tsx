@@ -1,7 +1,7 @@
 "use client"
 
-import { ChevronsUpDown, LogOut } from "lucide-react"
-import { useTransition } from "react"
+import { ChevronsUpDown, LogOut, UserRound } from "lucide-react"
+import { useState, useTransition } from "react"
 
 import { ThemeMenuItems } from "@/components/layout/theme-menu"
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { AccountDialog } from "@/features/account/account-dialog"
 import { signOut } from "@/features/auth/actions"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
@@ -21,6 +22,7 @@ export function NavUser() {
   const { currentUser, profiles } = useWorkspace()
   const { isMobile } = useSidebar()
   const [isSigningOut, startSignOut] = useTransition()
+  const [accountOpen, setAccountOpen] = useState(false)
   const colorIndex = profiles.findIndex((profile) => profile.id === currentUser.id)
 
   const avatar = (
@@ -66,6 +68,11 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setAccountOpen(true)}>
+              <UserRound />
+              Minha conta
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <ThemeMenuItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -77,6 +84,12 @@ export function NavUser() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <AccountDialog
+          open={accountOpen}
+          onOpenChange={setAccountOpen}
+          user={{ name: currentUser.full_name, email: currentUser.email, avatarUrl: currentUser.avatar_url }}
+          colorIndex={colorIndex}
+        />
       </SidebarMenuItem>
     </SidebarMenu>
   )

@@ -1,9 +1,9 @@
 "use client"
 
-import { Check, ChevronsUpDown, LogOut } from "lucide-react"
+import { Check, ChevronsUpDown, LogOut, UserRound } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 
 import { BoopMark } from "@/components/layout/boop-mark"
 import { ThemeMenuItems } from "@/components/layout/theme-menu"
@@ -29,12 +29,14 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { AccountDialog, type AccountDialogUser } from "@/features/account/account-dialog"
 import { signOut } from "@/features/auth/actions"
 import { portalHref, selectedClient } from "@/features/portal/links"
 import { countLabel } from "@/features/portal/notification-logic"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import { isPortalDetail, PORTAL_NAV, portalSectionOf } from "@/features/portal/portal-nav"
 import type { PortalClient } from "@/features/portal/session"
+import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { cn } from "@/lib/utils"
 
 /**
@@ -47,7 +49,7 @@ export function PortalSidebar({
   user,
   clients,
 }: {
-  user: { name: string; email: string }
+  user: AccountDialogUser
   clients: readonly PortalClient[]
 }) {
   const pathname = usePathname()
@@ -185,19 +187,14 @@ function ClientSwitcher({
   )
 }
 
-/** Quem está logado no portal (o nome dado pela equipe e o e-mail), o tema e "Sair". */
-function PortalUserMenu({ user }: { user: { name: string; email: string } }) {
+/** Quem está logado no portal (nome, foto e e-mail), Minha conta, o tema e "Sair". */
+function PortalUserMenu({ user }: { user: AccountDialogUser }) {
   const { isMobile } = useSidebar()
   const [isSigningOut, startSignOut] = useTransition()
-  const initial = user.name.trim().charAt(0).toUpperCase() || "?"
+  const [accountOpen, setAccountOpen] = useState(false)
 
   const avatar = (
-    <span
-      aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground"
-    >
-      {initial}
-    </span>
+    <PersonAvatar name={user.name} avatarUrl={user.avatarUrl} colorIndex={0} size="sm" className="size-7" />
   )
 
   return (
@@ -228,6 +225,11 @@ function PortalUserMenu({ user }: { user: { name: string; email: string } }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setAccountOpen(true)}>
+              <UserRound />
+              Minha conta
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <ThemeMenuItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={isSigningOut} onSelect={() => startSignOut(() => signOut())}>
@@ -236,6 +238,7 @@ function PortalUserMenu({ user }: { user: { name: string; email: string } }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} user={user} />
       </SidebarMenuItem>
     </SidebarMenu>
   )

@@ -60,7 +60,17 @@ export async function fetchThread(
   if (messages.error) throw loadError(messages.error, "as mensagens")
   if (pending?.error) throw loadError(pending.error, "os pedidos pendentes")
   const rows = messages.data.slice(0, THREAD_PAGE).reverse()
-  return { messages: rows, hasMore: messages.data.length > THREAD_PAGE, pending: pending?.data ?? [] }
+
+  // "Visto por" só na página mais recente. Post e projeto são parte do canal do cliente.
+  const channelId = "channelId" in scope ? scope.channelId : (rows[0]?.channel_id ?? null)
+  let reads: ThreadData["reads"] = []
+  if (!before && channelId) {
+    const result = await supabase.from("channel_reads").select("user_id, last_read_at").eq("channel_id", channelId)
+    // Sem a leitura dos outros, o fio continua (só não mostra quem viu).
+    if (result.error) console.error(`[supabase] ${result.error.code ?? "?"}: ${result.error.message}`)
+    else reads = result.data
+  }
+  return { messages: rows, hasMore: messages.data.length > THREAD_PAGE, pending: pending?.data ?? [], reads }
 }
 
 /** Canais que a pessoa enxerga, com participantes e contagens. */

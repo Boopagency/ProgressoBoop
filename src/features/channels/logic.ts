@@ -66,11 +66,57 @@ export interface ChannelEntry extends Channel {
   counts: ChannelCounts
 }
 
-/** Uma página do fio (as mais recentes, em ordem) e todos os pedidos pendentes do canal. */
+/** Até onde cada pessoa leu o canal (`channel_reads`). */
+export interface ChannelRead {
+  user_id: string
+  last_read_at: Timestamp
+}
+
+/**
+ * Uma página do fio (as mais recentes, em ordem), todos os pedidos pendentes
+ * do canal e até onde cada pessoa leu (só na página mais recente).
+ */
 export interface ThreadData {
   messages: ThreadMessage[]
   hasMore: boolean
   pending: ThreadMessage[]
+  reads: ChannelRead[]
+}
+
+/**
+ * "Visto por": cada pessoa aparece embaixo da última mensagem que já viu, como
+ * nos aplicativos de conversa. Quem escreveu viu até a própria mensagem; no
+ * próprio texto não aparece. Quem é do cliente não vê as mensagens internas,
+ * então só conta as outras. Quem está olhando a tela fica de fora.
+ */
+export function seenByMessage(
+  messages: readonly ThreadMessage[],
+  reads: readonly ChannelRead[],
+  viewerId: string,
+  isClient: (userId: string) => boolean
+): Map<string, string[]> {
+  const readAt = new Map<string, number>()
+  for (const read of reads) readAt.set(read.user_id, Date.parse(read.last_read_at))
+  for (const message of messages) {
+    if (!message.author_id) continue
+    const at = Date.parse(message.created_at)
+    if (at > (readAt.get(message.author_id) ?? -Infinity)) readAt.set(message.author_id, at)
+  }
+
+  const seen = new Map<string, string[]>()
+  for (const [userId, at] of readAt) {
+    if (userId === viewerId) continue
+    const client = isClient(userId)
+    let last: ThreadMessage | undefined
+    for (const message of messages) {
+      if (message.kind === "system" || (client && message.internal)) continue
+      if (Date.parse(message.created_at) > at) break
+      last = message
+    }
+    if (!last || last.author_id === userId) continue
+    seen.set(last.id, [...(seen.get(last.id) ?? []), userId])
+  }
+  return seen
 }
 
 /** Pedido pendente com o canal (tela Hoje). */

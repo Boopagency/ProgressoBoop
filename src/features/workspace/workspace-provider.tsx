@@ -2,12 +2,13 @@
 
 import { createContext, use, useMemo, type ReactNode } from "react"
 
-import type { Workspace } from "@/features/workspace/queries"
+import type { ClientPerson, Workspace } from "@/features/workspace/queries"
 import type { Client, Profile, Project, SessionUser } from "@/lib/types"
 
 interface WorkspaceContextValue extends Workspace {
   currentUser: SessionUser
   profileById: Map<string, Profile>
+  clientPersonById: Map<string, ClientPerson>
   clientById: Map<string, Client>
   projectById: Map<string, Project>
 }
@@ -32,6 +33,7 @@ export function WorkspaceProvider({
       ...workspace,
       currentUser,
       profileById: new Map(workspace.profiles.map((profile) => [profile.id, profile])),
+      clientPersonById: new Map(workspace.clientPeople.map((person) => [person.id, person])),
       clientById: new Map(workspace.clients.map((client) => [client.id, client])),
       projectById: new Map(workspace.projects.map((project) => [project.id, project])),
     }),

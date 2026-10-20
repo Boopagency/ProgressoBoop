@@ -2,7 +2,7 @@
 
 import { Check, Eye, FolderKanban, ListPlus, Lock, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { Fragment, useState, useTransition, type ReactNode } from "react"
+import { Fragment, useMemo, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import {
@@ -31,7 +31,17 @@ import {
   setMessageKind,
   setMessageResolved,
 } from "@/features/channels/actions"
-import { BODY_MAX, isPending, messageTime, taskTitleFrom, type MessagePost, type MessageProject, type ThreadMessage } from "@/features/channels/logic"
+import {
+  BODY_MAX,
+  isPending,
+  messageTime,
+  seenByMessage,
+  taskTitleFrom,
+  type ChannelRead,
+  type MessagePost,
+  type MessageProject,
+  type ThreadMessage,
+} from "@/features/channels/logic"
 import { ContentImage } from "@/features/content/content-image"
 import { FormatIcon, StageDot } from "@/features/content/post-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
@@ -66,12 +76,19 @@ function MessageText({ text }: { text: string }) {
   )
 }
 
-/** Quem escreveu: alguém da equipe, o cliente (fase 3) ou uma conta que saiu. */
+/**
+ * Quem escreveu: alguém da equipe, uma pessoa do cliente (pelo portal, com o
+ * nome e a foto de Minha conta) ou uma conta que saiu.
+ */
 export function useAuthor(authorId: string | null) {
-  const { profiles, profileById } = useWorkspace()
+  const { profiles, profileById, clientPersonById } = useWorkspace()
   const profile = authorId ? profileById.get(authorId) : undefined
+  const person = authorId && !profile ? clientPersonById.get(authorId) : undefined
+  const fullName = profile?.full_name ?? person?.full_name ?? null
   return {
-    name: profile ? firstName(profile.full_name) : authorId ? "Cliente" : "Conta removida",
+    name: fullName ? firstName(fullName) : authorId ? "Cliente" : "Conta removida",
+    fullName,
+    avatarUrl: profile?.avatar_url ?? person?.avatar_url ?? null,
     profile,
     colorIndex: profile ? profiles.indexOf(profile) : -1,
   }
@@ -81,11 +98,53 @@ export function MessageAvatar({ authorId, className }: { authorId: string | null
   const author = useAuthor(authorId)
   return (
     <PersonAvatar
-      name={author.profile?.full_name ?? author.name}
-      avatarUrl={author.profile?.avatar_url}
+      name={author.fullName ?? author.name}
+      avatarUrl={author.avatarUrl}
       colorIndex={author.colorIndex}
       className={cn("size-8", className)}
     />
+  )
+}
+
+/** "Visto por" de um fio: em qual mensagem aparece cada pessoa (ver `seenByMessage`). */
+export function useSeenBy(messages: readonly ThreadMessage[] | null, reads: readonly ChannelRead[]) {
+  const { currentUser, profileById, clientPersonById } = useWorkspace()
+  return useMemo(
+    () =>
+      seenByMessage(
+        messages ?? [],
+        // Só quem a tela conhece (equipe e pessoas do cliente).
+        reads.filter((read) => profileById.has(read.user_id) || clientPersonById.has(read.user_id)),
+        currentUser.id,
+        (userId) => !profileById.has(userId)
+      ),
+    [messages, reads, currentUser.id, profileById, clientPersonById]
+  )
+}
+
+function SeenName({ id }: { id: string }) {
+  return <>{useAuthor(id).name}</>
+}
+
+/** Fotos pequenas e os nomes de quem já viu até a mensagem. */
+function SeenBy({ ids, className }: { ids: readonly string[]; className?: string }) {
+  return (
+    <p className={cn("mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground", className)}>
+      <span className="flex -space-x-1" aria-hidden="true">
+        {ids.slice(0, 5).map((id) => (
+          <MessageAvatar key={id} authorId={id} className="size-4 ring-1 ring-background [&_[data-slot=avatar-fallback]]:text-[8px]" />
+        ))}
+      </span>
+      <span>
+        Visto por{" "}
+        {ids.map((id, index) => (
+          <Fragment key={id}>
+            {index > 0 ? (index === ids.length - 1 ? " e " : ", ") : null}
+            <SeenName id={id} />
+          </Fragment>
+        ))}
+      </span>
+    </p>
   )
 }
 
@@ -211,10 +270,13 @@ export function MessageItem({
   onRemoved,
   onOpenPost,
   extra,
+  seenBy,
 }: {
   message: ThreadMessage
   /** Mensagem seguida da mesma pessoa: sem nome nem foto. */
   continued?: boolean
+  /** Quem viu até esta mensagem (ids), para o "Visto por". */
+  seenBy?: readonly string[]
   showPost?: boolean
   /** Etiqueta do projeto (some na própria conversa do projeto). */
   showProject?: boolean
@@ -514,6 +576,7 @@ export function MessageItem({
             </div>
           )}
           {details}
+          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} className="justify-end" /> : null}
         </div>
       ) : (
         <div className="min-w-0 flex-1">
@@ -529,6 +592,7 @@ export function MessageItem({
           {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
           {body}
           {details}
+          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} /> : null}
         </div>
       )}
 

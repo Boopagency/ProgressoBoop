@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react"
 
-import { mergeMessages, THREAD_POLL_MS, type ThreadData, type ThreadMessage } from "@/features/channels/logic"
+import { mergeMessages, THREAD_POLL_MS, type ChannelRead, type ThreadData, type ThreadMessage } from "@/features/channels/logic"
 import type { ActionResult } from "@/lib/types"
 
 interface ThreadState {
@@ -11,11 +11,13 @@ interface ThreadState {
   /** Páginas anteriores carregadas com "Ver anteriores". */
   older: ThreadMessage[]
   pending: ThreadMessage[]
+  /** Até onde cada pessoa leu (para o "Visto por"). */
+  reads: ChannelRead[]
   hasMore: boolean
   error: string | null
 }
 
-const EMPTY: ThreadState = { latest: null, older: [], pending: [], hasMore: false, error: null }
+const EMPTY: ThreadState = { latest: null, older: [], pending: [], reads: [], hasMore: false, error: null }
 
 /**
  * Fio de mensagens que se atualiza sozinho: busca a página mais recente ao
@@ -58,6 +60,7 @@ export function useThread(
         latest: result.data.messages,
         older: current.older,
         pending: result.data.pending,
+        reads: result.data.reads,
         hasMore: current.older.length > 0 ? current.hasMore : result.data.hasMore,
         error: null,
       }))
@@ -134,6 +137,7 @@ export function useThread(
   return {
     messages: state.latest === null ? null : mergeMessages(state.older, state.latest),
     pending: state.pending,
+    reads: state.reads,
     hasMore: state.hasMore,
     error: state.error,
     refresh,

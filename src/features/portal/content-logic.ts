@@ -11,6 +11,7 @@ import type { ContentFormat, ContentNetwork, ContentSlide, ContentStage, DateKey
  * - Para o cliente, a etapa vira uma situação: aprovar (com o cliente), em
  *   ajuste (produção ou revisão interna), aprovado, programado e publicado.
  * - Só "aprovar" aceita a decisão; em ajuste o post é só leitura com o chat.
+ * - A capa é da equipe: num post com slides, o cliente vê só os slides.
  */
 
 /** Post como o portal recebe de `portal_posts` (sem nada interno da equipe). */
@@ -64,15 +65,25 @@ export function canReview(post: Pick<PortalPost, "stage">): boolean {
   return post.stage === "client_review"
 }
 
-/** Imagem que representa o post: a capa, senão a do primeiro slide que tiver. */
-export function postThumbnail(post: Pick<PortalPost, "cover_path" | "slides">): string | null {
-  return post.cover_path ?? post.slides.find((slide) => slide.image_path)?.image_path ?? null
+/** Imagens dos slides, na ordem (slides sem imagem ficam de fora). */
+function slideImages(post: Pick<PortalPost, "slides">): string[] {
+  return post.slides.flatMap((slide) => (slide.image_path ? [slide.image_path] : []))
 }
 
-/** Imagens do post na ordem de ver: capa e depois os slides, sem repetir. */
+/**
+ * Imagem que representa o post para o cliente: a do primeiro slide; sem
+ * slides com imagem, a capa. A capa de um carrossel é da equipe (preview do
+ * feed) e não aparece para o cliente.
+ */
+export function postThumbnail(post: Pick<PortalPost, "cover_path" | "slides">): string | null {
+  return slideImages(post)[0] ?? post.cover_path
+}
+
+/** Imagens que o cliente vê no post: os slides; sem slides com imagem, a capa. */
 export function postGallery(post: Pick<PortalPost, "cover_path" | "slides">): string[] {
-  const paths = [post.cover_path, ...post.slides.map((slide) => slide.image_path)]
-  return [...new Set(paths.filter((path): path is string => path !== null))]
+  const slides = slideImages(post)
+  if (slides.length > 0) return slides
+  return post.cover_path ? [post.cover_path] : []
 }
 
 /** Quantos dias a lista "Próximos" do início cobre (hoje incluído). */

@@ -26,6 +26,7 @@ import { ActivityFeed } from "@/features/activity/activity-feed"
 import { PostSidePanel } from "@/features/channels/post-side-panel"
 import { createFrontTasks, createPost, deletePost, loadPost, updatePost } from "@/features/content/actions"
 import { ContentImage, ImagePick } from "@/features/content/content-image"
+import { PostGallery } from "@/features/content/post-gallery"
 import { discardUploads, uploadContentImage } from "@/features/content/image-upload"
 import {
   defaultFronts,
@@ -699,9 +700,11 @@ function PostForm({
             <div>
               <p className="text-xs font-medium text-muted-foreground">Capa</p>
               <p className="mt-0.5 text-xs text-subtle-foreground">
-                {fields.client_id
-                  ? "Aparece no preview do feed, cortada em 3:4 como no Instagram. Vídeo não sobe: fica no link do Drive."
-                  : "Escolha o cliente para enviar a capa."}
+                {!fields.client_id
+                  ? "Escolha o cliente para enviar a capa."
+                  : formatUses(fields.format, "slides")
+                    ? "Só para a equipe: aparece no preview do feed, cortada em 3:4. O cliente vê só os slides."
+                    : "Aparece no preview do feed, cortada em 3:4 como no Instagram. Vídeo não sobe: fica no link do Drive."}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -763,6 +766,7 @@ function PostForm({
               </Field>
               {formatUses(fields.format, "slides") ? (
                 <SlidesEditor
+                  title={fields.title.trim() || "Carrossel"}
                   slides={texts.slides}
                   onChange={(slides) => setText("slides", slides)}
                   canUpload={fields.client_id !== null}
@@ -1001,12 +1005,14 @@ function CoverPicker({
 }
 
 function SlidesEditor({
+  title,
   slides,
   onChange,
   canUpload,
   uploading,
   onPickImage,
 }: {
+  title: string
   slides: ContentSlide[]
   onChange: (slides: ContentSlide[]) => void
   canUpload: boolean
@@ -1015,11 +1021,21 @@ function SlidesEditor({
 }) {
   // Enquanto uma imagem sobe, os slides não mudam de posição (a imagem vai para o slide certo).
   const busy = uploading.some((target) => target !== "cover")
+  const images = slides.flatMap((slide) => (slide.image_path ? [slide.image_path] : []))
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">
         Slides <span className="font-normal tabular-nums">{slides.length > 0 ? `· ${slides.length}` : ""}</span>
       </p>
+      {images.length > 0 ? (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <p className="mb-2 text-xs text-muted-foreground">
+            Como fica o carrossel{images.length < slides.length ? ` (${images.length} de ${slides.length} slides com imagem)` : ""}. É o que
+            o cliente vê, sem a capa.
+          </p>
+          <PostGallery paths={images} title={title} className="mx-auto max-w-[260px]" />
+        </div>
+      ) : null}
       {slides.length > 0 ? (
         <ol className="space-y-2">
           {slides.map((slide, index) => (
@@ -1038,7 +1054,7 @@ function SlidesEditor({
                 maxLength={SLIDE_TEXT_MAX}
                 onChange={(event) => onChange(slides.map((current, at) => (at === index ? { ...current, text: event.target.value } : current)))}
                 aria-label={`Texto do slide ${index + 1}`}
-                placeholder={index === 0 ? "Capa: a frase que faz parar de rolar" : "Texto do slide"}
+                placeholder={index === 0 ? "Primeiro slide: a frase que faz parar de rolar" : "Texto do slide"}
                 className="min-h-10 flex-1 text-[13px] shadow-none"
               />
               <Button

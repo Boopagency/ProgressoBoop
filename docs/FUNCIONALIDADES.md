@@ -845,8 +845,10 @@ juntos**, sem entrar cliente por cliente.
     Em produção, Falta material, Em revisão, Em alteração, Finalizado). Num
     post novo, vídeo já vem "A fazer" em reels, vídeo e stories e "Não
     precisa" nos outros formatos;
-  - **capa e feed:** a capa do post (aparece no feed) e "Fixar no topo do
-    feed". Imagens são reduzidas no navegador antes de enviar (lado maior
+  - **capa e feed:** a capa do post (aparece no feed; no carrossel é só da
+    equipe, o cliente vê só os slides) e "Fixar no topo do feed". No
+    carrossel, acima dos slides, a prévia "Como fica o carrossel": as imagens
+    dos slides uma de cada vez, como o cliente vê. Imagens são reduzidas no navegador antes de enviar (lado maior
     1440 px, WebP ou JPEG) e ficam privadas: só abrem para quem está
     logado. Trocar ou tirar a capa e excluir o post apagam o arquivo
     antigo; uma imagem enviada num post fechado sem salvar também é
@@ -910,7 +912,8 @@ post e no projeto aberto, o topo mostra o "voltar".
   número de posts, bio e o grid na mesma ordem, fixados primeiro), só com os
   posts que o cliente vê. Stories não entram.
 - **Post aberto:** a situação, o formato, as redes e a data; as imagens
-  (capa e slides) uma de cada vez, a legenda e o texto dos slides. Em "Para
+  dos slides uma de cada vez (a capa só aparece se não houver slide com
+  imagem; ela também é a miniatura nesse caso), a legenda e o texto dos slides. Em "Para
   aprovar", **Aprovar** (com comentário opcional; o post vai para
   Aprovado) e **Pedir ajuste** (com o que mudar, obrigatório; o post volta
   para a revisão interna e fica como Em ajuste). Em ajuste, o post é só

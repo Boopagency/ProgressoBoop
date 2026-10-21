@@ -8,6 +8,7 @@ import { selectedClient } from "@/features/portal/links"
 import { getPortalRealtimeToken, loadPortalCounts } from "@/features/portal/notification-actions"
 import { PORTAL_COUNTS_POLL_MS, type PortalCounts } from "@/features/portal/notification-logic"
 import type { PortalClient } from "@/features/portal/session"
+import { syncAppBadge } from "@/features/push/browser"
 
 /*
  * Contagens do menu do portal: as mensagens não lidas do cliente escolhido
@@ -88,6 +89,11 @@ export function PortalAlertsProvider({
       { table: "client_notifications", getToken: getPortalRealtimeToken }
     )
   }, [userId])
+
+  // O número no ícone do app instalado acompanha os avisos não lidos.
+  useEffect(() => {
+    syncAppBadge(counts.notifications)
+  }, [counts.notifications])
 
   return (
     <PortalAlertsContext value={{ counts, version, refresh: () => setTick((value) => value + 1) }}>

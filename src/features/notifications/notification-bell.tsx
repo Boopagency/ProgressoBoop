@@ -49,6 +49,7 @@ import {
   type NotificationKind,
 } from "@/features/notifications/logic"
 import { listenToNotifications } from "@/features/notifications/realtime"
+import { syncAppBadge } from "@/features/push/browser"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { todayKey } from "@/lib/dates"
@@ -223,6 +224,11 @@ export function NotificationBell({ initial }: { initial: NotificationFeed }) {
       document.removeEventListener("visibilitychange", onVisible)
     }
   }, [userId])
+
+  // O número no ícone do app instalado acompanha as não lidas.
+  useEffect(() => {
+    syncAppBadge(feed.unread)
+  }, [feed.unread])
 
   // O som só pode tocar depois de um clique (ou tecla) na página.
   useEffect(() => {

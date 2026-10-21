@@ -23,6 +23,8 @@ export type DocKind = "process" | "checklist" | "policy" | "guide"
 export type DocStatus = "draft" | "active" | "review"
 /** Semáforo do cliente: Saudável, Atenção ou Em risco. */
 export type ClientHealth = "healthy" | "attention" | "at_risk"
+/** Contrato, Briefing, Marca, Relatório ou Outro (documentos do cliente). */
+export type ClientFileCategory = "contract" | "briefing" | "brand" | "report" | "other"
 /** Planejado, Em andamento, Pausado, Concluído ou Cancelado. */
 export type ProjectStatus = "planned" | "active" | "paused" | "done" | "canceled"
 /** Em vigor ou Revogada. */

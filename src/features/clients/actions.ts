@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
+import { clientFilePaths, removeClientFileObjects } from "@/features/client-files/storage"
 import {
   insertClient,
   insertReviewStep,
@@ -57,12 +58,13 @@ export async function deleteClient(id: string): Promise<ActionResult> {
   if (!isUuid(id)) return NOT_FOUND
 
   const supabase = await createClient()
-  // Os posts saem em cascata: as imagens deles (e a foto do perfil) são lidas antes.
-  const images = await clientContentImages(supabase, id)
+  // Os posts e os documentos saem em cascata: as imagens deles (e a foto do
+  // perfil) e os arquivos são lidos antes.
+  const [images, files] = await Promise.all([clientContentImages(supabase, id), clientFilePaths(supabase, id)])
   const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir o cliente.")
   if (data.length === 0) return NOT_FOUND
-  await removeContentImages(supabase, images)
+  await Promise.all([removeContentImages(supabase, images), removeClientFileObjects(supabase, files)])
   refreshApp()
   return { ok: true, data: null }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { ArrowUpRight } from "lucide-react"
 import { useActionState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -48,8 +49,12 @@ export function LoginForm({ next }: { next: string | null }) {
         </p>
       ) : null}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="group h-10 w-full" disabled={isPending}>
         {isPending ? "Entrando…" : "Entrar"}
+        <ArrowUpRight
+          aria-hidden="true"
+          className="transition-transform motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5"
+        />
       </Button>
     </form>
   )

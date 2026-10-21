@@ -110,6 +110,7 @@ export function PageBody({
 }: ComponentProps<"div"> & { width?: "full" | "reading" }) {
   return (
     <div
+      data-slot="page-body"
       className={cn("mt-6 flex flex-col gap-8", width === "reading" && "max-w-[1080px]", className)}
       {...props}
     />

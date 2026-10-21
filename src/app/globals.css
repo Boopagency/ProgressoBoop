@@ -101,15 +101,23 @@
   --chart-muted: oklch(0.84 0.004 85);
   --chart-grid: oklch(0.94 0.003 90);
 
-  /* Sidebar (mesmo tom do fundo geral) */
-  --sidebar: oklch(0.974 0.002 95);
-  --sidebar-foreground: oklch(0.36 0.006 80);
+  /*
+   * Menu lateral (e a moldura em volta do painel) na cor da Boop: no claro,
+   * o ciano-100 do site, com o item ativo em branco; no escuro, o navy-800.
+   * Dentro do menu, os tons de texto viram os navys do site (veja
+   * `[data-sidebar="sidebar"]` abaixo).
+   */
+  --sidebar: #e2f7fe; /* ciano-100 */
+  --sidebar-foreground: #2a4f6e; /* navy-500 */
   --sidebar-primary: var(--brand-navy);
   --sidebar-primary-foreground: var(--brand-paper);
-  --sidebar-accent: oklch(0.935 0.003 95);
-  --sidebar-accent-foreground: oklch(0.185 0.004 75);
-  --sidebar-border: oklch(0.925 0.004 90);
+  --sidebar-accent: rgb(255 255 255 / 0.8);
+  --sidebar-accent-foreground: var(--brand-navy);
+  --sidebar-border: #b4e8fb; /* ciano-200 */
   --sidebar-ring: var(--brand);
+  --sidebar-ink: var(--brand-navy);
+  --sidebar-muted: #4c6f8c; /* navy-400 */
+  --sidebar-icon-active: var(--brand-ink);
 }
 
 /*
@@ -173,14 +181,29 @@
     --chart-muted: oklch(0.42 0.004 85);
     --chart-grid: oklch(0.29 0.004 85);
 
-    --sidebar: oklch(0.175 0.003 75);
-    --sidebar-foreground: oklch(0.78 0.006 85);
+    --sidebar: #0b1b2c; /* navy-800 */
+    --sidebar-foreground: #afc1ce; /* navy-200 */
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: oklch(0.245 0.004 80);
-    --sidebar-accent-foreground: oklch(0.935 0.004 90);
-    --sidebar-border: oklch(0.27 0.004 80);
+    --sidebar-accent: #163049; /* entre o navy-700 e o navy-600 */
+    --sidebar-accent-foreground: var(--brand-paper);
+    --sidebar-border: #1b3a55; /* navy-600 */
+    --sidebar-ink: var(--brand-paper);
+    --sidebar-muted: #7a95ab; /* navy-300 */
+    --sidebar-icon-active: var(--brand);
   }
+}
+
+/*
+ * Dentro do menu lateral, os tons neutros de texto usados nos itens viram os
+ * do menu (navys do site). Menus e dicas abertos a partir dele ficam fora
+ * desse elemento e seguem o tema normal.
+ */
+[data-sidebar="sidebar"] {
+  --foreground: var(--sidebar-ink);
+  --muted-foreground: var(--sidebar-muted);
+  --subtle-foreground: var(--sidebar-muted);
+  --brand-ink: var(--sidebar-icon-active);
 }
 
 @theme inline {
@@ -269,6 +292,88 @@
       opacity: 0;
       transform: translateY(4px);
     }
+  }
+}
+
+/*
+ * Portal do cliente: um pouco mais de movimento ao abrir as telas. Os blocos
+ * do conteúdo (e as colunas e linhas dentro deles) sobem um a um, os
+ * quadrados do feed aparecem em sequência e as imagens crescem de leve ao
+ * passar o mouse. Tudo curto e só com "reduzir movimento" desligado; o
+ * `backwards` não deixa transform nenhum no elemento depois da animação.
+ */
+@keyframes portal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes portal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-motion [data-slot="page-body"] > *,
+  .portal-motion [data-slot="page-body"] > .grid > *,
+  .portal-motion [data-slot="page-body"] > .grid > .flex > * {
+    animation: portal-rise 480ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .portal-motion [data-slot="page-body"] > :nth-child(2),
+  .portal-motion [data-slot="page-body"] > .grid > :nth-child(2),
+  .portal-motion [data-slot="page-body"] > .grid > .flex > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .portal-motion [data-slot="page-body"] > :nth-child(3),
+  .portal-motion [data-slot="page-body"] > .grid > :nth-child(3),
+  .portal-motion [data-slot="page-body"] > .grid > .flex > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  .portal-motion [data-slot="page-body"] > :nth-child(n + 4),
+  .portal-motion [data-slot="page-body"] > .grid > :nth-child(n + 4),
+  .portal-motion [data-slot="page-body"] > .grid > .flex > :nth-child(n + 4) {
+    animation-delay: 210ms;
+  }
+
+  /* A segunda coluna entra logo depois da primeira. */
+  .portal-motion [data-slot="page-body"] > .grid > .flex:nth-child(2) > * {
+    animation-delay: 110ms;
+  }
+
+  /* Linhas das listas dos cartões. */
+  .portal-motion [data-slot="page-body"] section ul > li {
+    animation: portal-rise 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(120ms + var(--portal-i, 0) * 45ms);
+  }
+
+  /* Feed: os quadrados aparecem em sequência. */
+  .portal-motion ul.grid > li {
+    animation: portal-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(80ms + var(--portal-i, 0) * 30ms);
+  }
+
+  .portal-motion li:nth-child(2) { --portal-i: 1; }
+  .portal-motion li:nth-child(3) { --portal-i: 2; }
+  .portal-motion li:nth-child(4) { --portal-i: 3; }
+  .portal-motion li:nth-child(5) { --portal-i: 4; }
+  .portal-motion li:nth-child(6) { --portal-i: 5; }
+  .portal-motion li:nth-child(7) { --portal-i: 6; }
+  .portal-motion li:nth-child(8) { --portal-i: 7; }
+  .portal-motion li:nth-child(9) { --portal-i: 8; }
+  .portal-motion li:nth-child(n + 10) { --portal-i: 9; }
+
+  .portal-motion ul.grid > li img {
+    transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .portal-motion ul.grid > li:hover img {
+    transform: scale(1.04);
   }
 }
 

@@ -80,8 +80,8 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
       </PageToolbar>
 
       <PageBody>
-      {/* Telas largas: o mês em grade, de segunda a domingo. */}
-      <div className="hidden overflow-hidden rounded-xl border bg-card sm:block">
+      {/* Do md para cima: o mês em grade, de segunda a domingo. */}
+      <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
         <div className="grid grid-cols-7 border-b bg-muted/40">
           {WEEKDAYS.map((label) => (
             <div key={label} className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
@@ -128,7 +128,7 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
       </div>
 
       {/* Celular: só os dias do mês que têm post, em lista. */}
-      <div className="space-y-4 sm:hidden">
+      <div className="space-y-4 md:hidden">
         {monthDays.length === 0 ? (
           <p className="rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground">
             Nenhum post neste mês.

@@ -4,11 +4,13 @@ import { notFound } from "next/navigation"
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
-import { canReview, portalStatus, postGallery, type PortalPost } from "@/features/portal/content-logic"
-import { getPortalPostMessages, getPortalPosts } from "@/features/portal/content-queries"
-import { PostChat } from "@/features/portal/post-chat"
+import { InstagramCaption, InstagramHeader } from "@/features/content/instagram-post"
 import { PostGallery } from "@/features/content/post-gallery"
+import { canReview, portalStatus, postGallery, type PortalPost } from "@/features/portal/content-logic"
+import { getPortalPostMessages, getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
+import { PostChat } from "@/features/portal/post-chat"
 import { StatusBadge } from "@/features/portal/post-meta"
+import { ProfilePhoto } from "@/features/portal/profile-photo"
 import { ReviewPanel } from "@/features/portal/review-panel"
 import { pickPortalClient, requirePortalUser, type PortalClient } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
@@ -36,11 +38,17 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
   if (!found) notFound()
   const { client, post } = found
 
-  const messages = await getPortalPostMessages(post.id)
+  const [messages, profile] = await Promise.all([
+    getPortalPostMessages(post.id),
+    // Sem o perfil, o post abre do mesmo jeito (o cabeçalho mostra o nome do cliente).
+    getPortalProfile(client.id).catch(() => null),
+  ])
+  const handle = profile?.instagram_handle ?? null
   const today = todayKey()
   const status = portalStatus(post.stage)
   const gallery = postGallery(post)
   const slideTexts = post.slides.filter((slide) => slide.text.trim())
+  const reviewing = canReview(post)
 
   return (
     <PageContainer>
@@ -64,7 +72,7 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
 
       <PageBody>
 
-      {canReview(post) ? (
+      {reviewing ? (
         <ReviewPanel postId={post.id} />
       ) : status === "adjusting" ? (
         <p className="rounded-xl border bg-muted/40 px-4 py-3 text-[13px] leading-5 text-muted-foreground">
@@ -75,10 +83,20 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-5">
-          <PostGallery paths={gallery} title={post.title} />
+          {/* No celular, como no Instagram: a foto e o @, o carrossel e a legenda com "mais". */}
+          <div className="space-y-3">
+            <InstagramHeader
+              className="md:hidden"
+              avatar={<ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} size="sm" />}
+              handle={handle}
+              name={client.name}
+            />
+            <PostGallery paths={gallery} title={post.title} />
+            {post.caption ? <InstagramCaption className="md:hidden" handle={handle} name={client.name} text={post.caption} /> : null}
+          </div>
 
           {post.caption ? (
-            <section className="space-y-1.5">
+            <section className="hidden space-y-1.5 md:block">
               <h2 className="text-sm font-semibold text-foreground">Legenda</h2>
               <p className="text-sm leading-6 break-words whitespace-pre-line text-foreground">{post.caption}</p>
             </section>
@@ -108,6 +126,8 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
           initialMessages={messages}
         />
       </div>
+      {/* Espaço para a barra fixa de Aprovar e Pedir ajuste no celular. */}
+      {reviewing ? <div aria-hidden="true" className="h-20 md:hidden" /> : null}
       </PageBody>
     </PageContainer>
   )

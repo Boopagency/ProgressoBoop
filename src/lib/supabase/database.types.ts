@@ -1974,6 +1974,39 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device: string | null
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device?: string | null
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device?: string | null
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_views: {
         Row: {
           created_at: string
@@ -2251,6 +2284,10 @@ export type Database = {
           unread: number
         }[]
       }
+      forget_push_endpoints: {
+        Args: { p_endpoints: string[]; p_secret: string }
+        Returns: number
+      }
       link_client_member: {
         Args: {
           member_email: string
@@ -2464,6 +2501,15 @@ export type Database = {
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
         Returns: string
+      }
+      save_push_subscription: {
+        Args: {
+          p_auth: string
+          p_device?: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: undefined
       }
       win_deal: {
         Args: {

@@ -9,6 +9,7 @@ import { PortalAlertsProvider } from "@/features/portal/portal-alerts"
 import { PortalSidebar } from "@/features/portal/portal-sidebar"
 import { PortalTopbar } from "@/features/portal/portal-topbar"
 import { requirePortalUser, type PortalUser } from "@/features/portal/session"
+import { PushRefresh } from "@/features/push/push-refresh"
 import { createClient } from "@/lib/supabase/server"
 
 /**
@@ -46,6 +47,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           <PortalTopbar clients={user.clients} />
           <div className="portal-motion flex-1 md:overflow-y-auto">{children}</div>
         </SidebarInset>
+        <PushRefresh />
       </SidebarProvider>
     </PortalAlertsProvider>
   )

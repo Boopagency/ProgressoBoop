@@ -24,7 +24,7 @@ import {
   type ChannelEntry,
   type ThreadItem,
 } from "@/features/channels/logic"
-import { MessageItem } from "@/features/channels/message-item"
+import { MessageItem, useSeenBy } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
 import { useThread } from "@/features/channels/use-thread"
 import { ChannelIcon, CommunicationKindBadge } from "@/features/communications/communication-meta"
@@ -159,6 +159,7 @@ export function Conversation({
   const { profileById, clientById } = useWorkspace()
   const { today } = useTasks()
   const thread = useThread(channel.id, (before) => loadThread(channel.id, before))
+  const seenBy = useSeenBy(thread.messages, thread.reads)
   const [query, setQuery] = useState(initialQuery)
   const [searchOpen, setSearchOpen] = useState(initialQuery !== "")
   const [sentCount, setSentCount] = useState(0)
@@ -221,6 +222,7 @@ export function Conversation({
       <MessageItem
         key={item.key}
         message={item.message}
+        seenBy={seenBy.get(item.message.id)}
         continued={item.continued}
         canWrite={!channel.archived}
         allowInternal={channel.kind === "client"}

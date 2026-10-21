@@ -5,11 +5,12 @@ import Link from "next/link"
 import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
-import { loadPostThread, sendMessage } from "@/features/channels/actions"
+import { loadPostThread, markChannelRead, sendMessage } from "@/features/channels/actions"
 import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref } from "@/features/channels/logic"
-import { MessageItem } from "@/features/channels/message-item"
+import { MessageItem, useSeenBy } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
+import { useUnread } from "@/features/channels/unread-provider"
 import { useThread } from "@/features/channels/use-thread"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { cn } from "@/lib/utils"
@@ -27,11 +28,13 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
   const [channelId, setChannelId] = useState<string | null>(null)
   const [sentCount, setSentCount] = useState(0)
   const { today } = useTasks()
+  const unread = useUnread()
   const thread = useThread(postId, async (before) => {
     const result = await loadPostThread(postId, before)
     if (result.ok && !before) setChannelId(result.data.channelId)
     return result
   })
+  const seenBy = useSeenBy(thread.messages, thread.reads)
   const days = buildThread(thread.messages ?? [], [], today)
 
   async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
@@ -42,6 +45,10 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
       return false
     }
     thread.addLocal(result.data)
+    // Quem responde viu a conversa: o canal fica lido até a resposta.
+    void markChannelRead(result.data.channel_id, result.data.created_at).then((read) => {
+      if (read.ok) unread.refresh()
+    })
     setSentCount((value) => value + 1)
     return true
   }
@@ -105,6 +112,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
                 <MessageItem
                   key={item.key}
                   message={item.message}
+                  seenBy={seenBy.get(item.message.id)}
                   continued={item.continued}
                   showPost={false}
                   allowInternal

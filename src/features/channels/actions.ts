@@ -279,6 +279,15 @@ export async function markChannelRead(channelId: string, at: string): Promise<Ac
   if (!isUuid(channelId)) return CHANNEL_GONE
   if (!isTimestamp(at)) return { ok: false, error: "Data inválida." }
   const supabase = await createClient()
+  // Nunca volta atrás (ex.: responder pelo post ou projeto marca até a resposta,
+  // e o canal já pode estar lido até mais adiante).
+  const { data: current } = await supabase
+    .from("channel_reads")
+    .select("last_read_at")
+    .eq("user_id", user.id)
+    .eq("channel_id", channelId)
+    .maybeSingle()
+  if (current && Date.parse(current.last_read_at) >= Date.parse(at)) return { ok: true, data: null }
   const { error } = await supabase
     .from("channel_reads")
     // O texto vai como veio: o banco guarda microssegundos, e passar por Date

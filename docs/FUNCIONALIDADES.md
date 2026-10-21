@@ -956,12 +956,13 @@ post e no projeto aberto, o topo mostra o "voltar".
   projeto, a marca vem junto.
 - **Acesso do cliente** (página do cliente, coluna da direita): quem do
   cliente entra no portal, com nome e e-mail. "Dar acesso" pede o nome e o
-  e-mail de uma conta já criada no Supabase (Authentication → Users → Add
-  user, com senha e "Auto Confirm User"; "Invite user" ainda não serve,
-  porque o app não recebe o link do convite e a pessoa ficaria sem senha);
-  e-mail sem conta ou de alguém da equipe é recusado com uma
-  mensagem clara. O "x" tira o acesso (com confirmação); a conta continua
-  no Supabase.
+  e-mail e cria a conta ali mesmo, com uma senha provisória; a tela mostra
+  a senha e "Copiar mensagem" (link, e-mail e senha, prontos para mandar no
+  WhatsApp). Se o e-mail já tem conta de cliente, só libera este cliente, e
+  a pessoa usa a senha que já tem. E-mail de alguém da equipe é recusado.
+  "Nova senha" gera outra senha provisória para quem perdeu a sua. O "x"
+  tira o acesso (com confirmação); dar acesso de novo com o mesmo e-mail
+  devolve.
 - **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
   do cliente: mensagens por dia, as seguidas da mesma pessoa juntas (as
   do cliente à direita; as da equipe à esquerda, com as iniciais e o nome;

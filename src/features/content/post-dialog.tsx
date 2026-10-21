@@ -115,7 +115,8 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
         showCloseButton={false}
         className={cn(
           // No celular, tela cheia (topo e rodapé fixos); do md para cima, o diálogo centralizado.
-          "top-0 left-0 h-dvh max-h-none max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none",
+          "top-0 left-0 h-dvh max-h-none max-w-none translate-x-0 translate-y-0 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none",
+          "md:grid-rows-none",
           "md:top-[5%] md:left-[50%] md:h-auto md:max-h-[94svh] md:max-w-[760px] md:translate-x-[-50%] md:rounded-lg md:border",
           state.post && "lg:top-[3%] lg:max-w-[1160px]"
         )}

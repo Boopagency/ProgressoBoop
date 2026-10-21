@@ -113,6 +113,13 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        onOpenAutoFocus={(event) => {
+          // No celular, abrir o post não põe o foco (e o teclado) em nenhum campo.
+          if (state.post && window.matchMedia("(max-width: 767px)").matches) {
+            event.preventDefault()
+            ;(event.currentTarget as HTMLElement | null)?.focus()
+          }
+        }}
         className={cn(
           // No celular, tela cheia (topo e rodapé fixos); do md para cima, o diálogo centralizado.
           "top-0 left-0 h-dvh max-h-none max-w-none translate-x-0 translate-y-0 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none",

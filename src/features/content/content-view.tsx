@@ -187,7 +187,8 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
           value={state.view}
           onValueChange={(view) => navigate({ ...state, view })}
           options={VIEW_OPTIONS}
-          className="self-start"
+          // No celular, as cinco visões dividem a largura (não passam da tela em 360 px).
+          className="self-start max-md:w-full max-md:self-stretch max-md:[&>*]:flex-1 max-md:[&>*]:px-1.5"
         />
         {/* No feed (o grid real do perfil) e nas ideias só o filtro de cliente vale: os outros somem. */}
         <div

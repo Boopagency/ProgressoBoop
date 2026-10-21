@@ -132,7 +132,18 @@ export function ContentCalendar({
       </div>
 
       {mode === "month" ? (
-        <MonthGrid days={days} month={monthRangeOf(reference).start.slice(0, 7)} today={today} byDay={byDay} onOpen={onOpen} />
+        <>
+          <MonthGrid days={days} month={monthRangeOf(reference).start.slice(0, 7)} today={today} byDay={byDay} onOpen={onOpen} />
+          <DayList
+            days={days.filter((day) => isWithin(day, monthRangeOf(reference)) && (byDay.has(day) || day === today))}
+            today={today}
+            byDay={byDay}
+            onOpen={onOpen}
+            onCreate={onCreate}
+            emptyText="Nenhum post neste mês."
+            className="md:hidden"
+          />
+        </>
       ) : (
         <WeekGrid days={days} today={today} byDay={byDay} onOpen={onOpen} onCreate={onCreate} />
       )}
@@ -161,7 +172,7 @@ function MonthGrid({
   onOpen: (post: PostSummary) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border max-md:hidden">
       <div className="grid grid-cols-7 border-b bg-muted/40">
         {days.slice(0, 7).map((day) => (
           <div key={day} className="px-1 py-2 text-center text-xs text-muted-foreground @3xl:px-2 @3xl:text-left">
@@ -379,34 +390,72 @@ function WeekGrid({
         ))}
       </div>
 
-      <div className="space-y-6 @3xl:hidden">
-        {days.map((day) => {
-          const list = byDay.get(day) ?? []
-          return (
-            <section key={day} aria-label={formatDayMonth(day)}>
-              <div className="flex items-center justify-between border-b pb-1.5">
-                <h3 className="flex items-center gap-2 text-sm font-semibold">
-                  {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
-                  {day === today ? <Badge className="px-2 text-[11px]">Hoje</Badge> : null}
-                </h3>
-                <Button variant="ghost" size="icon-xs" aria-label={`Novo post em ${formatDayMonth(day)}`} className="text-muted-foreground" onClick={() => onCreate(day)}>
-                  <Plus />
-                </Button>
-              </div>
-              {list.length === 0 ? (
-                <p className="pt-2 text-[13px] text-subtle-foreground">Nenhum post.</p>
-              ) : (
-                <div className="-mx-3 pt-1">
-                  {list.map((post) => (
-                    <PostRow key={post.id} post={post} today={today} onOpen={onOpen} showFronts={false} />
-                  ))}
-                </div>
-              )}
-            </section>
-          )
-        })}
-      </div>
+      <DayList days={days} today={today} byDay={byDay} onOpen={onOpen} onCreate={onCreate} className="@3xl:hidden" />
     </>
+  )
+}
+
+/**
+ * Lista por dia: a semana nas telas estreitas e, no celular, o mês (só os
+ * dias com post e hoje). Cada dia tem o "+" para criar um post nele.
+ */
+function DayList({
+  days,
+  today,
+  byDay,
+  onOpen,
+  onCreate,
+  emptyText,
+  className,
+}: {
+  days: DateKey[]
+  today: DateKey
+  byDay: Map<DateKey, PostSummary[]>
+  onOpen: (post: PostSummary) => void
+  onCreate: (day: DateKey) => void
+  /** Sem dias para mostrar. */
+  emptyText?: string
+  className?: string
+}) {
+  if (days.length === 0) {
+    return emptyText ? (
+      <p className={cn("rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground", className)}>{emptyText}</p>
+    ) : null
+  }
+  return (
+    <div className={cn("space-y-6", className)}>
+      {days.map((day) => {
+        const list = byDay.get(day) ?? []
+        return (
+          <section key={day} aria-label={formatDayMonth(day)}>
+            <div className="flex items-center justify-between border-b pb-1.5">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
+                {day === today ? <Badge className="px-2 text-[11px]">Hoje</Badge> : null}
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={`Novo post em ${formatDayMonth(day)}`}
+                className="text-muted-foreground max-md:size-11"
+                onClick={() => onCreate(day)}
+              >
+                <Plus />
+              </Button>
+            </div>
+            {list.length === 0 ? (
+              <p className="pt-2 text-[13px] text-subtle-foreground">Nenhum post.</p>
+            ) : (
+              <div className="-mx-3 pt-1">
+                {list.map((post) => (
+                  <PostRow key={post.id} post={post} today={today} onOpen={onOpen} showFronts={false} />
+                ))}
+              </div>
+            )}
+          </section>
+        )
+      })}
+    </div>
   )
 }
 

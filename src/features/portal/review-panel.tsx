@@ -19,6 +19,7 @@ import { reviewPortalPost } from "@/features/portal/content-actions"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import { reviewPortalStep } from "@/features/portal/project-actions"
 import type { ActionResult } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 type Decision = "approve" | "changes"
 
@@ -87,12 +88,18 @@ export function ReviewPanel({ postId }: { postId: string }) {
       <p className="flex-1 text-[13px] leading-5 text-foreground">
         Este post está esperando a sua resposta. Aprove ou conte o que precisa mudar.
       </p>
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="flex-1 sm:flex-none">
+      {/* No celular, os botões ficam numa barra fixa embaixo, como num app. */}
+      <div
+        className={cn(
+          "flex gap-2",
+          "max-md:fixed max-md:inset-x-0 max-md:bottom-[var(--app-bottom-bar,0px)] max-md:z-30 max-md:border-t max-md:bg-background/95 max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:backdrop-blur"
+        )}
+      >
+        <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="flex-1 max-md:h-11 md:flex-none">
           <PencilLine />
           Pedir ajuste
         </Button>
-        <Button type="button" size="sm" onClick={() => open("approve")} className="flex-1 sm:flex-none">
+        <Button type="button" size="sm" onClick={() => open("approve")} className="flex-1 max-md:h-11 md:flex-none">
           <Check />
           Aprovar
         </Button>
@@ -179,7 +186,7 @@ function DecisionDialog({
 
   return (
     <Dialog open={decision !== null} onOpenChange={(value) => (isPending ? null : onOpenChange(value))}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent sheetOnMobile className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>

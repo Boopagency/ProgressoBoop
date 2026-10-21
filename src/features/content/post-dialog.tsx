@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, ChevronLeft, ExternalLink, ImagePlus, ListPlus, Loader2, Plus, Trash2, X } from "lucide-react"
+import { ArrowDown, ArrowUp, CalendarDays, ChevronLeft, ExternalLink, ImagePlus, ListPlus, Loader2, Plus, Trash2, X } from "lucide-react"
 import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -26,6 +26,7 @@ import { ActivityFeed } from "@/features/activity/activity-feed"
 import { PostSidePanel } from "@/features/channels/post-side-panel"
 import { createFrontTasks, createPost, deletePost, loadPost, updatePost } from "@/features/content/actions"
 import { ContentImage, ImagePick } from "@/features/content/content-image"
+import { InstagramCaption, InstagramHeader } from "@/features/content/instagram-post"
 import { PostGallery } from "@/features/content/post-gallery"
 import { discardUploads, uploadContentImage } from "@/features/content/image-upload"
 import {
@@ -60,6 +61,7 @@ import { firstName } from "@/features/tasks/logic"
 import { StatusDot, TaskDateLabel } from "@/features/tasks/task-meta"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { formatShortDate, todayKey } from "@/lib/dates"
 import {
   CONTENT_FORMAT_LABEL,
@@ -515,7 +517,22 @@ function PostForm({
         }
       }}
     >
-      <div className="min-w-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 max-md:flex-1 md:px-5 md:pt-5">
+      {/*
+        No celular, o post vira seções empilhadas (Básico, Datas, Frentes,
+        Slides ou Roteiro, Legenda): os blocos do computador se abrem
+        (display: contents) e cada campo ganha a ordem da sua seção.
+        relative: os campos escondidos (sr-only) ficam presos a esta rolagem e
+        não fazem o diálogo inteiro rolar ao focar um campo.
+      */}
+      <div className="relative min-w-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 max-md:flex max-md:flex-1 max-md:flex-col max-md:gap-3 md:px-5 md:pt-5">
+        <MobileSection title="Básico" className="max-md:order-1" />
+        <MobileSection title="Datas" className="max-md:order-5" />
+        <MobileSection title="Frentes" className="max-md:order-7" />
+        <MobileSection
+          title={formatUses(fields.format, "slides") ? "Slides" : formatUses(fields.format, "script") ? "Roteiro" : "Conteúdo"}
+          className="max-md:order-10"
+        />
+        <MobileSection title={formatUses(fields.format, "caption") ? "Legenda" : "Drive"} className="max-md:order-[14]" />
         <div className="flex items-start gap-2.5">
           {fields.client_id ? <ClientMark clientId={fields.client_id} size="md" className="mt-0.5" /> : null}
           <input
@@ -529,8 +546,8 @@ function PostForm({
           />
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Field label="Cliente">
+        <div className="mt-4 grid gap-3 max-md:contents sm:grid-cols-2">
+          <Field label="Cliente" className="max-md:order-2">
             <Select value={fields.client_id ?? undefined} onValueChange={changeClient}>
               <SelectTrigger aria-label="Cliente" className={TRIGGER}>
                 <SelectValue placeholder="Escolha o cliente" />
@@ -544,7 +561,7 @@ function PostForm({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Projeto">
+          <Field label="Projeto" className="max-md:order-2">
             <Select
               value={fields.project_id ?? NONE}
               onValueChange={(value) => set("project_id", value === NONE ? null : value)}
@@ -563,7 +580,7 @@ function PostForm({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Formato">
+          <Field label="Formato" className="max-md:order-2">
             <Select value={fields.format} onValueChange={(value) => changeFormat(value as ContentFormat)}>
               <SelectTrigger aria-label="Formato" className={TRIGGER}>
                 <SelectValue />
@@ -577,7 +594,7 @@ function PostForm({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Etapa">
+          <Field label="Etapa" className="max-md:order-2">
             <Select value={fields.stage} onValueChange={(value) => set("stage", value as ContentStage)}>
               <SelectTrigger aria-label="Etapa" className={TRIGGER}>
                 <SelectValue />
@@ -591,7 +608,7 @@ function PostForm({
               </SelectContent>
             </Select>
           </Field>
-          <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3 max-md:order-6">
             <Field label="Publicação">
               <DatePicker
                 value={fields.publish_on}
@@ -616,7 +633,7 @@ function PostForm({
               />
             </Field>
           </div>
-          <Field label="Responsável">
+          <Field label="Responsável" className="max-md:order-3">
             <Select value={fields.owner_id ?? NONE} onValueChange={(value) => set("owner_id", value === NONE ? null : value)}>
               <SelectTrigger aria-label="Responsável" className={TRIGGER}>
                 <SelectValue />
@@ -633,7 +650,7 @@ function PostForm({
           </Field>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3 max-md:order-4 max-md:mt-0">
           <div>
             <p className="text-xs font-medium text-muted-foreground">Redes</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -674,7 +691,7 @@ function PostForm({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 rounded-lg border bg-muted/30 p-3 max-md:order-8 max-md:mt-0 sm:grid-cols-3">
           {CONTENT_FRONTS.map((front) => {
             const key = `${front}_status` as const
             return (
@@ -703,7 +720,7 @@ function PostForm({
           })}
         </div>
 
-        <section aria-label="Capa e feed" className="mt-4 flex gap-3 rounded-lg border p-3">
+        <section aria-label="Capa e feed" className="mt-4 flex gap-3 rounded-lg border p-3 max-md:order-11 max-md:mt-0">
           <CoverPicker
             path={fields.cover_path}
             uploading={uploading.includes("cover")}
@@ -751,14 +768,14 @@ function PostForm({
           </div>
         </section>
 
-        <section aria-label="Textos" className="mt-5 space-y-3">
+        <section aria-label="Textos" className="mt-5 space-y-3 max-md:contents">
           {texts === null ? (
-            <p className="rounded-lg border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
+            <p className="rounded-lg border border-dashed px-3 py-4 text-center text-xs text-muted-foreground max-md:order-11">
               {loadError ?? "Carregando os textos…"}
             </p>
           ) : (
             <>
-              <Field label="Conteúdo / ideia" htmlFor={`${ids}-brief`}>
+              <Field label="Conteúdo / ideia" htmlFor={`${ids}-brief`} className="max-md:order-11">
                 <Textarea
                   id={`${ids}-brief`}
                   value={texts.brief}
@@ -768,7 +785,11 @@ function PostForm({
                   className="min-h-16 text-base shadow-none md:text-[13px]"
                 />
               </Field>
-              <Field label={isVideoFormat(fields.format) ? "Orientação de vídeo" : "Orientação de design"} htmlFor={`${ids}-notes`}>
+              <Field
+                label={isVideoFormat(fields.format) ? "Orientação de vídeo" : "Orientação de design"}
+                htmlFor={`${ids}-notes`}
+                className="max-md:order-11"
+              >
                 <Textarea
                   id={`${ids}-notes`}
                   value={texts.design_notes}
@@ -780,6 +801,9 @@ function PostForm({
               </Field>
               {formatUses(fields.format, "slides") ? (
                 <SlidesEditor
+                  className="max-md:order-12"
+                  clientId={fields.client_id}
+                  caption={formatUses(fields.format, "caption") ? texts.caption : ""}
                   title={fields.title.trim() || "Carrossel"}
                   slides={texts.slides}
                   onChange={(slides) => setText("slides", slides)}
@@ -789,7 +813,7 @@ function PostForm({
                 />
               ) : null}
               {formatUses(fields.format, "script") ? (
-                <Field label="Roteiro" htmlFor={`${ids}-script`}>
+                <Field label="Roteiro" htmlFor={`${ids}-script`} className="max-md:order-12">
                   <Textarea
                     id={`${ids}-script`}
                     value={texts.script}
@@ -801,7 +825,7 @@ function PostForm({
                 </Field>
               ) : null}
               {formatUses(fields.format, "caption") ? (
-                <Field label="Legenda" htmlFor={`${ids}-caption`}>
+                <Field label="Legenda" htmlFor={`${ids}-caption`} className="max-md:order-[15]">
                   <Textarea
                     id={`${ids}-caption`}
                     value={texts.caption}
@@ -814,7 +838,7 @@ function PostForm({
               ) : null}
             </>
           )}
-          <Field label="Link do Drive" htmlFor={`${ids}-drive`}>
+          <Field label="Link do Drive" htmlFor={`${ids}-drive`} className="max-md:order-[16]">
             <div className="flex gap-2">
               <Input
                 id={`${ids}-drive`}
@@ -841,7 +865,7 @@ function PostForm({
         </section>
 
         {post ? (
-          <section aria-label="Tarefas das frentes" className="mt-5 border-t pt-4">
+          <section aria-label="Tarefas das frentes" className="mt-5 border-t pt-4 max-md:order-9 max-md:mt-0 max-md:border-t-0 max-md:pt-0">
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-medium text-muted-foreground">Tarefas das frentes</h3>
               {generating === 0 ? (
@@ -1008,6 +1032,11 @@ function PostForm({
   )
 }
 
+/** Título de seção do post no celular (no computador, o formulário não tem seções). */
+function MobileSection({ title, className }: { title: string; className?: string }) {
+  return <h3 className={cn("border-t pt-4 text-[13px] font-semibold text-foreground md:hidden", className)}>{title}</h3>
+}
+
 /* ------------------------------------------------------------------ */
 /* Slides                                                              */
 /* ------------------------------------------------------------------ */
@@ -1042,72 +1071,186 @@ function CoverPicker({
 }
 
 function SlidesEditor({
+  clientId,
+  caption,
   title,
   slides,
   onChange,
   canUpload,
   uploading,
   onPickImage,
+  className,
 }: {
+  clientId: string | null
+  /** Legenda do post, para a prévia do celular (vazia quando o formato não tem). */
+  caption: string
   title: string
   slides: ContentSlide[]
   onChange: (slides: ContentSlide[]) => void
   canUpload: boolean
   uploading: readonly ImageTarget[]
   onPickImage: (index: number, file: File) => void
+  className?: string
 }) {
+  const mobile = useIsMobile()
+  const { clientById } = useWorkspace()
   // Enquanto uma imagem sobe, os slides não mudam de posição (a imagem vai para o slide certo).
   const busy = uploading.some((target) => target !== "cover")
   const images = slides.flatMap((slide) => (slide.image_path ? [slide.image_path] : []))
+  const client = clientId ? clientById.get(clientId) : undefined
+  const handle = client?.instagram_handle ?? null
+
+  function setText(index: number, text: string) {
+    onChange(slides.map((current, at) => (at === index ? { ...current, text } : current)))
+  }
+
+  function removeImage(index: number) {
+    onChange(slides.map((current, at) => (at === index ? { ...current, image_path: null } : current)))
+  }
+
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction
+    if (target < 0 || target >= slides.length) return
+    const next = [...slides]
+    const [moved] = next.splice(index, 1)
+    if (!moved) return
+    next.splice(target, 0, moved)
+    onChange(next)
+  }
+
   return (
-    <div className="space-y-1.5">
+    <div className={cn("space-y-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground">
         Slides <span className="font-normal tabular-nums">{slides.length > 0 ? `· ${slides.length}` : ""}</span>
       </p>
       {images.length > 0 ? (
-        <div className="rounded-lg border bg-muted/30 p-3">
-          <p className="mb-2 text-xs text-muted-foreground">
-            Como fica o carrossel{images.length < slides.length ? ` (${images.length} de ${slides.length} slides com imagem)` : ""}. É o que
-            o cliente vê, sem a capa.
-          </p>
-          <PostGallery paths={images} title={title} className="mx-auto max-w-[260px]" />
-        </div>
+        mobile ? (
+          // No celular, a prévia como no Instagram: a foto e o @, o carrossel e a legenda.
+          <div className="space-y-2.5 rounded-lg border p-3">
+            <InstagramHeader
+              avatar={clientId ? <ClientMark clientId={clientId} size="md" /> : null}
+              handle={handle}
+              name={client?.name ?? "Cliente"}
+            />
+            <PostGallery paths={images} title={title} />
+            {caption.trim() ? <InstagramCaption handle={handle} name={client?.name ?? "Cliente"} text={caption.trim()} /> : null}
+            <p className="text-xs text-muted-foreground">
+              É o que o cliente vê, sem a capa
+              {images.length < slides.length ? ` (${images.length} de ${slides.length} slides com imagem)` : ""}.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <p className="mb-2 text-xs text-muted-foreground">
+              Como fica o carrossel{images.length < slides.length ? ` (${images.length} de ${slides.length} slides com imagem)` : ""}. É o que
+              o cliente vê, sem a capa.
+            </p>
+            <PostGallery paths={images} title={title} className="mx-auto max-w-[260px]" />
+          </div>
+        )
       ) : null}
       {slides.length > 0 ? (
-        <ol className="space-y-2">
-          {slides.map((slide, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <span className="mt-2 w-5 shrink-0 text-right text-xs text-muted-foreground tabular-nums">{index + 1}</span>
-              <SlideImage
-                index={index}
-                path={slide.image_path}
-                uploading={uploading.includes(`slide-${index}`)}
-                disabled={!canUpload}
-                onPick={(file) => onPickImage(index, file)}
-                onRemove={() => onChange(slides.map((current, at) => (at === index ? { ...current, image_path: null } : current)))}
-              />
-              <Textarea
-                value={slide.text}
-                maxLength={SLIDE_TEXT_MAX}
-                onChange={(event) => onChange(slides.map((current, at) => (at === index ? { ...current, text: event.target.value } : current)))}
-                aria-label={`Texto do slide ${index + 1}`}
-                placeholder={index === 0 ? "Primeiro slide: a frase que faz parar de rolar" : "Texto do slide"}
-                className="min-h-10 min-w-0 flex-1 text-base shadow-none md:text-[13px]"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Tirar o slide ${index + 1}`}
-                disabled={busy}
-                onClick={() => onChange(slides.filter((_, at) => at !== index))}
-                className="mt-0.5 shrink-0 text-muted-foreground"
-              >
-                <X />
-              </Button>
-            </li>
-          ))}
-        </ol>
+        mobile ? (
+          // No celular, cada slide é um cartão grande: a imagem, o texto e as setas para mudar a ordem.
+          <ol className="space-y-2.5">
+            {slides.map((slide, index) => (
+              <li key={index} className="rounded-lg border p-2.5">
+                <div className="flex items-center">
+                  <span className="pl-1 text-[13px] font-medium text-foreground">Slide {index + 1}</span>
+                  <div className="ml-auto flex">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Subir o slide ${index + 1}`}
+                      disabled={busy || index === 0}
+                      onClick={() => move(index, -1)}
+                      className="size-11 text-muted-foreground"
+                    >
+                      <ArrowUp />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Descer o slide ${index + 1}`}
+                      disabled={busy || index === slides.length - 1}
+                      onClick={() => move(index, 1)}
+                      className="size-11 text-muted-foreground"
+                    >
+                      <ArrowDown />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Tirar o slide ${index + 1}`}
+                      disabled={busy}
+                      onClick={() => onChange(slides.filter((_, at) => at !== index))}
+                      className="size-11 text-muted-foreground"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-1 flex items-start gap-3">
+                  <SlideImage
+                    large
+                    index={index}
+                    path={slide.image_path}
+                    uploading={uploading.includes(`slide-${index}`)}
+                    disabled={!canUpload}
+                    onPick={(file) => onPickImage(index, file)}
+                    onRemove={() => removeImage(index)}
+                  />
+                  <Textarea
+                    value={slide.text}
+                    maxLength={SLIDE_TEXT_MAX}
+                    onChange={(event) => setText(index, event.target.value)}
+                    aria-label={`Texto do slide ${index + 1}`}
+                    placeholder={index === 0 ? "Primeiro slide: a frase que faz parar de rolar" : "Texto do slide"}
+                    className="min-h-28 min-w-0 flex-1 text-base shadow-none"
+                  />
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <ol className="space-y-2">
+            {slides.map((slide, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="mt-2 w-5 shrink-0 text-right text-xs text-muted-foreground tabular-nums">{index + 1}</span>
+                <SlideImage
+                  index={index}
+                  path={slide.image_path}
+                  uploading={uploading.includes(`slide-${index}`)}
+                  disabled={!canUpload}
+                  onPick={(file) => onPickImage(index, file)}
+                  onRemove={() => removeImage(index)}
+                />
+                <Textarea
+                  value={slide.text}
+                  maxLength={SLIDE_TEXT_MAX}
+                  onChange={(event) => setText(index, event.target.value)}
+                  aria-label={`Texto do slide ${index + 1}`}
+                  placeholder={index === 0 ? "Primeiro slide: a frase que faz parar de rolar" : "Texto do slide"}
+                  className="min-h-10 min-w-0 flex-1 text-base shadow-none md:text-[13px]"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Tirar o slide ${index + 1}`}
+                  disabled={busy}
+                  onClick={() => onChange(slides.filter((_, at) => at !== index))}
+                  className="mt-0.5 shrink-0 text-muted-foreground"
+                >
+                  <X />
+                </Button>
+              </li>
+            ))}
+          </ol>
+        )
       ) : null}
       <Button
         type="button"
@@ -1115,7 +1258,7 @@ function SlidesEditor({
         size="sm"
         disabled={slides.length >= MAX_SLIDES}
         onClick={() => onChange([...slides, { text: "", image_path: null }])}
-        className="h-8 gap-1 text-xs shadow-none"
+        className="h-8 gap-1 text-xs shadow-none max-md:h-11 max-md:w-full max-md:text-sm"
       >
         <Plus className="size-3.5" />
         {slides.length >= MAX_SLIDES ? `Máximo de ${MAX_SLIDES} slides` : "Slide"}
@@ -1132,7 +1275,10 @@ function SlideImage({
   disabled,
   onPick,
   onRemove,
+  large = false,
 }: {
+  /** Maior, para o toque (a lista de slides do celular). */
+  large?: boolean
   index: number
   path: string | null
   uploading: boolean
@@ -1147,7 +1293,10 @@ function SlideImage({
         label={disabled ? "Escolha o cliente para enviar imagens" : label}
         disabled={disabled || uploading}
         onPick={onPick}
-        className="relative flex aspect-[3/4] w-10 items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted"
+        className={cn(
+          "relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted",
+          large ? "w-20" : "w-10"
+        )}
       >
         {path ? <ContentImage key={path} path={path} alt={`Imagem do slide ${index + 1}`} /> : <ImagePlus className="size-3.5" aria-hidden="true" />}
         {uploading ? (
@@ -1161,9 +1310,12 @@ function SlideImage({
           type="button"
           onClick={onRemove}
           aria-label={`Tirar a imagem do slide ${index + 1}`}
-          className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+          className={cn(
+            "absolute flex items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+            large ? "-top-2 -right-2 size-7" : "-top-1.5 -right-1.5 size-4"
+          )}
         >
-          <X className="size-2.5" />
+          <X className={large ? "size-3.5" : "size-2.5"} />
         </button>
       ) : null}
     </div>

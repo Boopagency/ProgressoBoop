@@ -3,8 +3,8 @@ import type { Timestamp } from "@/lib/types"
 /*
  * Avisos do cliente no portal (`client_notifications`): a frase de cada um e
  * o contador. Funções puras. O banco grava os avisos (respostas da equipe,
- * post e etapa para aprovar, etapa concluída); o portal só lê e marca como
- * lidos.
+ * post e etapa para aprovar, etapa concluída, documento novo); o portal só
+ * lê e marca como lidos.
  */
 
 /** Avisos mostrados na tela de Notificações (os mais recentes). */
@@ -12,7 +12,7 @@ export const PORTAL_NOTIFICATIONS_LIMIT = 50
 /** O menu confere as contagens a cada tanto (o Realtime avisa antes, quando está no ar). */
 export const PORTAL_COUNTS_POLL_MS = 30000
 
-export type PortalNotificationKind = "team_message" | "post_review" | "step_approval" | "step_done"
+export type PortalNotificationKind = "team_message" | "post_review" | "step_approval" | "step_done" | "file_shared"
 
 /** Aviso da conta do cliente. O texto é uma cópia do momento em que nasceu. */
 export interface PortalNotification {
@@ -60,6 +60,8 @@ export function describePortalNotification(item: PortalNotification): PortalNoti
       return { lead: "Etapa para você aprovar:", subject: item.title, excerpt: item.body ? `Projeto ${item.body}` : null }
     case "step_done":
       return { lead: "Etapa concluída:", subject: item.title, excerpt: item.body ? `Projeto ${item.body}` : null }
+    case "file_shared":
+      return { lead: "Novo documento:", subject: item.title, excerpt: null }
   }
 }
 

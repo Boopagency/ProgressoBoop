@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getEvents } from "@/features/calendar/queries"
+import { getClientFiles } from "@/features/client-files/queries"
 import { ClientView } from "@/features/clients/client-view"
 import { parsePeriodParam, periodOf } from "@/features/clients/logic"
 import { getClient, getClientReviews } from "@/features/clients/queries"
@@ -30,7 +31,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
@@ -44,6 +45,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getContentPosts(id),
     getContentIdeas(id),
     getClientMembers(id),
+    getClientFiles(id),
   ])
   if (!client) notFound()
 
@@ -71,6 +73,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
         posts={posts}
         ideas={ideas}
         members={members}
+        files={files}
       />
     </TasksProvider>
   )

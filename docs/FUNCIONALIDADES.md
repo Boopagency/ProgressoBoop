@@ -314,6 +314,12 @@ segunda, 07:00).
   moodboard, Estratégia de conteúdo do mês, Planejamento de stories e
   Relatório do mês (2.11). O atalho abre o "Novo documento" com o cliente,
   o modelo e o título já escolhidos.
+- **Arquivos do cliente:** os arquivos enviados para o cliente (PDF,
+  imagem, Word, Excel, PowerPoint, texto, CSV, ZIP ou vídeo MP4, até 25 MB),
+  com **Enviar** (nome, tipo, descrição e "O cliente vê no portal", ligado
+  por padrão). Cada um abre ou baixa; no menu, **Editar**, **Esconder do
+  cliente**/**Mostrar ao cliente** e **Excluir…**. Os visíveis aparecem em
+  Documentos no portal (2.27) e o cliente recebe o aviso "Novo documento".
 - **Tarefas** do cliente por prazo, com as concluídas nos últimos 30 dias
   recolhidas; **Tarefa** no topo cria uma já com o cliente.
 - **Canal do cliente:** os pedidos de ajuste pendentes e as últimas
@@ -331,7 +337,8 @@ segunda, 07:00).
   o cliente.
 - **Editar** muda o cadastro. No menu: nova reunião, novo documento do
   cliente, desativar/reativar e excluir (apaga o cadastro, as revisões, as
-  comunicações, os posts, com as imagens, e as ideias; tarefas,
+  comunicações, os posts, com as imagens, as ideias e os arquivos do
+  cliente; tarefas,
   projetos, eventos, decisões, lançamentos e processos continuam, sem o
   cliente).
 - A Boop (projetos internos) está cadastrada sem revisão mensal.
@@ -884,8 +891,8 @@ juntos**, sem entrar cliente por cliente.
 
 A área em que a pessoa de um cliente entra com a própria conta e vê só o
 que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
-Início, Calendário, Feed, Projetos, **Comunicação** e **Notificações** (as
-duas últimas com o contador de não lidas; no celular, o mesmo menu
+Início, Calendário, Feed, Projetos, **Documentos**, **Comunicação** e
+**Notificações** (as duas últimas com o contador de não lidas; no celular, o mesmo menu
 recolhível, pelo botão no topo), a troca de cliente no topo do menu (para
 quem acompanha mais de um) e, no rodapé, quem está logado, o **Tema**
 (Claro, Escuro ou Sistema) e **Sair**. No
@@ -957,11 +964,16 @@ post e no projeto aberto, o topo mostra o "voltar".
   segundos e, com a conversa na tela, marca como lida (o contador do menu
   zera). As mensagens internas da equipe não aparecem. Canal arquivado pela
   equipe vira só leitura.
+- **Documentos:** os arquivos que a equipe enviou para o cliente
+  (contrato, briefing, marca, relatório, outro), separados por tipo, com
+  nome, descrição, data e tamanho; **Abrir** (PDF, imagem, vídeo e texto
+  abrem no navegador) e **Baixar** (com o nome original). Só os que a
+  equipe deixou visíveis; o do aviso "Novo documento" vem destacado.
 - **Notificações:** os avisos da conta, do mais novo para o mais antigo,
   com os não lidos marcados e **Marcar todas como lidas**: a equipe
   respondeu (num post, num projeto ou na Comunicação), post para aprovar,
-  etapa para aprovar e etapa concluída. Abrir um aviso o marca como lido e
-  leva ao item. O contador do menu chega na hora (Realtime).
+  etapa para aprovar, etapa concluída e documento novo. Abrir um aviso o
+  marca como lido e leva ao item. O contador do menu chega na hora (Realtime).
 - Cliente desativado some do portal de quem o acompanhava.
 
 ### 2.28 Claude (conector do Boop Admin)

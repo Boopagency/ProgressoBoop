@@ -1,7 +1,7 @@
 "use client"
 
 import { Lock, SendHorizontal } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { BODY_MAX } from "@/features/channels/logic"
@@ -17,7 +17,8 @@ export interface ComposerOptions {
  * Campo de escrever: Enter envia, Shift + Enter quebra a linha. No canal de
  * cliente, "Pedido de ajuste" marca a mensagem como pedido (fica pendente
  * até ser resolvido) e "Interno" a deixa só para a equipe (o cliente não vê
- * no portal). O portal usa o mesmo campo, sem as duas opções.
+ * no portal). O portal usa o mesmo campo, sem as duas opções. `autoFocus`
+ * só vale com mouse (no celular, o teclado abre quando a pessoa toca).
  */
 export function Composer({
   onSend,
@@ -43,6 +44,13 @@ export function Composer({
   const [request, setRequest] = useState(false)
   const [internal, setInternal] = useState(false)
   const [sending, setSending] = useState(false)
+  const field = useRef<HTMLTextAreaElement>(null)
+
+  // Abrir a conversa já deixa o cursor no campo, mas só com mouse: no
+  // celular isso abriria o teclado por cima da conversa.
+  useEffect(() => {
+    if (autoFocus && window.matchMedia("(pointer: fine)").matches) field.current?.focus()
+  }, [autoFocus])
 
   // O campo limpa na hora de enviar; se der erro, o texto volta (sem apagar
   // o que a pessoa já começou a escrever de novo).
@@ -88,7 +96,7 @@ export function Composer({
         )}
       >
         <textarea
-          autoFocus={autoFocus}
+          ref={field}
           value={body}
           maxLength={BODY_MAX}
           onChange={(event) => setBody(event.target.value)}

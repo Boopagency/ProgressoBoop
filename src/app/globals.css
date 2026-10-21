@@ -475,6 +475,16 @@
   accent-color: var(--primary);
 }
 
+/* No celular (toque), o iPhone dá zoom ao tocar num campo com letra menor que
+ * 16px e a tela fica fora do lugar. Fora das camadas do Tailwind, vale sobre
+ * as classes de tamanho dos campos. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
 
 /* Relatório para imprimir / salvar em PDF (/relatorio). */
 @media print {

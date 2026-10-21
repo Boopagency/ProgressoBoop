@@ -2,6 +2,7 @@ import "server-only"
 
 import { cache } from "react"
 
+import type { Deliverable } from "@/features/deliverables/logic"
 import { toPortalMessage, type PortalMessage } from "@/features/portal/content-queries"
 import type { PortalProject, PortalStep, PortalStepApproval } from "@/features/portal/project-logic"
 import { requirePortalUser } from "@/features/portal/session"
@@ -79,4 +80,27 @@ export const getPortalStepApprovals = cache(async (clientId: string): Promise<Po
     decided_by_name: row.decided_by_name ?? null,
     decided_at: row.decided_at ?? null,
   }))
+})
+
+/** Entregas (links e arquivos) das etapas que o cliente vê no projeto, por etapa. */
+export const getPortalStepDeliverables = cache(async (projectId: string): Promise<Map<string, Deliverable[]>> => {
+  await requirePortalUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("portal_step_deliverables", { target_project: projectId })
+  if (error) throw loadError(error, "as entregas")
+  const byStep = new Map<string, Deliverable[]>()
+  for (const row of data ?? []) {
+    const item: Deliverable = {
+      id: row.id,
+      task_id: row.task_id,
+      kind: row.kind === "file" ? "file" : "link",
+      title: row.title,
+      url: row.url ?? null,
+      file_path: row.file_path ?? null,
+      mime_type: row.mime_type ?? null,
+      created_at: row.created_at,
+    }
+    byStep.set(item.task_id, [...(byStep.get(item.task_id) ?? []), item])
+  }
+  return byStep
 })

@@ -173,6 +173,11 @@ ali mesmo e salvo na hora.
   entram na conversa do projeto como pedido pendente; concluir de novo
   resolve o pedido e manda a etapa de novo para o cliente. Nas listas, a
   etapa esperando o cliente ou com ajustes pedidos ganha uma etiqueta.
+- **Entregas para o cliente** (em projeto de cliente): **Enviar arquivo**
+  (imagens e PDF até 20 MB, vários de uma vez, na resolução original) e
+  **Adicionar link** (Figma, Drive, prévia do site; nome opcional). O cliente
+  vê as entregas dentro da etapa, no portal, quando a etapa é vista por ele.
+  O X tira a entrega (e o arquivo); excluir a tarefa leva as entregas junto.
 - No topo, o projeto da tarefa leva à página dele. No rodapé, quando a
   tarefa nasceu de uma reunião, de uma revisão de cliente, de um processo ou
   de um pedido do cliente, aparece o link para a origem.
@@ -925,7 +930,9 @@ post e no projeto aberto, o topo mostra o "voltar".
   a situação, o modelo, quanto já foi feito (todas as tarefas contam, como
   no admin), o prazo e a próxima etapa. O **projeto aberto** mostra o
   andamento e, ao lado, as **etapas** que a equipe marcou como "o cliente
-  vê" (feita, próxima, em andamento ou a fazer, com a data) e a **conversa
+  vê" (feita, próxima, em andamento ou a fazer, com a data, e as
+  **entregas** da etapa: imagens em miniatura, PDFs e links, que abrem numa
+  aba nova) e a **conversa
   do projeto**, no mesmo canal "Alterações" do cliente, marcada com o
   projeto. A etapa que a equipe concluiu e espera a aprovação aparece com
   **Aprovar** (comentário opcional) e **Pedir ajustes** (o que mudar,

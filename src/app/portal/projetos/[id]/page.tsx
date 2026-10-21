@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
+import { DeliverableList } from "@/features/deliverables/deliverable-list"
 import { PostChat } from "@/features/portal/post-chat"
 import { projectPercent, stepApprovalState, templateName, type PortalProject } from "@/features/portal/project-logic"
 import {
@@ -10,6 +11,7 @@ import {
   getPortalProjects,
   getPortalProjectSteps,
   getPortalStepApprovals,
+  getPortalStepDeliverables,
 } from "@/features/portal/project-queries"
 import { StepReviewButtons } from "@/features/portal/review-panel"
 import { pickPortalClient, requirePortalUser, type PortalClient } from "@/features/portal/session"
@@ -38,10 +40,11 @@ export default async function PortalProjectPage(props: PageProps<"/portal/projet
   if (!found) notFound()
   const { client, project } = found
 
-  const [steps, messages, approvals] = await Promise.all([
+  const [steps, messages, approvals, deliverables] = await Promise.all([
     getPortalProjectSteps(project.id),
     getPortalProjectMessages(project.id),
     getPortalStepApprovals(client.id),
+    getPortalStepDeliverables(project.id),
   ])
   // As etapas deste projeto que pedem a aprovação do cliente.
   const approvalOf = new Map(approvals.filter((item) => item.project_id === project.id).map((item) => [item.id, item]))
@@ -133,6 +136,7 @@ export default async function PortalProjectPage(props: PageProps<"/portal/projet
                         {!done && step.due_date ? ` · ${late ? "previsto para " : ""}${formatShortDate(step.due_date, today)}` : ""}
                         {state?.kind === "pending" ? " · pede sua aprovação" : ""}
                       </p>
+                      <DeliverableList items={deliverables.get(step.id) ?? []} className="mt-2" />
                       {state?.kind === "awaiting" ? (
                         <div className="mt-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5">
                           <p className="text-[13px] leading-5 text-foreground">

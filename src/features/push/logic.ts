@@ -44,6 +44,8 @@ export interface PushNotificationRow {
   item_count?: number | null
   link: string
   created_at: string
+  /** Avisos não lidos de quem recebe, contando este (o número no ícone do app). */
+  unread?: number | null
   subscriptions: PushKeys[]
 }
 
@@ -62,6 +64,8 @@ export interface PushMessage {
   link: string
   /** O id do aviso: o mesmo aviso do sino e do push aparece uma vez só. */
   tag: string
+  /** Número no ícone do app (não lidas); ausente quando o banco não mandou. */
+  badge?: number
 }
 
 const TEAM_KINDS = new Set<string>([
@@ -77,6 +81,7 @@ const CLIENT_KINDS = new Set<string>([
   "post_review",
   "step_approval",
   "step_done",
+  "file_shared",
 ] satisfies PortalNotificationKind[])
 
 function clip(text: string, max: number): string {
@@ -145,6 +150,7 @@ export function pushMessage(audience: PushAudience, row: PushNotificationRow): P
     body: clip(body || "Toque para ver.", BODY_MAX),
     link,
     tag: row.id,
+    ...(typeof row.unread === "number" && row.unread >= 0 ? { badge: Math.floor(row.unread) } : {}),
   }
 }
 

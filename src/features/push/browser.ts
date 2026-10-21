@@ -150,3 +150,20 @@ export async function refreshPushSubscription(): Promise<void> {
     // Tenta de novo na próxima vez que o app abrir.
   }
 }
+
+/**
+ * O número no ícone do app (não lidas), com o app aberto: acompanha o sino
+ * (equipe) ou as Notificações do portal. Com o app fechado, quem atualiza é o
+ * push (public/sw.js). Navegador sem suporte: não faz nada.
+ */
+export function syncAppBadge(count: number): void {
+  const nav = navigator as Navigator & {
+    setAppBadge?: (count?: number) => Promise<void>
+    clearAppBadge?: () => Promise<void>
+  }
+  if (!nav.setAppBadge || !nav.clearAppBadge) return
+  const done = count > 0 ? nav.setAppBadge(count) : nav.clearAppBadge()
+  done.catch(() => {
+    // Sem permissão de notificações (iPhone) ou fora do app instalado.
+  })
+}

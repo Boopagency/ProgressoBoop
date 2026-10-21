@@ -1096,7 +1096,8 @@ No iPhone, o push só funciona com o app instalado (Safari → Compartilhar →
 Adicionar à Tela de Início, iOS 16.4 ou mais novo); a própria tela explica.
 No Android, o Chrome oferece **Instalar o app**. Sair da conta desliga os
 avisos daquele aparelho. Aviso novo que o banco passar a gravar no sino vai
-para o celular sozinho.
+para o celular sozinho. O ícone do app mostra quantos avisos estão sem ler
+(no iPhone, o número; no Android, um ponto) e zera quando a pessoa lê tudo.
 
 ## 3. Regras: como os números são calculados
 

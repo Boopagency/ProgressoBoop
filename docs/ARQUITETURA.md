@@ -1229,12 +1229,14 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
 - **Calendário** (mês ou semana, setas e "Hoje"): cada post com a foto do
   cliente (ou a inicial numa cor estável, derivada do id), o ícone do
   formato, a etapa e um ponto quando está atrasado (vermelho) ou com falta
-  material (laranja). No celular, o mês mostra pontos e abre a lista do
-  dia; a semana vira uma lista por dia. O "+" do dia cria um post naquela data. Posts sem data
-  ficam numa lista abaixo.
+  material (laranja). No celular (abaixo do `md`), o mês e a semana viram
+  uma lista por dia (no mês, só os dias com post e hoje); entre o `md` e
+  telas largas, o mês mostra pontos e abre a lista do dia. O "+" do dia
+  cria um post naquela data. Posts sem data ficam numa lista abaixo.
 - **Quadro** por etapa (Em produção → Revisão interna → Aguardando cliente →
   Aprovado → Programado → Publicado, este com os últimos 30 dias); arrastar
-  muda a etapa.
+  muda a etapa (só no computador). No celular, uma lista por etapa que abre
+  e fecha (Publicado começa fechado).
 - **7 dias**: os atrasados, hoje, amanhã e o resto da semana, com o que
   falta em cada frente (copy, design, vídeo).
 - **Feed** (`ver=feed`, com um cliente filtrado; sem um, a tela pede para
@@ -1268,8 +1270,12 @@ A Central de Conteúdo: os posts de **todos os clientes juntos**.
   o link do Drive; **Tarefas das frentes**; excluir com confirmação. Salvar
   envia só os campos que mudaram. Na lateral direita, duas abas:
   **Cliente** (o chat do post: as mensagens do canal do cliente com aquele
-  `post_id`) e **Interno** (histórico e comentários). No celular, "Post" e
-  "Conversa" são abas.
+  `post_id`) e **Interno** (histórico e comentários). No celular, o post
+  abre em tela cheia (topo com voltar, título e as abas "Post" e
+  "Conversa"; Excluir, Cancelar e Salvar fixos embaixo), em seções Básico,
+  Datas, Frentes, Slides (ou Roteiro) e Legenda; a prévia do carrossel fica
+  como no Instagram (foto e @, carrossel com o dedo e contador, legenda com
+  "mais") e os slides viram cartões grandes, com setas para mudar a ordem.
 - **Gerar tarefas**: uma tarefa por frente que falta ("Copy — <título>"),
   ligada ao post (`content_post_id`), ao cliente e ao projeto, área
   Clientes, com responsáveis (o do post, por padrão) e prazo antes da
@@ -1343,7 +1349,12 @@ rodapé tem quem está logado e "Sair".
   responsáveis ou prazos internos.
 - **Calendário**, **Feed**, **Projetos** e as páginas do post e do projeto:
   as mesmas de antes, agora no esqueleto (o mês e as setas do calendário na
-  linha de filtros; status, formato e datas na linha da descrição).
+  linha de filtros; status, formato e datas na linha da descrição). No
+  celular (abaixo do `md`), o calendário é uma lista dos dias com post e o
+  post fica como no Instagram: foto e @ do cliente, carrossel com o dedo
+  (4:5, contador "2/7") e legenda com "mais"; **Aprovar** e **Pedir
+  ajuste** ficam numa barra fixa embaixo, e a resposta abre numa folha de
+  baixo para cima.
 - **Projeto aberto**: as etapas que esperam a aprovação do cliente pedem a
   resposta ali mesmo (**Aprovar**, com comentário opcional, ou **Pedir
   ajustes**, com o que mudar; `StepReviewButtons`, o mesmo diálogo do post,

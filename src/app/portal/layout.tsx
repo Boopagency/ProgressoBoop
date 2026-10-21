@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import type { ReactNode } from "react"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { fetchPortalChannel } from "@/features/portal/channel-queries"
+import { fetchPortalUnreadMessages } from "@/features/portal/channel-queries"
 import { NO_PORTAL_COUNTS, type PortalCounts } from "@/features/portal/notification-logic"
 import { fetchPortalUnreadCount } from "@/features/portal/notification-queries"
 import { PortalAlertsProvider } from "@/features/portal/portal-alerts"
@@ -21,8 +21,8 @@ async function initialCounts(user: PortalUser): Promise<PortalCounts> {
   if (!first) return NO_PORTAL_COUNTS
   try {
     const supabase = await createClient()
-    const [channel, notifications] = await Promise.all([fetchPortalChannel(supabase, first.id), fetchPortalUnreadCount(supabase)])
-    return { messages: channel?.unread ?? 0, notifications }
+    const [messages, notifications] = await Promise.all([fetchPortalUnreadMessages(supabase, first.id), fetchPortalUnreadCount(supabase)])
+    return { messages, notifications }
   } catch {
     return NO_PORTAL_COUNTS
   }

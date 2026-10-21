@@ -123,7 +123,7 @@ export async function loadPendingRequests(supabase: McpSupabase): Promise<Pendin
 /** Canais que a pessoa enxerga (o RLS filtra), com os participantes. */
 export async function loadChannels(supabase: McpSupabase): Promise<(Channel & { member_ids: string[] })[]> {
   const [channels, members] = await Promise.all([
-    supabase.from("channels").select("id, kind, client_id, name, archived, created_by, created_at"),
+    supabase.from("channels").select("id, kind, client_id, client_user_id, name, archived, created_by, created_at"),
     supabase.from("channel_members").select("channel_id, user_id"),
   ])
   if (channels.error) throw loadError(channels.error, "os canais")

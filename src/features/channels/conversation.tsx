@@ -18,9 +18,11 @@ import { loadThread, markChannelRead, sendMessage } from "@/features/channels/ac
 import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import {
   buildThread,
+  clientDirectPerson,
   directPartner,
   filterCommunications,
   filterThread,
+  isClientDirect,
   type ChannelEntry,
   type ThreadItem,
 } from "@/features/channels/logic"
@@ -68,17 +70,20 @@ function usePageActive(): boolean {
 
 /** Ícone do canal: a foto do cliente, "#" do canal interno ou a outra pessoa. */
 export function ChannelGlyph({ channel, size = "sm" }: { channel: ChannelEntry; size?: "sm" | "md" }) {
-  const { currentUser, profiles, profileById } = useWorkspace()
+  const { currentUser, profiles, profileById, clientPersonById } = useWorkspace()
   if (channel.kind === "client" && channel.client_id) {
     return <ClientMark clientId={channel.client_id} size={size === "md" ? "md" : "sm"} />
   }
   if (channel.kind === "direct") {
+    // Com alguém do cliente, a foto dela; com a equipe, a da outra pessoa.
+    const clientPerson = isClientDirect(channel) && channel.client_user_id ? clientPersonById.get(channel.client_user_id) : undefined
     const partner = directPartner(channel, currentUser.id)
-    const profile = partner ? profileById.get(partner) : undefined
+    const profile = isClientDirect(channel) || !partner ? undefined : profileById.get(partner)
+    const person = clientPerson ?? profile
     return (
       <PersonAvatar
-        name={profile?.full_name ?? "?"}
-        avatarUrl={profile?.avatar_url}
+        name={person?.full_name ?? "?"}
+        avatarUrl={person?.avatar_url}
         colorIndex={profile ? profiles.indexOf(profile) : 0}
         size="sm"
         className={cn(size === "md" ? "size-7" : "size-5 [&_[data-slot=avatar-fallback]]:text-[10px]")}
@@ -156,8 +161,9 @@ export function Conversation({
   onOpenPost: (postId: string) => void
   onOpenCommunication: (communication: Communication) => void
 }) {
-  const { profileById, clientById } = useWorkspace()
+  const { profileById, clientById, clientPersonById } = useWorkspace()
   const { today } = useTasks()
+  const withClient = isClientDirect(channel)
   const thread = useThread(channel.id, (before) => loadThread(channel.id, before))
   const seenBy = useSeenBy(thread.messages, thread.reads)
   const [query, setQuery] = useState(initialQuery)
@@ -204,6 +210,13 @@ export function Conversation({
     channel.kind === "client" && channel.client_id ? (
       <>
         Canal do cliente · toda a equipe ·{" "}
+        <Link href={`/clientes/${channel.client_id}`} className="hover:text-foreground hover:underline">
+          ver {clientById.get(channel.client_id)?.name ?? "cliente"}
+        </Link>
+      </>
+    ) : withClient && channel.client_id ? (
+      <>
+        Conversa direta com {clientDirectPerson(channel, { clientPersonById })} ·{" "}
         <Link href={`/clientes/${channel.client_id}`} className="hover:text-foreground hover:underline">
           ver {clientById.get(channel.client_id)?.name ?? "cliente"}
         </Link>
@@ -376,7 +389,9 @@ export function Conversation({
                 <p className="mx-auto mt-1 max-w-sm text-[13px] text-muted-foreground">
                   {channel.kind === "client"
                     ? "Escreva para a equipe sobre este cliente. Pedidos de ajuste ficam pendentes até alguém resolver (ou a tarefa ser concluída)."
-                    : "Comece a conversa."}
+                    : withClient
+                      ? "Comece a conversa. Só você e essa pessoa veem estas mensagens."
+                      : "Comece a conversa."}
                 </p>
               )}
             </div>
@@ -390,6 +405,11 @@ export function Conversation({
           O cliente lê este canal no portal, em Comunicação. Para falar só com a equipe, marque Interno ao escrever.
         </p>
       ) : null}
+      {view === "thread" && withClient && !channel.archived ? (
+        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
+          {clientDirectPerson(channel, { clientPersonById })} lê esta conversa no portal, em Comunicação. O resto da equipe não vê.
+        </p>
+      ) : null}
       {view === "thread" ? (
         <Composer
           key={channel.id}
@@ -397,9 +417,15 @@ export function Conversation({
           allowRequest={channel.kind === "client"}
           allowInternal={channel.kind === "client"}
           autoFocus
-          placeholder={channel.kind === "direct" ? `Mensagem para ${title}` : `Mensagem em ${title}`}
+          placeholder={
+            withClient
+              ? `Mensagem para ${clientDirectPerson(channel, { clientPersonById })}`
+              : channel.kind === "direct"
+                ? `Mensagem para ${title}`
+                : `Mensagem em ${title}`
+          }
           disabledText={channel.archived ? "Canal arquivado. Desarquive pelo menu para voltar a escrever." : null}
-          className={channel.kind === "client" && !channel.archived ? "border-t-0" : undefined}
+          className={(channel.kind === "client" || withClient) && !channel.archived ? "border-t-0" : undefined}
         />
       ) : null}
     </section>

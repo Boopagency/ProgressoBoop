@@ -135,6 +135,8 @@ export function isPending(message: Pick<Message, "kind" | "resolved_at">): boole
 interface NameContext {
   clientById: Map<string, Client>
   profileById: Map<string, Profile>
+  /** Pessoas dos clientes (contas do portal), pelo `user_id`. */
+  clientPersonById: Map<string, { full_name: string }>
   me: string
 }
 
@@ -143,10 +145,24 @@ export function directPartner(channel: ChannelEntry, me: string): string | null 
   return channel.member_ids.find((id) => id !== me) ?? channel.member_ids[0] ?? null
 }
 
+/** Conversa direta com uma pessoa do cliente (ela lê e escreve no portal). */
+export function isClientDirect(channel: Pick<Channel, "kind" | "client_user_id">): boolean {
+  return channel.kind === "direct" && channel.client_user_id !== null
+}
+
+/** Nome da pessoa do cliente da conversa direta ("Pessoa do cliente" se ela perdeu o acesso). */
+export function clientDirectPerson(channel: Pick<Channel, "client_user_id">, ctx: Pick<NameContext, "clientPersonById">): string {
+  return (channel.client_user_id ? ctx.clientPersonById.get(channel.client_user_id)?.full_name : null) ?? "Pessoa do cliente"
+}
+
 /** Nome curto, para a lista: o cliente, o assunto ou a outra pessoa. */
 export function channelLabel(channel: ChannelEntry, ctx: NameContext): string {
   if (channel.kind === "client") {
     return (channel.client_id ? ctx.clientById.get(channel.client_id)?.name : null) ?? channel.name ?? "Cliente"
+  }
+  if (isClientDirect(channel)) {
+    const client = channel.client_id ? ctx.clientById.get(channel.client_id)?.name : null
+    return client ? `${clientDirectPerson(channel, ctx)} · ${client}` : clientDirectPerson(channel, ctx)
   }
   if (channel.kind === "direct") {
     const partner = directPartner(channel, ctx.me)
@@ -163,6 +179,8 @@ export function channelTitle(channel: ChannelEntry, ctx: NameContext): string {
 
 export interface ChannelGroups {
   clients: ChannelEntry[]
+  /** Conversas diretas com as pessoas dos clientes. */
+  clientDirect: ChannelEntry[]
   internal: ChannelEntry[]
   direct: ChannelEntry[]
   /** Arquivados e os canais de clientes inativos. */
@@ -170,17 +188,18 @@ export interface ChannelGroups {
 }
 
 export function groupChannels(channels: ChannelEntry[], ctx: NameContext): ChannelGroups {
-  const groups: ChannelGroups = { clients: [], internal: [], direct: [], archived: [] }
+  const groups: ChannelGroups = { clients: [], clientDirect: [], internal: [], direct: [], archived: [] }
   const byLabel = (a: ChannelEntry, b: ChannelEntry) => channelLabel(a, ctx).localeCompare(channelLabel(b, ctx), "pt-BR")
   for (const channel of channels) {
-    const inactiveClient =
-      channel.kind === "client" && channel.client_id !== null && ctx.clientById.get(channel.client_id)?.active === false
+    const inactiveClient = channel.client_id !== null && ctx.clientById.get(channel.client_id)?.active === false
     if (channel.archived || inactiveClient) groups.archived.push(channel)
     else if (channel.kind === "client") groups.clients.push(channel)
+    else if (isClientDirect(channel)) groups.clientDirect.push(channel)
     else if (channel.kind === "internal") groups.internal.push(channel)
     else groups.direct.push(channel)
   }
   groups.clients.sort(byLabel)
+  groups.clientDirect.sort(byLabel)
   groups.internal.sort(byLabel)
   groups.direct.sort(byLabel)
   groups.archived.sort(byLabel)

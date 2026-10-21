@@ -141,7 +141,7 @@ export function ChannelsView({
   initialQuery: string
 }) {
   const searchParams = useSearchParams()
-  const { clientById, profileById, currentUser } = useWorkspace()
+  const { clientById, profileById, clientPersonById, currentUser } = useWorkspace()
   const unreadTotals = useUnread()
   const [polledCounts, setPolledCounts] = useState<Record<string, ChannelCounts> | null>(null)
   const [serverChannels, setServerChannels] = useState(channels)
@@ -158,7 +158,7 @@ export function ChannelsView({
     setPolledCounts(null)
   }
 
-  const ctx = { clientById, profileById, me: currentUser.id }
+  const ctx = { clientById, profileById, clientPersonById, me: currentUser.id }
   const entries = channels.map((channel) => ({ ...channel, counts: polledCounts?.[channel.id] ?? channel.counts }))
   const groups = groupChannels(entries, ctx)
 
@@ -233,6 +233,10 @@ export function ChannelsView({
     if (channel.kind === "client") {
       return [
         {
+          label: "Conversa direta com alguém do cliente",
+          onSelect: () => setDialog({ open: true, mode: "client", clientId: channel.client_id ?? undefined }),
+        },
+        {
           label: "Registrar contato (ligação, reunião…)",
           onSelect: () =>
             setCommunicationDialog((current) => ({
@@ -303,6 +307,33 @@ export function ChannelsView({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-6">
           <Group title="Clientes">{groups.clients.length > 0 ? rows(groups.clients) : <p className="px-2 text-xs text-muted-foreground">Nenhum cliente ativo.</p>}</Group>
+          <Group
+            title="Com clientes"
+            action={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Nova conversa com alguém do cliente"
+                onClick={() => setDialog({ open: true, mode: "client" })}
+                className="size-6 text-muted-foreground"
+              >
+                <Plus className="size-3.5" />
+              </Button>
+            }
+          >
+            {groups.clientDirect.length > 0 ? (
+              rows(groups.clientDirect)
+            ) : (
+              <button
+                type="button"
+                onClick={() => setDialog({ open: true, mode: "client" })}
+                className="px-2 text-left text-xs text-muted-foreground hover:text-foreground"
+              >
+                Converse direto com uma pessoa do cliente.
+              </button>
+            )}
+          </Group>
           <Group
             title="Canais"
             action={
@@ -405,8 +436,8 @@ export function ChannelsView({
           <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
             <h2 className="text-base font-semibold text-foreground">Escolha um canal</h2>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              Cada cliente tem o canal “Alterações”, com os pedidos de ajuste e o chat dos posts. A equipe também tem
-              canais por assunto e conversas diretas.
+              Cada cliente tem o canal “Alterações”, com os pedidos de ajuste e o chat dos posts. Você também conversa
+              direto com uma pessoa do cliente, e a equipe tem canais por assunto e conversas diretas.
             </p>
             {totals.pending > 0 || totals.unread > 0 ? (
               <div className="mt-6 w-full max-w-sm space-y-4 text-left">

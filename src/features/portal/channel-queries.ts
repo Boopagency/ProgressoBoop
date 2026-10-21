@@ -11,10 +11,13 @@ import type { ContentStage, MessageKind, Timestamp } from "@/lib/types"
 /*
  * Leitura do canal do cliente no portal, só por `portal_channel_messages`:
  * o banco confere o cliente e deixa de fora as mensagens internas e as dos
- * posts que ainda não chegaram a ele.
+ * posts que ainda não chegaram a ele. As conversas diretas com alguém da
+ * equipe, só por `portal_direct_*` (o banco confere que a conversa é da conta).
  */
 
-type ChannelMessageRow = Database["public"]["Functions"]["portal_channel_messages"]["Returns"][number]
+type ChannelMessageRow =
+  | Database["public"]["Functions"]["portal_channel_messages"]["Returns"][number]
+  | Database["public"]["Functions"]["portal_direct_messages"]["Returns"][number]
 
 /** Mensagens por página do fio da Comunicação (o banco devolve até 200). */
 export const PORTAL_THREAD_PAGE = 100
@@ -103,4 +106,68 @@ export async function fetchPortalThread(
     messages: rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse(),
     hasMore: rows.length > PORTAL_THREAD_PAGE,
   }
+}
+
+/** Conversa direta da conta com alguém da equipe, como o portal vê. */
+export interface PortalDirectConversation {
+  channel_id: string
+  /** Quem da equipe participa (ex.: "Léo"). */
+  team_name: string
+  team_avatar_url: string | null
+  archived: boolean
+  unread: number
+  last_message_at: Timestamp | null
+}
+
+/**
+ * As conversas diretas da conta com a equipe, por cliente, a mais recente
+ * primeiro. Antes da migration delas entrar no banco, volta vazio.
+ */
+export async function fetchPortalDirectChannels(supabase: SupabaseServerClient, clientId: string): Promise<PortalDirectConversation[]> {
+  const { data, error } = await supabase.rpc("portal_direct_channels", { target_client: clientId })
+  if (error?.code === "PGRST202") return []
+  if (error) throw loadError(error, "as conversas")
+  return (data ?? []).map((row) => ({
+    channel_id: row.channel_id,
+    team_name: row.team_name,
+    team_avatar_url: row.team_avatar_url ?? null,
+    archived: row.archived ?? false,
+    unread: row.unread ?? 0,
+    last_message_at: row.last_message_at ?? null,
+  }))
+}
+
+export const getPortalDirectChannels = cache(async (clientId: string): Promise<PortalDirectConversation[]> => {
+  await requirePortalUser()
+  const supabase = await createClient()
+  return fetchPortalDirectChannels(supabase, clientId)
+})
+
+/** Uma página da conversa direta, como `fetchPortalThread`. */
+export async function fetchPortalDirectThread(
+  supabase: SupabaseServerClient,
+  channelId: string,
+  olderThan?: Timestamp
+): Promise<{ messages: PortalChannelMessage[]; hasMore: boolean }> {
+  const { data, error } = await supabase.rpc("portal_direct_messages", {
+    target_channel: channelId,
+    max_count: PORTAL_THREAD_PAGE + 1,
+    ...(olderThan ? { older_than: olderThan } : {}),
+  })
+  if (error) throw loadError(error, "as mensagens")
+  const rows = data ?? []
+  return {
+    messages: rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse(),
+    hasMore: rows.length > PORTAL_THREAD_PAGE,
+  }
+}
+
+/** Não lidas do menu: o canal do cliente e as conversas diretas da conta. */
+export async function fetchPortalUnreadMessages(supabase: SupabaseServerClient, clientId: string): Promise<number> {
+  const [channel, directs] = await Promise.all([
+    fetchPortalChannel(supabase, clientId),
+    // As diretas são um extra: se falharem, o contador fica com o canal.
+    fetchPortalDirectChannels(supabase, clientId).catch(() => []),
+  ])
+  return (channel?.unread ?? 0) + directs.reduce((sum, direct) => sum + direct.unread, 0)
 }

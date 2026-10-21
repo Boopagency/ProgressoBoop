@@ -2343,19 +2343,6 @@ export type Database = {
         Args: { message_body: string; target_project: string }
         Returns: string
       }
-      portal_step_deliverables: {
-        Args: { target_project: string }
-        Returns: {
-          created_at: string
-          file_path: string
-          id: string
-          kind: string
-          mime_type: string
-          task_id: string
-          title: string
-          url: string
-        }[]
-      }
       portal_step_approvals: {
         Args: { target_client: string }
         Returns: {
@@ -2371,6 +2358,19 @@ export type Database = {
           project_name: string
           status: Database["public"]["Enums"]["task_status"]
           title: string
+        }[]
+      }
+      portal_step_deliverables: {
+        Args: { target_project: string }
+        Returns: {
+          created_at: string
+          file_path: string
+          id: string
+          kind: string
+          mime_type: string
+          task_id: string
+          title: string
+          url: string
         }[]
       }
       portal_update_me: {

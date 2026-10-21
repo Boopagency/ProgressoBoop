@@ -2,7 +2,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 
-import { fetchPortalThread, type PortalChannelMessage } from "@/features/portal/channel-queries"
+import { fetchPortalDirectThread, fetchPortalThread, type PortalChannelMessage } from "@/features/portal/channel-queries"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import { getPortalUser } from "@/features/portal/session"
 import { dbFailure } from "@/lib/supabase/errors"
@@ -77,6 +77,45 @@ export async function readPortalChannel(clientId: string, readUntil: Timestamp):
   if (!isUuid(clientId) || !isTimestamp(readUntil)) return { ok: false, error: "Não foi possível marcar como lida." }
   const supabase = await createClient()
   const { error } = await supabase.rpc("portal_read_channel", { target_client: clientId, read_until: readUntil })
+  if (error) return failure(error, "Não foi possível marcar como lida.")
+  return { ok: true, data: null }
+}
+
+/* Conversa direta com alguém da equipe (o banco confere que é da conta). */
+
+const DIRECT_GONE = "Essa conversa não está mais disponível."
+
+export async function loadPortalDirectThread(
+  channelId: string,
+  olderThan?: Timestamp
+): Promise<ActionResult<{ messages: PortalChannelMessage[]; hasMore: boolean }>> {
+  if (!(await getPortalUser())) return { ok: false, error: SIGNED_OUT }
+  if (!isUuid(channelId)) return { ok: false, error: DIRECT_GONE }
+  if (olderThan !== undefined && !isTimestamp(olderThan)) return { ok: false, error: "Não foi possível carregar as mensagens." }
+  const supabase = await createClient()
+  try {
+    return { ok: true, data: await fetchPortalDirectThread(supabase, channelId, olderThan) }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error && error.message ? error.message : "Não foi possível carregar as mensagens." }
+  }
+}
+
+export async function sendPortalDirectMessage(channelId: string, body: string): Promise<ActionResult> {
+  if (!(await getPortalUser())) return { ok: false, error: SIGNED_OUT }
+  if (!isUuid(channelId)) return { ok: false, error: DIRECT_GONE }
+  const text = String(body ?? "").trim()
+  if (!text || text.length > MESSAGE_MAX) return { ok: false, error: INVALID_BODY }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("portal_send_direct_message", { target_channel: channelId, message_body: text })
+  if (error) return error.message === "channel_not_found" ? { ok: false, error: DIRECT_GONE } : failure(error, "Não foi possível enviar a mensagem.")
+  return { ok: true, data: null }
+}
+
+export async function readPortalDirect(channelId: string, readUntil: Timestamp): Promise<ActionResult> {
+  if (!(await getPortalUser())) return { ok: false, error: SIGNED_OUT }
+  if (!isUuid(channelId) || !isTimestamp(readUntil)) return { ok: false, error: "Não foi possível marcar como lida." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("portal_read_direct", { target_channel: channelId, read_until: readUntil })
   if (error) return failure(error, "Não foi possível marcar como lida.")
   return { ok: true, data: null }
 }

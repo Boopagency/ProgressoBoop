@@ -351,6 +351,41 @@ export async function openDirectChannel(profileId: string): Promise<ActionResult
   return { ok: true, data: { id: data } }
 }
 
+/** Pessoa de um cliente com acesso ao portal (para abrir a conversa direta). */
+export interface ClientContact {
+  /** `client_members.id`. */
+  id: string
+  client_id: string
+  user_id: string
+  full_name: string
+}
+
+/** Quem acessa o portal por cada cliente, por nome. */
+export async function loadClientContacts(): Promise<ActionResult<ClientContact[]>> {
+  await requireUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("client_members").select("id, client_id, user_id, full_name").order("full_name")
+  if (error) return dbFailure(error, "Não foi possível carregar as pessoas dos clientes.")
+  return { ok: true, data }
+}
+
+/**
+ * Conversa direta com uma pessoa do cliente (`client_members.id`): uma por
+ * par; o banco acha ou cria. Ela lê e responde no portal, em Comunicação.
+ */
+export async function openClientDirectChannel(memberId: string): Promise<ActionResult<{ id: string }>> {
+  await requireUser()
+  if (!isUuid(memberId)) return { ok: false, error: "Escolha uma pessoa do cliente." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("open_client_direct_channel", { member_id: memberId })
+  if (error) {
+    if (error.code === "P0002") return { ok: false, error: "Essa pessoa não acessa mais o portal." }
+    return dbFailure(error, "Não foi possível abrir a conversa.")
+  }
+  refreshChannels()
+  return { ok: true, data: { id: data } }
+}
+
 /** Renomear (só canal interno) e arquivar ou desarquivar. */
 export async function updateChannel(id: string, patch: { name?: string; archived?: boolean }): Promise<ActionResult> {
   await requireUser()

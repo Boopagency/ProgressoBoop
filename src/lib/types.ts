@@ -348,8 +348,10 @@ export interface Communication {
 export interface Channel {
   id: string
   kind: ChannelKind
-  /** Só nos canais de cliente. */
+  /** Nos canais de cliente e nas conversas diretas com alguém do cliente. */
   client_id: string | null
+  /** Conversa direta com uma pessoa do cliente: a conta dela (`client_members.user_id`). */
+  client_user_id: string | null
   /** "Alterações – <cliente>" ou o assunto; vazio na conversa direta. */
   name: string | null
   archived: boolean

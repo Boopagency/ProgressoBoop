@@ -1,6 +1,6 @@
 "use server"
 
-import { fetchPortalChannel } from "@/features/portal/channel-queries"
+import { fetchPortalUnreadMessages } from "@/features/portal/channel-queries"
 import type { PortalCounts, PortalNotification } from "@/features/portal/notification-logic"
 import { fetchPortalNotifications, fetchPortalUnreadCount } from "@/features/portal/notification-queries"
 import { getPortalUser } from "@/features/portal/session"
@@ -22,7 +22,7 @@ function message(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback
 }
 
-/** Contagens do menu: não lidas do canal do cliente escolhido e avisos não lidos da conta. */
+/** Contagens do menu: não lidas das conversas do cliente escolhido e avisos não lidos da conta. */
 export async function loadPortalCounts(clientId: string): Promise<ActionResult<PortalCounts>> {
   const user = await getPortalUser()
   if (!user) return { ok: false, error: SIGNED_OUT }
@@ -30,11 +30,11 @@ export async function loadPortalCounts(clientId: string): Promise<ActionResult<P
   if (!client || !isUuid(client.id)) return { ok: false, error: SIGNED_OUT }
   const supabase = await createClient()
   try {
-    const [channel, notifications] = await Promise.all([
-      fetchPortalChannel(supabase, client.id),
+    const [messages, notifications] = await Promise.all([
+      fetchPortalUnreadMessages(supabase, client.id),
       fetchPortalUnreadCount(supabase),
     ])
-    return { ok: true, data: { messages: channel?.unread ?? 0, notifications } }
+    return { ok: true, data: { messages, notifications } }
   } catch (error) {
     return { ok: false, error: message(error, "Não foi possível carregar as contagens.") }
   }

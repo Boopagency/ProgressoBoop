@@ -625,7 +625,14 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     participantes. Canal interno: o app cria com o id já sorteado e sem
     `RETURNING` (antes do trigger, quem criou ainda não o enxerga), o trigger
     `add_channel_creator` põe quem criou como participante e depois o app
-    inclui os outros.
+    inclui os outros. Conversa direta com uma pessoa do cliente: também
+    `kind = 'direct'`, com `client_id` e `client_user_id` (a conta dela);
+    `open_client_direct_channel` acha ou cria a do par (pessoa da equipe,
+    pessoa do cliente), quem é da equipe fica em `channel_members` e a conta
+    do cliente lê e escreve só por `portal_direct_channels`,
+    `portal_direct_messages`, `portal_send_direct_message` e
+    `portal_read_direct`. Sem post, projeto ou mensagem interna. O canal de
+    cliente continua um por cliente (índice único parcial).
 47. **Portal: conteúdo e aprovação só por funções.** O cliente vê os posts
     do cliente dele a partir de "com o cliente" (com o cliente, aprovado,
     programado, publicado) por `portal_posts`, que devolve só título,

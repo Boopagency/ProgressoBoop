@@ -144,6 +144,7 @@ export type Database = {
         Row: {
           archived: boolean
           client_id: string | null
+          client_user_id: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -153,6 +154,7 @@ export type Database = {
         Insert: {
           archived?: boolean
           client_id?: string | null
+          client_user_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -162,6 +164,7 @@ export type Database = {
         Update: {
           archived?: boolean
           client_id?: string | null
+          client_user_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -172,7 +175,7 @@ export type Database = {
           {
             foreignKeyName: "channels_client_id_fkey"
             columns: ["client_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -2142,6 +2145,7 @@ export type Database = {
         }
         Returns: string
       }
+      open_client_direct_channel: { Args: { member_id: string }; Returns: string }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
       portal_channel: {
         Args: { target_client: string }
@@ -2184,6 +2188,40 @@ export type Database = {
           client_name: string
           instagram_bio: string
           instagram_handle: string
+        }[]
+      }
+      portal_direct_channels: {
+        Args: { target_client: string }
+        Returns: {
+          archived: boolean
+          channel_id: string
+          last_message_at: string
+          last_read_at: string
+          team_avatar_url: string
+          team_name: string
+          unread: number
+        }[]
+      }
+      portal_direct_messages: {
+        Args: { max_count?: number; older_than?: string; target_channel: string }
+        Returns: {
+          author_name: string
+          body: string
+          created_at: string
+          edited_at: string
+          from_team: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          mine: boolean
+          post_cover_path: string
+          post_format: Database["public"]["Enums"]["content_format"]
+          post_id: string
+          post_publish_on: string
+          post_stage: Database["public"]["Enums"]["content_stage"]
+          post_title: string
+          project_id: string
+          project_name: string
+          resolved: boolean
         }[]
       }
       portal_my_clients: {
@@ -2269,6 +2307,10 @@ export type Database = {
         Args: { read_until: string; target_client: string }
         Returns: undefined
       }
+      portal_read_direct: {
+        Args: { read_until: string; target_channel: string }
+        Returns: undefined
+      }
       portal_review_post: {
         Args: { decision: string; note?: string; target_post: string }
         Returns: string
@@ -2279,6 +2321,10 @@ export type Database = {
       }
       portal_send_channel_message: {
         Args: { message_body: string; target_client: string }
+        Returns: string
+      }
+      portal_send_direct_message: {
+        Args: { message_body: string; target_channel: string }
         Returns: string
       }
       portal_send_message: {

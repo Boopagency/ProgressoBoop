@@ -1,13 +1,21 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { createChannel, openDirectChannel, setChannelMembers, updateChannel } from "@/features/channels/actions"
+import {
+  createChannel,
+  loadClientContacts,
+  openClientDirectChannel,
+  openDirectChannel,
+  setChannelMembers,
+  updateChannel,
+  type ClientContact,
+} from "@/features/channels/actions"
 import { CHANNEL_NAME_MAX, type ChannelEntry } from "@/features/channels/logic"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
@@ -16,9 +24,11 @@ export type ChannelDialogState =
   | { open: false }
   | { open: true; mode: "new" }
   | { open: true; mode: "direct" }
+  /** Conversa direta com uma pessoa do cliente (de um cliente só, com `clientId`). */
+  | { open: true; mode: "client"; clientId?: string }
   | { open: true; mode: "edit"; channel: ChannelEntry }
 
-/** Novo canal interno, nova conversa direta ou nome e participantes de um canal. */
+/** Novo canal interno, nova conversa direta (com a equipe ou com o cliente) ou nome e participantes de um canal. */
 export function ChannelDialog({
   state,
   onClose,
@@ -29,7 +39,15 @@ export function ChannelDialog({
   /** Abre o canal criado (ou a conversa). */
   onSelect: (channelId: string) => void
 }) {
-  const title = !state.open ? "" : state.mode === "new" ? "Novo canal" : state.mode === "direct" ? "Nova conversa" : "Canal"
+  const title = !state.open
+    ? ""
+    : state.mode === "new"
+      ? "Novo canal"
+      : state.mode === "direct"
+        ? "Nova conversa"
+        : state.mode === "client"
+          ? "Conversa com o cliente"
+          : "Canal"
   return (
     <Dialog open={state.open} onOpenChange={(open) => (open ? null : onClose())}>
       <DialogContent className="gap-0 p-0 sm:max-w-[440px]">
@@ -39,10 +57,14 @@ export function ChannelDialog({
             ? ""
             : state.mode === "direct"
               ? "Conversa só entre você e outra pessoa da equipe."
-              : "Canal da equipe por assunto. Só quem participa vê."}
+              : state.mode === "client"
+                ? "Conversa só entre você e uma pessoa do cliente. Ela lê e responde no portal, em Comunicação."
+                : "Canal da equipe por assunto. Só quem participa vê."}
         </DialogDescription>
         {state.open && state.mode === "direct" ? (
           <DirectPicker onClose={onClose} onSelect={onSelect} />
+        ) : state.open && state.mode === "client" ? (
+          <ClientPicker clientId={state.clientId} onClose={onClose} onSelect={onSelect} />
         ) : state.open ? (
           <ChannelForm key={state.mode === "edit" ? state.channel.id : "new"} channel={state.mode === "edit" ? state.channel : null} onClose={onClose} onSelect={onSelect} />
         ) : null}
@@ -85,6 +107,87 @@ function DirectPicker({ onClose, onSelect }: { onClose: () => void; onSelect: (c
       ))}
       {others.length === 0 ? <li className="px-2 py-2 text-sm text-muted-foreground">Ninguém mais na equipe.</li> : null}
     </ul>
+  )
+}
+
+/** As pessoas com acesso ao portal, por cliente ativo. */
+function ClientPicker({
+  clientId,
+  onClose,
+  onSelect,
+}: {
+  clientId?: string
+  onClose: () => void
+  onSelect: (channelId: string) => void
+}) {
+  const { clients, clientPersonById } = useWorkspace()
+  const [contacts, setContacts] = useState<ClientContact[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    let current = true
+    void loadClientContacts().then((result) => {
+      if (!current) return
+      if (result.ok) setContacts(result.data)
+      else setError(result.error)
+    })
+    return () => {
+      current = false
+    }
+  }, [])
+
+  function open(memberId: string) {
+    startTransition(async () => {
+      const result = await openClientDirectChannel(memberId)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      onClose()
+      onSelect(result.data.id)
+    })
+  }
+
+  const groups = clients
+    .filter((client) => client.active && (!clientId || client.id === clientId))
+    .map((client) => ({ client, people: (contacts ?? []).filter((contact) => contact.client_id === client.id) }))
+    .filter((group) => group.people.length > 0)
+
+  if (error) return <p className="px-5 pt-3 pb-5 text-sm text-destructive">{error}</p>
+  if (contacts === null) return <p className="px-5 pt-3 pb-5 text-sm text-muted-foreground">Carregando…</p>
+  if (groups.length === 0) {
+    return (
+      <p className="px-5 pt-3 pb-5 text-sm text-muted-foreground">
+        Ninguém {clientId ? "deste cliente" : "dos clientes"} acessa o portal ainda. Dê o acesso na página do cliente, em
+        “Acesso do cliente”.
+      </p>
+    )
+  }
+
+  return (
+    <div className="max-h-[60svh] overflow-y-auto px-3 pt-3 pb-4">
+      {groups.map(({ client, people }) => (
+        <section key={client.id} aria-label={client.name} className="pb-2">
+          <h3 className="px-2 pb-1 text-[11px] font-medium tracking-wide text-subtle-foreground uppercase">{client.name}</h3>
+          <ul>
+            {people.map((person) => (
+              <li key={person.id}>
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => open(person.id)}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-60"
+                >
+                  <PersonAvatar name={person.full_name} avatarUrl={clientPersonById.get(person.user_id)?.avatar_url} colorIndex={0} />
+                  <span className="font-medium text-foreground">{person.full_name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   )
 }
 

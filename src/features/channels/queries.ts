@@ -13,7 +13,7 @@ import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Timestamp } from "@/lib/types"
 
-export const CHANNEL_COLUMNS = "id, kind, client_id, name, archived, created_by, created_at"
+export const CHANNEL_COLUMNS = "id, kind, client_id, client_user_id, name, archived, created_by, created_at"
 
 /** Mensagem com o cartão do post (capa, título, etapa) e o do projeto. */
 export const MESSAGE_COLUMNS =
@@ -73,12 +73,24 @@ export async function fetchThread(
   return { messages: rows, hasMore: messages.data.length > THREAD_PAGE, pending: pending?.data ?? [], reads }
 }
 
+/**
+ * Os canais pelo RLS. Até a migration das conversas com o cliente entrar no
+ * banco (logo depois do deploy), a coluna `client_user_id` ainda não existe:
+ * a lista sai sem ela.
+ */
+async function selectChannels(supabase: SupabaseServerClient) {
+  const result = await supabase.from("channels").select(CHANNEL_COLUMNS)
+  if (result.error?.code !== "42703") return result
+  const legacy = await supabase.from("channels").select("id, kind, client_id, name, archived, created_by, created_at")
+  return legacy.error ? legacy : { ...legacy, data: legacy.data.map((channel) => ({ ...channel, client_user_id: null })) }
+}
+
 /** Canais que a pessoa enxerga, com participantes e contagens. */
 export async function getChannels(): Promise<ChannelEntry[]> {
   await requireUser()
   const supabase = await createClient()
   const [channels, members, counts] = await Promise.all([
-    supabase.from("channels").select(CHANNEL_COLUMNS),
+    selectChannels(supabase),
     supabase.from("channel_members").select("channel_id, user_id").order("created_at"),
     fetchCounts(supabase),
   ])

@@ -7,7 +7,14 @@ import { toast } from "sonner"
 
 import { Composer } from "@/features/channels/composer"
 import { ThreadView } from "@/features/channels/thread-view"
-import { loadPortalThread, readPortalChannel, sendPortalChannelMessage } from "@/features/portal/channel-actions"
+import {
+  loadPortalDirectThread,
+  loadPortalThread,
+  readPortalChannel,
+  readPortalDirect,
+  sendPortalChannelMessage,
+  sendPortalDirectMessage,
+} from "@/features/portal/channel-actions"
 import {
   buildPortalThread,
   mergePortalMessages,
@@ -26,7 +33,9 @@ import { todayKey, toTimeLabel } from "@/lib/dates"
  * Comunicação no portal: o canal do cliente com a equipe, como a conversa da
  * equipe (fio por dia, mensagens seguidas juntas, Enter envia). Busca de novo
  * a cada poucos segundos com a aba visível; com o fio na tela, marca como
- * lido até a mensagem mais nova e atualiza o contador do menu.
+ * lido até a mensagem mais nova e atualiza o contador do menu. Com
+ * `direct`, é a conversa direta com alguém da equipe (o mesmo fio, pelas
+ * funções `portal_direct_*`).
  */
 export function PortalChannel({
   client,
@@ -34,14 +43,19 @@ export function PortalChannel({
   initialMessages,
   initialHasMore,
   archived,
+  direct = null,
 }: {
   client: PortalClient
   clients: readonly PortalClient[]
   initialMessages: PortalChannelMessage[]
   initialHasMore: boolean
   archived: boolean
+  /** Conversa direta: o canal e quem da equipe participa. */
+  direct?: { channelId: string; teamName: string } | null
 }) {
   const clientId = client.id
+  const directId = direct?.channelId ?? null
+  const load = (olderThan?: string) => (directId ? loadPortalDirectThread(directId, olderThan) : loadPortalThread(clientId, olderThan))
   const { refresh: refreshCounts } = usePortalAlerts()
   const [latest, setLatest] = useState(initialMessages)
   const [older, setOlder] = useState<PortalChannelMessage[]>([])
@@ -54,7 +68,7 @@ export function PortalChannel({
   const newest = newestMessageAt(messages)
 
   async function loadLatest() {
-    const result = await loadPortalThread(clientId).catch(() => null)
+    const result = await load().catch(() => null)
     if (!result) {
       setError("Sem conexão. Tentando de novo…")
       return
@@ -84,13 +98,13 @@ export function PortalChannel({
       document.removeEventListener("visibilitychange", onVisible)
       window.removeEventListener("focus", onVisible)
     }
-  }, [clientId])
+  }, [clientId, directId])
 
   // Lido = a mensagem mais nova que está na tela, com a aba visível.
   const markRead = useEffectEvent(async () => {
     if (!newest || newest === lastRead.current || document.visibilityState !== "visible") return
     lastRead.current = newest
-    const result = await readPortalChannel(clientId, newest).catch(() => null)
+    const result = await (directId ? readPortalDirect(directId, newest) : readPortalChannel(clientId, newest)).catch(() => null)
     if (result?.ok) refreshCounts()
     else lastRead.current = null
   })
@@ -104,7 +118,7 @@ export function PortalChannel({
   async function loadOlder() {
     const oldest = messages[0]
     if (!oldest) return
-    const result = await loadPortalThread(clientId, oldest.created_at).catch(() => null)
+    const result = await load(oldest.created_at).catch(() => null)
     if (!result?.ok) {
       setError(result?.error ?? "Sem conexão. Tente de novo.")
       return
@@ -114,7 +128,7 @@ export function PortalChannel({
   }
 
   async function send(body: string): Promise<boolean> {
-    const result = await sendPortalChannelMessage(clientId, body).catch(() => null)
+    const result = await (directId ? sendPortalDirectMessage(directId, body) : sendPortalChannelMessage(clientId, body)).catch(() => null)
     if (!result?.ok) {
       toast.error(result?.error ?? "Sem conexão. A mensagem não foi enviada.")
       return false
@@ -126,7 +140,7 @@ export function PortalChannel({
 
   return (
     <section
-      aria-label="Conversa com a equipe"
+      aria-label={direct ? `Conversa com ${direct.teamName}` : "Conversa com a equipe"}
       className="flex h-[calc(100svh-15rem)] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]"
     >
       <ThreadView<PortalThreadItem>
@@ -138,7 +152,9 @@ export function PortalChannel({
         scrollToEndKey={sentCount}
         empty={
           <p className="flex h-full items-center justify-center px-6 py-16 text-center text-[13px] leading-5 text-muted-foreground">
-            Nenhuma mensagem ainda. Escreva aqui para falar com a equipe da Boop: dúvidas, pedidos e materiais.
+            {direct
+              ? `Nenhuma mensagem ainda. Esta conversa é só entre você e ${direct.teamName}.`
+              : "Nenhuma mensagem ainda. Escreva aqui para falar com a equipe da Boop: dúvidas, pedidos e materiais."}
           </p>
         }
         renderItem={(item) => (
@@ -152,7 +168,7 @@ export function PortalChannel({
       <Composer
         onSend={(body) => send(body)}
         allowRequest={false}
-        placeholder="Escreva para a equipe da Boop"
+        placeholder={direct ? `Escreva para ${direct.teamName}` : "Escreva para a equipe da Boop"}
         disabledText={archived ? "A conversa foi encerrada pela equipe. Fale com a Boop pelos outros canais." : null}
       />
     </section>

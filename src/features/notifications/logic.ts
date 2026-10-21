@@ -66,7 +66,10 @@ export function describeNotification(item: AppNotification, clientName?: string 
         ? { actor, action: "em", subject: item.title, excerpt: item.body }
         : { actor, action: "mandou uma mensagem para você", subject: null, excerpt: item.body }
     case "client_message":
-      return { actor: fromClient, action: "escreveu em", subject: item.title, excerpt: item.body }
+      // Sem título: a conversa direta com a pessoa do cliente.
+      return item.title
+        ? { actor: fromClient, action: "escreveu em", subject: item.title, excerpt: item.body }
+        : { actor: fromClient, action: "mandou uma mensagem para você", subject: null, excerpt: item.body }
     case "client_approval":
       return { actor: fromClient, action: "aprovou", subject: item.title, excerpt: null }
     case "client_change_request":

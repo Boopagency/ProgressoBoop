@@ -87,8 +87,12 @@ export const getPortalStepDeliverables = cache(async (projectId: string): Promis
   await requirePortalUser()
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("portal_step_deliverables", { target_project: projectId })
-  if (error) throw loadError(error, "as entregas")
   const byStep = new Map<string, Deliverable[]>()
+  // Sem as entregas, a etapa continua aparecendo (e a aprovação funcionando).
+  if (error) {
+    console.error(`[supabase] ${error.code ?? "?"}: ${error.message}`)
+    return byStep
+  }
   for (const row of data ?? []) {
     const item: Deliverable = {
       id: row.id,

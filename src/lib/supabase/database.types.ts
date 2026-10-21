@@ -185,6 +185,69 @@ export type Database = {
           },
         ]
       }
+      client_files: {
+        Row: {
+          category: Database["public"]["Enums"]["client_file_category"]
+          client_id: string
+          client_visible: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          file_name: string
+          id: string
+          mime_type: string
+          name: string
+          size_bytes: number
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["client_file_category"]
+          client_id: string
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_name: string
+          id?: string
+          mime_type: string
+          name: string
+          size_bytes: number
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["client_file_category"]
+          client_id?: string
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string
+          name?: string
+          size_bytes?: number
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_files_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_files_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_members: {
         Row: {
           avatar_path: string | null
@@ -2176,6 +2239,27 @@ export type Database = {
           resolved: boolean
         }[]
       }
+      portal_client_file: {
+        Args: { target_file: string }
+        Returns: {
+          file_name: string
+          mime_type: string
+          storage_path: string
+        }[]
+      }
+      portal_client_files: {
+        Args: { target_client: string }
+        Returns: {
+          category: Database["public"]["Enums"]["client_file_category"]
+          created_at: string
+          description: string
+          file_name: string
+          id: string
+          mime_type: string
+          name: string
+          size_bytes: number
+        }[]
+      }
       portal_client_profile: {
         Args: { target_client: string }
         Returns: {
@@ -2332,12 +2416,19 @@ export type Database = {
       activity_action: "created" | "updated" | "deleted" | "comment"
       channel_kind: "client" | "internal" | "direct"
       client_approval_result: "approved" | "changes"
+      client_file_category:
+        | "contract"
+        | "briefing"
+        | "brand"
+        | "report"
+        | "other"
       client_health: "healthy" | "attention" | "at_risk"
       client_notification_kind:
         | "team_message"
         | "post_review"
         | "step_approval"
         | "step_done"
+        | "file_shared"
       communication_channel: "whatsapp" | "email" | "call" | "meeting" | "other"
       communication_kind:
         | "update"
@@ -2557,12 +2648,14 @@ export const Constants = {
       activity_action: ["created", "updated", "deleted", "comment"],
       channel_kind: ["client", "internal", "direct"],
       client_approval_result: ["approved", "changes"],
+      client_file_category: ["contract", "briefing", "brand", "report", "other"],
       client_health: ["healthy", "attention", "at_risk"],
       client_notification_kind: [
         "team_message",
         "post_review",
         "step_approval",
         "step_done",
+        "file_shared",
       ],
       communication_channel: ["whatsapp", "email", "call", "meeting", "other"],
       communication_kind: [

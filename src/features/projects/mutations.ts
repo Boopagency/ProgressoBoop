@@ -1,5 +1,6 @@
 import "server-only"
 
+import { deliverableFilesOf, removeDeliverableFiles } from "@/features/deliverables/storage"
 import { checklistItems } from "@/features/docs/logic"
 import { copiedTasks, templateTasks, type SeedTask } from "@/features/projects/logic"
 import { templateByKey } from "@/features/projects/templates"
@@ -160,14 +161,19 @@ export async function patchProject(supabase: SupabaseServerClient, id: string, p
  */
 export async function removeProject(supabase: SupabaseServerClient, id: string, withTasks: unknown): Promise<ActionResult> {
   if (!isUuid(id) || typeof withTasks !== "boolean") return NOT_FOUND
+  let files: string[] = []
 
   if (withTasks) {
+    // Os arquivos das entregas, antes que o banco apague as entregas com as tarefas.
+    const { data: tasks } = await supabase.from("tasks").select("id").eq("project_id", id)
+    files = await deliverableFilesOf(supabase, (tasks ?? []).map((task) => task.id))
     const { error } = await supabase.from("tasks").delete().eq("project_id", id)
     if (error) return dbFailure(error, "Não foi possível excluir as tarefas do projeto.")
   }
   const { data, error } = await supabase.from("projects").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir o projeto.")
   if (data.length === 0) return NOT_FOUND
+  await removeDeliverableFiles(supabase, files)
 
   return { ok: true, data: null }
 }

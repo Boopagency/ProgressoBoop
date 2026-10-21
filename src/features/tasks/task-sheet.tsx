@@ -45,6 +45,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { Textarea } from "@/components/ui/textarea"
 import { loadActivity } from "@/features/activity/actions"
 import { ActivityFeed } from "@/features/activity/activity-feed"
+import { DeliverablesPanel } from "@/features/deliverables/deliverables-panel"
 import { ProjectSelect } from "@/features/projects/project-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
 import { ClientApprovalPanel } from "@/features/tasks/client-approval"
@@ -349,6 +350,7 @@ function TaskDetails({ task }: { task: Task }) {
         </dl>
 
         {project?.client_id ? <ClientApprovalPanel task={task} /> : null}
+        {project?.client_id ? <DeliverablesPanel task={task} /> : null}
 
         <div className="mt-5 border-t px-5 pt-5 pb-6">
           <label htmlFor="task-description" className="text-[13px] font-medium text-foreground">

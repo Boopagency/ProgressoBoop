@@ -2287,6 +2287,18 @@ export type Database = {
           unread: number
         }[]
       }
+      create_client_account: {
+        Args: {
+          member_email: string
+          member_name: string
+          target_client: string
+          temp_password: string
+        }
+        Returns: {
+          created: boolean
+          member_id: string
+        }[]
+      }
       forget_push_endpoints: {
         Args: { p_endpoints: string[]; p_secret: string }
         Returns: number
@@ -2542,6 +2554,10 @@ export type Database = {
       }
       portal_update_me: {
         Args: { new_avatar_path: string; new_name: string }
+        Returns: undefined
+      }
+      reset_client_password: {
+        Args: { target_member: string; temp_password: string }
         Returns: undefined
       }
       restore_doc_version: {

@@ -1,5 +1,6 @@
 import "server-only"
 
+import { deliverableFilesOf, removeDeliverableFiles } from "@/features/deliverables/storage"
 import { setAssignees } from "@/features/tasks/assignees"
 import { parseTaskInput, parseTaskPatch } from "@/features/tasks/validation"
 import { dbFailure } from "@/lib/supabase/errors"
@@ -55,8 +56,11 @@ export async function patchTask(supabase: SupabaseServerClient, id: string, patc
 
 export async function removeTask(supabase: SupabaseServerClient, id: string): Promise<ActionResult> {
   if (!isUuid(id)) return NOT_FOUND
+  const files = await deliverableFilesOf(supabase, [id])
   const { data, error } = await supabase.from("tasks").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir a tarefa.")
   if (data.length === 0) return NOT_FOUND
+  // As entregas saem com a tarefa (o banco apaga); os arquivos delas, daqui.
+  await removeDeliverableFiles(supabase, files)
   return { ok: true, data: null }
 }

@@ -2075,6 +2075,60 @@ export type Database = {
           },
         ]
       }
+      task_deliverables: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_path: string | null
+          id: string
+          kind: string
+          mime_type: string | null
+          size_bytes: number | null
+          task_id: string
+          title: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_path?: string | null
+          id?: string
+          kind: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          task_id: string
+          title: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          task_id?: string
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_deliverables_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_deliverables_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           area: Database["public"]["Enums"]["task_area"] | null
@@ -2471,6 +2525,19 @@ export type Database = {
           project_name: string
           status: Database["public"]["Enums"]["task_status"]
           title: string
+        }[]
+      }
+      portal_step_deliverables: {
+        Args: { target_project: string }
+        Returns: {
+          created_at: string
+          file_path: string
+          id: string
+          kind: string
+          mime_type: string
+          task_id: string
+          title: string
+          url: string
         }[]
       }
       portal_update_me: {

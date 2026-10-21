@@ -1,4 +1,5 @@
 import type {
+  ClientFileCategory,
   ClientHealth,
   CommunicationChannel,
   CommunicationKind,
@@ -333,6 +334,25 @@ export const CONTENT_FRONT_STATUS_LABEL: Record<ContentFrontStatus, string> = {
   in_review: "Em revisão",
   changes: "Em alteração",
   done: "Finalizado",
+}
+
+export const CLIENT_FILE_CATEGORIES = [
+  "contract",
+  "briefing",
+  "brand",
+  "report",
+  "other",
+] as const satisfies readonly ClientFileCategory[]
+export const CLIENT_FILE_CATEGORY_LABEL: Record<ClientFileCategory, string> = {
+  contract: "Contrato",
+  briefing: "Briefing",
+  brand: "Marca",
+  report: "Relatório",
+  other: "Outro",
+}
+
+export function isClientFileCategory(value: unknown): value is ClientFileCategory {
+  return CLIENT_FILE_CATEGORIES.includes(value as ClientFileCategory)
 }
 
 export function isContentFormat(value: unknown): value is ContentFormat {

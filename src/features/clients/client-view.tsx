@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
 import { ClientChannelCard } from "@/features/channels/client-channel-card"
+import { ClientFilesCard } from "@/features/client-files/client-files-card"
+import type { ClientFile } from "@/features/client-files/logic"
 import { deleteClient, setClientActive } from "@/features/clients/actions"
 import { ClientDialog, type ClientDialogState } from "@/features/clients/client-dialog"
 import { HealthBadge, HealthDot } from "@/features/clients/client-meta"
@@ -98,6 +100,7 @@ export function ClientView({
   posts,
   ideas,
   members,
+  files,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -119,6 +122,8 @@ export function ClientView({
   ideas: ContentIdea[]
   /** Quem do cliente tem acesso ao portal. */
   members: ClientMember[]
+  /** Arquivos enviados para o cliente (Documentos no portal). */
+  files: ClientFile[]
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -243,6 +248,7 @@ export function ClientView({
           <ClientContentCard clientId={client.id} posts={posts} today={today} />
           <ClientIdeasCard clientId={client.id} ideas={ideas} posts={posts} />
           <ClientDocsCard docs={docs} today={today} onNew={openNewDoc} />
+          <ClientFilesCard clientId={client.id} files={files} today={today} />
           <ClientTasksCard clientId={client.id} />
           <ClientChannelCard clientId={client.id} />
           <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />

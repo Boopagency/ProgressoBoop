@@ -800,6 +800,7 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
 | `notifications`    | ver e marcar como lidas (só `read_at`) as próprias. Ninguém cria nem apaga pela API (só os triggers); a conta do cliente não tem nenhuma. O Realtime aplica o mesmo RLS: cada um escuta só as próprias |
 | `client_notifications` | a equipe não tem nenhuma. A conta do cliente vê e marca como lidos (só `read_at`) os próprios avisos, dos clientes a que ainda tem acesso. Ninguém cria nem apaga pela API (só os triggers). O Realtime aplica o mesmo RLS |
 | Storage, buckets `docs` e `content` | ver, enviar e apagar imagens. A conta do cliente lê, no `content`, só a foto do perfil e as imagens dos posts que vê no portal |
+| `client_files` e o bucket `client-files` | só a equipe vê, envia, edita e apaga (depois de enviado, o arquivo não muda: só nome, categoria, descrição e `client_visible`). A conta do cliente não lê a tabela: lê os visíveis por `portal_client_files`/`portal_client_file`, e no Storage só os objetos desses arquivos (`private.portal_can_read_client_file`), com o cliente ativo |
 
 - `win_deal` é `security invoker`: roda com as permissões de quem chamou,
   então as políticas acima valem para tudo o que ela cria. Anônimos não
@@ -1314,8 +1315,8 @@ A área da conta de cliente, com a mesma lógica visual do admin: menu lateral
 celular, o mesmo Sheet), topo com o botão do menu e a seção
 (`PortalTopbar`; no post ou no projeto aberto, a seção vira o "voltar") e as
 telas no esqueleto do admin (`PageContainer`, `PageHeader`, `PageToolbar`,
-`PageBody`). O menu tem Início, Calendário, Feed, Projetos, Comunicação e
-Notificações, as duas últimas com o contador (`PortalAlertsProvider`); quem
+`PageBody`). O menu tem Início, Calendário, Feed, Projetos, Documentos,
+Comunicação e Notificações, as duas últimas com o contador (`PortalAlertsProvider`); quem
 acompanha mais de um cliente troca de cliente no topo do menu (o escolhido
 vai em `?cliente=` em todos os links, `features/portal/links.ts`), e o
 rodapé tem quem está logado e "Sair".
@@ -1348,6 +1349,15 @@ rodapé tem quem está logado e "Sair".
   segundos com a aba visível e, com o fio na tela, grava a leitura
   (`portal_read_channel`, que também marca os avisos dessas mensagens) e
   atualiza o contador. Canal arquivado vira só leitura.
+- **Documentos** (`/portal/documentos`): os arquivos visíveis do cliente
+  (`client_files` com `client_visible`, por `portal_client_files`),
+  agrupados por categoria. Abrir e baixar passam pela rota
+  `/api/documentos/[id]`, que confere a sessão (equipe pela tabela, cliente
+  por `portal_client_file`) e redireciona para uma URL assinada de uma hora
+  no bucket privado `client-files` (`?baixar=1` baixa com o nome original).
+  Na página do cliente, a equipe envia pelo cartão "Arquivos do cliente"
+  (`features/client-files`): URL assinada de envio, e a linha é salva com o
+  tamanho e o tipo que o Storage registrou.
 - **Notificações** (`/portal/notificacoes`, `PortalNotificationList`): os
   avisos da conta (`client_notifications`, até 50, de todos os clientes que
   ela acompanha), não lidos marcados, "Marcar todas como lidas"; abrir um

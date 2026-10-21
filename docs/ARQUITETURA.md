@@ -1893,13 +1893,24 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | -------------------------------------- | ------ | ----------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`             | CONFIG | Vercel (Production, Preview e Development) e `.env.local` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | CONFIG | Vercel (Production, Preview e Development) e `.env.local` |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | CONFIG | Vercel (todos os ambientes): chave pública do Web Push |
+| `VAPID_PRIVATE_KEY`                    | SECRET | Vercel (todos os ambientes), sensível: assina o Web Push |
+| `PUSH_WEBHOOK_SECRET`                  | SECRET | Vercel (todos os ambientes), sensível: o mesmo valor de `push_webhook_secret` no Vault |
 
 - **CONFIG**: valores públicos por natureza. A chave publicável
   (`sb_publishable_…`) pode estar no navegador; quem protege os dados é o RLS.
-- **SECRET**: nenhuma. O app não usa `service_role` nem chave secreta
-  (`sb_secret_…`). Se um dia alguma rotina administrativa precisar, ela deve
-  ficar só no servidor, como variável sensível, e nunca com prefixo
-  `NEXT_PUBLIC_`.
+- **SECRET**: só as do push. O app não usa `service_role` nem chave secreta
+  (`sb_secret_…`) do Supabase. Se um dia alguma rotina administrativa
+  precisar, ela deve ficar só no servidor, como variável sensível, e nunca
+  com prefixo `NEXT_PUBLIC_`.
+- **Notificações no celular (Web Push):** toda linha nova em `notifications`
+  ou `client_notifications` dispara um trigger que junta as inscrições de
+  quem recebe (`push_subscriptions`) e faz um POST (pg_net) para
+  `/api/push`, com o segredo do Vault (`push_webhook_url` e
+  `push_webhook_secret`). A rota confere o segredo, monta a frase (a mesma do
+  sino), assina com as chaves VAPID e avisa o banco dos aparelhos encerrados
+  (`forget_push_endpoints`). Sem os segredos no Vault, nada sai. O POST vai
+  sempre para a produção, já que prévias e produção usam o mesmo banco.
 
 ## 13. Fora do escopo (por enquanto)
 

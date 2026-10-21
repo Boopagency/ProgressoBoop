@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { changeMyEmail, changeMyPassword, saveMyAvatar, updateMyName } from "@/features/account/actions"
 import { uploadAvatar } from "@/features/account/avatar-upload"
 import { EMAIL_MAX, NAME_MAX, PASSWORD_MAX, PASSWORD_MIN, passwordProblem } from "@/features/account/logic"
+import { PushSection } from "@/features/push/push-section"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 
 export interface AccountDialogUser {
@@ -22,7 +23,8 @@ export interface AccountDialogUser {
 
 /**
  * Minha conta, aberta pelo nome no menu lateral (admin e portal): a própria
- * pessoa troca a foto, o nome, o e-mail e a senha. Cada parte salva sozinha.
+ * pessoa troca a foto, o nome, o e-mail e a senha e ativa as notificações no
+ * celular. Cada parte salva sozinha.
  */
 export function AccountDialog({
   open,
@@ -40,7 +42,7 @@ export function AccountDialog({
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Minha conta</DialogTitle>
-          <DialogDescription>Sua foto, seu nome e os dados de acesso. Só você vê esta tela.</DialogDescription>
+          <DialogDescription>Sua foto, seu nome, os dados de acesso e as notificações no celular. Só você vê esta tela.</DialogDescription>
         </DialogHeader>
         {open ? (
           <div className="space-y-5">
@@ -51,6 +53,8 @@ export function AccountDialog({
             <EmailSection current={user.email} />
             <Separator />
             <PasswordSection />
+            <Separator />
+            <PushSection />
           </div>
         ) : null}
       </DialogContent>

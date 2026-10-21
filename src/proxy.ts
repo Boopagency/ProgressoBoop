@@ -11,11 +11,12 @@ import { updateSession } from "@/lib/supabase/proxy"
  * perfil (redirecionar aqui criaria um loop para contas sem perfil).
  *
  * Rotas públicas: o login, a volta do link de confirmação por e-mail, a
- * visita diária ao banco (cron da Vercel) e o conector do Claude, que se
+ * visita diária ao banco (cron da Vercel), o envio das notificações no
+ * celular (chamado pelo banco, com segredo próprio) e o conector do Claude, que se
  * autentica pelo token (Authorization: Bearer) e responde 401 com o
  * endereço dos metadados do OAuth.
  */
-const PUBLIC_PATHS = new Set(["/login", "/auth/confirmar", "/api/keepalive", MCP_PATH, ...RESOURCE_METADATA_PATHS])
+const PUBLIC_PATHS = new Set(["/login", "/auth/confirmar", "/api/keepalive", "/api/push", MCP_PATH, ...RESOURCE_METADATA_PATHS])
 
 export async function proxy(request: NextRequest) {
   const { response, isAuthenticated } = await updateSession(request)
@@ -38,8 +39,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Fora: arquivos do Next e estáticos (logo, ícones), que o login também usa.
+  // Fora: arquivos do Next e estáticos (logo, ícones), que o login também usa,
+  // e o app instalável: o manifesto (o navegador busca sem cookies) e o
+  // service worker.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }

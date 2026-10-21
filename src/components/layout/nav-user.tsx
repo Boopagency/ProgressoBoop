@@ -15,6 +15,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { AccountDialog } from "@/features/account/account-dialog"
 import { signOut } from "@/features/auth/actions"
+import { forgetThisDevice } from "@/features/push/browser"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 
@@ -77,7 +78,12 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={isSigningOut}
-              onSelect={() => startSignOut(() => signOut())}
+              onSelect={() =>
+                startSignOut(async () => {
+                  await forgetThisDevice()
+                  await signOut()
+                })
+              }
             >
               <LogOut />
               {isSigningOut ? "Saindo…" : "Sair"}

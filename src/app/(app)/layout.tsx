@@ -8,6 +8,7 @@ import { requireUser } from "@/features/auth/session"
 import { getChannelTotals } from "@/features/channels/queries"
 import { UnreadProvider } from "@/features/channels/unread-provider"
 import { getNotifications } from "@/features/notifications/queries"
+import { PushRefresh } from "@/features/push/push-refresh"
 import { CommandPaletteProvider } from "@/features/search/command-palette"
 import { NewTaskProvider } from "@/features/tasks/new-task-dialog"
 import { getWorkspace } from "@/features/workspace/queries"
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <AppTopbar notifications={notifications} />
             <div className="flex-1 md:overflow-y-auto">{children}</div>
           </SidebarInset>
+          <PushRefresh />
         </SidebarProvider>
         </UnreadProvider>
         </CommandPaletteProvider>

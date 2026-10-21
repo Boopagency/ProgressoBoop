@@ -1061,10 +1061,23 @@ de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
   preciso liberar nas configurações do site.
 - **Ligar e desligar:** **Som** e **Aviso do navegador**, no rodapé da
   lista, valem para aquele navegador (o som começa ligado; o aviso, desligado).
-  No celular só aparece o som: push no celular fica para depois.
+  No celular só aparece o som; para receber com o app fechado, veja
+  Notificações no celular, abaixo.
 - Com o app aberto em várias abas, só uma toca o som e mostra o aviso.
 - Avisos com mais de 90 dias somem sozinhos. O cliente do portal não usa o
   sino: tem os próprios avisos, em Notificações no menu do portal (2.27).
+
+**Notificações no celular (app instalável).** O Boop Admin e o portal viram
+um app na tela de início do celular (ícone da Boop, abre sem a barra do
+navegador; a equipe cai em Hoje e o cliente no portal). Em **Minha conta →
+Notificações no celular**, cada pessoa (equipe ou cliente) ativa os avisos
+naquele aparelho e passa a receber os mesmos avisos do sino (ou de
+Notificações, no portal) mesmo com o app fechado; tocar abre o lugar certo.
+No iPhone, o push só funciona com o app instalado (Safari → Compartilhar →
+Adicionar à Tela de Início, iOS 16.4 ou mais novo); a própria tela explica.
+No Android, o Chrome oferece **Instalar o app**. Sair da conta desliga os
+avisos daquele aparelho. Aviso novo que o banco passar a gravar no sino vai
+para o celular sozinho.
 
 ## 3. Regras: como os números são calculados
 

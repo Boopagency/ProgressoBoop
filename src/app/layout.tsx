@@ -27,6 +27,8 @@ export const metadata: Metadata = {
   },
   description: "Cockpit interno da Boop.",
   robots: { index: false, follow: false },
+  // App instalável (src/app/manifest.ts): no iPhone, abre sem a barra do Safari.
+  appleWebApp: { capable: true, title: "Boop", statusBarStyle: "default" },
 }
 
 export const viewport: Viewport = {

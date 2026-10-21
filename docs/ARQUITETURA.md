@@ -854,13 +854,18 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
 - Para adicionar uma pessoa: criar a conta em Authentication → Users → Add
   user (com "Auto Confirm User") e inserir o perfil
   (`insert into profiles (id, full_name, role) values (...)`).
-- Para dar acesso a um cliente: criar a conta como a da equipe
-  (Authentication → Users → Add user, com senha e "Auto Confirm User"),
-  passar a senha para a pessoa e ligar a conta ao cliente com
-  `link_client_member` (pelo app, no cartão "Acesso do cliente" da página
-  do cliente). "Invite user" não serve ainda: o app não recebe o link do
-  convite, e a pessoa ficaria sem senha (o login por link vem numa fase
-  seguinte). Nunca criar perfil para essa conta: o banco recusa.
+- Para dar acesso a um cliente: no app, cartão "Acesso do cliente" da
+  página do cliente → "Dar acesso" (nome e e-mail). `create_client_account`
+  (security definer, só para a equipe) cria a conta já confirmada no Auth,
+  com uma senha provisória gerada no servidor do app, e liga ao cliente; se
+  o e-mail já tem conta de cliente, só liga. A equipe copia a mensagem com o
+  link, o e-mail e a senha e manda para a pessoa. "Nova senha"
+  (`reset_client_password`) troca a senha de quem perdeu a dela, já que não
+  há "esqueci minha senha" sem serviço de e-mail. Nenhuma das duas mexe em
+  conta da equipe, e o app continua sem service role. Quando o e-mail
+  (Resend) entrar, o convite por link substitui a senha provisória
+  (`deliverAccess` em `features/portal/access-actions.ts`). Nunca criar
+  perfil para essa conta: o banco recusa.
 - Sessão persistente via cookies (`@supabase/ssr`). O `proxy.ts` renova a
   sessão a cada requisição (`getClaims()`, que valida o JWT) e manda para
   `/login` quem não tem sessão. Páginas, queries e Server Actions conferem a

@@ -44,7 +44,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         <PortalSidebar user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} clients={user.clients} />
         <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/80 md:peer-data-[variant=inset]:shadow-[0_1px_3px_0_rgb(0_0_0/0.03)]">
           <PortalTopbar clients={user.clients} />
-          <div className="flex-1 md:overflow-y-auto">{children}</div>
+          <div className="portal-motion flex-1 md:overflow-y-auto">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </PortalAlertsProvider>

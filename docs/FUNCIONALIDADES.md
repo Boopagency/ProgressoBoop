@@ -1099,6 +1099,11 @@ No Android, o Chrome oferece **Instalar o app**. Sair da conta desliga os
 avisos daquele aparelho. Aviso novo que o banco passar a gravar no sino vai
 para o celular sozinho. O ícone do app mostra quantos avisos estão sem ler
 (no iPhone, o número; no Android, um ponto) e zera quando a pessoa lê tudo.
+Logo depois de entrar pelo navegador do celular, sobe um passo a passo
+animado de instalar (Android: ⋮ → Instalar e criar atalho → Instalar; iPhone:
+⋯ → Compartilhar → Adicionar à Tela de Início). Aberta pelo ícone, a Boop
+pede para ativar os avisos. "Agora não" não mostra de novo aquela etapa
+naquele aparelho, e tudo continua em Minha conta. No computador, não aparece.
 
 ## 3. Regras: como os números são calculados
 

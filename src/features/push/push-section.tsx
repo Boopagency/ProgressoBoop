@@ -146,16 +146,18 @@ function InstallSteps({ apple }: { apple: boolean }) {
         <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
           <li>Abra este endereço no Safari.</li>
           <li>
-            Toque em Compartilhar <Share className="inline size-3.5 align-[-2px]" aria-label="(ícone de compartilhar)" />.
+            Toque em Compartilhar{" "}
+            <Share className="inline size-3.5 align-[-2px]" aria-label="(ícone de compartilhar)" /> (nos iPhones mais
+            novos, fica dentro do ⋯, embaixo à direita).
           </li>
-          <li>Toque em “Adicionar à Tela de Início” e em Adicionar.</li>
-          <li>Abra a Boop pelo ícone novo, entre em Minha conta e ative as notificações.</li>
+          <li>Desça a lista e toque em “Adicionar à Tela de Início”, depois em Adicionar.</li>
+          <li>Abra a Boop pelo ícone novo e ative as notificações.</li>
         </ol>
       ) : (
         <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-          <li>No Chrome, toque no menu ⋮ (canto de cima).</li>
-          <li>Toque em “Instalar app” (ou “Adicionar à tela inicial”).</li>
-          <li>Abra a Boop pelo ícone novo.</li>
+          <li>No Chrome, toque no menu ⋮ (canto de cima, à direita).</li>
+          <li>Toque em “Instalar e criar atalho” e escolha Instalar (não “Criar atalho”).</li>
+          <li>Abra a Boop pelo ícone novo e ative as notificações.</li>
         </ol>
       )}
       {apple ? <p className="text-xs text-muted-foreground">Precisa do iOS 16.4 ou mais novo.</p> : null}

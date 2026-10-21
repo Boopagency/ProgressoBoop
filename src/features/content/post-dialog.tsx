@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, ExternalLink, ImagePlus, ListPlus, Loader2, Plus, Trash2, X } from "lucide-react"
+import { CalendarDays, ChevronLeft, ExternalLink, ImagePlus, ListPlus, Loader2, Plus, Trash2, X } from "lucide-react"
 import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -113,8 +113,18 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        onOpenAutoFocus={(event) => {
+          // No celular, abrir o post não põe o foco (e o teclado) em nenhum campo.
+          if (state.post && window.matchMedia("(max-width: 767px)").matches) {
+            event.preventDefault()
+            ;(event.currentTarget as HTMLElement | null)?.focus()
+          }
+        }}
         className={cn(
-          "top-[3%] max-h-[94svh] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[5%] sm:max-w-[760px]",
+          // No celular, tela cheia (topo e rodapé fixos); do md para cima, o diálogo centralizado.
+          "top-0 left-0 h-dvh max-h-none max-w-none translate-x-0 translate-y-0 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none",
+          "md:grid-rows-none",
+          "md:top-[5%] md:left-[50%] md:h-auto md:max-h-[94svh] md:max-w-[760px] md:translate-x-[-50%] md:rounded-lg md:border",
           state.post && "lg:top-[3%] lg:max-w-[1160px]"
         )}
       >
@@ -489,7 +499,11 @@ function PostForm({
 
   const form = (
     <form
-      className={cn("flex max-h-[94svh] min-h-0 flex-col", post && "lg:max-h-none lg:flex-1", post && pane === "chat" && "max-lg:hidden")}
+      className={cn(
+        "flex min-h-0 min-w-0 flex-col max-md:flex-1 md:max-h-[94svh]",
+        post && "lg:max-h-none lg:flex-1",
+        post && pane === "chat" && "max-lg:hidden"
+      )}
       onSubmit={(event) => {
         event.preventDefault()
         submit()
@@ -501,7 +515,7 @@ function PostForm({
         }
       }}
     >
-      <div className="overflow-y-auto px-5 pt-5 pb-4">
+      <div className="min-w-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 max-md:flex-1 md:px-5 md:pt-5">
         <div className="flex items-start gap-2.5">
           {fields.client_id ? <ClientMark clientId={fields.client_id} size="md" className="mt-0.5" /> : null}
           <input
@@ -751,7 +765,7 @@ function PostForm({
                   maxLength={BRIEF_MAX}
                   onChange={(event) => setText("brief", event.target.value)}
                   placeholder="Sobre o que é o post, referências, objetivo…"
-                  className="min-h-16 text-[13px] shadow-none"
+                  className="min-h-16 text-base shadow-none md:text-[13px]"
                 />
               </Field>
               <Field label={isVideoFormat(fields.format) ? "Orientação de vídeo" : "Orientação de design"} htmlFor={`${ids}-notes`}>
@@ -761,7 +775,7 @@ function PostForm({
                   maxLength={DESIGN_NOTES_MAX}
                   onChange={(event) => setText("design_notes", event.target.value)}
                   placeholder={isVideoFormat(fields.format) ? "Cenário, enquadramento, cortes, trilha…" : "Cores, referências visuais, elementos…"}
-                  className="min-h-16 text-[13px] shadow-none"
+                  className="min-h-16 text-base shadow-none md:text-[13px]"
                 />
               </Field>
               {formatUses(fields.format, "slides") ? (
@@ -782,7 +796,7 @@ function PostForm({
                     maxLength={SCRIPT_MAX}
                     onChange={(event) => setText("script", event.target.value)}
                     placeholder="Gancho, desenvolvimento e chamada para ação…"
-                    className="min-h-24 text-[13px] shadow-none"
+                    className="min-h-24 text-base shadow-none md:text-[13px]"
                   />
                 </Field>
               ) : null}
@@ -794,7 +808,7 @@ function PostForm({
                     maxLength={CAPTION_MAX}
                     onChange={(event) => setText("caption", event.target.value)}
                     placeholder="Texto que vai no post, com as hashtags"
-                    className="min-h-20 text-[13px] shadow-none"
+                    className="min-h-20 text-base shadow-none md:text-[13px]"
                   />
                 </Field>
               ) : null}
@@ -873,7 +887,7 @@ function PostForm({
 
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/40 px-5 py-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-muted/40 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-5 md:pb-3">
         <div className="flex min-w-0 flex-wrap items-center gap-1">
           {post ? (
             <Button
@@ -883,7 +897,7 @@ function PostForm({
               aria-label="Excluir post"
               onClick={() => setConfirmDelete(true)}
               disabled={isPending}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive max-md:size-11"
             >
               <Trash2 />
             </Button>
@@ -895,10 +909,10 @@ function PostForm({
           ) : null}
         </div>
         <div className="ml-auto flex shrink-0 gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={onDone}>
+          <Button type="button" variant="ghost" size="sm" onClick={onDone} className="max-md:h-11 max-md:px-4">
             Cancelar
           </Button>
-          <Button type="submit" size="sm" disabled={isPending || uploading.length > 0}>
+          <Button type="submit" size="sm" disabled={isPending || uploading.length > 0} className="max-md:h-11 max-md:px-5">
             {isPending ? "Salvando…" : uploading.length > 0 ? "Enviando imagem…" : post ? "Salvar" : "Criar post"}
           </Button>
         </div>
@@ -924,11 +938,31 @@ function PostForm({
     </form>
   )
 
-  if (!post) return form
+  // Topo do celular (tela cheia): voltar e o título; no computador, o diálogo não tem.
+  const mobileTop = (
+    <div className="flex shrink-0 items-center gap-1 px-1 pt-[env(safe-area-inset-top)] md:hidden">
+      <Button type="button" variant="ghost" size="icon" onClick={onDone} aria-label="Voltar" className="size-11 shrink-0">
+        <ChevronLeft className="size-5" />
+      </Button>
+      <p className="min-w-0 flex-1 truncate pr-3 text-[15px] font-semibold text-foreground">
+        {fields.title.trim() || (post ? "Post" : "Novo post")}
+      </p>
+    </div>
+  )
+
+  if (!post) {
+    return (
+      <div className="flex min-w-0 flex-col max-md:h-full max-md:[&>form]:border-t">
+        {mobileTop}
+        {form}
+      </div>
+    )
+  }
 
   return (
-    <div className="flex max-h-[94svh] flex-col lg:h-[94svh] lg:flex-row">
-      <div role="tablist" aria-label="Post ou conversa" className="flex shrink-0 gap-1 border-b px-3 pt-2 lg:hidden">
+    <div className="flex min-w-0 flex-col max-md:h-full md:max-h-[94svh] lg:h-[94svh] lg:flex-row">
+      {mobileTop}
+      <div role="tablist" aria-label="Post ou conversa" className="flex shrink-0 gap-1 border-b px-3 pt-2 max-md:pt-0 lg:hidden">
         {(
           [
             ["post", "Post"],
@@ -953,7 +987,10 @@ function PostForm({
       {form}
       <PostSidePanel
         postId={post.id}
-        className={cn("h-[85svh] lg:h-auto lg:w-[400px] lg:shrink-0 lg:border-l", pane === "post" && "max-lg:hidden")}
+        className={cn(
+          "max-md:flex-1 md:h-[85svh] lg:h-auto lg:w-[400px] lg:shrink-0 lg:border-l",
+          pane === "post" && "max-lg:hidden"
+        )}
         internal={
           activity ? (
             <ActivityFeed
@@ -1055,7 +1092,7 @@ function SlidesEditor({
                 onChange={(event) => onChange(slides.map((current, at) => (at === index ? { ...current, text: event.target.value } : current)))}
                 aria-label={`Texto do slide ${index + 1}`}
                 placeholder={index === 0 ? "Primeiro slide: a frase que faz parar de rolar" : "Texto do slide"}
-                className="min-h-10 flex-1 text-[13px] shadow-none"
+                className="min-h-10 min-w-0 flex-1 text-base shadow-none md:text-[13px]"
               />
               <Button
                 type="button"

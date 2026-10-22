@@ -1,4 +1,14 @@
-import { Bell, CalendarDays, FileText, FolderKanban, House, LayoutGrid, MessagesSquare, type LucideIcon } from "lucide-react"
+import {
+  Bell,
+  CalendarDays,
+  FileText,
+  FolderKanban,
+  HeartHandshake,
+  House,
+  LayoutGrid,
+  MessagesSquare,
+  type LucideIcon,
+} from "lucide-react"
 
 /*
  * Menu lateral do portal, no padrão do admin (`components/layout/nav-items.ts`).
@@ -22,6 +32,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { title: "Documentos", href: "/portal/documentos", icon: FileText },
   { title: "Comunicação", href: "/portal/comunicacao", icon: MessagesSquare, badge: "messages" },
   { title: "Notificações", href: "/portal/notificacoes", icon: Bell, badge: "notifications" },
+  { title: "Indicar", href: "/portal/indicar", icon: HeartHandshake },
 ]
 
 /** No menu de baixo do celular, Calendário e Feed ficam juntos em "Conteúdo". */

@@ -792,6 +792,7 @@ export type Database = {
           reached_stage: Database["public"]["Enums"]["deal_stage"]
           recurrence_id: string | null
           recurring_cents: number
+          referred_by_client_id: string | null
           service: string | null
           source: Database["public"]["Enums"]["lead_source"]
           stage: Database["public"]["Enums"]["deal_stage"]
@@ -821,6 +822,7 @@ export type Database = {
           reached_stage?: Database["public"]["Enums"]["deal_stage"]
           recurrence_id?: string | null
           recurring_cents?: number
+          referred_by_client_id?: string | null
           service?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -850,6 +852,7 @@ export type Database = {
           reached_stage?: Database["public"]["Enums"]["deal_stage"]
           recurrence_id?: string | null
           recurring_cents?: number
+          referred_by_client_id?: string | null
           service?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -891,6 +894,13 @@ export type Database = {
             columns: ["recurrence_id"]
             isOneToOne: false
             referencedRelation: "finance_recurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_referred_by_client_id_fkey"
+            columns: ["referred_by_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -1886,6 +1896,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          receives_referrals: boolean
           role: string | null
         }
         Insert: {
@@ -1893,6 +1904,7 @@ export type Database = {
           created_at?: string
           full_name: string
           id: string
+          receives_referrals?: boolean
           role?: string | null
         }
         Update: {
@@ -1900,6 +1912,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          receives_referrals?: boolean
           role?: string | null
         }
         Relationships: []
@@ -2311,7 +2324,10 @@ export type Database = {
         }
         Returns: string
       }
-      open_client_direct_channel: { Args: { member_id: string }; Returns: string }
+      open_client_direct_channel: {
+        Args: { member_id: string }
+        Returns: string
+      }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
       portal_channel: {
         Args: { target_client: string }
@@ -2390,7 +2406,11 @@ export type Database = {
         }[]
       }
       portal_direct_messages: {
-        Args: { max_count?: number; older_than?: string; target_channel: string }
+        Args: {
+          max_count?: number
+          older_than?: string
+          target_channel: string
+        }
         Returns: {
           author_name: string
           body: string
@@ -2497,6 +2517,27 @@ export type Database = {
       portal_read_direct: {
         Args: { read_until: string; target_channel: string }
         Returns: undefined
+      }
+      portal_refer_lead: {
+        Args: {
+          referral_company: string
+          referral_email: string
+          referral_name: string
+          referral_note: string
+          referral_phone: string
+          target_client: string
+        }
+        Returns: string
+      }
+      portal_referrals: {
+        Args: { target_client: string }
+        Returns: {
+          company: string
+          contact_name: string
+          created_at: string
+          id: string
+          status: string
+        }[]
       }
       portal_review_post: {
         Args: { decision: string; note?: string; target_post: string }
@@ -2683,6 +2724,7 @@ export type Database = {
         | "client_approval"
         | "client_change_request"
         | "task_assigned"
+        | "client_referral"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -2823,7 +2865,13 @@ export const Constants = {
       activity_action: ["created", "updated", "deleted", "comment"],
       channel_kind: ["client", "internal", "direct"],
       client_approval_result: ["approved", "changes"],
-      client_file_category: ["contract", "briefing", "brand", "report", "other"],
+      client_file_category: [
+        "contract",
+        "briefing",
+        "brand",
+        "report",
+        "other",
+      ],
       client_health: ["healthy", "attention", "at_risk"],
       client_notification_kind: [
         "team_message",
@@ -2912,6 +2960,7 @@ export const Constants = {
         "client_approval",
         "client_change_request",
         "task_assigned",
+        "client_referral",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

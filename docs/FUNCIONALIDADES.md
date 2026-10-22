@@ -907,8 +907,8 @@ juntos**, sem entrar cliente por cliente.
 
 A área em que a pessoa de um cliente entra com a própria conta e vê só o
 que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
-Início, Calendário, Feed, Projetos, **Documentos**, **Comunicação** e
-**Notificações** (as duas últimas com o contador de não lidas; no celular, o mesmo menu
+Início, Calendário, Feed, Projetos, **Documentos**, **Comunicação**,
+**Notificações** e **Indicar** (Comunicação e Notificações últimas com o contador de não lidas; no celular, o mesmo menu
 recolhível, pelo botão no topo), a troca de cliente no topo do menu (para
 quem acompanha mais de um) e, no rodapé, quem está logado, o **Tema**
 (Claro, Escuro ou Sistema) e **Sair**. No
@@ -993,6 +993,16 @@ post e no projeto aberto, o topo mostra o "voltar".
   respondeu (num post, num projeto ou na Comunicação), post para aprovar,
   etapa para aprovar, etapa concluída e documento novo. Abrir um aviso o
   marca como lido e leva ao item. O contador do menu chega na hora (Realtime).
+- **Indicar:** o cliente indica alguém para a Boop (nome, empresa,
+  WhatsApp ou e-mail, pelo menos um dos dois, e do que a pessoa precisa).
+  A indicação vira um negócio no **Comercial**, na etapa Lead, com a origem
+  "Indicação", o contato preenchido e, nas notas, quem indicou. O
+  responsável é quem cuida das indicações (`profiles.receives_referrals`),
+  que recebe o aviso no sino e no celular ("Danielle (Velmont) indicou
+  Padaria"), abrindo o negócio; sem ninguém marcado, a equipe toda é
+  avisada. Abaixo do formulário, as indicações já feitas pelo cliente e em
+  que pé estão (Recebida, Em conversa, Virou cliente, Encerrada), sem
+  valores nem notas. Até 20 por cliente por dia. No celular, fica em Mais.
 - Cliente desativado some do portal de quem o acompanhava.
 
 ### 2.28 Claude (conector do Boop Admin)

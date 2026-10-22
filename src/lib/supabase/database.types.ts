@@ -2591,7 +2591,11 @@ export type Database = {
         Returns: string
       }
       portal_send_direct_audio: {
-        Args: { audio_path: string; duration_ms: number; target_channel: string }
+        Args: {
+          audio_path: string
+          duration_ms: number
+          target_channel: string
+        }
         Returns: string
       }
       portal_send_direct_message: {
@@ -2648,6 +2652,15 @@ export type Database = {
         Args: { version_id: string; version_text: string }
         Returns: string
       }
+      save_push_subscription: {
+        Args: {
+          p_auth: string
+          p_device?: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: undefined
+      }
       send_audio_message: {
         Args: {
           audio_path: string
@@ -2659,15 +2672,6 @@ export type Database = {
           target_project?: string
         }
         Returns: string
-      }
-      save_push_subscription: {
-        Args: {
-          p_auth: string
-          p_device?: string
-          p_endpoint: string
-          p_p256dh: string
-        }
-        Returns: undefined
       }
       win_deal: {
         Args: {

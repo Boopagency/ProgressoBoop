@@ -68,6 +68,7 @@ import { DueDatePicker } from "@/features/tasks/due-date-picker"
 import { firstName } from "@/features/tasks/logic"
 import { StatusDot } from "@/features/tasks/task-meta"
 import { useTasks } from "@/features/tasks/tasks-provider"
+import { AudioPlayer } from "@/features/voice/audio-player"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useLongPress } from "@/hooks/use-long-press"
@@ -527,7 +528,10 @@ export function MessageItem({
           }
     )
   }
-  if (mine && canWrite) {
+  // Mensagem de voz não se edita (só apaga).
+  if (mine && canWrite && message.audio) {
+    menuActions.push({ key: "delete", label: "Apagar", icon: Trash2, destructive: true, separated: true, onSelect: () => setConfirmDelete(true) })
+  } else if (mine && canWrite) {
     menuActions.push(
       {
         key: "edit",
@@ -647,6 +651,11 @@ export function MessageItem({
         </Button>
         <span className="self-center max-md:hidden">Enter salva · Esc cancela</span>
       </div>
+    </div>
+  ) : message.audio ? (
+    <div className="max-md:flow-root">
+      <AudioPlayer messageId={message.id} durationMs={message.audio.duration_ms} mine={own} />
+      <BubbleMeta message={message} own={own} seen={seen} />
     </div>
   ) : (
     <p

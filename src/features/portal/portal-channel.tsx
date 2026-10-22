@@ -28,6 +28,8 @@ import { searchPortalMentions } from "@/features/mentions/actions"
 import { PortalMessageBubble } from "@/features/portal/message-bubble"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import type { PortalClient } from "@/features/portal/session"
+import { sendPortalChannelAudio, sendPortalDirectAudio } from "@/features/voice/actions"
+import { deliverRecording, type Recording } from "@/features/voice/upload"
 import { todayKey, toTimeLabel } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 
@@ -152,6 +154,19 @@ export function PortalChannel({
     return true
   }
 
+  async function sendAudio(recording: Recording): Promise<boolean> {
+    const result = await deliverRecording(recording, (path) =>
+      directId ? sendPortalDirectAudio(directId, path, recording.durationMs) : sendPortalChannelAudio(clientId, path, recording.durationMs)
+    )
+    if (!result.ok) {
+      toast.error(result.error)
+      return false
+    }
+    setSentCount((value) => value + 1)
+    await loadLatest()
+    return true
+  }
+
   return (
     <section
       aria-label={direct ? `Conversa com ${direct.teamName}` : "Conversa com a equipe"}
@@ -204,6 +219,7 @@ export function PortalChannel({
       />
       <Composer
         onSend={(body) => send(body)}
+        onSendAudio={(recording) => sendAudio(recording)}
         allowRequest={false}
         mentions={(query) => searchPortalMentions(clientId, query)}
         placeholder={direct ? `Escreva para ${direct.teamName}` : "Escreva para a equipe da Boop"}

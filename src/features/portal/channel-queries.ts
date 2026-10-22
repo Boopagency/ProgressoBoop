@@ -3,6 +3,8 @@ import "server-only"
 import { cache } from "react"
 
 import { requirePortalUser } from "@/features/portal/session"
+import type { MessageAudio } from "@/features/voice/logic"
+import { withAudio } from "@/features/voice/queries"
 import type { Database } from "@/lib/supabase/database.types"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
@@ -40,6 +42,8 @@ export interface PortalChannelMessage {
   mine: boolean
   post: { id: string; title: string; stage: ContentStage } | null
   project: { id: string; name: string } | null
+  /** Mensagem de voz: o áudio (só no fio da Comunicação). */
+  audio?: MessageAudio | null
   created_at: Timestamp
 }
 
@@ -103,7 +107,7 @@ export async function fetchPortalThread(
   if (error) throw loadError(error, "as mensagens")
   const rows = data ?? []
   return {
-    messages: rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse(),
+    messages: await withAudio(supabase, rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse()),
     hasMore: rows.length > PORTAL_THREAD_PAGE,
   }
 }
@@ -157,7 +161,7 @@ export async function fetchPortalDirectThread(
   if (error) throw loadError(error, "as mensagens")
   const rows = data ?? []
   return {
-    messages: rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse(),
+    messages: await withAudio(supabase, rows.slice(0, PORTAL_THREAD_PAGE).map(toChannelMessage).reverse()),
     hasMore: rows.length > PORTAL_THREAD_PAGE,
   }
 }

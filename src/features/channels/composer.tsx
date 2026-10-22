@@ -1,7 +1,8 @@
 "use client"
 
-import { AtSign, Lock, MessageSquareWarning, Plus, SendHorizontal, X } from "lucide-react"
+import { AtSign, Lock, MessageSquareWarning, Mic, Plus, SendHorizontal, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +16,10 @@ import { BODY_MAX } from "@/features/channels/logic"
 import { MentionList, useMentions, type MentionSearch } from "@/features/mentions/mention-picker"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { WritableKind } from "@/features/channels/validation"
+import { AUDIO_MIN_MS } from "@/features/voice/logic"
+import { RecordingBar } from "@/features/voice/recording-bar"
+import type { Recording } from "@/features/voice/upload"
+import { useCanRecordAudio, useVoiceRecorder } from "@/features/voice/use-voice-recorder"
 import { cn } from "@/lib/utils"
 
 /** Celular com toque (o teclado da tela não tem Shift + Enter). */
@@ -34,9 +39,13 @@ export interface ComposerOptions {
  * celular, como nos aplicativos de conversa: o campo arredondado, o botão
  * redondo de enviar, as duas opções no "+" e Enter quebra a linha. Com
  * `mentions`, "@" ou "/" abre a busca para mencionar um post, reunião etc.
+ * Com `onSendAudio`, o microfone grava uma mensagem de voz (no celular, no
+ * lugar do botão de enviar enquanto o campo está vazio); enquanto grava, a
+ * barra de gravação fica no lugar do campo.
  */
 export function Composer({
   onSend,
+  onSendAudio,
   allowRequest,
   allowInternal = false,
   placeholder,
@@ -47,6 +56,8 @@ export function Composer({
 }: {
   /** Devolve true quando enviou (aí o campo limpa). */
   onSend: (body: string, kind: WritableKind, options: ComposerOptions) => Promise<boolean>
+  /** Envia a mensagem de voz (sem isso, não aparece o microfone). Devolve true quando enviou. */
+  onSendAudio?: (recording: Recording, kind: WritableKind, options: ComposerOptions) => Promise<boolean>
   allowRequest: boolean
   /** Canal do cliente, na equipe: mostra "Interno". */
   allowInternal?: boolean
@@ -65,6 +76,9 @@ export function Composer({
   const field = useRef<HTMLTextAreaElement>(null)
   const isMobile = useIsMobile()
   const mentions = useMentions({ search: searchMentions, field, body, setBody })
+  const [sendingAudio, setSendingAudio] = useState(false)
+  const voice = useVoiceRecorder({ onLimit: () => void sendAudio() })
+  const showMic = useCanRecordAudio() && !!onSendAudio
 
   // Abrir a conversa já deixa o cursor no campo, mas só com mouse: no
   // celular isso abriria o teclado por cima da conversa.
@@ -94,6 +108,21 @@ export function Composer({
     }
   }
 
+  async function sendAudio() {
+    if (!onSendAudio || sendingAudio) return
+    setSendingAudio(true)
+    const recording = await voice.finish()
+    if (!recording || recording.durationMs < AUDIO_MIN_MS) {
+      setSendingAudio(false)
+      if (recording) toast("Áudio muito curto. Toque no microfone, fale e toque em enviar.")
+      return
+    }
+    const kind: WritableKind = allowRequest && request ? "change_request" : "text"
+    const sent = await onSendAudio(recording, kind, { internal: allowInternal && internal })
+    setSendingAudio(false)
+    if (sent) setRequest(false)
+  }
+
   if (disabledText) {
     return (
       <div className={cn("border-t px-4 py-3", className)}>
@@ -103,6 +132,20 @@ export function Composer({
   }
 
   const internalOn = allowInternal && internal
+  if (voice.status !== "idle" || sendingAudio) {
+    return (
+      <div className={cn("border-t bg-background px-3 py-3 sm:px-4 max-md:px-2 max-md:py-1.5", className)}>
+        <RecordingBar
+          status={voice.status}
+          elapsedMs={voice.elapsedMs}
+          sending={sendingAudio}
+          onCancel={voice.cancel}
+          onSend={() => void sendAudio()}
+        />
+      </div>
+    )
+  }
+
   return (
     <form
       className={cn(
@@ -264,23 +307,49 @@ export function Composer({
           <span className="hidden truncate text-[11px] text-subtle-foreground @lg:inline">
             Enter envia · Shift + Enter quebra a linha{mentions.enabled ? " · @ menciona" : ""}
           </span>
-          <Button type="submit" size="sm" disabled={sending || !body.trim()} className="ml-auto h-8 gap-1.5" aria-label="Enviar">
+          {showMic ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => void voice.start()}
+              aria-label="Gravar áudio"
+              title="Gravar áudio"
+              className="ml-auto size-8 shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              <Mic className="size-4" />
+            </Button>
+          ) : null}
+          <Button type="submit" size="sm" disabled={sending || !body.trim()} className={cn("h-8 gap-1.5", !showMic && "ml-auto")} aria-label="Enviar">
             <SendHorizontal className="size-3.5" />
             <span className="max-sm:sr-only">Enviar</span>
           </Button>
         </div>
       </div>
-      <Button
-        type="submit"
-        size="icon"
-        disabled={sending || !body.trim()}
-        aria-label="Enviar"
-        // Tocar em enviar não tira o cursor do campo: o teclado continua aberto para a próxima.
-        onMouseDown={(event) => event.preventDefault()}
-        className="size-10 shrink-0 rounded-full md:hidden"
-      >
-        <SendHorizontal className="size-5" />
-      </Button>
+      {/* Celular: campo vazio, o microfone no lugar de enviar (como nos aplicativos de conversa). */}
+      {showMic && !body.trim() ? (
+        <Button
+          type="button"
+          size="icon"
+          onClick={() => void voice.start()}
+          aria-label="Gravar áudio"
+          className="size-10 shrink-0 rounded-full md:hidden"
+        >
+          <Mic className="size-5" />
+        </Button>
+      ) : (
+        <Button
+          type="submit"
+          size="icon"
+          disabled={sending || !body.trim()}
+          aria-label="Enviar"
+          // Tocar em enviar não tira o cursor do campo: o teclado continua aberto para a próxima.
+          onMouseDown={(event) => event.preventDefault()}
+          className="size-10 shrink-0 rounded-full md:hidden"
+        >
+          <SendHorizontal className="size-5" />
+        </Button>
+      )}
     </form>
   )
 }

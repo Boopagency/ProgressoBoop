@@ -25,6 +25,7 @@ import {
   isClientDirect,
   type ChannelEntry,
   type ThreadItem,
+  type ThreadMessage,
 } from "@/features/channels/logic"
 import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
@@ -35,10 +36,12 @@ import { ClientMark } from "@/features/content/post-meta"
 import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
+import { sendAudioMessage } from "@/features/voice/actions"
+import { deliverRecording, type Recording } from "@/features/voice/upload"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { formatShortDate, toDateKey } from "@/lib/dates"
-import type { Communication } from "@/lib/types"
+import type { ActionResult, Communication } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export type ConversationView = "thread" | "pending"
@@ -201,7 +204,17 @@ export function Conversation({
   }, [active, newest, channel.id, onRead])
 
   async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
-    const result = await sendMessage({ channel_id: channel.id, body, kind, post_id: null, internal: options.internal })
+    return afterSend(await sendMessage({ channel_id: channel.id, body, kind, post_id: null, internal: options.internal }))
+  }
+
+  async function sendAudio(recording: Recording, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
+    const result = await deliverRecording(recording, (path) =>
+      sendAudioMessage({ channel_id: channel.id, path, duration_ms: recording.durationMs, kind, post_id: null, internal: options.internal })
+    )
+    return afterSend(result)
+  }
+
+  function afterSend(result: ActionResult<ThreadMessage>) {
     if (!result.ok) {
       toast.error(result.error)
       return false
@@ -467,6 +480,7 @@ export function Conversation({
         <Composer
           key={channel.id}
           onSend={send}
+          onSendAudio={sendAudio}
           allowRequest={channel.kind === "client"}
           allowInternal={channel.kind === "client"}
           autoFocus

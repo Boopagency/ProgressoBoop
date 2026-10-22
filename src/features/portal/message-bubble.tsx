@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 
 import { MentionText } from "@/features/mentions/mention-text"
+import { AudioPlayer } from "@/features/voice/audio-player"
+import type { MessageAudio } from "@/features/voice/logic"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { MESSAGE_KIND_LABEL } from "@/lib/labels"
 import type { MessageKind, Timestamp } from "@/lib/types"
@@ -8,6 +10,7 @@ import { cn } from "@/lib/utils"
 
 /** O que o balão precisa da mensagem (do canal do cliente ou da conversa do post/projeto). */
 interface BubbleMessage {
+  id: string
   kind: MessageKind
   body: string
   author_name: string
@@ -16,6 +19,8 @@ interface BubbleMessage {
   created_at: Timestamp
   /** Pedido de ajuste já resolvido pela equipe. */
   resolved?: boolean
+  /** Mensagem de voz: o player no lugar do texto. */
+  audio?: MessageAudio | null
 }
 
 /**
@@ -114,7 +119,11 @@ export function PortalMessageBubble({
               {message.kind === "change_request" && message.resolved ? " · resolvido" : ""}
             </span>
           ) : null}
-          <MentionText text={message.body} portalHref={mentionHref} />
+          {message.audio ? (
+            <AudioPlayer messageId={message.id} durationMs={message.audio.duration_ms} mine={mine} />
+          ) : (
+            <MentionText text={message.body} portalHref={mentionHref} />
+          )}
           {/* No celular, a hora fica dentro do balão, no canto. */}
           <time
             dateTime={message.created_at}

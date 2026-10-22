@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import { toPortalMessage, type PortalMessage } from "@/features/portal/content-queries"
 import { getPortalUser } from "@/features/portal/session"
+import { withAudio } from "@/features/voice/queries"
 import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
@@ -87,5 +88,5 @@ export async function loadPortalMessages(postId: string): Promise<ActionResult<P
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("portal_post_messages", { target_post: postId })
   if (error) return failure(error, "Não foi possível carregar as mensagens.")
-  return { ok: true, data: (data ?? []).map(toPortalMessage) }
+  return { ok: true, data: await withAudio(supabase, (data ?? []).map(toPortalMessage)) }
 }

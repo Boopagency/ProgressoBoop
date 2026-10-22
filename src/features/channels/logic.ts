@@ -1,6 +1,7 @@
 import { mentionPlainText } from "@/features/mentions/logic"
 import { addDaysToKey, capitalize, daysBetween, formatShortDate, formatWeekdayLong, toDateKey, toTimeLabel } from "@/lib/dates"
 import { includesText } from "@/lib/text"
+import type { MessageAudio } from "@/features/voice/logic"
 import type {
   Channel,
   Client,
@@ -51,6 +52,8 @@ export interface MessageProject {
 export interface ThreadMessage extends Message {
   post: MessagePost | null
   project: MessageProject | null
+  /** Mensagem de voz: o áudio (só quando a tela juntou; senão, o texto "Mensagem de voz"). */
+  audio?: MessageAudio | null
 }
 
 export interface ChannelCounts {

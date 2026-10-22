@@ -6,6 +6,7 @@ import type { Deliverable } from "@/features/deliverables/logic"
 import { toPortalMessage, type PortalMessage } from "@/features/portal/content-queries"
 import type { PortalProject, PortalStep, PortalStepApproval } from "@/features/portal/project-logic"
 import { requirePortalUser } from "@/features/portal/session"
+import { withAudio } from "@/features/voice/queries"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 
@@ -54,7 +55,7 @@ export const getPortalProjectMessages = cache(async (projectId: string): Promise
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("portal_project_messages", { target_project: projectId })
   if (error) throw loadError(error, "as mensagens")
-  return (data ?? []).map(toPortalMessage)
+  return withAudio(supabase, (data ?? []).map(toPortalMessage))
 })
 
 /**

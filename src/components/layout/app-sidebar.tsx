@@ -82,7 +82,7 @@ export function AppSidebar() {
                       asChild
                       isActive={isActivePath(pathname, item.href) && !(item.href === "/tarefas" && savedViews.some((view) => sameQuery(view.query, currentQuery) && currentQuery !== ""))}
                       tooltip={item.title}
-                      className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground data-[active=true]:text-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-brand-ink"
+                      className="h-9 gap-2.5 rounded-full px-3 text-[13.5px] text-sidebar-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-[0_6px_16px_-8px_rgb(11_27_44/0.5)] data-[active=true]:hover:bg-sidebar-primary data-[active=true]:hover:text-sidebar-primary-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-(--sidebar-primary-icon)"
                     >
                       <Link href={item.href} onClick={closeOnMobile}>
                         <item.icon />
@@ -92,7 +92,7 @@ export function AppSidebar() {
                     {item.href === "/comunicacoes" && unread > 0 ? (
                       <SidebarMenuBadge
                         aria-label={`${unread} ${unread === 1 ? "mensagem não lida" : "mensagens não lidas"}`}
-                        className="rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[active=true]/menu-button:text-brand-navy"
+                        className="right-2 rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[size=default]/menu-button:top-2 peer-data-[active=true]/menu-button:text-brand-navy"
                       >
                         {unread > 99 ? "99+" : unread}
                       </SidebarMenuBadge>
@@ -132,7 +132,7 @@ export function AppSidebar() {
                 closeOnMobile()
                 setClaudeOpen(true)
               }}
-              className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground [&>svg]:text-muted-foreground"
+              className="h-9 gap-2.5 rounded-full px-3 text-[13.5px] text-sidebar-foreground [&>svg]:text-muted-foreground"
             >
               <CLAUDE_NAV_ITEM.icon />
               <span>{CLAUDE_NAV_ITEM.title}</span>

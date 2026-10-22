@@ -35,7 +35,11 @@ export default async function PortalPage(props: PageProps<"/portal">) {
   return (
     <PageContainer>
       <PageHeader
-        title={`${greetingFor()}, ${user.name}`}
+        title={
+          <>
+            {greetingFor()}, <span className="text-brand-ink">{user.name}</span>
+          </>
+        }
         description={`${client.name} · ${
           pending.length === 0
             ? "nada esperando a sua aprovação"

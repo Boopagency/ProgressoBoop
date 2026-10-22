@@ -3,7 +3,7 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 
-/** Controle segmentado (ex.: Todas | Minhas, Semana | Mês), sobre o ToggleGroup do shadcn. */
+/** Controle segmentado em pílulas (ex.: Todas | Minhas, Semana | Mês), sobre o ToggleGroup do shadcn: a opção escolhida fica preenchida. */
 export function SegmentedControl<T extends string>({
   value,
   onValueChange,
@@ -27,13 +27,13 @@ export function SegmentedControl<T extends string>({
       }}
       spacing={0.5}
       aria-label={ariaLabel}
-      className={cn("rounded-lg bg-muted p-0.5", className)}
+      className={cn("rounded-full bg-card p-1 shadow-card", className)}
     >
       {options.map((option) => (
         <ToggleGroupItem
           key={option.value}
           value={option.value}
-          className="h-7 rounded-md px-3 text-[13px] font-medium text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+          className="h-8 rounded-full! px-4 text-[13px] font-medium text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)]"
         >
           {option.label}
         </ToggleGroupItem>

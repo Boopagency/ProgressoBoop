@@ -16,12 +16,12 @@ export interface StatItem {
   progress?: number
 }
 
-/** Linha de indicadores discretos, divididos por linhas finas. */
+/** Linha de indicadores, cada um no seu cartão. */
 export function StatGrid({ items, className }: { items: StatItem[]; className?: string }) {
   return (
     <dl
       className={cn(
-        "grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4",
+        "grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4",
         className
       )}
     >
@@ -37,7 +37,7 @@ export function StatGrid({ items, className }: { items: StatItem[]; className?: 
             <dd className="mt-1.5 flex items-baseline gap-2">
               <span
                 className={cn(
-                  "font-display text-[26px] leading-8 font-semibold tracking-tight tabular-nums",
+                  "font-display text-[30px] leading-9 font-semibold tracking-tight tabular-nums",
                   item.alert ? "text-overdue" : "text-foreground"
                 )}
               >
@@ -57,12 +57,12 @@ export function StatGrid({ items, className }: { items: StatItem[]; className?: 
           </>
         )
         const cellClass =
-          "relative flex flex-col justify-between bg-background px-4 py-4 transition-colors outline-none sm:px-5"
+          "relative flex flex-col justify-between overflow-hidden rounded-xl bg-card px-4 py-4 shadow-card transition-[background-color,box-shadow] outline-none sm:px-5 sm:py-5"
         return item.href ? (
           <a
             key={item.label}
             href={item.href}
-            className={cn(cellClass, "hover:bg-muted/50 focus-visible:bg-muted/50")}
+            className={cn(cellClass, "hover:shadow-float focus-visible:ring-[3px] focus-visible:ring-ring/40")}
           >
             {content}
           </a>

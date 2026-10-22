@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { isActivePath, NAV_ITEMS } from "@/components/layout/nav-items"
-import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { NotificationFeed } from "@/features/notifications/logic"
 import { NotificationBell } from "@/features/notifications/notification-bell"
@@ -25,9 +24,9 @@ export function AppTopbar({ notifications }: { notifications: NotificationFeed }
   const isDetail = current ? pathname !== current.href && !TABBED_SECTIONS.has(current.href) : false
 
   return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-border/70 bg-background/90 px-3 backdrop-blur-sm max-md:h-[calc(3rem+env(safe-area-inset-top))] max-md:pt-[env(safe-area-inset-top)] md:px-4">
-      <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground max-md:hidden" />
-      <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4 max-md:hidden" />
+    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 bg-canvas/85 px-3 backdrop-blur-md max-md:h-[calc(3rem+env(safe-area-inset-top))] max-md:border-b max-md:border-border/70 md:h-16 md:px-6 max-md:pt-[env(safe-area-inset-top)] md:px-4">
+      <SidebarTrigger className="-ml-1 size-9 rounded-full bg-card text-muted-foreground shadow-card hover:bg-card hover:text-foreground max-md:hidden" />
+      
       {current ? (
         isDetail ? (
           // Numa página de detalhe (cliente, projeto, reunião…), a seção vira o
@@ -35,13 +34,13 @@ export function AppTopbar({ notifications }: { notifications: NotificationFeed }
           // mesma altura das listas.
           <Link
             href={current.href}
-            className="-ml-1 flex items-center gap-1 rounded-md px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 max-md:h-11 max-md:pr-3"
+            className="-ml-1 flex items-center gap-1 rounded-full px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 max-md:h-11 max-md:pr-3 md:ml-0 md:h-9 md:bg-card md:px-3.5 md:shadow-card"
           >
             <ChevronLeft className="size-3.5" aria-hidden="true" />
             {current.title}
           </Link>
         ) : (
-          <span className="flex items-center gap-2 text-[13px] font-medium text-foreground">
+          <span className="flex items-center gap-2 text-[13px] font-medium text-foreground md:h-9 md:rounded-full md:bg-card md:px-3.5 md:shadow-card">
             <current.icon className="size-3.5 text-muted-foreground" aria-hidden="true" />
             {current.title}
           </span>

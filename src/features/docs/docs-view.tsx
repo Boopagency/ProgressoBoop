@@ -308,7 +308,7 @@ export function DocsView({
                         ? `Nada encontrado para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}.`
                         : `${results.length} ${results.length === 1 ? "resultado" : "resultados"} para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}`}
                     </p>
-                    <ul className="mt-2 -mx-3">
+                    <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
                       {results.map((doc) => (
                         <DocRow
                           key={doc.id}
@@ -349,7 +349,7 @@ export function DocsView({
                               {group.area ? TASK_AREA_LABEL[group.area] : "Sem área"}
                             </SectionTitle>
                           )}
-                          <ul className="mt-2 -mx-3">
+                          <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
                             {group.docs.map((doc) => (
                               <DocRow key={doc.id} doc={doc} today={today} />
                             ))}
@@ -430,7 +430,7 @@ function FilterNav({
         {groups.map((group, groupIndex) => (
           <div key={group.label ?? groupIndex}>
             {group.label ? (
-              <p className="mb-1 px-2 text-[11.5px] font-medium tracking-wide text-subtle-foreground uppercase">
+              <p className="mb-1 px-3 text-[11.5px] font-medium tracking-wide text-subtle-foreground uppercase">
                 {group.label}
               </p>
             ) : null}
@@ -445,10 +445,10 @@ function FilterNav({
                       aria-current={active ? "true" : undefined}
                       onClick={() => onChange(item.filter)}
                       className={cn(
-                        "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                        "flex h-8 w-full items-center gap-2.5 rounded-full px-3 text-left text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                         active
-                          ? "bg-accent font-medium text-foreground"
-                          : "text-sidebar-foreground hover:bg-accent/70 hover:text-foreground",
+                          ? "bg-card font-medium text-foreground shadow-card"
+                          : "text-sidebar-foreground hover:bg-card/70 hover:text-foreground",
                         item.count === 0 && !active && "text-subtle-foreground"
                       )}
                     >
@@ -677,7 +677,7 @@ function SuggestionsSection({ suggestions, startOpen }: { suggestions: IndexedSu
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open ? (
-        <ul className="mt-2 -mx-3">
+        <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
           {suggestions.map((suggestion) => {
             const Icon = DOC_KIND_ICON[suggestion.kind]
             return (

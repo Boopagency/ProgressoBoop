@@ -24,7 +24,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   (`queries.ts`, `actions.ts`, `features/auth`), com a sessão da pessoa e RLS.
   Nunca usar service role nem chave secreta no app.
 - Cor da marca só em detalhes (progresso, item ativo, foco, hoje, indicadores):
-  `brand` (#00C2FF) como preenchimento, `brand-ink` (#0079A8) quando for texto.
+  `brand` (#2B8FD9) como preenchimento, `brand-ink` (#155E9C) quando for texto.
 - Antes de concluir uma mudança: `npm run lint`, `npm run typecheck` e `npm run build`.
 
 ## Trabalho com vários agentes

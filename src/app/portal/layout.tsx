@@ -45,7 +45,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
       {/* No celular, o menu fica embaixo (PortalTabBar); --app-bottom-bar é a altura dele. */}
       <SidebarProvider defaultOpen={sidebarOpen} className="max-md:[--app-bottom-bar:calc(3.5rem+env(safe-area-inset-bottom))]">
         <PortalSidebar user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} clients={user.clients} />
-        <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/80 md:peer-data-[variant=inset]:shadow-[0_1px_3px_0_rgb(0_0_0/0.03)]">
+        <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden bg-canvas md:peer-data-[variant=inset]:rounded-[1.375rem] md:peer-data-[variant=inset]:shadow-none">
           <PortalTopbar clients={user.clients} />
           <div className="portal-motion flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto">{children}</div>
         </SidebarInset>

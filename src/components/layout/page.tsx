@@ -70,7 +70,7 @@ export function PageHeader({
       <div className="min-w-0 space-y-1">
         <h1
           title={typeof title === "string" ? title : undefined}
-          className="truncate font-display text-2xl leading-8 font-semibold tracking-tight text-foreground sm:text-[28px] sm:leading-9"
+          className="truncate font-display text-[28px] leading-9 font-semibold tracking-[-0.02em] text-foreground sm:text-[34px] sm:leading-[2.75rem]"
         >
           {title}
         </h1>
@@ -166,8 +166,8 @@ export function PageHeaderSkeleton({ actions = true }: { actions?: boolean }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
       <div className="min-w-0 space-y-1">
-        <div className="flex h-8 items-center sm:h-9">
-          <Skeleton className="h-6 w-48 sm:h-7 sm:w-56" />
+        <div className="flex h-9 items-center sm:h-11">
+          <Skeleton className="h-7 w-48 sm:h-8 sm:w-64" />
         </div>
         <div className="flex h-5 items-center">
           <Skeleton className="h-3.5 w-64 max-w-full" />

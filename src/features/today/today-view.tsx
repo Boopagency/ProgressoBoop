@@ -103,7 +103,11 @@ export function TodayView({
   return (
     <PageContainer>
       <PageHeader
-        title={`${greeting}, ${firstName(currentUser.full_name)}`}
+        title={
+          <>
+            {greeting}, <span className="text-brand-ink">{firstName(currentUser.full_name)}</span>
+          </>
+        }
         description={formatLongDate(today)}
         actions={<NewTaskButton />}
       />
@@ -133,7 +137,7 @@ export function TodayView({
             className="lg:col-start-2 lg:row-start-1"
           />
 
-          <div className="min-w-0 space-y-9 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          <div className="min-w-0 space-y-5 lg:col-start-1 lg:row-span-2 lg:row-start-1">
             <TaskSection
               id="atrasadas"
               title="Atrasadas"

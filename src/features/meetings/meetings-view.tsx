@@ -248,7 +248,7 @@ export function MeetingsView({
               <SectionTitle id="proximas" count={visibleUpcoming.length}>
                 {next ? "Depois dessa" : "Próximas"}
               </SectionTitle>
-              <ul className="mt-2 -mx-3">
+              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
                 {visibleUpcoming.map((entry) => (
                   <MeetingRow
                     key={entry.key}
@@ -264,7 +264,7 @@ export function MeetingsView({
           {months.map(([month, entries]) => (
             <section key={month} aria-label={formatMonthYear(`${month}-01`)}>
               <SectionTitle count={entries.length}>{formatMonthYear(`${month}-01`)}</SectionTitle>
-              <ul className="mt-2 -mx-3">
+              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
                 {entries.map((entry) => (
                   <MeetingRow
                     key={entry.key}

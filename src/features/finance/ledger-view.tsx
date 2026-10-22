@@ -210,7 +210,7 @@ export function LedgerView({ data, today, filters }: { data: FinanceData; today:
         ) : null}
       </div>
 
-      <section aria-label="Totais" className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border text-[13px] sm:grid-cols-4">
+      <section aria-label="Totais" className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-(--card-edge) bg-border text-[13px] shadow-card sm:grid-cols-4">
         <Total label="Entrou (bruto)" value={formatMoney(totals.paidIn)} />
         <Total label="Saiu" value={formatMoney(-totals.paidOut)} />
         <Total label="Taxas" value={formatMoney(-totals.fees)} />

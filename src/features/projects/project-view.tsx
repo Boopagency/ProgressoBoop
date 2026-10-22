@@ -379,7 +379,7 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
       }
       action={
         <div className="flex items-center gap-1">
-          <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-md bg-muted p-0.5">
+          <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-full bg-muted p-0.5">
             {(
               [
                 { value: "list", label: "Lista", icon: <List /> },
@@ -394,7 +394,7 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
                 title={option.label}
                 onClick={() => setMode(option.value)}
                 className={cn(
-                  "inline-flex h-6 items-center gap-1 rounded px-2 text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
+                  "inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
                   mode === option.value && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06)]"
                 )}
               >

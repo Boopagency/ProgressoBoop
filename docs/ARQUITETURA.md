@@ -1744,9 +1744,11 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
 1. **Identidade Boop em 5–10% da interface.** A base continua neutra
    (branco, off-white, cinzas, quase preto). A cor da marca aparece só em
    detalhes: barras de progresso, item ativo da sidebar, foco, o dia de hoje
-   no calendário, pontos indicadores e hover de links. Ciano `#00C2FF` só como
-   preenchimento; quando precisa ser texto, `#0079A8`; o botão principal é o
-   azul-marinho da marca (`#0B1B2C`). Vermelho, verde e laranja continuam
+   no calendário, pontos indicadores e hover de links. Azul `#2B8FD9` só como
+   preenchimento; quando precisa ser texto, `#155E9C`; o botão principal é o
+   azul-marinho da marca (`#0B1B2C`); no escuro, o próprio azul com o navy
+   por cima. (Até 22/10/2026 era o ciano do site, `#00C2FF`: estridente no
+   claro e apagado no escuro.) Vermelho, verde e laranja continuam
    reservados para atrasado, concluído e atenção. Logo: o "olhar" oficial, o
    mesmo SVG do favicon do site, sem redesenho. Poppins (fonte da marca) só em
    títulos e números de destaque; o resto da interface usa Inter.

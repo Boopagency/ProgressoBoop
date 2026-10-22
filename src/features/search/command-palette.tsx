@@ -134,7 +134,7 @@ export function SearchButton({ className }: { className?: string }) {
       onClick={openPalette}
       aria-label="Buscar no portal"
       className={cn(
-        "relative inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-2.5 text-[13px] text-muted-foreground transition-colors outline-none touch-target hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:w-56",
+        "relative inline-flex h-8 items-center gap-2 rounded-full border border-input bg-background px-2.5 text-[13px] text-muted-foreground transition-colors outline-none touch-target hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:w-56 md:h-9 md:border-transparent md:bg-card md:px-3.5 md:shadow-card md:w-64 md:hover:bg-card",
         className
       )}
     >

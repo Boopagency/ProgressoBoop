@@ -172,7 +172,7 @@ function MonthGrid({
   onOpen: (post: PostSummary) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border max-md:hidden">
+    <div className="overflow-hidden rounded-xl border bg-card max-md:hidden">
       <div className="grid grid-cols-7 border-b bg-muted/40">
         {days.slice(0, 7).map((day) => (
           <div key={day} className="px-1 py-2 text-center text-xs text-muted-foreground @3xl:px-2 @3xl:text-left">
@@ -356,7 +356,7 @@ function WeekGrid({
 }) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-xl border @3xl:grid @3xl:grid-cols-7">
+      <div className="hidden overflow-hidden rounded-xl border bg-card @3xl:grid @3xl:grid-cols-7">
         {days.map((day) => (
           <div key={day} className={cn("group/day flex min-h-[420px] min-w-0 flex-col border-l first:border-l-0", isWeekend(day) && "bg-muted/30")}>
             <div className="flex h-11 items-center justify-between gap-1 border-b px-2.5">
@@ -423,12 +423,12 @@ function DayList({
     ) : null
   }
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn("space-y-4", className)}>
       {days.map((day) => {
         const list = byDay.get(day) ?? []
         return (
-          <section key={day} aria-label={formatDayMonth(day)}>
-            <div className="flex items-center justify-between border-b pb-1.5">
+          <section key={day} aria-label={formatDayMonth(day)} className="rounded-xl bg-card px-4 pt-1.5 pb-1.5 shadow-card">
+            <div className="flex min-h-10 items-center justify-between border-b border-border/70 pb-1.5">
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
                 {day === today ? <Badge className="px-2 text-[11px]">Hoje</Badge> : null}
@@ -497,7 +497,7 @@ function WeekCard({ post, today, onOpen }: { post: PostSummary; today: DateKey; 
 function UndatedPosts({ posts, today, onOpen }: { posts: PostSummary[]; today: DateKey; onOpen: (post: PostSummary) => void }) {
   const [open, setOpen] = useState(false)
   return (
-    <section aria-label="Posts sem data" className="mt-4 rounded-xl border">
+    <section aria-label="Posts sem data" className="mt-4 rounded-xl border bg-card">
       <button
         type="button"
         aria-expanded={open}

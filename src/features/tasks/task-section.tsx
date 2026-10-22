@@ -33,8 +33,8 @@ export function TaskSection({
   const openCount = tasks.filter((task) => !isDone(task)).length
 
   return (
-    <section id={id} aria-label={title} className={cn("scroll-mt-16", className)}>
-      <div className="flex h-8 items-center justify-between gap-2 border-b border-border/80">
+    <section id={id} aria-label={title} className={cn("scroll-mt-20 rounded-xl bg-card px-4 pt-2.5 pb-1.5 shadow-card sm:px-5", className)}>
+      <div className="flex h-10 items-center justify-between gap-2 border-b border-border/70">
         <SectionTitle count={openCount}>
           {tone !== "default" && openCount > 0 ? (
             <span

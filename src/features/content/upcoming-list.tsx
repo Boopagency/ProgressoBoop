@@ -26,7 +26,7 @@ export function UpcomingList({ posts, today, onOpen }: { posts: PostSummary[]; t
     )
   }
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {late.length > 0 ? <DaySection id="atrasados" title="Atrasados" danger posts={late} today={today} onOpen={onOpen} /> : null}
       {days.map(({ day, posts: list }) => (
         <DaySection key={day} id={`dia-${day}`} title={dayTitle(day, today)} brand={day === today} posts={list} today={today} onOpen={onOpen} />
@@ -53,8 +53,8 @@ function DaySection({
   brand?: boolean
 }) {
   return (
-    <section aria-labelledby={id}>
-      <div className="flex h-8 items-center gap-2 border-b border-border/80">
+    <section aria-labelledby={id} className="rounded-xl bg-card px-4 pt-1 pb-1.5 shadow-card sm:px-5">
+      <div className="flex h-10 items-center gap-2 border-b border-border/70">
         {brand ? <span aria-hidden="true" className="size-1.5 rounded-full bg-brand" /> : null}
         <h2 id={id} className={cn("flex items-center gap-2 text-sm font-semibold", danger ? "text-overdue" : "text-foreground")}>
           {title}

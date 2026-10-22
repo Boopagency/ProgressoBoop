@@ -15,51 +15,60 @@
 
 /*
  * Boop Admin — tokens do design system.
- * Base neutra levemente quente: fundo off-white, superfícies brancas,
- * texto quase preto, bordas suaves e pouca sombra.
+ * Painel cinza-azulado bem claro com cartões brancos flutuando por cima
+ * (cantos bem arredondados, sombra suave e sem borda), texto no navy da
+ * marca e controles em pílula.
  *
- * Identidade Boop (tokens oficiais do site, sistema "ATENÇÃO"), usada em
- * 5–10% da interface: progresso, item ativo, foco, indicadores pequenos.
- *   ciano-500 #00C2FF — "sinal": só preenchimento/traço, nunca texto
- *   ciano-700 #0079A8 — ciano legível quando precisa ser texto/ícone
- *   navy-800  #0B1B2C — "tinta": botão principal e texto sobre o sinal
+ * Cor de destaque (versão "azul profundo", escolhida pelo Leo em 22/10/2026:
+ * o ciano do site, #00C2FF, ficava estridente no claro e apagado no escuro),
+ * usada em 5–10% da interface: progresso, item ativo, foco, indicadores.
+ *   azul     #2B8FD9 — "sinal": preenchimento/traço (com navy por cima)
+ *   azul-ink #155E9C — o mesmo azul legível como texto/ícone
+ *   navy-800 #0B1B2C — "tinta": botão principal e texto sobre o sinal
  */
 :root {
-  --radius: 0.5rem;
+  --radius: 0.875rem;
 
-  --brand: #00c2ff;
-  --brand-ink: #0079a8;
-  --brand-soft: #e2f7fe;
+  --brand: #2b8fd9;
+  --brand-ink: #155e9c;
+  --brand-soft: #e9f1fa;
   --brand-navy: #0b1b2c;
   --brand-paper: #fffdf5;
   /* Tons de apoio da mesma paleta (avatares e tipos de evento) */
-  --brand-sky: #b4e8fb; /* ciano-200 */
+  --brand-sky: #cfe0f3;
   --brand-mist: #dce4ea; /* navy-100 */
   --brand-slate: #4c6f8c; /* navy-400 */
   --brand-sand: #ede9dd; /* osso-300 */
 
-  /* Fundo geral (atrás do painel) e superfícies */
-  --canvas: oklch(0.974 0.002 95);
+  /*
+   * Fundo do painel (onde ficam as telas) e superfícies. O painel é um
+   * cinza com um toque do azul da marca; cartões, campos e menus são brancos.
+   */
+  --canvas: #f2f5f8;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.185 0.004 75);
+  --foreground: #0f1d2b;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.185 0.004 75);
+  --card-foreground: #0f1d2b;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.185 0.004 75);
+  --popover-foreground: #0f1d2b;
+  /* Cartão sobre o painel: sem borda, com uma sombra curta e uma longa bem leve. */
+  --card-edge: transparent;
+  --shadow-card: 0 1px 2px rgb(15 29 43 / 0.04), 0 6px 20px -6px rgb(15 29 43 / 0.08);
+  --shadow-float: 0 2px 6px rgb(15 29 43 / 0.06), 0 16px 40px -12px rgb(15 29 43 / 0.18);
 
   --primary: var(--brand-navy);
   --primary-foreground: var(--brand-paper);
-  --secondary: oklch(0.966 0.002 95);
-  --secondary-foreground: oklch(0.205 0.004 75);
-  --muted: oklch(0.966 0.002 95);
-  --muted-foreground: oklch(0.52 0.006 85);
-  --subtle-foreground: oklch(0.66 0.005 85);
-  --accent: oklch(0.958 0.003 95);
-  --accent-foreground: oklch(0.185 0.004 75);
+  --secondary: #edf1f5;
+  --secondary-foreground: #0f1d2b;
+  --muted: #eef2f6;
+  --muted-foreground: #5a6b7c;
+  --subtle-foreground: #8c9aa8;
+  --accent: #eef2f6;
+  --accent-foreground: #0f1d2b;
   --destructive: oklch(0.577 0.215 27.3);
 
-  --border: oklch(0.925 0.004 90);
-  --input: oklch(0.905 0.005 90);
+  --border: #e6ebf0;
+  --input: #dde4ea;
   --ring: var(--brand);
 
   /* Semânticas do produto */
@@ -91,72 +100,78 @@
 
   /*
    * Gráficos (validados contra a superfície branca: contraste e daltonismo).
-   * chart-1: o ciano da marca um passo mais escuro (marcas com ≥ 3:1);
+   * chart-1: o azul de destaque (marcas com ≥ 3:1);
    * chart-1-light: o mesmo tom mais claro para o previsto (escala ordinal);
    * chart-2: segunda série, quando houver; chart-muted: contexto.
    */
-  --chart-1: #0a9fd8;
-  --chart-1-light: #5fc0e8;
+  --chart-1: #2b8fd9;
+  --chart-1-light: #8dbde8;
   --chart-2: #e8743b;
-  --chart-muted: oklch(0.84 0.004 85);
-  --chart-grid: oklch(0.94 0.003 90);
+  --chart-muted: #d3dce4;
+  --chart-grid: #edf1f5;
 
   /*
-   * Menu lateral (e a moldura em volta do painel) na cor da Boop: no claro,
-   * o ciano-100 do site, com o item ativo em branco; no escuro, o navy-800.
-   * Dentro do menu, os tons de texto viram os navys do site (veja
-   * `[data-sidebar="sidebar"]` abaixo).
+   * Menu lateral (e a moldura em volta do painel): no claro, quase branco,
+   * com o item ativo numa pílula azul; no escuro, o navy-800 com a pílula
+   * num azul mais aberto. Dentro do menu, os tons de texto viram os do menu
+   * (veja `[data-sidebar="sidebar"]` abaixo).
    */
-  --sidebar: #e2f7fe; /* ciano-100 */
-  --sidebar-foreground: #2a4f6e; /* navy-500 */
-  --sidebar-primary: var(--brand-navy);
-  --sidebar-primary-foreground: var(--brand-paper);
-  --sidebar-accent: rgb(255 255 255 / 0.8);
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #3b4e62;
+  --sidebar-primary: var(--brand-ink);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-icon: #bfe0fa;
+  --sidebar-accent: #edf2f7;
   --sidebar-accent-foreground: var(--brand-navy);
-  --sidebar-border: #b4e8fb; /* ciano-200 */
+  --sidebar-border: #e3e9ef;
   --sidebar-ring: var(--brand);
   --sidebar-ink: var(--brand-navy);
-  --sidebar-muted: #4c6f8c; /* navy-400 */
+  --sidebar-muted: #6a7c8e;
   --sidebar-icon-active: var(--brand-ink);
 }
 
 /*
- * Tema escuro. Mesma base levemente quente, invertida: fundo geral quase
- * preto, painel e cartões um passo mais claros, bordas discretas. A marca
- * continua só em detalhes: `brand` (#00C2FF) igual, como preenchimento (com
- * `brand-navy` por cima); `brand-ink` vira um ciano claro, legível (AA) como
- * texto no fundo escuro; os fundos suaves da marca escurecem.
+ * Tema escuro, nos navys da marca: painel mais fundo, cartões um passo acima,
+ * bordas discretas. O azul de destaque abre um pouco (`brand` #4BA6EE, com
+ * `brand-navy` por cima) e vira também o botão principal; `brand-ink` vira
+ * um azul claro, legível (AA) como texto no fundo escuro; os fundos suaves
+ * da marca escurecem.
  */
 @media screen {
   .dark {
-    --brand-ink: #4fcbf7;
-    --brand-soft: #0f2b37;
-    --brand-sky: #164559;
+    --brand: #4ba6ee;
+    --brand-ink: #86c3f5;
+    --brand-soft: #132b45;
+    --brand-sky: #1c3f63;
     --brand-mist: #233039;
     --brand-slate: #7f9db4;
     --brand-sand: #312d26;
 
-    --canvas: oklch(0.175 0.003 75);
-    --background: oklch(0.205 0.004 75);
-    --foreground: oklch(0.935 0.004 90);
-    --card: oklch(0.205 0.004 75);
-    --card-foreground: oklch(0.935 0.004 90);
-    --popover: oklch(0.235 0.004 75);
-    --popover-foreground: oklch(0.935 0.004 90);
+    /* Escuro nos navys da marca: painel mais fundo, cartões um passo acima. */
+    --canvas: #08121c;
+    --background: #0f1b28;
+    --foreground: #e9eef3;
+    --card: #0f1b28;
+    --card-foreground: #e9eef3;
+    --popover: #142333;
+    --popover-foreground: #e9eef3;
+    --card-edge: rgb(255 255 255 / 0.05);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px -8px rgb(0 0 0 / 0.45);
+    --shadow-float: 0 2px 6px rgb(0 0 0 / 0.4), 0 16px 40px -12px rgb(0 0 0 / 0.6);
 
-    --primary: oklch(0.93 0.012 95);
+    --primary: var(--brand);
     --primary-foreground: var(--brand-navy);
-    --secondary: oklch(0.265 0.004 80);
-    --secondary-foreground: oklch(0.935 0.004 90);
-    --muted: oklch(0.255 0.004 80);
-    --muted-foreground: oklch(0.71 0.006 85);
-    --subtle-foreground: oklch(0.57 0.005 85);
-    --accent: oklch(0.275 0.004 80);
-    --accent-foreground: oklch(0.935 0.004 90);
+    --secondary: #172739;
+    --secondary-foreground: #e9eef3;
+    --muted: #152434;
+    --muted-foreground: #9aabbc;
+    --subtle-foreground: #6c8195;
+    --accent: #18293b;
+    --accent-foreground: #e9eef3;
     --destructive: oklch(0.64 0.2 25);
 
-    --border: oklch(0.3 0.004 80);
-    --input: oklch(0.34 0.005 80);
+    --border: #1d2e40;
+    --input: #243649;
 
     --overdue: oklch(0.7 0.17 25);
     --success: oklch(0.66 0.13 158);
@@ -175,22 +190,23 @@
     --tint-foreground: oklch(0.93 0.012 230);
     --overlay: rgb(0 0 0 / 0.55);
 
-    --chart-1: #2fb6ea;
-    --chart-1-light: #1f6d8e;
+    --chart-1: #4ba6ee;
+    --chart-1-light: #2c5f8c;
     --chart-2: #f0874f;
-    --chart-muted: oklch(0.42 0.004 85);
-    --chart-grid: oklch(0.29 0.004 85);
+    --chart-muted: #2c3f52;
+    --chart-grid: #1a2a3b;
 
-    --sidebar: #0b1b2c; /* navy-800 */
-    --sidebar-foreground: #afc1ce; /* navy-200 */
-    --sidebar-primary: var(--primary);
-    --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: #163049; /* entre o navy-700 e o navy-600 */
+    --sidebar: #0c1a29;
+    --sidebar-foreground: #b3c3d3;
+    --sidebar-primary: #2a6fb0;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-primary-icon: #cde6fb;
+    --sidebar-accent: #152a40;
     --sidebar-accent-foreground: var(--brand-paper);
     --sidebar-border: #1b3a55; /* navy-600 */
     --sidebar-ink: var(--brand-paper);
-    --sidebar-muted: #7a95ab; /* navy-300 */
-    --sidebar-icon-active: var(--brand);
+    --sidebar-muted: #7d93a8;
+    --sidebar-icon-active: #86c3f5;
   }
 }
 
@@ -277,6 +293,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
 }
 
 /*
@@ -375,6 +395,19 @@
 
   .portal-motion ul.grid > li:hover img {
     transform: scale(1.04);
+  }
+}
+
+/*
+ * Cartões: toda superfície `bg-card` com borda (os cartões das telas, os
+ * quadros e os indicadores) vira um cartão branco sem borda e com sombra
+ * suave sobre o painel cinza. No escuro, um contorno bem discreto no lugar.
+ */
+@layer components {
+  .bg-card.border,
+  [data-slot="card"] {
+    border-color: var(--card-edge);
+    box-shadow: var(--shadow-card);
   }
 }
 

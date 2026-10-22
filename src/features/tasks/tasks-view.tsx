@@ -278,7 +278,7 @@ export function TasksView() {
 /** Lista, Tabela ou Quadro (ícones; o nome aparece para leitores de tela). */
 function ViewSwitch({ value, onChange }: { value: TaskViewMode; onChange: (view: TaskViewMode) => void }) {
   return (
-    <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-lg bg-muted p-0.5 xl:ml-1">
+    <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-full bg-card p-1 shadow-card xl:ml-1">
       {VIEW_OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -288,9 +288,9 @@ function ViewSwitch({ value, onChange }: { value: TaskViewMode; onChange: (view:
           title={option.label}
           onClick={() => onChange(option.value)}
           className={cn(
-            "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
+            "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
             value === option.value &&
-              "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+              "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
           )}
         >
           {option.icon}

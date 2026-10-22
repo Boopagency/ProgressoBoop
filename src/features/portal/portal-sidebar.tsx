@@ -92,7 +92,7 @@ export function PortalSidebar({
                     asChild
                     isActive={active?.href === item.href}
                     tooltip={item.title}
-                    className="h-8 gap-2.5 text-[13.5px] text-sidebar-foreground data-[active=true]:text-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-brand-ink"
+                    className="h-9 gap-2.5 rounded-full px-3 text-[13.5px] text-sidebar-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-[0_6px_16px_-8px_rgb(11_27_44/0.5)] data-[active=true]:hover:bg-sidebar-primary data-[active=true]:hover:text-sidebar-primary-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-(--sidebar-primary-icon)"
                   >
                     <Link href={client ? portalHref(item.href, client, clients) : item.href} onClick={closeOnMobile}>
                       <item.icon />
@@ -106,7 +106,7 @@ export function PortalSidebar({
                           ? `${counts.messages} ${counts.messages === 1 ? "mensagem não lida" : "mensagens não lidas"}`
                           : `${counts.notifications} ${counts.notifications === 1 ? "aviso não lido" : "avisos não lidos"}`
                       }
-                      className="rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[active=true]/menu-button:text-brand-navy"
+                      className="right-2 rounded-full bg-brand px-1.5 text-[11px] text-brand-navy peer-data-[size=default]/menu-button:top-2 peer-data-[active=true]/menu-button:text-brand-navy"
                     >
                       {countLabel(counts[item.badge])}
                     </SidebarMenuBadge>

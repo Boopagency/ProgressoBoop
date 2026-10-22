@@ -82,8 +82,8 @@ export function KpiTile({
       {footer}
     </>
   )
-  const base = cn("block rounded-xl border bg-card px-4 py-3.5", className)
-  const interactive = "w-full text-left transition-colors hover:border-foreground/15 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-ring"
+  const base = cn("block rounded-xl border bg-card px-5 py-4", className)
+  const interactive = "w-full text-left transition-shadow hover:shadow-float focus-visible:outline-2 focus-visible:outline-ring"
   if (onSelect) {
     return (
       <button type="button" onClick={onSelect} className={cn(base, interactive)}>

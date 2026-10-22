@@ -133,7 +133,7 @@ export function IdeasBoard({
           <SectionTitle id="ideias-no-cronograma" count={scheduled.length}>
             No cronograma
           </SectionTitle>
-          <ul className="mt-2 -mx-3">
+          <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
             {scheduled.map((idea) => (
               <li key={idea.id} className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-muted/50">
                 <ClientMark clientId={idea.client_id} size="md" />

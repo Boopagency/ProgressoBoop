@@ -65,7 +65,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
       />
 
       <PageToolbar role="group" aria-label="Período">
-        <nav aria-label="Tipo de período" className="inline-flex rounded-lg bg-muted p-0.5">
+        <nav aria-label="Tipo de período" className="inline-flex rounded-full bg-card p-1 shadow-card">
           {links.kinds.map((kind) => (
             <Link
               key={kind.key}
@@ -73,8 +73,8 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
               scroll={false}
               aria-current={kind.active ? "page" : undefined}
               className={cn(
-                "inline-flex h-7 items-center rounded-md px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground",
-                kind.active && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+                "inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground hover:text-foreground",
+                kind.active && "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
               )}
             >
               {kind.label}

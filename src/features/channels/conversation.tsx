@@ -307,7 +307,7 @@ export function Conversation({
             {pendingCount} {pendingCount === 1 ? "pendente" : "pendentes"}
           </button>
         ) : null}
-        <div role="tablist" aria-label="O que mostrar" className="flex shrink-0 rounded-lg bg-muted p-0.5 max-md:hidden">
+        <div role="tablist" aria-label="O que mostrar" className="flex shrink-0 rounded-full bg-muted p-0.5 max-md:hidden">
           {(
             [
               ["thread", "Conversa"],
@@ -321,7 +321,7 @@ export function Conversation({
               aria-selected={view === value}
               onClick={() => onView(value)}
               className={cn(
-                "flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                "flex h-7 items-center gap-1.5 rounded-full px-3 text-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                 view === value ? "bg-background font-medium text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
               )}
             >

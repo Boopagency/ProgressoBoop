@@ -67,8 +67,9 @@ export function FinanceShell({ children }: { children: ReactNode }) {
             </Button>
           }
         />
-        <nav aria-label="Seções do financeiro" className="-mx-4 mt-6 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
-          <ul className="flex min-w-max gap-1">
+        {/* py-2: espaço para a sombra das pílulas dentro da rolagem lateral. */}
+        <nav aria-label="Seções do financeiro" className="-mx-4 mt-4 overflow-x-auto px-4 py-2 sm:-mx-2 sm:px-2">
+          <ul className="flex w-max gap-1 rounded-full bg-card p-1 shadow-card">
             {FINANCE_TABS.map((tab) => {
               const active = tab.href === "/financeiro" ? pathname === tab.href : pathname.startsWith(tab.href)
               return (
@@ -77,8 +78,8 @@ export function FinanceShell({ children }: { children: ReactNode }) {
                     href={tab.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative inline-flex h-9 items-center px-2.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:text-foreground",
-                      active && "text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand"
+                      "inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
+                      active && "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
                     )}
                   >
                     {tab.label}
@@ -88,7 +89,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
             })}
           </ul>
         </nav>
-        <div className="pt-6">{children}</div>
+        <div className="pt-4">{children}</div>
       </PageContainer>
       <FinanceDialog state={dialog} onOpenChange={(open) => setDialog((current) => ({ ...current, open }))} />
     </FinanceDialogContext>

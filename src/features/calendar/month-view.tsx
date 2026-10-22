@@ -35,7 +35,7 @@ export function MonthView({
   onOpenPost: (post: PostSummary) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card">
       <div className="grid grid-cols-7 border-b bg-muted/40">
         {days.slice(0, 7).map((day) => (
           <div key={day} className="px-2 py-2 text-center text-xs text-muted-foreground @3xl:text-left">

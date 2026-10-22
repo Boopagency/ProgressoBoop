@@ -126,7 +126,7 @@ export function ClientsView({
               <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showInactive && "rotate-180")} />
             </button>
             {showInactive ? (
-              <ul className="mt-2 -mx-3">
+              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
                 {inactive.map((client) => (
                   <li key={client.id}>
                     <Link

@@ -305,13 +305,15 @@ export function ChannelsView({
   return (
     <div
       className={cn(
-        "flex h-[calc(100svh-3rem-env(safe-area-inset-top)-var(--app-bottom-bar,0px))] min-h-0 motion-safe:animate-page-in md:h-full",
+        "flex h-[calc(100svh-3rem-env(safe-area-inset-top)-var(--app-bottom-bar,0px))] min-h-0 motion-safe:animate-page-in",
+        // No computador, a lista e a conversa ficam num cartão sobre o painel.
+        "md:mx-4 md:mb-4 md:h-[calc(100%-1rem)] md:overflow-hidden md:rounded-xl md:bg-card md:shadow-card lg:mx-6",
         // A conversa do celular é fixa na tela: sem o movimento de entrada, que a deslocaria.
         selected && "max-md:animate-none"
       )}
     >
       {selected ? null : <MobileChannelList channels={entries} previews={previews} onSelect={(id) => select(id)} onNew={setDialog} />}
-      <nav aria-label="Canais" className="flex w-full shrink-0 flex-col border-r bg-sidebar/40 max-md:hidden md:w-72">
+      <nav aria-label="Canais" className="flex w-full shrink-0 flex-col border-r bg-muted/40 max-md:hidden md:w-72">
         <div className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <h1 className="font-display text-lg font-semibold tracking-tight text-foreground">Comunicações</h1>
           <Tooltip>

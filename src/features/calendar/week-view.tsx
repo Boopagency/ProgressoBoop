@@ -38,7 +38,7 @@ export function WeekView({
 }) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-xl border @3xl:grid @3xl:grid-cols-7">
+      <div className="hidden overflow-hidden rounded-xl border bg-card @3xl:grid @3xl:grid-cols-7">
         {days.map((day) => {
           const dayItems = items.get(day)
           const isToday = day === today

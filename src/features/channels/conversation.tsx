@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Hash, MoreHorizontal, Search, X } from "lucide-react"
+import { ChevronLeft, Hash, MoreHorizontal, Search, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -26,7 +26,7 @@ import {
   type ChannelEntry,
   type ThreadItem,
 } from "@/features/channels/logic"
-import { MessageItem, useSeenBy } from "@/features/channels/message-item"
+import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
 import { useThread } from "@/features/channels/use-thread"
 import { ChannelIcon, CommunicationKindBadge } from "@/features/communications/communication-meta"
@@ -35,6 +35,7 @@ import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { formatShortDate, toDateKey } from "@/lib/dates"
 import type { Communication } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -69,10 +70,10 @@ function usePageActive(): boolean {
 }
 
 /** Ícone do canal: a foto do cliente, "#" do canal interno ou a outra pessoa. */
-export function ChannelGlyph({ channel, size = "sm" }: { channel: ChannelEntry; size?: "sm" | "md" }) {
+export function ChannelGlyph({ channel, size = "sm", className }: { channel: ChannelEntry; size?: "sm" | "md" | "lg"; className?: string }) {
   const { currentUser, profiles, profileById, clientPersonById } = useWorkspace()
   if (channel.kind === "client" && channel.client_id) {
-    return <ClientMark clientId={channel.client_id} size={size === "md" ? "md" : "sm"} />
+    return <ClientMark clientId={channel.client_id} size={size} className={className} />
   }
   if (channel.kind === "direct") {
     // Com alguém do cliente, a foto dela; com a equipe, a da outra pessoa.
@@ -85,14 +86,23 @@ export function ChannelGlyph({ channel, size = "sm" }: { channel: ChannelEntry; 
         name={person?.full_name ?? "?"}
         avatarUrl={person?.avatar_url}
         colorIndex={profile ? profiles.indexOf(profile) : 0}
-        size="sm"
-        className={cn(size === "md" ? "size-7" : "size-5 [&_[data-slot=avatar-fallback]]:text-[10px]")}
+        size={size === "lg" ? "default" : "sm"}
+        className={cn(
+          size === "lg" ? "size-12 [&_[data-slot=avatar-fallback]]:text-base" : size === "md" ? "size-7" : "size-5 [&_[data-slot=avatar-fallback]]:text-[10px]",
+          className
+        )}
       />
     )
   }
   return (
-    <span className={cn("inline-flex shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground", size === "md" ? "size-7" : "size-5")}>
-      <Hash className={size === "md" ? "size-4" : "size-3"} aria-hidden="true" />
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center bg-muted text-muted-foreground",
+        size === "lg" ? "size-12 rounded-full" : size === "md" ? "size-7 rounded-md" : "size-5 rounded-md",
+        className
+      )}
+    >
+      <Hash className={size === "lg" ? "size-5" : size === "md" ? "size-4" : "size-3"} aria-hidden="true" />
     </span>
   )
 }
@@ -137,6 +147,7 @@ function CommunicationEntry({ communication, onOpen }: { communication: Communic
 export function Conversation({
   channel,
   title,
+  shortTitle,
   communications,
   view,
   initialQuery,
@@ -149,6 +160,8 @@ export function Conversation({
 }: {
   channel: ChannelEntry
   title: string
+  /** Nome curto para o topo do celular (o cliente, o assunto ou a pessoa). */
+  shortTitle: string
   /** Registros antigos do cliente (só no canal de cliente). */
   communications: Communication[]
   view: ConversationView
@@ -165,11 +178,12 @@ export function Conversation({
   const { today } = useTasks()
   const withClient = isClientDirect(channel)
   const thread = useThread(channel.id, (before) => loadThread(channel.id, before))
-  const seenBy = useSeenBy(thread.messages, thread.reads)
+  const { seenBy, readers } = useReadReceipts(thread.messages, thread.reads)
   const [query, setQuery] = useState(initialQuery)
   const [searchOpen, setSearchOpen] = useState(initialQuery !== "")
   const [sentCount, setSentCount] = useState(0)
   const active = usePageActive()
+  const isMobile = useIsMobile()
   const readUpTo = useRef<string | null>(null)
   const messages = thread.messages
   const newest = messages && messages.length > 0 ? messages[messages.length - 1] : undefined
@@ -236,9 +250,11 @@ export function Conversation({
         key={item.key}
         message={item.message}
         seenBy={seenBy.get(item.message.id)}
+        readers={readers.get(item.message.id)}
         continued={item.continued}
         canWrite={!channel.archived}
         allowInternal={channel.kind === "client"}
+        oneToOne={channel.kind === "direct"}
         onChanged={changed}
         onRemoved={thread.removeLocal}
         onOpenPost={onOpenPost}
@@ -247,24 +263,51 @@ export function Conversation({
   }
 
   return (
-    <section aria-label={title} className="flex min-h-0 flex-1 flex-col">
-      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b px-2 py-2 sm:flex-nowrap sm:px-4">
-        <Button type="button" variant="ghost" size="icon-sm" onClick={onBack} aria-label="Voltar para os canais" className="md:hidden">
-          <ArrowLeft />
+    <section
+      aria-label={title}
+      className={cn(
+        "flex min-h-0 flex-1 flex-col",
+        // Celular: tela cheia, por cima do topo e do menu de baixo, do tamanho da
+        // parte que se vê (com o teclado aberto, o campo sobe junto).
+        "max-md:fixed max-md:inset-x-0 max-md:top-[var(--vv-top,0px)] max-md:z-50 max-md:h-[var(--vv-height,100dvh)] max-md:bg-background max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]"
+      )}
+    >
+      <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2 max-md:min-h-0 max-md:gap-1.5 max-md:px-1 max-md:pt-[calc(0.25rem+env(safe-area-inset-top))] max-md:pb-1">
+        <Button type="button" variant="ghost" size="icon" onClick={onBack} aria-label="Voltar para as conversas" className="size-10 shrink-0 md:hidden">
+          <ChevronLeft className="size-6" />
         </Button>
-        <ChannelGlyph channel={channel} size="md" />
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[15px] leading-5 font-semibold text-foreground">{title}</h2>
+        <ChannelGlyph channel={channel} size="md" className="max-md:hidden" />
+        <ChannelGlyph channel={channel} size="lg" className="size-9 text-sm md:hidden [&_[data-slot=avatar-fallback]]:text-sm [&_svg]:size-4" />
+        <div className="min-w-0 flex-1 max-md:pl-1">
+          <h2 className="truncate text-[15px] leading-5 font-semibold text-foreground">
+            <span className="max-md:hidden">{title}</span>
+            {/* No celular, o nome curto (o cliente ou a pessoa), como nos aplicativos de conversa. */}
+            <span className="md:hidden">{shortTitle}</span>
+          </h2>
           <p className="truncate text-xs text-muted-foreground">
             {channel.archived ? "Arquivado · " : ""}
             {subtitle}
           </p>
         </div>
-        <div
-          role="tablist"
-          aria-label="O que mostrar"
-          className="flex shrink-0 rounded-lg bg-muted p-0.5 max-sm:order-last max-sm:basis-full max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center"
-        >
+        {/* Celular: os pendentes num botão (no computador, as abas ao lado). */}
+        {view === "pending" ? (
+          <button
+            type="button"
+            onClick={() => onView("thread")}
+            className="h-8 shrink-0 rounded-full bg-muted px-3 text-xs font-medium text-foreground touch-target relative md:hidden"
+          >
+            Conversa
+          </button>
+        ) : pendingCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => onView("pending")}
+            className="relative h-8 shrink-0 rounded-full bg-attention-muted px-3 text-xs font-medium text-attention-ink tabular-nums touch-target md:hidden"
+          >
+            {pendingCount} {pendingCount === 1 ? "pendente" : "pendentes"}
+          </button>
+        ) : null}
+        <div role="tablist" aria-label="O que mostrar" className="flex shrink-0 rounded-lg bg-muted p-0.5 max-md:hidden">
           {(
             [
               ["thread", "Conversa"],
@@ -299,18 +342,25 @@ export function Conversation({
             setSearchOpen((open) => !open)
             if (searchOpen) setQuery("")
           }}
-          className="text-muted-foreground max-sm:hidden"
+          className="text-muted-foreground max-md:hidden"
         >
           <Search />
         </Button>
         {menu.length > 0 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label="Opções do canal" className="text-muted-foreground">
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Opções do canal" className="text-muted-foreground max-md:size-10">
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
+              {/* No celular, a busca fica aqui (no computador, a lupa do topo). */}
+              {isMobile && view === "thread" ? (
+                <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
+                  <Search />
+                  Buscar na conversa
+                </DropdownMenuItem>
+              ) : null}
               {menu.map((item) => (
                 <span key={item.label}>
                   {item.separated ? <DropdownMenuSeparator /> : null}
@@ -359,10 +409,12 @@ export function Conversation({
             </p>
           ) : (
             <ul className="py-2">
+              <li className="px-4 pt-1 pb-2 text-xs font-medium text-muted-foreground md:hidden">Pedidos de ajuste pendentes</li>
               {thread.pending.map((message) => (
                 <MessageItem
                   key={message.id}
                   message={message}
+                  readers={readers.get(message.id)}
                   canWrite={!channel.archived}
                   allowInternal={channel.kind === "client"}
                   onChanged={changed}
@@ -401,12 +453,12 @@ export function Conversation({
       )}
 
       {view === "thread" && channel.kind === "client" && !channel.archived ? (
-        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
+        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong max-md:py-1.5 max-md:text-[11.5px] max-md:leading-4">
           O cliente lê este canal no portal, em Comunicação. Para falar só com a equipe, marque Interno ao escrever.
         </p>
       ) : null}
       {view === "thread" && withClient && !channel.archived ? (
-        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
+        <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong max-md:py-1.5 max-md:text-[11.5px] max-md:leading-4">
           {clientDirectPerson(channel, { clientPersonById })} lê esta conversa no portal, em Comunicação. O resto da equipe não vê.
         </p>
       ) : null}

@@ -59,6 +59,7 @@ const CLIENT_ROUTES = [
   { path: "/portal/projetos", detail: new RegExp(`^/portal/projetos/${ID}`) },
   { path: "/portal/documentos" },
   { path: "/portal/comunicacao" },
+  { path: "/portal/comunicacao?conversa=equipe" },
   { path: "/portal/notificacoes" },
 ]
 

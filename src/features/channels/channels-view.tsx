@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRight, MessageSquarePlus, Plus } from "lucide-react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { deleteChannel, leaveChannel, loadChannelCounts, updateChannel } from "@/features/channels/actions"
 import { ChannelDialog, type ChannelDialogState } from "@/features/channels/channel-dialog"
+import { MobileChannelList } from "@/features/channels/channel-list"
 import { ChannelGlyph, Conversation, type ChannelMenuItem, type ConversationView } from "@/features/channels/conversation"
 import {
   channelLabel,
@@ -27,12 +28,14 @@ import {
   totalsOf,
   type ChannelCounts,
   type ChannelEntry,
+  type ChannelPreview,
 } from "@/features/channels/logic"
 import { useUnread } from "@/features/channels/unread-provider"
 import { CommunicationDialog, type CommunicationDialogState } from "@/features/communications/communication-dialog"
 import { loadPost } from "@/features/content/actions"
 import { PostDialog, usePostDialog } from "@/features/content/post-dialog"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
 import type { Communication } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -129,18 +132,25 @@ function Group({
  * Comunicações em canais, estilo Slack: à esquerda os canais (clientes,
  * internos e conversas diretas) com não lidas e pendentes; à direita a
  * conversa. `?canal=` abre um canal; `?cliente=` abre o canal do cliente;
- * `?ver=pendentes` abre os pendentes; `?q=` já busca no canal.
+ * `?ver=pendentes` abre os pendentes; `?q=` já busca no canal. No celular,
+ * como nos aplicativos de conversa: a lista (`MobileChannelList`, com a
+ * última mensagem de cada canal) e, ao tocar, a conversa em tela cheia.
  */
 export function ChannelsView({
   channels,
+  previews,
   communications,
   initialQuery,
 }: {
   channels: ChannelEntry[]
+  /** A última mensagem de cada canal (a lista do celular). */
+  previews: Record<string, ChannelPreview>
   communications: Communication[]
   initialQuery: string
 }) {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const isMobile = useIsMobile()
   const { clientById, profileById, clientPersonById, currentUser } = useWorkspace()
   const unreadTotals = useUnread()
   const [polledCounts, setPolledCounts] = useState<Record<string, ChannelCounts> | null>(null)
@@ -188,6 +198,17 @@ export function ChannelsView({
     const timer = window.setInterval(poll, COUNTS_POLL_MS)
     return () => window.clearInterval(timer)
   }, [])
+
+  // A lista do celular mostra a última mensagem de cada canal: chegou mensagem
+  // nova (pelas contagens), a tela busca a lista de novo.
+  const stalePreviews =
+    isMobile &&
+    !selected &&
+    polledCounts !== null &&
+    channels.some((channel) => (polledCounts[channel.id]?.last_message_at ?? null) !== channel.counts.last_message_at)
+  useEffect(() => {
+    if (stalePreviews) router.refresh()
+  }, [stalePreviews, router])
 
   function select(channelId: string | null, nextView: ConversationView = "thread") {
     window.history.pushState(null, "", urlFor({ canal: channelId, ver: nextView }))
@@ -282,11 +303,15 @@ export function ChannelsView({
   const withUnread = entries.filter((channel) => !channel.archived && channel.counts.unread > 0)
 
   return (
-    <div className="flex h-[calc(100svh-3rem-env(safe-area-inset-top)-var(--app-bottom-bar,0px))] min-h-0 motion-safe:animate-page-in md:h-full">
-      <nav
-        aria-label="Canais"
-        className={cn("flex w-full shrink-0 flex-col border-r bg-sidebar/40 md:w-72", selected && "max-md:hidden")}
-      >
+    <div
+      className={cn(
+        "flex h-[calc(100svh-3rem-env(safe-area-inset-top)-var(--app-bottom-bar,0px))] min-h-0 motion-safe:animate-page-in md:h-full",
+        // A conversa do celular é fixa na tela: sem o movimento de entrada, que a deslocaria.
+        selected && "max-md:animate-none"
+      )}
+    >
+      {selected ? null : <MobileChannelList channels={entries} previews={previews} onSelect={(id) => select(id)} onNew={setDialog} />}
+      <nav aria-label="Canais" className="flex w-full shrink-0 flex-col border-r bg-sidebar/40 max-md:hidden md:w-72">
         <div className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <h1 className="font-display text-lg font-semibold tracking-tight text-foreground">Comunicações</h1>
           <Tooltip>
@@ -420,6 +445,7 @@ export function ChannelsView({
             key={selected.id}
             channel={selected}
             title={channelTitle(selected, ctx)}
+            shortTitle={channelLabel(selected, ctx)}
             communications={clientCommunications}
             view={view}
             initialQuery={selected.client_id === clientParam ? query : ""}

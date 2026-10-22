@@ -1,12 +1,22 @@
 "use client"
 
-import { Lock, SendHorizontal } from "lucide-react"
+import { Lock, MessageSquareWarning, Plus, SendHorizontal, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { BODY_MAX } from "@/features/channels/logic"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { WritableKind } from "@/features/channels/validation"
 import { cn } from "@/lib/utils"
+
+/** Celular com toque (o teclado da tela não tem Shift + Enter). */
+const TOUCH_PHONE = "(pointer: coarse) and (max-width: 767px)"
 
 /** Opções da mensagem além do tipo: interna (só a equipe vê, no canal do cliente). */
 export interface ComposerOptions {
@@ -18,7 +28,9 @@ export interface ComposerOptions {
  * cliente, "Pedido de ajuste" marca a mensagem como pedido (fica pendente
  * até ser resolvido) e "Interno" a deixa só para a equipe (o cliente não vê
  * no portal). O portal usa o mesmo campo, sem as duas opções. `autoFocus`
- * só vale com mouse (no celular, o teclado abre quando a pessoa toca).
+ * só vale com mouse (no celular, o teclado abre quando a pessoa toca). No
+ * celular, como nos aplicativos de conversa: o campo arredondado, o botão
+ * redondo de enviar, as duas opções no "+" e Enter quebra a linha.
  */
 export function Composer({
   onSend,
@@ -45,6 +57,7 @@ export function Composer({
   const [internal, setInternal] = useState(false)
   const [sending, setSending] = useState(false)
   const field = useRef<HTMLTextAreaElement>(null)
+  const isMobile = useIsMobile()
 
   // Abrir a conversa já deixa o cursor no campo, mas só com mouse: no
   // celular isso abriria o teclado por cima da conversa.
@@ -80,27 +93,89 @@ export function Composer({
     )
   }
 
+  const internalOn = allowInternal && internal
   return (
     <form
-      className={cn("@container border-t bg-background px-3 py-3 sm:px-4", className)}
+      className={cn(
+        "@container border-t bg-background px-3 py-3 sm:px-4",
+        "max-md:flex max-md:items-end max-md:gap-1.5 max-md:px-2 max-md:py-1.5",
+        className
+      )}
       onSubmit={(event) => {
         event.preventDefault()
         void send()
       }}
     >
+      {allowRequest || allowInternal ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Tipo da mensagem: pedido de ajuste ou interna"
+              className="relative flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring/40 active:bg-muted data-[state=open]:bg-muted md:hidden"
+            >
+              <Plus className="size-6" aria-hidden="true" />
+              {request || internalOn ? <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand" aria-hidden="true" /> : null}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-64">
+            {allowRequest ? (
+              <DropdownMenuCheckboxItem checked={request} onCheckedChange={(checked) => setRequest(checked === true)}>
+                <MessageSquareWarning aria-hidden="true" />
+                Pedido de ajuste
+              </DropdownMenuCheckboxItem>
+            ) : null}
+            {allowInternal ? (
+              <DropdownMenuCheckboxItem checked={internal} onCheckedChange={(checked) => setInternal(checked === true)}>
+                <Lock aria-hidden="true" />
+                Interno: só a equipe vê
+              </DropdownMenuCheckboxItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
       <div
         className={cn(
           "rounded-xl border bg-background transition-colors focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
+          "max-md:min-w-0 max-md:flex-1 max-md:rounded-[1.375rem]",
           request && "border-attention-line/30 bg-attention-soft/30",
           allowInternal && internal && !request && "border-dashed border-foreground/25 bg-muted/50"
         )}
       >
+        {/* Celular: o que está marcado no "+", com o × para tirar. */}
+        {request || internalOn ? (
+          <div className="flex flex-wrap gap-1 px-2.5 pt-1.5 md:hidden">
+            {request ? (
+              <button
+                type="button"
+                onClick={() => setRequest(false)}
+                className="inline-flex h-6 items-center gap-1 rounded-full border border-attention-line/25 bg-attention-soft px-2 text-xs font-medium text-attention-ink"
+              >
+                Pedido de ajuste
+                <X className="size-3" aria-label="tirar" />
+              </button>
+            ) : null}
+            {internalOn ? (
+              <button
+                type="button"
+                onClick={() => setInternal(false)}
+                className="inline-flex h-6 items-center gap-1 rounded-full border border-foreground/20 bg-muted px-2 text-xs font-medium text-foreground"
+              >
+                <Lock className="size-3" aria-hidden="true" />
+                Interno
+                <X className="size-3" aria-label="tirar" />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <textarea
           ref={field}
           value={body}
           maxLength={BODY_MAX}
           onChange={(event) => setBody(event.target.value)}
           onKeyDown={(event) => {
+            // No celular (toque) não há Shift: Enter quebra a linha e o botão envia.
+            if (window.matchMedia(TOUCH_PHONE).matches) return
             if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault()
               void send()
@@ -112,12 +187,14 @@ export function Composer({
               ? "Qual ajuste o cliente pediu?"
               : allowInternal && internal
                 ? "Mensagem interna: só a equipe vê"
-                : placeholder
+                : isMobile
+                  ? "Mensagem"
+                  : placeholder
           }
           aria-label="Mensagem"
-          className="field-sizing-content block max-h-48 min-h-10 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-6 outline-none placeholder:text-subtle-foreground"
+          className="field-sizing-content block max-h-48 min-h-10 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-6 outline-none placeholder:text-subtle-foreground max-md:max-h-32 max-md:px-4 max-md:py-2"
         />
-        <div className="flex items-center gap-2 px-2 pb-2">
+        <div className="flex items-center gap-2 px-2 pb-2 max-md:hidden">
           {allowRequest ? (
             <button
               type="button"
@@ -157,6 +234,17 @@ export function Composer({
           </Button>
         </div>
       </div>
+      <Button
+        type="submit"
+        size="icon"
+        disabled={sending || !body.trim()}
+        aria-label="Enviar"
+        // Tocar em enviar não tira o cursor do campo: o teclado continua aberto para a próxima.
+        onMouseDown={(event) => event.preventDefault()}
+        className="size-10 shrink-0 rounded-full md:hidden"
+      >
+        <SendHorizontal className="size-5" />
+      </Button>
     </form>
   )
 }

@@ -80,6 +80,7 @@ const MARK_SIZE = {
   xs: "size-4 text-[9px]",
   sm: "size-5 text-[10px]",
   md: "size-7 text-xs",
+  lg: "size-12 text-lg",
 } as const
 
 /**

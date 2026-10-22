@@ -1,8 +1,8 @@
 "use client"
 
-import { FolderKanban, Megaphone } from "lucide-react"
+import { ChevronLeft, FolderKanban, Megaphone } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { Composer } from "@/features/channels/composer"
@@ -28,6 +28,7 @@ import { PortalMessageBubble } from "@/features/portal/message-bubble"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import type { PortalClient } from "@/features/portal/session"
 import { todayKey, toTimeLabel } from "@/lib/dates"
+import { cn } from "@/lib/utils"
 
 /**
  * Comunicação no portal: o canal do cliente com a equipe, como a conversa da
@@ -35,7 +36,10 @@ import { todayKey, toTimeLabel } from "@/lib/dates"
  * a cada poucos segundos com a aba visível; com o fio na tela, marca como
  * lido até a mensagem mais nova e atualiza o contador do menu. Com
  * `direct`, é a conversa direta com alguém da equipe (o mesmo fio, pelas
- * funções `portal_direct_*`).
+ * funções `portal_direct_*`). No celular, a conversa aberta da lista
+ * (`mobile`) fica em tela cheia, com o topo (voltar, foto e nome) e o campo
+ * embaixo, que sobe com o teclado; com a lista na tela (`hiddenOnMobile`),
+ * ela não busca nem marca como lido.
  */
 export function PortalChannel({
   client,
@@ -44,6 +48,8 @@ export function PortalChannel({
   initialHasMore,
   archived,
   direct = null,
+  mobile = null,
+  hiddenOnMobile = false,
 }: {
   client: PortalClient
   clients: readonly PortalClient[]
@@ -52,6 +58,10 @@ export function PortalChannel({
   archived: boolean
   /** Conversa direta: o canal e quem da equipe participa. */
   direct?: { channelId: string; teamName: string } | null
+  /** Tela cheia no celular: para onde volta (a lista), a foto, o nome e a linha de baixo. */
+  mobile?: { backHref: string; avatar: ReactNode; title: string; subtitle: string } | null
+  /** No celular, a lista de conversas está na tela no lugar desta. */
+  hiddenOnMobile?: boolean
 }) {
   const clientId = client.id
   const directId = direct?.channelId ?? null
@@ -82,7 +92,10 @@ export function PortalChannel({
     if (older.length === 0) setHasMore(result.data.hasMore)
   }
 
-  const fetchLatest = useEffectEvent(() => loadLatest())
+  /** Escondida no celular (a lista está na tela): não busca nem marca como lido. */
+  const offScreen = () => hiddenOnMobile && window.matchMedia("(max-width: 767px)").matches
+
+  const fetchLatest = useEffectEvent(() => (offScreen() ? undefined : loadLatest()))
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -102,7 +115,7 @@ export function PortalChannel({
 
   // Lido = a mensagem mais nova que está na tela, com a aba visível.
   const markRead = useEffectEvent(async () => {
-    if (!newest || newest === lastRead.current || document.visibilityState !== "visible") return
+    if (!newest || newest === lastRead.current || document.visibilityState !== "visible" || offScreen()) return
     lastRead.current = newest
     const result = await (directId ? readPortalDirect(directId, newest) : readPortalChannel(clientId, newest)).catch(() => null)
     if (result?.ok) refreshCounts()
@@ -141,8 +154,30 @@ export function PortalChannel({
   return (
     <section
       aria-label={direct ? `Conversa com ${direct.teamName}` : "Conversa com a equipe"}
-      className="flex h-[calc(100svh-15rem-var(--app-bottom-bar,0px))] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]"
+      className={cn(
+        "flex h-[calc(100svh-15rem-var(--app-bottom-bar,0px))] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]",
+        hiddenOnMobile && "max-md:hidden",
+        // Celular: tela cheia, por cima do topo e do menu de baixo, do tamanho da parte que se vê.
+        mobile &&
+          "max-md:fixed max-md:inset-x-0 max-md:top-[var(--vv-top,0px)] max-md:z-50 max-md:h-[var(--vv-height,100dvh)] max-md:min-h-0 max-md:rounded-none max-md:border-0 max-md:bg-background max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]"
+      )}
     >
+      {mobile ? (
+        <header className="flex shrink-0 items-center gap-1.5 border-b px-1 pt-[calc(0.25rem+env(safe-area-inset-top))] pb-1 md:hidden">
+          <Link
+            href={mobile.backHref}
+            aria-label="Voltar para as conversas"
+            className="flex size-10 shrink-0 items-center justify-center rounded-md text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:bg-muted"
+          >
+            <ChevronLeft className="size-6" aria-hidden="true" />
+          </Link>
+          {mobile.avatar}
+          <div className="min-w-0 flex-1 pl-1">
+            <h2 className="truncate text-[15px] leading-5 font-semibold text-foreground">{mobile.title}</h2>
+            <p className="truncate text-xs text-muted-foreground">{mobile.subtitle}</p>
+          </div>
+        </header>
+      ) : null}
       <ThreadView<PortalThreadItem>
         days={buildPortalThread(messages, today)}
         loaded
@@ -161,6 +196,7 @@ export function PortalChannel({
           <PortalMessageRow
             key={item.key}
             item={item}
+            oneToOne={direct !== null}
             href={(path) => portalHref(path, client, clients)}
           />
         )}
@@ -176,7 +212,15 @@ export function PortalChannel({
 }
 
 /** Uma mensagem do fio, com o post ou o projeto de que fala (se houver). */
-function PortalMessageRow({ item, href }: { item: PortalThreadItem; href: (path: string) => string }) {
+function PortalMessageRow({
+  item,
+  href,
+  oneToOne,
+}: {
+  item: PortalThreadItem
+  href: (path: string) => string
+  oneToOne: boolean
+}) {
   const { message, continued } = item
   const context = message.post
     ? { icon: Megaphone, label: message.post.title, path: `/portal/posts/${message.post.id}` }
@@ -185,7 +229,7 @@ function PortalMessageRow({ item, href }: { item: PortalThreadItem; href: (path:
       : null
 
   return (
-    <PortalMessageBubble message={message} time={toTimeLabel(message.created_at)} continued={continued}>
+    <PortalMessageBubble message={message} time={toTimeLabel(message.created_at)} continued={continued} oneToOne={oneToOne}>
       {context ? (
         <Link
           href={href(context.path)}

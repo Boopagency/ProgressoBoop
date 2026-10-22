@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { loadPostThread, markChannelRead, sendMessage } from "@/features/channels/actions"
 import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref } from "@/features/channels/logic"
-import { MessageItem, useSeenBy } from "@/features/channels/message-item"
+import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
 import { useUnread } from "@/features/channels/unread-provider"
 import { useThread } from "@/features/channels/use-thread"
@@ -34,7 +34,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
     if (result.ok && !before) setChannelId(result.data.channelId)
     return result
   })
-  const seenBy = useSeenBy(thread.messages, thread.reads)
+  const { seenBy, readers } = useReadReceipts(thread.messages, thread.reads)
   const days = buildThread(thread.messages ?? [], [], today)
 
   async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
@@ -54,7 +54,8 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
   }
 
   return (
-    <aside aria-label="Conversa do post" className={cn("flex min-h-0 flex-col", className)}>
+    // No celular (o post em tela cheia), o campo fica acima da barrinha de baixo do iPhone.
+    <aside aria-label="Conversa do post" className={cn("flex min-h-0 flex-col max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]", className)}>
       <div role="tablist" aria-label="Conversa" className="flex shrink-0 items-center gap-1 border-b px-3 pt-3">
         {(
           [
@@ -113,6 +114,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
                   key={item.key}
                   message={item.message}
                   seenBy={seenBy.get(item.message.id)}
+                  readers={readers.get(item.message.id)}
                   continued={item.continued}
                   showPost={false}
                   allowInternal
@@ -122,7 +124,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
               ) : null
             }
           />
-          <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
+          <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong max-md:py-1.5 max-md:text-[11.5px] max-md:leading-4">
             O cliente lê esta conversa (inclusive o que foi escrito antes). Para falar só com a equipe, marque Interno
             ao escrever (ou use a aba Interno).
           </p>

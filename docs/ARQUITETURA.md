@@ -1115,7 +1115,8 @@ o cliente lê e escreve nele, menos nas mensagens internas.
   excluir. **Nova conversa** abre (ou cria) a conversa direta com a pessoa.
 - Endereços: `?canal=<id>`, `?cliente=<id>` (o canal do cliente; com `q=`,
   já busca nele, como vem da busca geral) e `&ver=pendentes`. No celular, a
-  lista e a conversa são telas separadas.
+  lista e a conversa são telas separadas, como num aplicativo de conversa
+  (8.2).
 
 ### Decisões (`/decisoes`)
 
@@ -1613,8 +1614,41 @@ Abaixo do `md` (768 px), o admin e o portal funcionam como um aplicativo
 - **Toque**: botões (`Button`, `Toggle`, o fechar dos diálogos, a busca e o
   sino do topo) têm área de toque de 44 px pela classe `touch-target`
   (`globals.css`), sem mudar o tamanho que se vê; campos com letra de 16 px
-  (#70); nada fica só no passar do mouse (as ações das mensagens passam a
-  abrir ao segurar a mensagem no PR 2 da #73).
+  (#70); nada fica só no passar do mouse (as ações das mensagens abrem ao
+  segurar a mensagem, `hooks/use-long-press.ts`).
+- **Teclado**: `VisualViewportVars` (`components/layout/visual-viewport.tsx`,
+  no layout raiz) põe no `<html>` a altura e o topo da parte visível da tela
+  com o teclado aberto (`--vv-height`, `--vv-top`) e a área segura de baixo
+  (`--vv-safe-bottom`, zero com o teclado aberto). As conversas em tela
+  cheia e o post em tela cheia usam essas variáveis, para o campo de
+  escrever subir com o teclado sem zoom (#70 continua valendo).
+- **Comunicação estilo WhatsApp** (admin e portal):
+  - **Lista** (`MobileChannelList` em `channels/channel-list.tsx`; no portal,
+    `ConversationList` em `app/portal/comunicacao/page.tsx`): todas as
+    conversas, a mais recente primeiro, com a foto, o nome, a última
+    mensagem ("Você:" ou o primeiro nome nos canais com várias pessoas), a
+    hora (`listTimeLabel`: hora hoje, "Ontem", dia da semana, `dd/MM`) e as
+    não lidas. No admin, busca pelo nome, filtros (Não lidas, Pendentes,
+    Arquivadas) e o botão de nova conversa (folha com equipe, cliente ou
+    canal novo). A última mensagem de cada canal vem de uma consulta só
+    (`getChannelPreviews` e `getPortalConversationPreviews`), só leitura.
+  - **Conversa em tela cheia**: topo com voltar, foto e nome (no admin, os
+    pendentes num botão); balões com a "pontinha", a hora dentro do balão e,
+    nas próprias mensagens do admin, os tiques do "Visto por" (#61): ✓ ainda
+    ninguém leu, ✓✓ azul alguém leu (`readersByMessage`); nas conversas a
+    dois, sem foto e nome em cada balão. Abre na última mensagem e continua
+    no fim quando a tela muda de tamanho (teclado, imagens).
+  - **Campo** preso embaixo: "Mensagem", botão redondo de enviar (não fecha
+    o teclado) e "+" com Pedido de ajuste e Interno, que aparecem como
+    etiquetas acima do campo. No celular, Enter pula linha; envia pelo botão.
+  - **Segurar a mensagem** abre a folha "Mensagem" (`MessageActionsSheet`):
+    o texto, quem viu e as ações do menu "…" do computador (virar tarefa,
+    resolver, pedido de ajuste, interna, editar, apagar), mais "Copiar
+    texto". Vale no canal, nas conversas diretas, no chat do post e na
+    conversa do projeto.
+  - No portal, a lista fica no lugar das abas (`?conversa=equipe` ou o id
+    da conversa direta abre a conversa); o chat do post e do projeto no
+    portal ganham os mesmos balões.
 - **Largura**: `scripts/check-mobile-width.mjs` confere o `scrollWidth` de
   todas as rotas em 360, 390 e 430 px (veja o README).
 

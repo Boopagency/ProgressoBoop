@@ -1,7 +1,7 @@
 "use client"
 
 import { Loader2 } from "lucide-react"
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import type { ThreadItem } from "@/features/channels/logic"
@@ -49,6 +49,7 @@ export function ThreadView<Item extends { key: string } = ThreadItem>({
   const [loadingOlder, setLoadingOlder] = useState(false)
   const lastDay = days[days.length - 1]
   const lastKey = lastDay?.items[lastDay.items.length - 1]?.key ?? null
+  const hasDays = days.length > 0
 
   useLayoutEffect(() => {
     const element = scroller.current
@@ -61,6 +62,19 @@ export function ThreadView<Item extends { key: string } = ThreadItem>({
     atEnd.current = true
     element.scrollTop = element.scrollHeight
   }, [scrollToEndKey])
+
+  // A conversa encolhe (o teclado do celular abriu) ou cresce (a capa de um
+  // post carregou): quem estava no fim continua vendo a última mensagem.
+  useEffect(() => {
+    const element = scroller.current
+    if (!element || typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(() => {
+      if (atEnd.current) element.scrollTop = element.scrollHeight
+    })
+    observer.observe(element)
+    if (element.firstElementChild) observer.observe(element.firstElementChild)
+    return () => observer.disconnect()
+  }, [loaded, hasDays])
 
   async function loadOlder() {
     const element = scroller.current
@@ -81,7 +95,8 @@ export function ThreadView<Item extends { key: string } = ThreadItem>({
         const element = event.currentTarget
         atEnd.current = element.scrollHeight - element.scrollTop - element.clientHeight < STICK_DISTANCE
       }}
-      className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain", className)}
+      // No celular, o fundo da conversa é levemente cinza e os balões ficam por cima.
+      className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:bg-muted/50", className)}
       role="log"
       aria-live="polite"
       aria-relevant="additions"

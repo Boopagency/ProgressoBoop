@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <AppSidebar />
           <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden bg-canvas md:peer-data-[variant=inset]:rounded-[1.375rem] md:peer-data-[variant=inset]:shadow-none">
             <AppTopbar notifications={notifications} />
-            <div className="flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto">{children}</div>
+            <div className="flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto md:[scrollbar-gutter:stable]">{children}</div>
           </SidebarInset>
           <AppTabBar />
           <PushRefresh />

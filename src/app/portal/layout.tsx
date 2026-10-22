@@ -47,7 +47,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         <PortalSidebar user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} clients={user.clients} />
         <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden bg-canvas md:peer-data-[variant=inset]:rounded-[1.375rem] md:peer-data-[variant=inset]:shadow-none">
           <PortalTopbar clients={user.clients} />
-          <div className="portal-motion flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto">{children}</div>
+          <div className="portal-motion flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto md:[scrollbar-gutter:stable]">{children}</div>
         </SidebarInset>
         <PortalTabBar user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} clients={user.clients} />
         <PushRefresh />

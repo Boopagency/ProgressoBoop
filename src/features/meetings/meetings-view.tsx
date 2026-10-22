@@ -33,6 +33,7 @@ import { ITEM_MAX } from "@/features/meetings/validation"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { formatMonthYear, formatWeekdayShort, parseDateKey } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import type { CalendarEvent, DateKey, MeetingItem, MeetingRecord } from "@/lib/types"
@@ -81,6 +82,7 @@ export function MeetingsView({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const kind = parseKind(searchParams.get("tipo"))
+  const bodyRef = useViewFade(kind)
   const [draft, setDraft] = useState(query)
   const [isSearching, startSearch] = useTransition()
   const [dialog, setDialog] = useState<EventDialogState>({ open: false, key: 0, mode: "meeting" })
@@ -215,7 +217,7 @@ export function MeetingsView({
         />
       </PageToolbar>
 
-      <PageBody width="reading">
+      <PageBody ref={bodyRef} width="reading">
         {searching ? (
           <p className={cn("-mb-4 text-[13px] text-muted-foreground", isSearching && "opacity-60")} aria-live="polite">
             {visibleUpcoming.length + visibleHistory.length === 0

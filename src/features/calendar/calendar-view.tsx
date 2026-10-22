@@ -20,6 +20,7 @@ import { PostDialog, usePostDialog } from "@/features/content/post-dialog"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { MonthView } from "@/features/calendar/month-view"
 import { WeekView } from "@/features/calendar/week-view"
+import { useViewFade } from "@/hooks/use-view-fade"
 import {
   addDaysToKey,
   addMonthsToKey,
@@ -87,6 +88,7 @@ export function CalendarView({
   }
 
   const range = view === "week" ? weekRangeOf(anchor) : monthGridRangeOf(anchor)
+  const bodyRef = useViewFade(`${view}:${range.start}`)
   const days = eachDayKey(range)
   const items = itemsByDay(range, events, tasks, posts)
   const showsToday = isWithin(today, view === "week" ? range : monthRangeOf(anchor))
@@ -181,7 +183,7 @@ export function CalendarView({
         <Legend />
       </PageToolbar>
 
-      <PageBody>
+      <PageBody ref={bodyRef}>
         {view === "week" ? (
           <WeekView
             days={days}

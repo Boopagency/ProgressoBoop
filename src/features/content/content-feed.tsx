@@ -22,6 +22,7 @@ import {
 } from "@/features/content/logic"
 import { clientColor, StageDot } from "@/features/content/post-meta"
 import { BIO_MAX, HANDLE_MAX } from "@/features/content/validation"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { CONTENT_FORMAT_LABEL, CONTENT_STAGE_LABEL } from "@/lib/labels"
 import type { Client, ContentFormat, DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -65,6 +66,7 @@ export function ContentFeed({
   className?: string
 }) {
   const [filter, setFilter] = useState<FeedFilter>("planned")
+  const gridRef = useViewFade<HTMLUListElement>(filter)
   const [, startTransition] = useTransition()
   const [optimistic, pinOptimistic] = useOptimistic(posts, (current: PostSummary[], change: { id: string; pinned: boolean }) =>
     current.map((post) => (post.id === change.id ? { ...post, pinned: change.pinned } : post))
@@ -105,7 +107,7 @@ export function ContentFeed({
             : "Nenhum post de Instagram planejado. Stories não entram no feed."}
         </p>
       ) : (
-        <ul aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
+        <ul ref={gridRef} aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
           {shown.map((post) => (
             <FeedTile key={post.id} post={post} today={today} onOpen={onOpen} onTogglePin={togglePin} />
           ))}

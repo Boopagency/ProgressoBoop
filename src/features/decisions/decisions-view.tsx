@@ -29,6 +29,7 @@ import { compareProjects } from "@/features/projects/logic"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { formatMonthYear, formatShortDate, todayKey } from "@/lib/dates"
 import { TASK_AREA_LABEL, TASK_AREAS, isTaskArea } from "@/lib/labels"
 import type { DateKey, Decision, MeetingRecord } from "@/lib/types"
@@ -56,6 +57,8 @@ export function DecisionsView({
   const [filters, setFilters] = useState<DecisionFilters>(
     initialQuery ? { ...DEFAULT_DECISION_FILTERS, status: "all", query: initialQuery } : DEFAULT_DECISION_FILTERS
   )
+  // A busca digitada não anima; só as trocas de status, área e origem.
+  const bodyRef = useViewFade(`${filters.status}:${filters.area}:${filters.origin}`)
   const [dialog, setDialog] = useState<DecisionDialogState>({ open: false, key: 0 })
   useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1 })))
   const meetingDate = new Map(meetings.map((meeting) => [meeting.id, meeting.occurs_on]))
@@ -148,7 +151,7 @@ export function DecisionsView({
         </div>
       </PageToolbar>
 
-      <PageBody>
+      <PageBody ref={bodyRef}>
         {decisions.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
             <div className="flex size-10 items-center justify-center rounded-full bg-muted">

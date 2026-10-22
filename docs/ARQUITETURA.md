@@ -1523,18 +1523,28 @@ Regras:
   das áreas e das seções.
 - **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
 - **Carregamento:** cada `loading.tsx` usa `PageSkeleton`
-  (`components/layout/page-skeleton.tsx`: moldura sem animação, cabeçalho,
-  linha de filtros opcional e corpo) com a geometria da tela; quando a tela
-  chega, nada muda de lugar. O genérico de `(app)` tem linha de filtros;
+  (`components/layout/page-skeleton.tsx`: moldura, cabeçalho, linha de
+  filtros opcional e corpo) com a geometria da tela; quando a tela chega,
+  nada muda de lugar. O esqueleto só aparece depois de 140ms, com fade
+  (`animate-skeleton-in`): numa tela rápida ele nem pisca. O genérico de `(app)` tem linha de filtros;
   Hoje, Tarefas, Calendário e Conteúdo têm o próprio; Clientes, Processos,
   Relatórios e as páginas de projeto e reunião, o sem linha de filtros.
 - **Transição:** o `PageContainer` entra com `motion-safe:animate-page-in`
-  (fade de 0 a 1 e subida de 4px em 200ms, `globals.css`). Anima quando a tela
-  monta: troca de tela pelo menu, abrir um detalhe e o fim do carregamento.
-  Filtros na URL, `router.refresh()` e mudanças dentro da tela não animam (a
+  (fade de 0 a 1 e subida de 6px em 300ms, desacelerando, `globals.css`).
+  Anima quando a tela monta: troca de tela pelo menu, abrir um detalhe e o
+  fim do carregamento. Filtros na URL e `router.refresh()` não animam (a
   moldura continua montada). O menu e o topo ficam no layout e não se mexem.
   Com "reduzir movimento" no sistema, não há animação. Telas fora do
   `PageContainer` (Comunicações, em tela cheia) usam a mesma classe na raiz.
+- **Troca de visão na mesma tela** (Calendário | Quadro | 7 dias, Lista |
+  Quadro, Mês | Semana, Todas | Minhas, abas do Financeiro e de Indicadores):
+  só o miolo entra com o mesmo fade (`useViewFade` ou `ViewFade`, com a
+  visão como chave); título, filtros e números ficam parados. Nada é montado
+  de novo, então o estado das listas continua.
+- **Barra de rolagem:** a área que rola reserva o espaço da barra
+  (`scrollbar-gutter: stable`, do md para cima). Sem isso, no Windows a barra
+  aparecia e sumia entre visões de alturas diferentes e a tela inteira, com o
+  título, pulava para o lado.
 
 Aplicação (issue #40): a base entrou no PR 1, as telas do admin no PR 2 e o
 portal no PR 3. No portal, as telas já vinham no esqueleto (#46); o PR 3

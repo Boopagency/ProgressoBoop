@@ -7,6 +7,7 @@ import { SegmentedControl } from "@/components/segmented-control"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ViewFade } from "@/components/view-fade"
 import { isWeekend } from "@/features/calendar/logic"
 import type { CalendarMode } from "@/features/content/filters"
 import { comparePosts, groupByDay, postsInRange, type PostSummary } from "@/features/content/logic"
@@ -131,22 +132,24 @@ export function ContentCalendar({
         <SegmentedControl aria-label="Período" value={mode} onValueChange={(next) => onNavigate({ mode: next })} options={MODE_OPTIONS} />
       </div>
 
-      {mode === "month" ? (
-        <>
-          <MonthGrid days={days} month={monthRangeOf(reference).start.slice(0, 7)} today={today} byDay={byDay} onOpen={onOpen} />
-          <DayList
-            days={days.filter((day) => isWithin(day, monthRangeOf(reference)) && (byDay.has(day) || day === today))}
-            today={today}
-            byDay={byDay}
-            onOpen={onOpen}
-            onCreate={onCreate}
-            emptyText="Nenhum post neste mês."
-            className="md:hidden"
-          />
-        </>
-      ) : (
-        <WeekGrid days={days} today={today} byDay={byDay} onOpen={onOpen} onCreate={onCreate} />
-      )}
+      <ViewFade view={`${mode}:${label}`}>
+        {mode === "month" ? (
+          <>
+            <MonthGrid days={days} month={monthRangeOf(reference).start.slice(0, 7)} today={today} byDay={byDay} onOpen={onOpen} />
+            <DayList
+              days={days.filter((day) => isWithin(day, monthRangeOf(reference)) && (byDay.has(day) || day === today))}
+              today={today}
+              byDay={byDay}
+              onOpen={onOpen}
+              onCreate={onCreate}
+              emptyText="Nenhum post neste mês."
+              className="md:hidden"
+            />
+          </>
+        ) : (
+          <WeekGrid days={days} today={today} byDay={byDay} onOpen={onOpen} onCreate={onCreate} />
+        )}
+      </ViewFade>
 
       {undated.length > 0 ? <UndatedPosts posts={undated} today={today} onOpen={onOpen} /> : null}
     </div>

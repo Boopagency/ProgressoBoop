@@ -11,9 +11,11 @@ import { LineChart } from "@/components/charts/line-chart"
 import { KpiTile } from "@/components/kpi-tile"
 import { PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { PanelCard } from "@/components/panel-card"
+import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ViewFade } from "@/components/view-fade"
 import { AlertList } from "@/features/finance/finance-ui"
 import { formatMoney, formatMoneyAxis, formatMoneyShort } from "@/features/finance/money"
 import type { MetricArea } from "@/features/metrics/catalog"
@@ -65,7 +67,8 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
       />
 
       <PageToolbar role="group" aria-label="Período">
-        <nav aria-label="Tipo de período" className="inline-flex rounded-full bg-card p-1 shadow-card">
+        <nav aria-label="Tipo de período" className="group/pill relative inline-flex rounded-full bg-card p-1 shadow-card">
+          <PillIndicator selector="[aria-current=page]" active={links.kinds.find((kind) => kind.active)?.key ?? ""} />
           {links.kinds.map((kind) => (
             <Link
               key={kind.key}
@@ -73,8 +76,8 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
               scroll={false}
               aria-current={kind.active ? "page" : undefined}
               className={cn(
-                "inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground hover:text-foreground",
-                kind.active && "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
+                "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground",
+                kind.active && PILL_ACTIVE
               )}
             >
               {kind.label}
@@ -139,38 +142,41 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
         </ul>
       </nav>
 
-      {dashboard.period.current || dashboard.period.future ? (
-        <p className="mt-4 text-xs text-muted-foreground">
-          {dashboard.period.future
-            ? "Período futuro: o financeiro mostra a previsão (contratos, custos fixos e lançamentos agendados)."
-            : "Período em andamento: o financeiro soma o realizado e o que ainda vence até o fim do período, como no DRE."}
-        </p>
-      ) : null}
+      {/* Troca de área, período ou comparação: os números entram com fade; título e filtros ficam. */}
+      <ViewFade view={`${area}:${dashboard.period.label}:${dashboard.comparison.label}`}>
+        {dashboard.period.current || dashboard.period.future ? (
+          <p className="mt-4 text-xs text-muted-foreground">
+            {dashboard.period.future
+              ? "Período futuro: o financeiro mostra a previsão (contratos, custos fixos e lançamentos agendados)."
+              : "Período em andamento: o financeiro soma o realizado e o que ainda vence até o fim do período, como no DRE."}
+          </p>
+        ) : null}
 
-      <section aria-label="Indicadores" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {dashboard.snapshots.map((snapshot) => (
-          <KpiTile
-            key={snapshot.key}
-            label={snapshot.label}
-            value={formatMetric(snapshot.value, snapshot.unit)}
-            delta={metricDelta(snapshot.value, snapshot.previous, snapshot.unit, snapshot.better, compareShort)}
-            trend={snapshot.trend}
-            alert={isAlert(snapshot)}
-            onSelect={() => setSelected(snapshot)}
-          />
-        ))}
-      </section>
+        <section aria-label="Indicadores" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {dashboard.snapshots.map((snapshot) => (
+            <KpiTile
+              key={snapshot.key}
+              label={snapshot.label}
+              value={formatMetric(snapshot.value, snapshot.unit)}
+              delta={metricDelta(snapshot.value, snapshot.previous, snapshot.unit, snapshot.better, compareShort)}
+              trend={snapshot.trend}
+              alert={isAlert(snapshot)}
+              onSelect={() => setSelected(snapshot)}
+            />
+          ))}
+        </section>
 
-      {area === "overview" && dashboard.alerts.length > 0 ? (
-        <PanelCard id="indicadores-alertas" title="Pede atenção" className="mt-6">
-          <AlertList alerts={dashboard.alerts} />
-        </PanelCard>
-      ) : null}
+        {area === "overview" && dashboard.alerts.length > 0 ? (
+          <PanelCard id="indicadores-alertas" title="Pede atenção" className="mt-6">
+            <AlertList alerts={dashboard.alerts} />
+          </PanelCard>
+        ) : null}
 
-      {dashboard.financial && area !== "overview" ? <FinancialSection charts={dashboard.financial} /> : null}
-      {dashboard.financial && area === "overview" ? <OverviewCharts charts={dashboard.financial} /> : null}
-      {dashboard.commercial ? <CommercialSection charts={dashboard.commercial} /> : null}
-      {dashboard.operational ? <OperationalSection charts={dashboard.operational} /> : null}
+        {dashboard.financial && area !== "overview" ? <FinancialSection charts={dashboard.financial} /> : null}
+        {dashboard.financial && area === "overview" ? <OverviewCharts charts={dashboard.financial} /> : null}
+        {dashboard.commercial ? <CommercialSection charts={dashboard.commercial} /> : null}
+        {dashboard.operational ? <OperationalSection charts={dashboard.operational} /> : null}
+      </ViewFade>
 
       <MetricSheet snapshot={selected} period={dashboard.period.label} comparison={dashboard.comparison.label} onOpenChange={(open) => !open && setSelected(null)} />
     </PageContainer>

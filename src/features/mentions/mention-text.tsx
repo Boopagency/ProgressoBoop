@@ -42,8 +42,9 @@ export const MENTION_ICON: Record<MentionKind, LucideIcon> = {
 
 const URL_PATTERN = /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g
 
+// Em linha (não um bloco): um nome longo quebra como texto, com o fundo em cada linha.
 const CHIP =
-  "mx-px inline-flex max-w-full items-baseline gap-1 rounded-md bg-brand/10 px-1.5 align-baseline font-medium text-brand-ink no-underline transition-colors [overflow-wrap:anywhere]"
+  "mx-px rounded-md bg-brand/10 px-1 py-px font-medium text-brand-ink no-underline box-decoration-clone transition-colors [overflow-wrap:anywhere]"
 const CHIP_LINK = "hover:bg-brand/20 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
 
 /** Texto solto com os links clicáveis. */
@@ -66,10 +67,16 @@ function Linkified({ text }: { text: string }) {
 
 function ChipContent({ mention }: { mention: Mention }) {
   const Icon = MENTION_ICON[mention.kind]
+  // O ícone fica sempre junto da primeira palavra (não sobra sozinho no fim da linha).
+  const space = mention.label.indexOf(" ")
+  const first = space === -1 ? mention.label : mention.label.slice(0, space)
   return (
     <>
-      <Icon className="size-3.5 shrink-0 translate-y-0.5" aria-hidden="true" />
-      <span>{mention.label}</span>
+      <span className="whitespace-nowrap">
+        <Icon className="mr-1 inline size-3.5 -translate-y-px" aria-hidden="true" />
+        {first}
+      </span>
+      {space === -1 ? null : mention.label.slice(space)}
     </>
   )
 }

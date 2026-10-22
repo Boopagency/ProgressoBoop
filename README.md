@@ -36,6 +36,17 @@ cadastro: as contas são criadas no Supabase (veja "Contas" abaixo).
 | `npm run lint`      | ESLint                                      |
 | `npm run typecheck` | gera os tipos de rota e roda o TypeScript   |
 
+**Celular: nada rola para o lado.** `scripts/check-mobile-width.mjs` abre
+todas as telas do admin e do portal em 360, 390 e 430 px e confere se alguma
+passa da largura da tela. Precisa do Playwright, que não é dependência do
+projeto, e das contas em variáveis de ambiente (nunca em arquivo):
+
+```bash
+npm i --no-save playwright && npx playwright install chromium
+BASE_URL=http://localhost:3000 TEAM_EMAIL=… TEAM_PASSWORD=… \
+CLIENT_EMAIL=… CLIENT_PASSWORD=… node scripts/check-mobile-width.mjs
+```
+
 ### Variáveis de ambiente
 
 | Variável                               | Tipo   | Valor                                              |

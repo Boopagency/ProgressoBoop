@@ -6,6 +6,7 @@ import {
   BellRing,
   CheckCheck,
   CircleCheck,
+  HeartHandshake,
   ListTodo,
   MessageCircle,
   MessageSquare,
@@ -62,6 +63,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   client_approval: CircleCheck,
   client_change_request: PencilLine,
   task_assigned: ListTodo,
+  client_referral: HeartHandshake,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

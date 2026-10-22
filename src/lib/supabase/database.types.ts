@@ -792,6 +792,7 @@ export type Database = {
           reached_stage: Database["public"]["Enums"]["deal_stage"]
           recurrence_id: string | null
           recurring_cents: number
+          referred_by_client_id: string | null
           service: string | null
           source: Database["public"]["Enums"]["lead_source"]
           stage: Database["public"]["Enums"]["deal_stage"]
@@ -821,6 +822,7 @@ export type Database = {
           reached_stage?: Database["public"]["Enums"]["deal_stage"]
           recurrence_id?: string | null
           recurring_cents?: number
+          referred_by_client_id?: string | null
           service?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -850,6 +852,7 @@ export type Database = {
           reached_stage?: Database["public"]["Enums"]["deal_stage"]
           recurrence_id?: string | null
           recurring_cents?: number
+          referred_by_client_id?: string | null
           service?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -1886,6 +1889,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          receives_referrals: boolean
           role: string | null
         }
         Insert: {
@@ -1893,6 +1897,7 @@ export type Database = {
           created_at?: string
           full_name: string
           id: string
+          receives_referrals?: boolean
           role?: string | null
         }
         Update: {
@@ -1900,6 +1905,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          receives_referrals?: boolean
           role?: string | null
         }
         Relationships: []
@@ -2498,6 +2504,27 @@ export type Database = {
         Args: { read_until: string; target_channel: string }
         Returns: undefined
       }
+      portal_refer_lead: {
+        Args: {
+          referral_company: string
+          referral_email: string
+          referral_name: string
+          referral_note: string
+          referral_phone: string
+          target_client: string
+        }
+        Returns: string
+      }
+      portal_referrals: {
+        Args: { target_client: string }
+        Returns: {
+          company: string
+          contact_name: string
+          created_at: string
+          id: string
+          status: string
+        }[]
+      }
       portal_review_post: {
         Args: { decision: string; note?: string; target_post: string }
         Returns: string
@@ -2683,6 +2710,7 @@ export type Database = {
         | "client_approval"
         | "client_change_request"
         | "task_assigned"
+        | "client_referral"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -2912,6 +2940,7 @@ export const Constants = {
         "client_approval",
         "client_change_request",
         "task_assigned",
+        "client_referral",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

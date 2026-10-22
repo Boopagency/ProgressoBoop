@@ -21,6 +21,7 @@ export type NotificationKind =
   | "client_approval"
   | "client_change_request"
   | "task_assigned"
+  | "client_referral"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -83,6 +84,9 @@ export function describeNotification(item: AppNotification, clientName?: string 
             excerpt: null,
           }
         : { actor, action: "atribuiu a você", subject: item.title, excerpt: null }
+    case "client_referral":
+      // Título: a empresa ou o nome de quem foi indicado; trecho: o contato.
+      return { actor: fromClient, action: "indicou", subject: item.title, excerpt: item.body }
   }
 }
 

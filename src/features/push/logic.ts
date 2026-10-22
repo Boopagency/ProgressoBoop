@@ -74,6 +74,7 @@ const TEAM_KINDS = new Set<string>([
   "client_approval",
   "client_change_request",
   "task_assigned",
+  "client_referral",
 ] satisfies NotificationKind[])
 
 const CLIENT_KINDS = new Set<string>([

@@ -3,6 +3,7 @@ import "server-only"
 import type { ThreadMessage } from "@/features/channels/logic"
 import { MESSAGE_COLUMNS } from "@/features/channels/queries"
 import { parseBody, parseNewMessage } from "@/features/channels/validation"
+import { mentionPlainText } from "@/features/mentions/logic"
 import { setAssignees } from "@/features/tasks/assignees"
 import { isDateKey } from "@/lib/dates"
 import { dbFailure } from "@/lib/supabase/errors"
@@ -110,7 +111,7 @@ export async function messageTask(
     .from("tasks")
     .insert({
       title,
-      description: message.body !== title ? message.body : null,
+      description: mentionPlainText(message.body) !== title ? mentionPlainText(message.body) : null,
       due_date: input.due_date,
       client_id: message.channel.client_id,
       project_id: message.project_id ?? message.post?.project_id ?? null,

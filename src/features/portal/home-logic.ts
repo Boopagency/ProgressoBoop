@@ -1,4 +1,5 @@
 import { comparePosts } from "@/features/content/logic"
+import { mentionPlainText } from "@/features/mentions/logic"
 import type { PortalPost } from "@/features/portal/content-logic"
 import type { PortalProject, PortalStepApproval } from "@/features/portal/project-logic"
 import { addDaysToKey, toDateKey, toTimeLabel } from "@/lib/dates"
@@ -46,7 +47,7 @@ export function homeProjects(projects: readonly PortalProject[]): PortalProject[
 
 /** Trecho de uma mensagem numa linha só, cortado no limite. */
 export function messageExcerpt(body: string, max = 140): string {
-  const text = body.replace(/\s+/g, " ").trim()
+  const text = mentionPlainText(body).replace(/\s+/g, " ").trim()
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
 }
 

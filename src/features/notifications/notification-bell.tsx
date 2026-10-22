@@ -280,7 +280,7 @@ export function NotificationBell({ initial }: { initial: NotificationFeed }) {
         <button
           type="button"
           aria-label={unread > 0 ? `Notificações: ${unread} ${unread === 1 ? "não lida" : "não lidas"}` : "Notificações"}
-          className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[state=open]:bg-accent data-[state=open]:text-foreground"
+          className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none touch-target hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[state=open]:bg-accent data-[state=open]:text-foreground"
         >
           <Bell className="size-4" aria-hidden="true" />
           {unread > 0 ? (

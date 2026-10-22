@@ -141,7 +141,7 @@ export function PortalChannel({
   return (
     <section
       aria-label={direct ? `Conversa com ${direct.teamName}` : "Conversa com a equipe"}
-      className="flex h-[calc(100svh-15rem)] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]"
+      className="flex h-[calc(100svh-15rem-var(--app-bottom-bar,0px))] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]"
     >
       <ThreadView<PortalThreadItem>
         days={buildPortalThread(messages, today)}

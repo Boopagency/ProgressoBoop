@@ -66,7 +66,7 @@ export function WeekView({
                   variant="ghost"
                   size="icon-xs"
                   aria-label={`Novo evento em ${formatDayMonth(day)}`}
-                  className="text-muted-foreground opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100"
+                  className="text-muted-foreground opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
                   onClick={() => onCreateEvent(day)}
                 >
                   <Plus />

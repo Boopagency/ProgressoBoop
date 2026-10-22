@@ -3,6 +3,7 @@ import { Bell, CalendarDays, FileText, FolderKanban, House, LayoutGrid, Messages
 /*
  * Menu lateral do portal, no padrão do admin (`components/layout/nav-items.ts`).
  * Comunicação e Notificações levam o contador (não lidas e avisos não lidos).
+ * No celular, o menu de baixo (`portal-tab-bar.tsx`) usa as mesmas seções.
  */
 
 export interface PortalNavItem {
@@ -22,6 +23,9 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { title: "Comunicação", href: "/portal/comunicacao", icon: MessagesSquare, badge: "messages" },
   { title: "Notificações", href: "/portal/notificacoes", icon: Bell, badge: "notifications" },
 ]
+
+/** No menu de baixo do celular, Calendário e Feed ficam juntos em "Conteúdo". */
+export const PORTAL_CONTENT_HREFS = ["/portal/calendario", "/portal/feed"]
 
 /**
  * Item do menu da tela atual. O post aberto conta como Início (de onde o

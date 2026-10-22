@@ -115,6 +115,7 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        sheetOnMobile={false}
         onOpenAutoFocus={(event) => {
           // No celular, abrir o post não põe o foco (e o teclado) em nenhum campo.
           if (state.post && window.matchMedia("(max-width: 767px)").matches) {

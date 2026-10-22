@@ -47,19 +47,23 @@ function DialogOverlay({
   )
 }
 
-/** No celular, o diálogo vira uma folha que sobe de baixo, presa à borda de baixo. */
-const MOBILE_SHEET =
-  "max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:rounded-t-2xl max-md:border-x-0 max-md:border-b-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-md:data-[state=closed]:slide-out-to-bottom-8 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom-8 max-md:data-[state=open]:zoom-in-100"
+/**
+ * No celular, o diálogo vira uma folha que sobe de baixo, presa à borda de
+ * baixo e com a área segura do iPhone. Os diálogos de formulário (`p-0`, com
+ * o rodapé dos botões no fim) ficam com o rodapé colado embaixo.
+ */
+export const MOBILE_SHEET =
+  "max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:max-h-[calc(100dvh-1.5rem)] max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:rounded-t-2xl max-md:border-x-0 max-md:border-b-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-md:[&.p-0]:pb-[env(safe-area-inset-bottom)] max-md:data-[state=closed]:slide-out-to-bottom-8 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom-8 max-md:data-[state=open]:zoom-in-100"
 
 function DialogContent({
   className,
   children,
   showCloseButton = true,
-  sheetOnMobile = false,
+  sheetOnMobile = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
-  /** No celular, abre como folha de baixo para cima. */
+  /** No celular, abre como folha de baixo para cima (o padrão). `false` para quem monta a própria tela cheia. */
   sheetOnMobile?: boolean
 }) {
   return (
@@ -78,7 +82,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity touch-target hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
             <span className="sr-only">Fechar</span>

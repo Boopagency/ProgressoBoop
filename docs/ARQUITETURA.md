@@ -1419,6 +1419,7 @@ rodapé tem quem está logado e "Sair".
 | Componente           | Papel                                                          |
 | -------------------- | -------------------------------------------------------------- |
 | `AppSidebar`         | navegação + usuário/sair (shadcn Sidebar, variante inset)      |
+| `AppTabBar` / `PortalTabBar` / `MoreSheet` | no celular, o menu de baixo do admin e do portal e a folha "Mais" (8.2) |
 | `PageContainer`      | moldura da tela (largura, margens) e a entrada suave ao trocar de tela (8.1) |
 | `PageHeader`         | título, descrição e ações, com altura fixa (8.1)               |
 | `PageToolbar` / `PageBody` | linha de filtros e o conteúdo, sempre no mesmo lugar (8.1) |
@@ -1474,7 +1475,7 @@ rodapé tem quem está logado e "Sair".
 | `KpiTile`            | indicador: valor, variação colorida pelo sentido bom, tendência e alerta |
 | `ColumnChart` / `LineChart` / `Sparkline` / `BarList` | gráficos em HTML/SVG, com tooltip, teclado (setas), legenda e clique para o detalhe |
 | `PanelCard`          | cartão das páginas de detalhe (título, ação, conteúdo)          |
-| `PortalSidebar` / `PortalTopbar` | menu lateral do portal (troca de cliente, telas, contadores, "Sair") e o topo com a seção ou o "voltar" |
+| `PortalSidebar` / `PortalTopbar` | menu lateral do portal (troca de cliente, telas, contadores, "Sair") e o topo com a seção ou o "voltar" (no celular, Calendário e Feed lado a lado) |
 | `PortalAlertsProvider` | contadores do menu do portal (não lidas da Comunicação e avisos), pelo Realtime e por consulta |
 | `PortalChannel` / `PortalNotificationList` / `StepReviewButtons` | Comunicação, Notificações e a resposta às etapas no portal |
 | `ClientApprovalPanel` / `ClientApprovalBadge` / `ProjectApprovalsCard` | aprovação do cliente na tarefa, nas listas e na página do projeto (equipe) |
@@ -1582,6 +1583,40 @@ primeiro bloco 32px abaixo.
 Depois do PR 2, em todas as telas (menos Comunicações e Processo): título
 em x = 297px (1440) / 424px (1920), y = 97px, e o bloco seguinte em y =
 181px.
+
+### 8.2 No celular: cara de aplicativo
+
+Abaixo do `md` (768 px), o admin e o portal funcionam como um aplicativo
+(issue #73). Do `md` para cima, nada muda.
+
+- **Menu de baixo** (`components/layout/tab-bar.tsx`), no lugar do menu
+  lateral, nas cores do menu (#62). Admin (`AppTabBar`): Hoje (com os pedidos
+  de ajuste pendentes), Tarefas, Conteúdo, Comunicações (com as não lidas) e
+  Mais. Portal (`PortalTabBar`): Início, Conteúdo (Calendário e Feed, que
+  trocam pelo topo), Comunicação e Notificações (com os contadores) e Mais. O
+  item ativo leva a cor da marca. O topo perde o botão do menu lateral.
+- **Mais** (`MoreSheet`): folha de baixo com a conta (Minha conta), o resto
+  do menu, a busca e o Claude (admin), a troca de cliente (portal), o tema e
+  "Sair".
+- **Altura do menu**: `--app-bottom-bar` (3,5rem mais a área segura), posta
+  no layout. O conteúdo tem esse espaço embaixo, e o que fica preso embaixo
+  (Aprovar e Pedir ajuste do post no portal, Comunicações) fica acima do menu.
+- **Área segura**: `viewportFit: "cover"` no layout raiz; o menu de baixo,
+  as folhas, o topo e o post em tela cheia usam `env(safe-area-inset-*)`. Com
+  o iPhone deitado (que já é `md`), o corpo e o menu lateral se afastam do
+  entalhe.
+- **Diálogos viram folhas** que sobem de baixo (`DialogContent` e
+  `AlertDialogContent`, com `MOBILE_SHEET`); os de formulário mantêm o rodapé
+  com os botões no fim. Ficam de fora o post (tela cheia, #74) e a busca, que
+  desce do topo (`sheetOnMobile={false}`). Os painéis laterais (tarefa,
+  evento, Claude) já ocupam a tela toda.
+- **Toque**: botões (`Button`, `Toggle`, o fechar dos diálogos, a busca e o
+  sino do topo) têm área de toque de 44 px pela classe `touch-target`
+  (`globals.css`), sem mudar o tamanho que se vê; campos com letra de 16 px
+  (#70); nada fica só no passar do mouse (as ações das mensagens passam a
+  abrir ao segurar a mensagem no PR 2 da #73).
+- **Largura**: `scripts/check-mobile-width.mjs` confere o `scrollWidth` de
+  todas as rotas em 360, 390 e 430 px (veja o README).
 
 ## 9. Definições de negócio
 

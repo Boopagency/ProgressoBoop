@@ -10,6 +10,7 @@ import {
   type PendingRequest,
   type ThreadData,
 } from "@/features/channels/logic"
+import { mentionPlainText } from "@/features/mentions/logic"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Timestamp } from "@/lib/types"
@@ -140,7 +141,7 @@ export async function getChannelPreviews(channels: ChannelEntry[]): Promise<Reco
     previews[row.channel_id] = {
       author_id: row.author_id,
       kind: row.kind,
-      body: row.body.slice(0, PREVIEW_MAX),
+      body: mentionPlainText(row.body).slice(0, PREVIEW_MAX),
       internal: row.internal,
       created_at: row.created_at,
     }

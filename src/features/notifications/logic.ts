@@ -1,3 +1,4 @@
+import { mentionPlainText } from "@/features/mentions/logic"
 import type { Timestamp } from "@/lib/types"
 
 /*
@@ -58,7 +59,9 @@ export interface NotificationText {
   excerpt: string | null
 }
 
-export function describeNotification(item: AppNotification, clientName?: string | null): NotificationText {
+export function describeNotification(notification: AppNotification, clientName?: string | null): NotificationText {
+  // As menções da mensagem ("@[Título](post:…)") aparecem como "@Título".
+  const item = { ...notification, body: notification.body && mentionPlainText(notification.body) }
   const actor = item.actor_name?.trim() || "Alguém"
   const fromClient = clientName ? `${actor} (${clientName})` : actor
   switch (item.kind) {

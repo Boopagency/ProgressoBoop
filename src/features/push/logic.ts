@@ -1,3 +1,4 @@
+import { mentionPlainText } from "@/features/mentions/logic"
 import { describeNotification, type NotificationKind } from "@/features/notifications/logic"
 import { describePortalNotification, type PortalNotificationKind } from "@/features/portal/notification-logic"
 
@@ -143,7 +144,7 @@ export function pushMessage(audience: PushAudience, row: PushNotificationRow): P
     body = [text.subject, text.excerpt].filter(Boolean).join(": ")
   } else {
     title = row.title?.trim() || (audience === "client" ? "Boop" : "Boop Admin")
-    body = row.body ?? ""
+    body = mentionPlainText(row.body ?? "")
   }
 
   return {

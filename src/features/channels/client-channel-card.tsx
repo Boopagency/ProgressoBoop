@@ -8,6 +8,7 @@ import { PanelCard } from "@/components/panel-card"
 import { loadClientChannel, type ClientChannelSummary } from "@/features/channels/actions"
 import { channelHref, type ThreadMessage } from "@/features/channels/logic"
 import { RequestStatus, useAuthor } from "@/features/channels/message-item"
+import { mentionPlainText } from "@/features/mentions/logic"
 import { formatShortDate, toDateKey, toTimeLabel, todayKey } from "@/lib/dates"
 
 function MessageLine({ message, today }: { message: ThreadMessage; today: string }) {
@@ -20,7 +21,7 @@ function MessageLine({ message, today }: { message: ThreadMessage; today: string
         <span className="tabular-nums">{day === today ? toTimeLabel(message.created_at) : formatShortDate(day, today)}</span>
         {message.post ? <span className="truncate">· {message.post.title}</span> : null}
       </p>
-      <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 break-words whitespace-pre-line text-foreground">{message.body}</p>
+      <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 break-words whitespace-pre-line text-foreground">{mentionPlainText(message.body)}</p>
       {message.kind === "change_request" ? <RequestStatus message={message} className="mt-1" /> : null}
     </li>
   )

@@ -896,6 +896,13 @@ export type Database = {
             referencedRelation: "finance_recurrences"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "deals_referred_by_client_id_fkey"
+            columns: ["referred_by_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
         ]
       }
       decisions: {
@@ -2317,7 +2324,10 @@ export type Database = {
         }
         Returns: string
       }
-      open_client_direct_channel: { Args: { member_id: string }; Returns: string }
+      open_client_direct_channel: {
+        Args: { member_id: string }
+        Returns: string
+      }
       open_direct_channel: { Args: { profile_id: string }; Returns: string }
       portal_channel: {
         Args: { target_client: string }
@@ -2396,7 +2406,11 @@ export type Database = {
         }[]
       }
       portal_direct_messages: {
-        Args: { max_count?: number; older_than?: string; target_channel: string }
+        Args: {
+          max_count?: number
+          older_than?: string
+          target_channel: string
+        }
         Returns: {
           author_name: string
           body: string
@@ -2851,7 +2865,13 @@ export const Constants = {
       activity_action: ["created", "updated", "deleted", "comment"],
       channel_kind: ["client", "internal", "direct"],
       client_approval_result: ["approved", "changes"],
-      client_file_category: ["contract", "briefing", "brand", "report", "other"],
+      client_file_category: [
+        "contract",
+        "briefing",
+        "brand",
+        "report",
+        "other",
+      ],
       client_health: ["healthy", "attention", "at_risk"],
       client_notification_kind: [
         "team_message",

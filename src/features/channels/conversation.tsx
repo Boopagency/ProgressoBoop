@@ -29,6 +29,7 @@ import {
 } from "@/features/channels/logic"
 import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
+import { searchMentions } from "@/features/mentions/actions"
 import { useThread } from "@/features/channels/use-thread"
 import { ChannelIcon, CommunicationKindBadge } from "@/features/communications/communication-meta"
 import { ClientMark } from "@/features/content/post-meta"
@@ -483,6 +484,7 @@ export function Conversation({
           allowRequest={channel.kind === "client"}
           allowInternal={channel.kind === "client"}
           autoFocus
+          mentions={(query) => searchMentions(query, channel.client_id)}
           placeholder={
             withClient
               ? `Mensagem para ${clientDirectPerson(channel, { clientPersonById })}`

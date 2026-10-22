@@ -60,6 +60,8 @@ import {
   type ThreadMessage,
 } from "@/features/channels/logic"
 import { ContentImage } from "@/features/content/content-image"
+import { applyMentions, mentionPlainText, mentionsForEditing } from "@/features/mentions/logic"
+import { MentionText } from "@/features/mentions/mention-text"
 import { FormatIcon, StageDot } from "@/features/content/post-meta"
 import { AssigneePicker } from "@/features/tasks/assignee-picker"
 import { DueDatePicker } from "@/features/tasks/due-date-picker"
@@ -74,26 +76,6 @@ import { formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
 import { CONTENT_STAGE_LABEL, MESSAGE_KIND_LABEL } from "@/lib/labels"
 import type { DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
-
-const URL_PATTERN = /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g
-
-/** Texto da mensagem com os links clicáveis. */
-function MessageText({ text }: { text: string }) {
-  const parts = text.split(URL_PATTERN)
-  return (
-    <>
-      {parts.map((part, index) =>
-        index % 2 === 1 ? (
-          <a key={index} href={part} target="_blank" rel="noreferrer" className="break-all text-brand-ink underline underline-offset-2">
-            {part}
-          </a>
-        ) : (
-          <Fragment key={index}>{part}</Fragment>
-        )
-      )}
-    </>
-  )
-}
 
 /**
  * Quem escreveu: alguém da equipe, uma pessoa do cliente (pelo portal, com o
@@ -233,7 +215,7 @@ function MessageActionsSheet({
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{own ? "Você" : author.name}</span> · {messageTime(message)}
         </p>
-        <p className="mt-0.5 line-clamp-4 text-[14px] leading-5 break-words whitespace-pre-wrap text-foreground">{message.body}</p>
+        <p className="mt-0.5 line-clamp-4 text-[14px] leading-5 break-words whitespace-pre-wrap text-foreground">{mentionPlainText(message.body)}</p>
         {readers.length > 0 ? (
           <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
             <CheckCheck className="size-3.5 shrink-0 text-brand-ink" aria-hidden="true" />
@@ -439,7 +421,9 @@ export function MessageItem({
   const author = useAuthor(message.author_id)
   const mine = message.author_id === currentUser.id
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(message.body)
+  // Editando, as menções aparecem como "@Título" e voltam a ser marcas ao salvar.
+  const editable = mentionsForEditing(message.body)
+  const [draft, setDraft] = useState(editable.text)
   const [taskOpen, setTaskOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -460,7 +444,7 @@ export function MessageItem({
   }
 
   function saveEdit() {
-    const body = draft.trim()
+    const body = applyMentions(draft.trim(), editable.picked)
     if (!body || body === message.body) {
       setEditing(false)
       return
@@ -555,7 +539,7 @@ export function MessageItem({
         icon: Pencil,
         separated: true,
         onSelect: () => {
-          setDraft(message.body)
+          setDraft(editable.text)
           setEditing(true)
         },
       },
@@ -571,7 +555,7 @@ export function MessageItem({
     sheetOnly: true,
     onSelect: () =>
       void navigator.clipboard
-        ?.writeText(message.body)
+        ?.writeText(mentionPlainText(message.body))
         .then(() => toast.success("Texto copiado"))
         .catch(() => toast.error("Não foi possível copiar.")),
   }
@@ -651,7 +635,7 @@ export function MessageItem({
           }
           if (event.key === "Escape") {
             event.preventDefault()
-            setDraft(message.body)
+            setDraft(editable.text)
             setEditing(false)
           }
         }}
@@ -680,7 +664,7 @@ export function MessageItem({
         system && "text-muted-foreground italic"
       )}
     >
-      <MessageText text={message.body} />
+      <MentionText text={message.body} />
       {message.edited_at ? <span className="ml-1 text-[11px] text-muted-foreground">(editada)</span> : null}
       {system ? null : <BubbleMeta message={message} own={own} seen={seen} />}
     </p>

@@ -10,6 +10,7 @@ import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref, type ThreadMessage } from "@/features/channels/logic"
 import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
+import { searchMentions } from "@/features/mentions/actions"
 import { useUnread } from "@/features/channels/unread-provider"
 import { useThread } from "@/features/channels/use-thread"
 import { useTasks } from "@/features/tasks/tasks-provider"
@@ -147,6 +148,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
         allowRequest
         allowInternal
         placeholder="Escreva para o cliente sobre este projeto…"
+        mentions={searchMentions}
         disabledText={
           thread.messages === null
             ? thread.error

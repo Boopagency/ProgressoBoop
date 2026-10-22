@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import { MentionText } from "@/features/mentions/mention-text"
 import { AudioPlayer } from "@/features/voice/audio-player"
 import type { MessageAudio } from "@/features/voice/logic"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
@@ -34,6 +35,7 @@ export function PortalMessageBubble({
   time,
   continued = false,
   oneToOne = false,
+  mentionHref = (path) => path,
   children,
 }: {
   message: BubbleMessage
@@ -43,6 +45,8 @@ export function PortalMessageBubble({
   continued?: boolean
   /** Conversa a dois: no celular, sem a foto e o nome da outra pessoa em cada balão. */
   oneToOne?: boolean
+  /** Endereço das menções (posts e projetos) no portal, com o cliente escolhido. */
+  mentionHref?: (path: string) => string
   /** Dentro do balão, depois do texto (ex.: o post ou projeto de que fala). */
   children?: ReactNode
 }) {
@@ -115,7 +119,11 @@ export function PortalMessageBubble({
               {message.kind === "change_request" && message.resolved ? " · resolvido" : ""}
             </span>
           ) : null}
-          {message.audio ? <AudioPlayer messageId={message.id} durationMs={message.audio.duration_ms} mine={mine} /> : message.body}
+          {message.audio ? (
+            <AudioPlayer messageId={message.id} durationMs={message.audio.duration_ms} mine={mine} />
+          ) : (
+            <MentionText text={message.body} portalHref={mentionHref} />
+          )}
           {/* No celular, a hora fica dentro do balão, no canto. */}
           <time
             dateTime={message.created_at}

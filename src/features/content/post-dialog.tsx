@@ -525,8 +525,10 @@ function PostForm({
         (display: contents) e cada campo ganha a ordem da sua seção.
         relative: os campos escondidos (sr-only) ficam presos a esta rolagem e
         não fazem o diálogo inteiro rolar ao focar um campo.
+        overflow-x-hidden: a rolagem é só para baixo; no celular, nada arrasta
+        o post para o lado (o carrossel tem a própria rolagem).
       */}
-      <div className="relative min-w-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 max-md:flex max-md:flex-1 max-md:flex-col max-md:gap-3 md:px-5 md:pt-5">
+      <div className="relative min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pt-4 pb-4 max-md:flex max-md:flex-1 max-md:flex-col max-md:gap-3 md:px-5 md:pt-5">
         <MobileSection title="Básico" className="max-md:order-1" />
         <MobileSection title="Datas" className="max-md:order-5" />
         <MobileSection title="Frentes" className="max-md:order-7" />

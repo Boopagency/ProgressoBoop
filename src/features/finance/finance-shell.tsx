@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { createContext, use, useMemo, useState, type ReactNode } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { Button } from "@/components/ui/button"
 import { FinanceDialog, type FinanceDialogState } from "@/features/finance/finance-dialog"
 import type { FinanceItem } from "@/features/finance/logic"
@@ -68,7 +69,8 @@ export function FinanceShell({ children }: { children: ReactNode }) {
           }
         />
         {/* py-2: espaço para a sombra das pílulas dentro da rolagem lateral. */}
-        <nav aria-label="Seções do financeiro" className="-mx-4 mt-4 overflow-x-auto px-4 py-2 sm:-mx-2 sm:px-2">
+        <nav aria-label="Seções do financeiro" className="group/pill relative -mx-4 mt-4 overflow-x-auto px-4 py-2 sm:-mx-2 sm:px-2">
+          <PillIndicator selector="[aria-current=page]" active={pathname} />
           <ul className="flex w-max gap-1 rounded-full bg-card p-1 shadow-card">
             {FINANCE_TABS.map((tab) => {
               const active = tab.href === "/financeiro" ? pathname === tab.href : pathname.startsWith(tab.href)
@@ -78,8 +80,8 @@ export function FinanceShell({ children }: { children: ReactNode }) {
                     href={tab.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
-                      active && "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
+                      "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
+                      active && PILL_ACTIVE
                     )}
                   >
                     {tab.label}
@@ -89,7 +91,8 @@ export function FinanceShell({ children }: { children: ReactNode }) {
             })}
           </ul>
         </nav>
-        <div className="pt-4">{children}</div>
+        {/* Troca de aba: o título e as abas ficam; o conteúdo novo (e o esqueleto, depois de um instante) entra com fade. */}
+        <div className="pt-4 [&>:not([aria-busy])]:motion-safe:animate-page-in">{children}</div>
       </PageContainer>
       <FinanceDialog state={dialog} onOpenChange={(open) => setDialog((current) => ({ ...current, open }))} />
     </FinanceDialogContext>

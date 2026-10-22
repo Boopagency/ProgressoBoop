@@ -7,7 +7,9 @@ import { useMemo } from "react"
 import { ColumnChart } from "@/components/charts/column-chart"
 import { KpiTile } from "@/components/kpi-tile"
 import { PanelCard } from "@/components/panel-card"
+import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { Button } from "@/components/ui/button"
+import { ViewFade } from "@/components/view-fade"
 import { monthName, periodLabel } from "@/features/clients/logic"
 import { ledgerHref, StatusChip } from "@/features/finance/finance-ui"
 import {
@@ -69,7 +71,8 @@ export function DreView({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Período" className="inline-flex rounded-full bg-card p-1 shadow-card">
+        <nav aria-label="Período" className="group/pill relative inline-flex rounded-full bg-card p-1 shadow-card">
+          <PillIndicator selector="[aria-current=page]" active={rangeKey} />
           {options.map((option) => (
             <Link
               key={option.key}
@@ -77,8 +80,8 @@ export function DreView({
               scroll={false}
               aria-current={option.key === rangeKey ? "page" : undefined}
               className={cn(
-                "inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground",
-                option.key === rangeKey && "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
+                "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground",
+                option.key === rangeKey && PILL_ACTIVE
               )}
             >
               {option.label}
@@ -93,150 +96,152 @@ export function DreView({
         </Button>
       </div>
 
-      <section aria-label="Resumo do período" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiTile
-          label="Receita bruta no período"
-          value={formatMoney(total.revenue)}
-          hint={`${formatMoneyShort(realizedTotal.revenue)} realizados · ${formatMoneyShort(total.revenue - realizedTotal.revenue)} previstos`}
-        />
-        <KpiTile
-          label="Resultado no período"
-          value={formatMoney(total.result)}
-          alert={total.result < 0}
-          hint={`margem líquida ${formatPercent(total.margin)}`}
-        />
-        <KpiTile
-          label="Margem de contribuição"
-          value={formatPercent(total.contributionMargin)}
-          hint={`${formatMoneyShort(total.contribution)} depois de imposto, taxas e custos diretos`}
-        />
-        <KpiTile
-          label="Resultado médio por mês"
-          value={formatMoney(Math.round(total.result / Math.max(1, months.length)))}
-          alert={total.result < 0}
-          hint={`${months.filter((month) => month.result < 0).length} de ${months.length} meses no vermelho`}
-        />
-      </section>
+      <ViewFade view={rangeKey}>
+        <section aria-label="Resumo do período" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            label="Receita bruta no período"
+            value={formatMoney(total.revenue)}
+            hint={`${formatMoneyShort(realizedTotal.revenue)} realizados · ${formatMoneyShort(total.revenue - realizedTotal.revenue)} previstos`}
+          />
+          <KpiTile
+            label="Resultado no período"
+            value={formatMoney(total.result)}
+            alert={total.result < 0}
+            hint={`margem líquida ${formatPercent(total.margin)}`}
+          />
+          <KpiTile
+            label="Margem de contribuição"
+            value={formatPercent(total.contributionMargin)}
+            hint={`${formatMoneyShort(total.contribution)} depois de imposto, taxas e custos diretos`}
+          />
+          <KpiTile
+            label="Resultado médio por mês"
+            value={formatMoney(Math.round(total.result / Math.max(1, months.length)))}
+            alert={total.result < 0}
+            hint={`${months.filter((month) => month.result < 0).length} de ${months.length} meses no vermelho`}
+          />
+        </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <PanelCard id="grafico-receita" title="Receita bruta por mês">
-          <div className="px-4 pt-4 pb-3">
-            <ColumnChart
-              ariaLabel="Receita bruta por mês"
-              data={months.map((month) => ({
-                key: month.period,
-                label: monthName(month.period).slice(0, 3),
-                title: periodLabel(month.period),
-                value: month.status === "forecast" ? 0 : month.realizedRevenue,
-                forecast: month.revenue - (month.status === "forecast" ? 0 : month.realizedRevenue),
-                current: month.status === "current",
-                href: ledgerHref({ mes: month.period, contas: DRE_LINE_ACCOUNTS.revenue }),
-              }))}
-              format={formatMoney}
-              axisFormat={formatMoneyAxis}
-              legend={{ realized: "Recebido", forecast: "Previsto" }}
-            />
-          </div>
-        </PanelCard>
-        <PanelCard id="grafico-resultado" title="Resultado por mês">
-          <div className="px-4 pt-4 pb-3">
-            <ColumnChart
-              ariaLabel="Resultado por mês"
-              data={months.map((month) => ({
-                key: month.period,
-                label: monthName(month.period).slice(0, 3),
-                title: periodLabel(month.period),
-                value: month.result,
-                projected: month.status === "current" || month.status === "forecast",
-                current: month.status === "current",
-                details: [{ label: "Margem", value: formatPercent(month.margin) }],
-              }))}
-              format={formatMoney}
-              axisFormat={formatMoneyAxis}
-              legend={{ realized: "Realizado", forecast: "Previsto" }}
-            />
-          </div>
-        </PanelCard>
-      </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <PanelCard id="grafico-receita" title="Receita bruta por mês">
+            <div className="px-4 pt-4 pb-3">
+              <ColumnChart
+                ariaLabel="Receita bruta por mês"
+                data={months.map((month) => ({
+                  key: month.period,
+                  label: monthName(month.period).slice(0, 3),
+                  title: periodLabel(month.period),
+                  value: month.status === "forecast" ? 0 : month.realizedRevenue,
+                  forecast: month.revenue - (month.status === "forecast" ? 0 : month.realizedRevenue),
+                  current: month.status === "current",
+                  href: ledgerHref({ mes: month.period, contas: DRE_LINE_ACCOUNTS.revenue }),
+                }))}
+                format={formatMoney}
+                axisFormat={formatMoneyAxis}
+                legend={{ realized: "Recebido", forecast: "Previsto" }}
+              />
+            </div>
+          </PanelCard>
+          <PanelCard id="grafico-resultado" title="Resultado por mês">
+            <div className="px-4 pt-4 pb-3">
+              <ColumnChart
+                ariaLabel="Resultado por mês"
+                data={months.map((month) => ({
+                  key: month.period,
+                  label: monthName(month.period).slice(0, 3),
+                  title: periodLabel(month.period),
+                  value: month.result,
+                  projected: month.status === "current" || month.status === "forecast",
+                  current: month.status === "current",
+                  details: [{ label: "Margem", value: formatPercent(month.margin) }],
+                }))}
+                format={formatMoney}
+                axisFormat={formatMoneyAxis}
+                legend={{ realized: "Realizado", forecast: "Previsto" }}
+              />
+            </div>
+          </PanelCard>
+        </div>
 
-      <PanelCard id="dre-tabela" title="DRE mês a mês" className="mt-6">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-max border-separate border-spacing-0 text-[13px] tabular-nums">
-            <thead>
-              <tr className="text-xs text-muted-foreground">
-                <th scope="col" className="sticky left-0 z-10 bg-card px-4 py-2 text-left font-medium">
-                  Linha
-                </th>
-                {months.map((month) => (
-                  <th key={month.period} scope="col" className="px-3 py-2 text-right font-medium">
-                    <span className="block text-foreground capitalize">{monthName(month.period).slice(0, 3)}/{month.period.slice(2, 4)}</span>
-                    <StatusChip status={month.status} className="mt-1" />
+        <PanelCard id="dre-tabela" title="DRE mês a mês" className="mt-6">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-max border-separate border-spacing-0 text-[13px] tabular-nums">
+              <thead>
+                <tr className="text-xs text-muted-foreground">
+                  <th scope="col" className="sticky left-0 z-10 bg-card px-4 py-2 text-left font-medium">
+                    Linha
                   </th>
-                ))}
-                <th scope="col" className="bg-muted/40 px-4 py-2 text-right font-medium text-foreground">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {DRE_LINES.map((line) => {
-                const accounts = DRE_LINE_ACCOUNTS[line.key]
-                const strong = "strong" in line && line.strong
-                return (
-                  <tr key={line.key} className={cn(strong && "font-medium")}>
-                    <th
-                      scope="row"
-                      title={COMPUTED_HINT[line.key]}
-                      className={cn(
-                        "sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap",
-                        strong ? "font-medium text-foreground" : "text-muted-foreground"
-                      )}
-                    >
+                  {months.map((month) => (
+                    <th key={month.period} scope="col" className="px-3 py-2 text-right font-medium">
+                      <span className="block text-foreground capitalize">{monthName(month.period).slice(0, 3)}/{month.period.slice(2, 4)}</span>
+                      <StatusChip status={month.status} className="mt-1" />
+                    </th>
+                  ))}
+                  <th scope="col" className="bg-muted/40 px-4 py-2 text-right font-medium text-foreground">
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {DRE_LINES.map((line) => {
+                  const accounts = DRE_LINE_ACCOUNTS[line.key]
+                  const strong = "strong" in line && line.strong
+                  return (
+                    <tr key={line.key} className={cn(strong && "font-medium")}>
+                      <th
+                        scope="row"
+                        title={COMPUTED_HINT[line.key]}
+                        className={cn(
+                          "sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap",
+                          strong ? "font-medium text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        {line.label}
+                      </th>
+                      {months.map((month) => (
+                        <DreCell
+                          key={month.period}
+                          value={line.sign * (month[line.key] as number)}
+                          href={accounts.length > 0 ? ledgerHref({ mes: month.period, contas: accounts }) : undefined}
+                          strong={Boolean(strong)}
+                        />
+                      ))}
+                      <DreCell value={line.sign * (total[line.key] as number)} strong={Boolean(strong)} total />
+                    </tr>
+                  )
+                })}
+                <PercentRow label="Margem de contribuição (%)" months={months} pick={(month) => month.contributionMargin} total={total.contributionMargin} />
+                <PercentRow label="Margem líquida (%)" months={months} pick={(month) => month.margin} total={total.margin} />
+                <tr>
+                  <th scope="row" colSpan={months.length + 2} className="sticky left-0 border-t bg-muted/40 px-4 pt-3 pb-1 text-left text-[11px] font-medium tracking-wide text-subtle-foreground uppercase">
+                    Fora do resultado (só caixa)
+                  </th>
+                </tr>
+                {OUTSIDE_LINES.map((line) => (
+                  <tr key={line.key}>
+                    <th scope="row" className="sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
                       {line.label}
                     </th>
                     {months.map((month) => (
                       <DreCell
                         key={month.period}
-                        value={line.sign * (month[line.key] as number)}
-                        href={accounts.length > 0 ? ledgerHref({ mes: month.period, contas: accounts }) : undefined}
-                        strong={Boolean(strong)}
+                        value={line.sign * month[line.key]}
+                        href={ledgerHref({ mes: month.period, contas: [line.account] })}
                       />
                     ))}
-                    <DreCell value={line.sign * (total[line.key] as number)} strong={Boolean(strong)} total />
+                    <DreCell value={line.sign * total[line.key]} total />
                   </tr>
-                )
-              })}
-              <PercentRow label="Margem de contribuição (%)" months={months} pick={(month) => month.contributionMargin} total={total.contributionMargin} />
-              <PercentRow label="Margem líquida (%)" months={months} pick={(month) => month.margin} total={total.margin} />
-              <tr>
-                <th scope="row" colSpan={months.length + 2} className="sticky left-0 border-t bg-muted/40 px-4 pt-3 pb-1 text-left text-[11px] font-medium tracking-wide text-subtle-foreground uppercase">
-                  Fora do resultado (só caixa)
-                </th>
-              </tr>
-              {OUTSIDE_LINES.map((line) => (
-                <tr key={line.key}>
-                  <th scope="row" className="sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
-                    {line.label}
-                  </th>
-                  {months.map((month) => (
-                    <DreCell
-                      key={month.period}
-                      value={line.sign * month[line.key]}
-                      href={ledgerHref({ mes: month.period, contas: [line.account] })}
-                    />
-                  ))}
-                  <DreCell value={line.sign * total[line.key]} total />
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="border-t px-4 py-3 text-xs text-muted-foreground">
-          Regime de caixa, como na planilha: meses passados mostram o que foi recebido e pago; o mês atual soma o que
-          ainda vence; os próximos mostram contratos, custos fixos e lançamentos agendados. Clique num valor para ver
-          os lançamentos.
-        </p>
-      </PanelCard>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="border-t px-4 py-3 text-xs text-muted-foreground">
+            Regime de caixa, como na planilha: meses passados mostram o que foi recebido e pago; o mês atual soma o que
+            ainda vence; os próximos mostram contratos, custos fixos e lançamentos agendados. Clique num valor para ver
+            os lançamentos.
+          </p>
+        </PanelCard>
+      </ViewFade>
     </div>
   )
 }

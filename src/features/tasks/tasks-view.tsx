@@ -15,6 +15,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, type ReactNode } from "react"
 
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,6 +49,7 @@ import { TaskTable } from "@/features/tasks/task-table"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { SavedViewsBar } from "@/features/views/saved-views-bar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { TASK_AREA_LABEL, TASK_AREAS } from "@/lib/labels"
 import type { TaskArea } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -108,6 +110,7 @@ export function TasksView() {
   const params = Object.fromEntries(searchParams)
   const parsed = filtersFromSearchParams(params)
   const view = viewModeFromSearchParams(params)
+  const bodyRef = useViewFade(`${view}:${parsed.person}`)
   const filters: TaskFilters = {
     ...parsed,
     person:
@@ -247,7 +250,7 @@ export function TasksView() {
         <SavedViewsBar query={query} onApply={navigate} className="xl:basis-full" />
       </PageToolbar>
 
-      <PageBody>
+      <PageBody ref={bodyRef}>
         {isEmpty ? (
           <EmptyState
             filtered={filtered}
@@ -278,7 +281,8 @@ export function TasksView() {
 /** Lista, Tabela ou Quadro (ícones; o nome aparece para leitores de tela). */
 function ViewSwitch({ value, onChange }: { value: TaskViewMode; onChange: (view: TaskViewMode) => void }) {
   return (
-    <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-full bg-card p-1 shadow-card xl:ml-1">
+    <div role="radiogroup" aria-label="Modo de exibição" className="group/pill relative flex rounded-full bg-card p-1 shadow-card xl:ml-1">
+      <PillIndicator selector="[aria-checked=true]" active={value} />
       {VIEW_OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -288,9 +292,8 @@ function ViewSwitch({ value, onChange }: { value: TaskViewMode; onChange: (view:
           title={option.label}
           onClick={() => onChange(option.value)}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
-            value === option.value &&
-              "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground"
+            "relative inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
+            value === option.value && PILL_ACTIVE
           )}
         >
           {option.icon}

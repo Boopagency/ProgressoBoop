@@ -38,6 +38,7 @@ import { firstName } from "@/features/tasks/logic"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { DOC_KIND_LABEL, TASK_AREA_LABEL, TASK_AREAS } from "@/lib/labels"
 import { foldText } from "@/lib/text"
 import type { DateKey, DocSummary, TaskArea } from "@/lib/types"
@@ -125,6 +126,7 @@ export function DocsView({
   const searchParams = useSearchParams()
   const { clients, clientById } = useWorkspace()
   const filter = parseFilter(searchParams)
+  const listRef = useViewFade(JSON.stringify(filter))
   const [draft, setDraft] = useState(query)
   const [isSearching, startSearch] = useTransition()
   const [dialog, setDialog] = useState<NewDocDialogState>({ open: false, key: 0 })
@@ -300,7 +302,7 @@ export function DocsView({
                 ) : null}
               </form>
 
-              <div className={cn("transition-opacity", isSearching && "opacity-60")}>
+              <div ref={listRef} className={cn("transition-opacity", isSearching && "opacity-60")}>
                 {searching ? (
                   <section aria-label="Resultados da busca" className="mt-6">
                     <p className="text-[13px] text-muted-foreground" aria-live="polite">

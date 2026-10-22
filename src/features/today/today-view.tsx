@@ -31,6 +31,7 @@ import { TODAY_SCOPE_COOKIE, type TodayScope } from "@/features/today/constants"
 import { ProgressCard } from "@/features/today/progress-card"
 import { SummaryStats } from "@/features/today/summary-stats"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { formatLongDate } from "@/lib/dates"
 import type {
   CalendarEvent,
@@ -77,6 +78,7 @@ export function TodayView({
   const { tasks, today, keepInPlace } = useTasks()
   const { currentUser, projects } = useWorkspace()
   const [scope, setScope] = useState<TodayScope>(initialScope)
+  const bodyRef = useViewFade(scope)
 
   function changeScope(next: TodayScope) {
     setScope(next)
@@ -121,7 +123,7 @@ export function TodayView({
         />
       </PageToolbar>
 
-      <PageBody>
+      <PageBody ref={bodyRef}>
         <SummaryStats summary={summary} />
 
         {/*

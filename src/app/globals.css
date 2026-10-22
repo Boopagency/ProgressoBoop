@@ -301,17 +301,29 @@
 
 /*
  * Transição entre telas: o conteúdo da tela (PageContainer) entra com um fade
- * e uma subida de 4px, curtos. Só o conteúdo anima; o menu e o topo ficam no
- * layout e não se mexem. Usado com `motion-safe:`, então some com "reduzir
- * movimento" no sistema. Ao terminar, não sobra transform no elemento.
+ * e uma subida de 6px, que desacelera no fim (300ms). Só o conteúdo anima; o
+ * menu e o topo ficam no layout e não se mexem. As trocas de visão dentro da
+ * tela (`useViewFade`) e a pílula que desliza (`PillIndicator`) usam o mesmo
+ * tempo e a mesma curva. Usado com `motion-safe:`, então some com "reduzir
+ * movimento" no sistema. Ao terminar, não sobra transform.
+ *
+ * O esqueleto de carregamento só aparece depois de um instante e com fade:
+ * numa tela que chega rápido ele nem chega a piscar.
  */
 @theme {
-  --animate-page-in: page-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  --animate-page-in: page-in 300ms cubic-bezier(0.2, 0, 0, 1);
+  --animate-skeleton-in: skeleton-in 240ms ease-out 140ms backwards;
 
   @keyframes page-in {
     from {
       opacity: 0;
-      transform: translateY(4px);
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes skeleton-in {
+    from {
+      opacity: 0;
     }
   }
 }

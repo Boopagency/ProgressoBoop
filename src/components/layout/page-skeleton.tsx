@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils"
 /*
  * Peças dos `loading.tsx`: a moldura, o cabeçalho e a linha de filtros com a
  * geometria das telas (seção 8.1 da arquitetura), para nada mudar de lugar
- * quando a tela chega. O esqueleto não anima; a tela que chega entra com o fade.
+ * quando a tela chega. O esqueleto aparece com um fade depois de um instante
+ * (numa tela rápida ele nem pisca); a tela que chega entra com o fade dela.
  */
 
 /** Tela carregando: cabeçalho, linha de filtros (opcional) e o corpo. */
@@ -23,7 +24,7 @@ export function PageSkeleton({
   children: ReactNode
 }) {
   return (
-    <PageContainer animate={false} aria-busy="true" aria-label="Carregando">
+    <PageContainer animate={false} aria-busy="true" aria-label="Carregando" className="motion-safe:animate-skeleton-in">
       <PageHeaderSkeleton actions={actions} />
       {toolbar ? (
         <div className="mt-6 flex min-h-9 items-center gap-2">

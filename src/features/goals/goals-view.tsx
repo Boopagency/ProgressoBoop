@@ -17,6 +17,7 @@ import { formatMetric } from "@/features/metrics/format"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { formatShortDate } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import { TASK_AREA_LABEL } from "@/lib/labels"
@@ -72,6 +73,7 @@ function GoalMeter({ progress, expected, label, className }: { progress: number 
 /** Tela Metas: objetivos com resultados-chave que se atualizam pelos dados do sistema. */
 export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; metrics: MetricOption[]; today: DateKey }) {
   const [filter, setFilter] = useState<ObjectiveFilter>("current")
+  const bodyRef = useViewFade(filter)
   const [objectiveDialog, setObjectiveDialog] = useState<ObjectiveDialogState>({ open: false, key: 0 })
   const [keyResultDialog, setKeyResultDialog] = useState<KeyResultDialogState>({ open: false, key: 0 })
   const [isPending, startTransition] = useTransition()
@@ -125,7 +127,7 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
         </PageToolbar>
       ) : null}
 
-      <PageBody width="reading">
+      <PageBody ref={bodyRef} width="reading">
         {goals.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
             <div className="flex size-10 items-center justify-center rounded-full bg-muted">

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ViewFade } from "@/components/view-fade"
 import { loadPost, updatePost } from "@/features/content/actions"
 import { ContentBoard } from "@/features/content/content-board"
 import { ContentCalendar } from "@/features/content/content-calendar"
@@ -187,8 +188,8 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
           value={state.view}
           onValueChange={(view) => navigate({ ...state, view })}
           options={VIEW_OPTIONS}
-          // No celular, as cinco visões dividem a largura (não passam da tela em 360 px).
-          className="self-start max-md:w-full max-md:self-stretch max-md:[&>*]:flex-1 max-md:[&>*]:px-1.5"
+          // No celular, as cinco visões dividem a largura (não passam da tela em 360 px), cada uma pelo tamanho do nome.
+          className="self-start max-md:w-full max-md:self-stretch max-md:[&>*]:flex-auto max-md:[&>*]:px-1.5"
         />
         {/* No feed (o grid real do perfil) e nas ideias só o filtro de cliente vale: os outros somem. */}
         <div
@@ -290,50 +291,53 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
           />
         </section>
 
-        {state.view === "ideas" ? (
-          <IdeasBoard
-            ideas={filterIdeas(ideas, filters.clients)}
-            posts={optimistic}
-            today={today}
-            onOpenIdea={ideaDialog.openIdea}
-            onNewIdea={() => ideaDialog.openNew({ client_id: singleClient })}
-            onOpenPost={dialog.openPost}
-          />
-        ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-            <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
-            <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram
-              tarefas com prazo antes da publicação.
-            </p>
-            <Button size="sm" className="mt-5" onClick={() => openNew()}>
-              Primeiro post
-            </Button>
-          </div>
-        ) : state.view === "board" ? (
-          <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
-        ) : state.view === "list" ? (
-          <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
-        ) : state.view === "feed" ? (
-          feedClient ? (
-            <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} />
-          ) : (
-            <FeedClientPicker
-              clients={clients.filter((client) => client.active)}
-              onPick={(id) => navigate({ ...state, filters: { ...filters, clients: [id] } })}
+        {/* Só a visão troca (com fade); título, filtros e números ficam parados. */}
+        <ViewFade view={state.view}>
+          {state.view === "ideas" ? (
+            <IdeasBoard
+              ideas={filterIdeas(ideas, filters.clients)}
+              posts={optimistic}
+              today={today}
+              onOpenIdea={ideaDialog.openIdea}
+              onNewIdea={() => ideaDialog.openNew({ client_id: singleClient })}
+              onOpenPost={dialog.openPost}
             />
-          )
-        ) : (
-          <ContentCalendar
-            posts={visible}
-            today={today}
-            mode={state.calendar}
-            anchor={state.anchor}
-            onNavigate={(next) => navigate({ ...state, calendar: next.mode ?? state.calendar, anchor: next.anchor === undefined ? state.anchor : next.anchor })}
-            onOpen={dialog.openPost}
-            onCreate={(day) => openNew(day)}
-          />
-        )}
+          ) : posts.length === 0 ? (
+            <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+              <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram
+                tarefas com prazo antes da publicação.
+              </p>
+              <Button size="sm" className="mt-5" onClick={() => openNew()}>
+                Primeiro post
+              </Button>
+            </div>
+          ) : state.view === "board" ? (
+            <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
+          ) : state.view === "list" ? (
+            <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
+          ) : state.view === "feed" ? (
+            feedClient ? (
+              <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} />
+            ) : (
+              <FeedClientPicker
+                clients={clients.filter((client) => client.active)}
+                onPick={(id) => navigate({ ...state, filters: { ...filters, clients: [id] } })}
+              />
+            )
+          ) : (
+            <ContentCalendar
+              posts={visible}
+              today={today}
+              mode={state.calendar}
+              anchor={state.anchor}
+              onNavigate={(next) => navigate({ ...state, calendar: next.mode ?? state.calendar, anchor: next.anchor === undefined ? state.anchor : next.anchor })}
+              onOpen={dialog.openPost}
+              onCreate={(day) => openNew(day)}
+            />
+          )}
+        </ViewFade>
       </PageBody>
 
       <PostDialog state={dialog.state} onOpenChange={dialog.onOpenChange} />

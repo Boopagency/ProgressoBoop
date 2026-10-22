@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ViewFade } from "@/components/view-fade"
 import { updateDeal } from "@/features/deals/actions"
 import { DealDialog, type DealDialogState } from "@/features/deals/deal-dialog"
 import {
@@ -207,26 +208,28 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
           />
         </section>
 
-        {deals.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-            <h2 className="text-sm font-semibold">Cadastre os leads que estão chegando</h2>
-            <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
-              cliente, contrato no financeiro e projeto, sem digitar de novo.
-            </p>
-            <Button size="sm" className="mt-5" onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))}>
-              Primeiro negócio
-            </Button>
-          </div>
-        ) : view === "board" ? (
-          <Board deals={visible} today={today} onOpen={openDeal} onMove={move} />
-        ) : (
-          <DealList
-            deals={visible.filter((deal) => (listFilter === "all" ? true : listFilter === "open" ? isOpenDeal(deal) : deal.stage === listFilter))}
-            today={today}
-            onOpen={openDeal}
-          />
-        )}
+        <ViewFade view={`${view}:${listFilter}`}>
+          {deals.length === 0 ? (
+            <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
+              <h2 className="text-sm font-semibold">Cadastre os leads que estão chegando</h2>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
+                cliente, contrato no financeiro e projeto, sem digitar de novo.
+              </p>
+              <Button size="sm" className="mt-5" onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))}>
+                Primeiro negócio
+              </Button>
+            </div>
+          ) : view === "board" ? (
+            <Board deals={visible} today={today} onOpen={openDeal} onMove={move} />
+          ) : (
+            <DealList
+              deals={visible.filter((deal) => (listFilter === "all" ? true : listFilter === "open" ? isOpenDeal(deal) : deal.stage === listFilter))}
+              today={today}
+              onOpen={openDeal}
+            />
+          )}
+        </ViewFade>
       </PageBody>
 
       <DealDialog state={dialog} onOpenChange={(open) => setDialog((state) => ({ ...state, open }))} onWin={setWinning} />

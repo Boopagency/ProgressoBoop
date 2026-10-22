@@ -22,6 +22,7 @@ import { useTasks } from "@/features/tasks/tasks-provider"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
+import { useViewFade } from "@/hooks/use-view-fade"
 import { formatShortDate } from "@/lib/dates"
 import type { DocSummary, Project, ProjectStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -45,6 +46,7 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
   const { projects, currentUser } = useWorkspace()
   const { tasks, today } = useTasks()
   const [scope, setScope] = useState<Scope>("all")
+  const bodyRef = useViewFade(scope)
   const [dialog, setDialog] = useState<ProjectDialogState>({ open: false, key: 0 })
   const [showClosed, setShowClosed] = useState(false)
   useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1 })))
@@ -85,11 +87,11 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
       </PageToolbar>
 
       {open.length === 0 && closed.length === 0 ? (
-        <PageBody>
+        <PageBody ref={bodyRef}>
           <EmptyState onCreate={() => setDialog((current) => ({ open: true, key: current.key + 1 }))} />
         </PageBody>
       ) : (
-        <PageBody>
+        <PageBody ref={bodyRef}>
           {OPEN_GROUPS.map((group) => {
             const list = open.filter((project) => project.status === group.status)
             if (list.length === 0) return null

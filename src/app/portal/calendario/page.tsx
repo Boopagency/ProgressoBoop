@@ -79,7 +79,8 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
         ) : null}
       </PageToolbar>
 
-      <PageBody>
+      {/* A chave por mês faz o corpo entrar de novo (como ao abrir a tela) a cada troca de mês. */}
+      <PageBody key={anchor.slice(0, 7)}>
       {/* Do md para cima: o mês em grade, de segunda a domingo. */}
       <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
         <div className="grid grid-cols-7 border-b bg-muted/40">

@@ -32,6 +32,9 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  // A página vai até as bordas da tela (no app instalado, até a barrinha de
+  // baixo do iPhone); o menu de baixo e as barras fixas usam env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: THEME_COLOR.light },
     { media: "(prefers-color-scheme: dark)", color: THEME_COLOR.dark },
@@ -47,7 +50,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-svh font-sans">
         <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-        <Toaster position="bottom-right" />
+        {/* No celular, os avisos ficam acima do menu de baixo. */}
+        <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
       </body>
     </html>
   )

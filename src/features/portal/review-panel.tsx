@@ -186,7 +186,7 @@ function DecisionDialog({
 
   return (
     <Dialog open={decision !== null} onOpenChange={(value) => (isPending ? null : onOpenChange(value))}>
-      <DialogContent sheetOnMobile className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>

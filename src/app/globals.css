@@ -199,7 +199,8 @@
  * do menu (navys do site). Menus e dicas abertos a partir dele ficam fora
  * desse elemento e seguem o tema normal.
  */
-[data-sidebar="sidebar"] {
+[data-sidebar="sidebar"],
+[data-slot="tab-bar"] {
   --foreground: var(--sidebar-ink);
   --muted-foreground: var(--sidebar-muted);
   --subtle-foreground: var(--sidebar-muted);
@@ -473,6 +474,34 @@
 
 .boop-editor .bn-block-content[data-content-type="checkListItem"] > div > input {
   accent-color: var(--primary);
+}
+
+/* No celular (toque), a área de toque de um botão pequeno chega a 44 px (um
+ * ::after centrado e invisível), sem mudar o tamanho que se vê. Precisa de
+ * `relative` (ou outro posicionamento) no botão. */
+@utility touch-target {
+  @media (pointer: coarse) and (width < 48rem) {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/* App instalado e iPhone deitado (viewport-fit=cover, em src/app/layout.tsx):
+ * nada fica sob o entalhe dos lados. Fora do iPhone, env() vale 0. */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+[data-slot="sidebar"][data-side="left"] > [data-slot="sidebar-container"] {
+  left: env(safe-area-inset-left);
 }
 
 /* No celular (toque), o iPhone dá zoom ao tocar num campo com letra menor que

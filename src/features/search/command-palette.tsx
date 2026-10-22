@@ -107,9 +107,11 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
     <PaletteContext value={{ openPalette }}>
       {children}
       <Dialog open={state.open} onOpenChange={(open) => setState((current) => ({ ...current, open }))}>
+        {/* No celular, a busca desce do topo (o teclado ocupa a parte de baixo). */}
         <DialogContent
           showCloseButton={false}
-          className="top-[8%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[12%] sm:max-w-[640px]"
+          sheetOnMobile={false}
+          className="top-[8%] translate-y-0 gap-0 overflow-hidden p-0 max-md:top-0 max-md:max-w-none max-md:rounded-none max-md:rounded-b-2xl max-md:border-x-0 max-md:border-t-0 max-md:pt-[env(safe-area-inset-top)] sm:top-[12%] sm:max-w-[640px]"
         >
           <DialogTitle className="sr-only">Buscar no portal</DialogTitle>
           <DialogDescription className="sr-only">
@@ -132,7 +134,7 @@ export function SearchButton({ className }: { className?: string }) {
       onClick={openPalette}
       aria-label="Buscar no portal"
       className={cn(
-        "inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-2.5 text-[13px] text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:w-56",
+        "relative inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-2.5 text-[13px] text-muted-foreground transition-colors outline-none touch-target hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:w-56",
         className
       )}
     >
@@ -442,7 +444,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         })}
       </div>
 
-      <div className="flex items-center gap-4 border-t bg-muted/40 px-4 py-2 text-[11.5px] text-muted-foreground">
+      <div className="flex items-center gap-4 border-t bg-muted/40 px-4 py-2 text-[11.5px] text-muted-foreground max-md:pointer-coarse:hidden">
         <span>
           <kbd className="font-sans">↑</kbd> <kbd className="font-sans">↓</kbd> navegar
         </span>

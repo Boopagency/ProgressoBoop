@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import type { ReactNode } from "react"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { AppTabBar } from "@/components/layout/app-tab-bar"
 import { AppTopbar } from "@/components/layout/app-topbar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { requireUser } from "@/features/auth/session"
@@ -29,12 +30,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <NewTaskProvider>
         <CommandPaletteProvider>
         <UnreadProvider initial={channelTotals}>
-        <SidebarProvider defaultOpen={sidebarOpen}>
+        {/* No celular, o menu fica embaixo (AppTabBar); --app-bottom-bar é a altura dele. */}
+        <SidebarProvider defaultOpen={sidebarOpen} className="max-md:[--app-bottom-bar:calc(3.5rem+env(safe-area-inset-bottom))]">
           <AppSidebar />
           <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/80 md:peer-data-[variant=inset]:shadow-[0_1px_3px_0_rgb(0_0_0/0.03)]">
             <AppTopbar notifications={notifications} />
-            <div className="flex-1 md:overflow-y-auto">{children}</div>
+            <div className="flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto">{children}</div>
           </SidebarInset>
+          <AppTabBar />
           <PushRefresh />
         </SidebarProvider>
         </UnreadProvider>

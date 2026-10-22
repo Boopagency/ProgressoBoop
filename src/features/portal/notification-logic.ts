@@ -1,3 +1,4 @@
+import { mentionPlainText } from "@/features/mentions/logic"
 import type { Timestamp } from "@/lib/types"
 
 /*
@@ -47,7 +48,9 @@ export interface PortalNotificationText {
   excerpt: string | null
 }
 
-export function describePortalNotification(item: PortalNotification): PortalNotificationText {
+export function describePortalNotification(notification: PortalNotification): PortalNotificationText {
+  // As menções da mensagem ("@[Título](post:…)") aparecem como "@Título".
+  const item = { ...notification, body: notification.body && mentionPlainText(notification.body) }
   const actor = item.actor_name?.trim() || "A equipe da Boop"
   switch (item.kind) {
     case "team_message":

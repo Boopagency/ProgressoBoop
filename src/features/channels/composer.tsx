@@ -1,6 +1,6 @@
 "use client"
 
-import { Lock, MessageSquareWarning, Plus, SendHorizontal, X } from "lucide-react"
+import { AtSign, Lock, MessageSquareWarning, Plus, SendHorizontal, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -8,9 +8,11 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { BODY_MAX } from "@/features/channels/logic"
+import { MentionList, useMentions, type MentionSearch } from "@/features/mentions/mention-picker"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { WritableKind } from "@/features/channels/validation"
 import { cn } from "@/lib/utils"
@@ -30,7 +32,8 @@ export interface ComposerOptions {
  * no portal). O portal usa o mesmo campo, sem as duas opções. `autoFocus`
  * só vale com mouse (no celular, o teclado abre quando a pessoa toca). No
  * celular, como nos aplicativos de conversa: o campo arredondado, o botão
- * redondo de enviar, as duas opções no "+" e Enter quebra a linha.
+ * redondo de enviar, as duas opções no "+" e Enter quebra a linha. Com
+ * `mentions`, "@" ou "/" abre a busca para mencionar um post, reunião etc.
  */
 export function Composer({
   onSend,
@@ -39,6 +42,7 @@ export function Composer({
   placeholder,
   disabledText,
   autoFocus = false,
+  mentions: searchMentions,
   className,
 }: {
   /** Devolve true quando enviou (aí o campo limpa). */
@@ -50,6 +54,8 @@ export function Composer({
   /** Canal arquivado (ou sem canal): o campo vira um aviso. */
   disabledText?: string | null
   autoFocus?: boolean
+  /** Busca do que dá para mencionar ("@" ou "/"); sem ela, o campo não menciona. */
+  mentions?: MentionSearch
   className?: string
 }) {
   const [body, setBody] = useState("")
@@ -58,6 +64,7 @@ export function Composer({
   const [sending, setSending] = useState(false)
   const field = useRef<HTMLTextAreaElement>(null)
   const isMobile = useIsMobile()
+  const mentions = useMentions({ search: searchMentions, field, body, setBody })
 
   // Abrir a conversa já deixa o cursor no campo, mas só com mouse: no
   // celular isso abriria o teclado por cima da conversa.
@@ -77,9 +84,11 @@ export function Composer({
     setSending(true)
     setBody("")
     setRequest(false)
-    const sent = await onSend(text, kind, options)
+    mentions.close()
+    const sent = await onSend(mentions.encode(text), kind, options)
     setSending(false)
-    if (!sent) {
+    if (sent) mentions.reset()
+    else {
       setBody((current) => current || text)
       setRequest(kind === "change_request")
     }
@@ -98,7 +107,7 @@ export function Composer({
     <form
       className={cn(
         "@container border-t bg-background px-3 py-3 sm:px-4",
-        "max-md:flex max-md:items-end max-md:gap-1.5 max-md:px-2 max-md:py-1.5",
+        "max-md:relative max-md:flex max-md:items-end max-md:gap-1.5 max-md:px-2 max-md:py-1.5",
         className
       )}
       onSubmit={(event) => {
@@ -106,19 +115,25 @@ export function Composer({
         void send()
       }}
     >
-      {allowRequest || allowInternal ? (
+      {allowRequest || allowInternal || mentions.enabled ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Tipo da mensagem: pedido de ajuste ou interna"
+              aria-label="Mais opções da mensagem"
               className="relative flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring/40 active:bg-muted data-[state=open]:bg-muted md:hidden"
             >
               <Plus className="size-6" aria-hidden="true" />
               {request || internalOn ? <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand" aria-hidden="true" /> : null}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-64">
+          <DropdownMenuContent side="top" align="start" className="w-64" onCloseAutoFocus={(event) => event.preventDefault()}>
+            {mentions.enabled ? (
+              <DropdownMenuItem onSelect={() => mentions.start()}>
+                <AtSign aria-hidden="true" />
+                Mencionar post ou reunião
+              </DropdownMenuItem>
+            ) : null}
             {allowRequest ? (
               <DropdownMenuCheckboxItem checked={request} onCheckedChange={(checked) => setRequest(checked === true)}>
                 <MessageSquareWarning aria-hidden="true" />
@@ -136,12 +151,13 @@ export function Composer({
       ) : null}
       <div
         className={cn(
-          "rounded-xl border bg-background transition-colors focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
+          "rounded-xl border bg-background transition-colors md:relative focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
           "max-md:min-w-0 max-md:flex-1 max-md:rounded-[1.375rem]",
           request && "border-attention-line/30 bg-attention-soft/30",
           allowInternal && internal && !request && "border-dashed border-foreground/25 bg-muted/50"
         )}
       >
+        <MentionList mentions={mentions} className="max-md:right-2 max-md:left-2" />
         {/* Celular: o que está marcado no "+", com o × para tirar. */}
         {request || internalOn ? (
           <div className="flex flex-wrap gap-1 px-2.5 pt-1.5 md:hidden">
@@ -172,8 +188,14 @@ export function Composer({
           ref={field}
           value={body}
           maxLength={BODY_MAX}
-          onChange={(event) => setBody(event.target.value)}
+          onChange={(event) => {
+            setBody(event.target.value)
+            mentions.sync(event.target.value, event.target.selectionStart)
+          }}
+          onSelect={(event) => mentions.sync(event.currentTarget.value, event.currentTarget.selectionStart)}
+          onBlur={() => mentions.close()}
           onKeyDown={(event) => {
+            if (mentions.onKeyDown(event)) return
             // No celular (toque) não há Shift: Enter quebra a linha e o botão envia.
             if (window.matchMedia(TOUCH_PHONE).matches) return
             if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -227,7 +249,21 @@ export function Composer({
               Interno
             </button>
           ) : null}
-          <span className="hidden truncate text-[11px] text-subtle-foreground @lg:inline">Enter envia · Shift + Enter quebra a linha</span>
+          {mentions.enabled ? (
+            <button
+              type="button"
+              title="Mencionar um post, reunião ou outro item (ou digite @)"
+              aria-label="Mencionar"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => mentions.start()}
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <AtSign className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+          <span className="hidden truncate text-[11px] text-subtle-foreground @lg:inline">
+            Enter envia · Shift + Enter quebra a linha{mentions.enabled ? " · @ menciona" : ""}
+          </span>
           <Button type="submit" size="sm" disabled={sending || !body.trim()} className="ml-auto h-8 gap-1.5" aria-label="Enviar">
             <SendHorizontal className="size-3.5" />
             <span className="max-sm:sr-only">Enviar</span>

@@ -24,6 +24,7 @@ import {
 } from "@/features/portal/channel-logic"
 import type { PortalChannelMessage } from "@/features/portal/channel-queries"
 import { portalHref } from "@/features/portal/links"
+import { searchPortalMentions } from "@/features/mentions/actions"
 import { PortalMessageBubble } from "@/features/portal/message-bubble"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
 import type { PortalClient } from "@/features/portal/session"
@@ -204,6 +205,7 @@ export function PortalChannel({
       <Composer
         onSend={(body) => send(body)}
         allowRequest={false}
+        mentions={(query) => searchPortalMentions(clientId, query)}
         placeholder={direct ? `Escreva para ${direct.teamName}` : "Escreva para a equipe da Boop"}
         disabledText={archived ? "A conversa foi encerrada pela equipe. Fale com a Boop pelos outros canais." : null}
       />
@@ -229,7 +231,7 @@ function PortalMessageRow({
       : null
 
   return (
-    <PortalMessageBubble message={message} time={toTimeLabel(message.created_at)} continued={continued} oneToOne={oneToOne}>
+    <PortalMessageBubble message={message} time={toTimeLabel(message.created_at)} continued={continued} oneToOne={oneToOne} mentionHref={href}>
       {context ? (
         <Link
           href={href(context.path)}

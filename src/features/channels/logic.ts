@@ -1,3 +1,4 @@
+import { mentionPlainText } from "@/features/mentions/logic"
 import { addDaysToKey, capitalize, daysBetween, formatShortDate, formatWeekdayLong, toDateKey, toTimeLabel } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import type {
@@ -378,7 +379,8 @@ export function messageTime(message: Pick<Message, "created_at">): string {
 
 /** Título da tarefa de um pedido: a primeira linha, até 200 letras. */
 export function taskTitleFrom(body: string): string {
-  const firstLine = body.split("\n").find((line) => line.trim()) ?? body
+  const plain = mentionPlainText(body)
+  const firstLine = plain.split("\n").find((line) => line.trim()) ?? plain
   const text = firstLine.replace(/\s+/g, " ").trim()
   if (text.length <= TASK_TITLE_MAX) return text
   const cut = text.slice(0, TASK_TITLE_MAX - 1)

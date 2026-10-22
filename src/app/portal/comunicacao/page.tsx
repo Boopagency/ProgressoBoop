@@ -4,6 +4,7 @@ import Link from "next/link"
 import { BoopMark } from "@/components/layout/boop-mark"
 import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { listTimeLabel } from "@/features/channels/logic"
+import { mentionPlainText } from "@/features/mentions/logic"
 import {
   fetchPortalDirectThread,
   fetchPortalThread,
@@ -132,7 +133,7 @@ function TeamAvatar({ name, avatarUrl, className }: { name: string; avatarUrl: s
 /** A segunda linha da conversa na lista: quem escreveu (na conversa com a equipe toda) e a última mensagem. */
 function previewText(message: PortalChannelMessage | undefined, group: boolean): string {
   if (!message) return "Nenhuma mensagem ainda"
-  const text = message.body.replace(/\s+/g, " ")
+  const text = mentionPlainText(message.body).replace(/\s+/g, " ")
   if (message.kind === "system") return text
   if (message.mine) return `Você: ${text}`
   return group ? `${message.author_name.split(" ")[0]}: ${text}` : text

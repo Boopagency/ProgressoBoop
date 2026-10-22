@@ -7,12 +7,15 @@ import { toast } from "sonner"
 
 import { loadPostThread, markChannelRead, sendMessage } from "@/features/channels/actions"
 import { Composer, type ComposerOptions } from "@/features/channels/composer"
-import { buildThread, channelHref } from "@/features/channels/logic"
+import { buildThread, channelHref, type ThreadMessage } from "@/features/channels/logic"
 import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
 import { useUnread } from "@/features/channels/unread-provider"
 import { useThread } from "@/features/channels/use-thread"
 import { useTasks } from "@/features/tasks/tasks-provider"
+import { sendAudioMessage } from "@/features/voice/actions"
+import { deliverRecording, type Recording } from "@/features/voice/upload"
+import type { ActionResult } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 type Tab = "client" | "internal"
@@ -39,7 +42,19 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
 
   async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
     if (!channelId) return false
-    const result = await sendMessage({ channel_id: channelId, body, kind, post_id: postId, internal: options.internal })
+    return afterSend(await sendMessage({ channel_id: channelId, body, kind, post_id: postId, internal: options.internal }))
+  }
+
+  async function sendAudio(recording: Recording, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
+    const target = channelId
+    if (!target) return false
+    const result = await deliverRecording(recording, (path) =>
+      sendAudioMessage({ channel_id: target, path, duration_ms: recording.durationMs, kind, post_id: postId, internal: options.internal })
+    )
+    return afterSend(result)
+  }
+
+  function afterSend(result: ActionResult<ThreadMessage>) {
     if (!result.ok) {
       toast.error(result.error)
       return false
@@ -130,6 +145,7 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
           </p>
           <Composer
             onSend={send}
+            onSendAudio={sendAudio}
             allowRequest
             allowInternal
             placeholder="Escreva para o cliente sobre este post…"

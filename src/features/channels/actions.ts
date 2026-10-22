@@ -16,6 +16,7 @@ import {
 } from "@/features/channels/mutations"
 import { fetchCounts, fetchThread, MESSAGE_COLUMNS } from "@/features/channels/queries"
 import { parseChannelName, parseMemberIds, type NewMessageInput } from "@/features/channels/validation"
+import { MESSAGE_AUDIO_BUCKET } from "@/features/voice/logic"
 import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
@@ -221,10 +222,18 @@ export async function editMessage(id: string, body: string): Promise<ActionResul
   return writeMessageBody(await createClient(), id, body)
 }
 
-/** Só as próprias (o RLS confere). */
+/** Só as próprias (o RLS confere). O áudio de uma mensagem de voz sai junto. */
 export async function deleteMessage(id: string): Promise<ActionResult> {
   const user = await requireUser()
-  return removeMessage(await createClient(), user.id, id)
+  const supabase = await createClient()
+  const audio = isUuid(id) ? await supabase.from("message_audio").select("storage_path").eq("message_id", id).maybeSingle() : null
+  const result = await removeMessage(supabase, user.id, id)
+  const path = audio?.data?.storage_path
+  if (result.ok && path) {
+    const { error } = await supabase.storage.from(MESSAGE_AUDIO_BUCKET).remove([path])
+    if (error) console.error(`[storage] ${error.message}`)
+  }
+  return result
 }
 
 /**

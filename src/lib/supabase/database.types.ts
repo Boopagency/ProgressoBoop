@@ -1659,6 +1659,41 @@ export type Database = {
           },
         ]
       }
+      message_audio: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms: number
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          message_id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_audio_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           author_id: string | null
@@ -2547,8 +2582,16 @@ export type Database = {
         Args: { decision: string; note?: string; target_step: string }
         Returns: string
       }
+      portal_send_channel_audio: {
+        Args: { audio_path: string; duration_ms: number; target_client: string }
+        Returns: string
+      }
       portal_send_channel_message: {
         Args: { message_body: string; target_client: string }
+        Returns: string
+      }
+      portal_send_direct_audio: {
+        Args: { audio_path: string; duration_ms: number; target_channel: string }
         Returns: string
       }
       portal_send_direct_message: {
@@ -2603,6 +2646,18 @@ export type Database = {
       }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
+        Returns: string
+      }
+      send_audio_message: {
+        Args: {
+          audio_path: string
+          duration_ms: number
+          is_internal?: boolean
+          message_kind?: Database["public"]["Enums"]["message_kind"]
+          target_channel: string
+          target_post?: string
+          target_project?: string
+        }
         Returns: string
       }
       save_push_subscription: {

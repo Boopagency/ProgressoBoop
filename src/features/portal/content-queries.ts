@@ -5,6 +5,8 @@ import { cache } from "react"
 import { asSlides } from "@/features/content/queries"
 import type { PortalPost } from "@/features/portal/content-logic"
 import { requirePortalUser } from "@/features/portal/session"
+import type { MessageAudio } from "@/features/voice/logic"
+import { withAudio } from "@/features/voice/queries"
 import type { Database } from "@/lib/supabase/database.types"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
@@ -40,6 +42,8 @@ export interface PortalMessage {
   resolved: boolean
   created_at: string
   edited_at: string | null
+  /** Mensagem de voz: o áudio. */
+  audio?: MessageAudio | null
 }
 
 function toPost(row: PostRow): PortalPost {
@@ -104,5 +108,5 @@ export const getPortalPostMessages = cache(async (postId: string): Promise<Porta
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("portal_post_messages", { target_post: postId })
   if (error) throw loadError(error, "as mensagens")
-  return (data ?? []).map(toPortalMessage)
+  return withAudio(supabase, (data ?? []).map(toPortalMessage))
 })

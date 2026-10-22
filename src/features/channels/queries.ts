@@ -10,6 +10,7 @@ import {
   type PendingRequest,
   type ThreadData,
 } from "@/features/channels/logic"
+import { withAudio } from "@/features/voice/queries"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 import type { Timestamp } from "@/lib/types"
@@ -60,7 +61,10 @@ export async function fetchThread(
   const [messages, pending] = await Promise.all([page(), before ? null : pendingQuery()])
   if (messages.error) throw loadError(messages.error, "as mensagens")
   if (pending?.error) throw loadError(pending.error, "os pedidos pendentes")
-  const rows = messages.data.slice(0, THREAD_PAGE).reverse()
+  const [rows, pendingRows] = await Promise.all([
+    withAudio(supabase, messages.data.slice(0, THREAD_PAGE).reverse()),
+    withAudio(supabase, pending?.data ?? []),
+  ])
 
   // "Visto por" só na página mais recente. Post e projeto são parte do canal do cliente.
   const channelId = "channelId" in scope ? scope.channelId : (rows[0]?.channel_id ?? null)
@@ -71,7 +75,7 @@ export async function fetchThread(
     if (result.error) console.error(`[supabase] ${result.error.code ?? "?"}: ${result.error.message}`)
     else reads = result.data
   }
-  return { messages: rows, hasMore: messages.data.length > THREAD_PAGE, pending: pending?.data ?? [], reads }
+  return { messages: rows, hasMore: messages.data.length > THREAD_PAGE, pending: pendingRows, reads }
 }
 
 /**

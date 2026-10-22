@@ -6,6 +6,7 @@ import {
   THREAD_PAGE,
   type ChannelCounts,
   type ChannelEntry,
+  type ChannelPreview,
   type PendingRequest,
   type ThreadData,
 } from "@/features/channels/logic"
@@ -107,6 +108,44 @@ export async function getChannels(): Promise<ChannelEntry[]> {
     member_ids: membersOf.get(channel.id) ?? [],
     counts: counts.get(channel.id) ?? NO_COUNTS,
   }))
+}
+
+/** Tamanho do texto da última mensagem que a lista do celular recebe. */
+const PREVIEW_MAX = 160
+
+/**
+ * A última mensagem de cada canal, para a lista de conversas do celular: uma
+ * busca só, pela hora que `channel_counts` devolve para cada canal. É um
+ * extra: se falhar, a lista mostra os canais sem o texto.
+ */
+export async function getChannelPreviews(channels: ChannelEntry[]): Promise<Record<string, ChannelPreview>> {
+  const lastAt = new Map<string, string>()
+  for (const channel of channels) if (channel.counts.last_message_at) lastAt.set(channel.id, channel.counts.last_message_at)
+  if (lastAt.size === 0) return {}
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, channel_id, author_id, kind, body, internal, created_at")
+    .in("channel_id", [...lastAt.keys()])
+    .in("created_at", [...new Set(lastAt.values())])
+    .order("id", { ascending: false })
+  if (error) {
+    console.error(`[supabase] ${error.code ?? "?"}: ${error.message}`)
+    return {}
+  }
+  const previews: Record<string, ChannelPreview> = {}
+  for (const row of data) {
+    const at = lastAt.get(row.channel_id)
+    if (previews[row.channel_id] || !at || Date.parse(at) !== Date.parse(row.created_at)) continue
+    previews[row.channel_id] = {
+      author_id: row.author_id,
+      kind: row.kind,
+      body: row.body.slice(0, PREVIEW_MAX),
+      internal: row.internal,
+      created_at: row.created_at,
+    }
+  }
+  return previews
 }
 
 /**

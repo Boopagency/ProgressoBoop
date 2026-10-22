@@ -1,6 +1,21 @@
 "use client"
 
-import { Check, Eye, FolderKanban, ListPlus, Lock, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react"
+import {
+  Check,
+  CheckCheck,
+  Copy,
+  Eye,
+  FolderKanban,
+  ListPlus,
+  Lock,
+  MessageSquare,
+  MessageSquareWarning,
+  MoreHorizontal,
+  Pencil,
+  RotateCcw,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react"
 import Link from "next/link"
 import { Fragment, useMemo, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -15,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { MoreSheet, MoreSheetSection, MoreSheetItem } from "@/components/layout/more-sheet"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -35,6 +51,7 @@ import {
   BODY_MAX,
   isPending,
   messageTime,
+  readersByMessage,
   seenByMessage,
   taskTitleFrom,
   type ChannelRead,
@@ -51,6 +68,7 @@ import { StatusDot } from "@/features/tasks/task-meta"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useLongPress } from "@/hooks/use-long-press"
 import { formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
 import { CONTENT_STAGE_LABEL, MESSAGE_KIND_LABEL } from "@/lib/labels"
 import type { DateKey } from "@/lib/types"
@@ -106,20 +124,22 @@ export function MessageAvatar({ authorId, className }: { authorId: string | null
   )
 }
 
-/** "Visto por" de um fio: em qual mensagem aparece cada pessoa (ver `seenByMessage`). */
-export function useSeenBy(messages: readonly ThreadMessage[] | null, reads: readonly ChannelRead[]) {
+/**
+ * Quem viu o quê num fio: o "Visto por" (em qual mensagem aparece cada
+ * pessoa, ver `seenByMessage`) e, por mensagem, todo mundo que já a viu (os
+ * tiques no celular, ver `readersByMessage`).
+ */
+export function useReadReceipts(messages: readonly ThreadMessage[] | null, reads: readonly ChannelRead[]) {
   const { currentUser, profileById, clientPersonById } = useWorkspace()
-  return useMemo(
-    () =>
-      seenByMessage(
-        messages ?? [],
-        // Só quem a tela conhece (equipe e pessoas do cliente).
-        reads.filter((read) => profileById.has(read.user_id) || clientPersonById.has(read.user_id)),
-        currentUser.id,
-        (userId) => !profileById.has(userId)
-      ),
-    [messages, reads, currentUser.id, profileById, clientPersonById]
-  )
+  return useMemo(() => {
+    // Só quem a tela conhece (equipe e pessoas do cliente).
+    const known = reads.filter((read) => profileById.has(read.user_id) || clientPersonById.has(read.user_id))
+    const isClient = (userId: string) => !profileById.has(userId)
+    return {
+      seenBy: seenByMessage(messages ?? [], known, currentUser.id, isClient),
+      readers: readersByMessage(messages ?? [], known, currentUser.id, isClient),
+    }
+  }, [messages, reads, currentUser.id, profileById, clientPersonById])
 }
 
 function SeenName({ id }: { id: string }) {
@@ -145,6 +165,121 @@ function SeenBy({ ids, className }: { ids: readonly string[]; className?: string
         ))}
       </span>
     </p>
+  )
+}
+
+/**
+ * Dentro do balão, no canto de baixo (só no celular): a hora e, nas próprias
+ * mensagens, os tiques: um quando foi enviada, dois na cor da marca quando
+ * alguém já viu (o "Visto por" com os nomes fica na folha de ações).
+ */
+function BubbleMeta({ message, own, seen }: { message: ThreadMessage; own: boolean; seen: boolean }) {
+  return (
+    <span className="float-right mt-[7px] -mb-1 ml-2.5 flex items-center gap-0.5 text-[11px] leading-4 text-muted-foreground tabular-nums md:hidden">
+      <time dateTime={message.created_at}>
+        {toTimeLabel(message.created_at)}
+      </time>
+      {own ? (
+        seen ? (
+          <CheckCheck className="size-3.5 text-brand-ink" aria-label="Vista" />
+        ) : (
+          <Check className="size-3.5" aria-label="Enviada" />
+        )
+      ) : null}
+    </span>
+  )
+}
+
+/** Uma ação da mensagem: no menu "…" do computador e na folha do celular. */
+interface MessageAction {
+  key: string
+  label: string
+  icon?: LucideIcon
+  /** Ícone só na folha do celular (no menu do computador, a linha não tem). */
+  sheetIcon?: LucideIcon
+  onSelect: () => void
+  destructive?: boolean
+  /** Linha separada das de cima. */
+  separated?: boolean
+  /** Só na folha do celular. */
+  sheetOnly?: boolean
+}
+
+/** Folha de baixo com as ações da mensagem (segurar a mensagem, no celular). */
+function MessageActionsSheet({
+  open,
+  onOpenChange,
+  message,
+  own,
+  readers,
+  actions,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  message: ThreadMessage
+  own: boolean
+  readers: readonly string[]
+  actions: MessageAction[]
+}) {
+  const author = useAuthor(message.author_id)
+  // A separação do menu do computador vira dois grupos na folha.
+  const cut = actions.findIndex((action) => action.separated)
+  const main = cut < 0 ? actions : actions.slice(0, cut)
+  const rest = cut < 0 ? [] : actions.slice(cut)
+  return (
+    <MoreSheet open={open} onOpenChange={onOpenChange} title="Mensagem" description="O que fazer com esta mensagem.">
+      <div className="rounded-xl bg-muted/60 px-3 py-2.5">
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">{own ? "Você" : author.name}</span> · {messageTime(message)}
+        </p>
+        <p className="mt-0.5 line-clamp-4 text-[14px] leading-5 break-words whitespace-pre-wrap text-foreground">{message.body}</p>
+        {readers.length > 0 ? (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+            <CheckCheck className="size-3.5 shrink-0 text-brand-ink" aria-hidden="true" />
+            <span>
+              Visto por{" "}
+              {readers.map((id, index) => (
+                <Fragment key={id}>
+                  {index > 0 ? (index === readers.length - 1 ? " e " : ", ") : null}
+                  <SeenName id={id} />
+                </Fragment>
+              ))}
+            </span>
+          </p>
+        ) : own ? (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+            <Check className="size-3.5 shrink-0" aria-hidden="true" />
+            Ninguém viu ainda
+          </p>
+        ) : null}
+      </div>
+      {main.length > 0 ? (
+        <MoreSheetSection>
+          {main.map((action) => (
+            <MoreSheetItem
+              key={action.key}
+              title={action.label}
+              icon={action.icon ?? action.sheetIcon}
+              destructive={action.destructive}
+              onClick={action.onSelect}
+            />
+          ))}
+        </MoreSheetSection>
+      ) : null}
+      {rest.length > 0 ? (
+        <MoreSheetSection>
+          {rest.map((action) => (
+            <MoreSheetItem
+              key={action.key}
+              title={action.label}
+              icon={action.icon ?? action.sheetIcon}
+              destructive={action.destructive}
+              onClick={action.onSelect}
+            />
+          ))}
+        </MoreSheetSection>
+      ) : null}
+    </MoreSheet>
   )
 }
 
@@ -257,7 +392,9 @@ export function InternalBadge({ className }: { className?: string }) {
  * Uma mensagem do fio: quem, quando, o texto, o tipo (pedido de ajuste ou
  * aprovação), o post, a tarefa e as ações (virar tarefa, resolver, marcar
  * como pedido, editar e apagar as próprias e, no canal do cliente, deixar
- * interna ou mostrar ao cliente).
+ * interna ou mostrar ao cliente). No celular, como nos aplicativos de
+ * conversa: todas em balões, com a hora (e os tiques) no canto e o "rabinho"
+ * na primeira de cada sequência; segurar a mensagem abre as ações numa folha.
  */
 export function MessageItem({
   message,
@@ -266,17 +403,21 @@ export function MessageItem({
   showProject = true,
   canWrite = true,
   allowInternal = false,
+  oneToOne = false,
   onChanged,
   onRemoved,
   onOpenPost,
   extra,
   seenBy,
+  readers,
 }: {
   message: ThreadMessage
   /** Mensagem seguida da mesma pessoa: sem nome nem foto. */
   continued?: boolean
   /** Quem viu até esta mensagem (ids), para o "Visto por". */
   seenBy?: readonly string[]
+  /** Todo mundo que já viu a mensagem (ids): os tiques e a folha do celular. */
+  readers?: readonly string[]
   showPost?: boolean
   /** Etiqueta do projeto (some na própria conversa do projeto). */
   showProject?: boolean
@@ -284,6 +425,8 @@ export function MessageItem({
   canWrite?: boolean
   /** Canal do cliente: quem escreveu pode deixar a mensagem interna (ou mostrar ao cliente). */
   allowInternal?: boolean
+  /** Conversa a dois: no celular, sem a foto e o nome da outra pessoa em cada balão. */
+  oneToOne?: boolean
   onChanged: () => void
   onRemoved: (id: string) => void
   onOpenPost?: (postId: string) => void
@@ -298,8 +441,10 @@ export function MessageItem({
   const [draft, setDraft] = useState(message.body)
   const [taskOpen, setTaskOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [saving, startTransition] = useTransition()
   const system = message.kind === "system"
+  const longPress = useLongPress(() => setSheetOpen(true), !editing && !system)
 
   function run(action: () => Promise<{ ok: boolean; error?: string }>, success?: string) {
     startTransition(async () => {
@@ -345,14 +490,105 @@ export function MessageItem({
   const pending = isPending(message)
   /** A própria mensagem: à direita, num balão, sem foto nem nome. */
   const own = mine && !system
+  const seen = (readers?.length ?? 0) > 0
 
-  /** Ações da mensagem: no alto, do lado oposto ao balão (no celular, ao lado dele). */
+  const menuActions: MessageAction[] = []
+  if (!message.task_id) menuActions.push({ key: "task", label: "Virar tarefa", icon: ListPlus, onSelect: () => setTaskOpen(true) })
+  if (message.kind === "change_request") {
+    menuActions.push(
+      message.resolved_at
+        ? {
+            key: "resolve",
+            label: "Reabrir o pedido",
+            icon: RotateCcw,
+            onSelect: () => run(() => setMessageResolved(message.id, false), "Pedido reaberto"),
+          }
+        : {
+            key: "resolve",
+            label: "Marcar como resolvido",
+            icon: Check,
+            onSelect: () => run(() => setMessageResolved(message.id, true), "Pedido resolvido"),
+          }
+    )
+  }
+  if (message.kind === "text") {
+    menuActions.push({
+      key: "kind",
+      label: "Marcar como pedido de ajuste",
+      sheetIcon: MessageSquareWarning,
+      onSelect: () => run(() => setMessageKind(message.id, "change_request")),
+    })
+  } else if (message.kind === "change_request") {
+    menuActions.push({
+      key: "kind",
+      label: "Não é pedido de ajuste",
+      sheetIcon: MessageSquare,
+      onSelect: () => run(() => setMessageKind(message.id, "text")),
+    })
+  }
+  if (mine && canWrite && (allowInternal || message.internal)) {
+    menuActions.push(
+      message.internal
+        ? {
+            key: "internal",
+            label: "Mostrar ao cliente",
+            icon: Eye,
+            onSelect: () => run(() => setMessageInternal(message.id, false), "O cliente passa a ver a mensagem"),
+          }
+        : {
+            key: "internal",
+            label: "Deixar interna",
+            icon: Lock,
+            onSelect: () => run(() => setMessageInternal(message.id, true), "Mensagem interna: o cliente não vê"),
+          }
+    )
+  }
+  if (mine && canWrite) {
+    menuActions.push(
+      {
+        key: "edit",
+        label: "Editar",
+        icon: Pencil,
+        separated: true,
+        onSelect: () => {
+          setDraft(message.body)
+          setEditing(true)
+        },
+      },
+      { key: "delete", label: "Apagar", icon: Trash2, destructive: true, onSelect: () => setConfirmDelete(true) }
+    )
+  }
+
+  // Na folha do celular: as mesmas ações e "Copiar texto" (segurar a mensagem não seleciona o texto).
+  const copy: MessageAction = {
+    key: "copy",
+    label: "Copiar texto",
+    icon: Copy,
+    sheetOnly: true,
+    onSelect: () =>
+      void navigator.clipboard
+        ?.writeText(message.body)
+        .then(() => toast.success("Texto copiado"))
+        .catch(() => toast.error("Não foi possível copiar.")),
+  }
+  const editAt = menuActions.findIndex((action) => action.separated)
+  const sheetActions = (editAt < 0 ? [...menuActions, copy] : [...menuActions.slice(0, editAt), copy, ...menuActions.slice(editAt)]).map(
+    (action) => ({
+      ...action,
+      // A folha fecha antes (uma confirmação ou a edição abrem depois dela).
+      onSelect: () => {
+        setSheetOpen(false)
+        window.setTimeout(action.onSelect, 150)
+      },
+    })
+  )
+
+  /** Ações da mensagem: no alto, do lado oposto ao balão (no celular, segurar a mensagem). */
   const actions = editing ? null : (
     <div
       className={cn(
-        "absolute top-0 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100",
-        own ? "left-3 max-md:mr-1" : "right-3 max-md:ml-1",
-        "max-md:static max-md:translate-y-0 max-md:self-start max-md:border-0 max-md:p-0 max-md:opacity-100 max-md:shadow-none"
+        "absolute top-0 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100 max-md:hidden",
+        own ? "left-3" : "right-3"
       )}
     >
       {pending ? (
@@ -362,7 +598,7 @@ export function MessageItem({
           size="sm"
           disabled={saving}
           onClick={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}
-          className="h-7 gap-1 px-2 text-xs max-md:hidden"
+          className="h-7 gap-1 px-2 text-xs"
         >
           <Check className="size-3.5" />
           Resolver
@@ -375,69 +611,27 @@ export function MessageItem({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {message.task_id ? null : (
-            <DropdownMenuItem onSelect={() => setTaskOpen(true)}>
-              <ListPlus />
-              Virar tarefa
-            </DropdownMenuItem>
-          )}
-          {message.kind === "change_request" ? (
-            message.resolved_at ? (
-              <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, false), "Pedido reaberto")}>
-                <RotateCcw />
-                Reabrir o pedido
+          {menuActions.map((action) => (
+            <Fragment key={action.key}>
+              {action.separated ? <DropdownMenuSeparator /> : null}
+              <DropdownMenuItem variant={action.destructive ? "destructive" : "default"} onSelect={action.onSelect}>
+                {action.icon ? <action.icon /> : null}
+                {action.label}
               </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onSelect={() => run(() => setMessageResolved(message.id, true), "Pedido resolvido")}>
-                <Check />
-                Marcar como resolvido
-              </DropdownMenuItem>
-            )
-          ) : null}
-          {message.kind === "text" ? (
-            <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "change_request"))}>
-              Marcar como pedido de ajuste
-            </DropdownMenuItem>
-          ) : message.kind === "change_request" ? (
-            <DropdownMenuItem onSelect={() => run(() => setMessageKind(message.id, "text"))}>
-              Não é pedido de ajuste
-            </DropdownMenuItem>
-          ) : null}
-          {mine && canWrite && (allowInternal || message.internal) ? (
-            message.internal ? (
-              <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, false), "O cliente passa a ver a mensagem")}>
-                <Eye />
-                Mostrar ao cliente
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onSelect={() => run(() => setMessageInternal(message.id, true), "Mensagem interna: o cliente não vê")}>
-                <Lock />
-                Deixar interna
-              </DropdownMenuItem>
-            )
-          ) : null}
-          {mine && canWrite ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={() => {
-                  setDraft(message.body)
-                  setEditing(true)
-                }}
-              >
-                <Pencil />
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
-                <Trash2 />
-                Apagar
-              </DropdownMenuItem>
-            </>
-          ) : null}
+            </Fragment>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
   )
+
+  /** No celular, para quem não segura o dedo (leitor de tela): o mesmo que segurar a mensagem. */
+  const sheetTrigger =
+    editing || system ? null : (
+      <button type="button" onClick={() => setSheetOpen(true)} className="sr-only md:hidden">
+        Ações da mensagem
+      </button>
+    )
 
   const body = editing ? (
     <div className="mt-1 w-full space-y-1.5">
@@ -467,68 +661,93 @@ export function MessageItem({
         <Button type="button" variant="ghost" size="sm" className="h-7" onClick={() => setEditing(false)}>
           Cancelar
         </Button>
-        <span className="self-center">Enter salva · Esc cancela</span>
+        <span className="self-center max-md:hidden">Enter salva · Esc cancela</span>
       </div>
     </div>
   ) : (
-    <p className={cn("text-[14px] leading-6 break-words whitespace-pre-wrap text-foreground", system && "text-muted-foreground italic")}>
+    <p
+      className={cn(
+        "text-[14px] leading-6 break-words whitespace-pre-wrap text-foreground max-md:flow-root max-md:text-[15px] max-md:leading-[1.4]",
+        system && "text-muted-foreground italic"
+      )}
+    >
       <MessageText text={message.body} />
       {message.edited_at ? <span className="ml-1 text-[11px] text-muted-foreground">(editada)</span> : null}
+      {system ? null : <BubbleMeta message={message} own={own} seen={seen} />}
     </p>
   )
 
-  const details = (
-    <>
-      {message.kind === "change_request" || message.kind === "approval" || message.task_id || extra ? (
-        <div className={cn("mt-1 flex flex-wrap items-center gap-x-3 gap-y-1", own && "justify-end")}>
-          <RequestStatus message={message} />
-          {message.kind === "approval" ? (
-            <span className="inline-flex h-5 items-center rounded-full border border-success/20 bg-success/10 px-2 text-[11px] font-medium text-success">
-              {MESSAGE_KIND_LABEL.approval}
-            </span>
-          ) : null}
-          {message.task_id ? <TaskLink taskId={message.task_id} /> : null}
-          {extra}
-        </div>
-      ) : null}
+  const details =
+    message.kind === "change_request" || message.kind === "approval" || message.task_id || extra || (showPost && message.post) || (showProject && message.project) ? (
+      <>
+        {message.kind === "change_request" || message.kind === "approval" || message.task_id || extra ? (
+          <div className={cn("mt-1 flex flex-wrap items-center gap-x-3 gap-y-1", own && "justify-end")}>
+            <RequestStatus message={message} />
+            {message.kind === "approval" ? (
+              <span className="inline-flex h-5 items-center rounded-full border border-success/20 bg-success/10 px-2 text-[11px] font-medium text-success">
+                {MESSAGE_KIND_LABEL.approval}
+              </span>
+            ) : null}
+            {message.task_id ? <TaskLink taskId={message.task_id} /> : null}
+            {extra}
+          </div>
+        ) : null}
 
-      {showPost && message.post ? <PostCard post={message.post} today={today} onOpen={onOpenPost} /> : null}
-      {showProject && message.project ? <ProjectChip project={message.project} /> : null}
+        {showPost && message.post ? <PostCard post={message.post} today={today} onOpen={onOpenPost} /> : null}
+        {showProject && message.project ? <ProjectChip project={message.project} /> : null}
+      </>
+    ) : null
 
-      {taskOpen ? (
-        <MessageTaskForm
-          message={message}
-          onDone={(created) => {
-            setTaskOpen(false)
-            if (created) onChanged()
-          }}
-        />
-      ) : null}
-    </>
-  )
+  const taskForm = taskOpen ? (
+    <MessageTaskForm
+      message={message}
+      onDone={(created) => {
+        setTaskOpen(false)
+        if (created) onChanged()
+      }}
+    />
+  ) : null
 
   if (system) {
     return (
       <li className="flex flex-col items-center px-4 py-1.5 text-center" aria-label={`Aviso, ${messageTime(message)}`}>
-        <p className="max-w-[85%] text-[12px] leading-5 text-muted-foreground">
+        <p className="max-w-[85%] text-[12px] leading-5 text-muted-foreground max-md:rounded-lg max-md:bg-card/80 max-md:px-2.5 max-md:py-1 max-md:shadow-xs">
           <span className="italic">{message.body}</span>
           <time dateTime={message.created_at} className="ml-1.5 text-[11px] tabular-nums">
             {toTimeLabel(message.created_at)}
           </time>
         </p>
         {details}
+        {taskForm}
       </li>
     )
   }
 
+  /** O balão do celular (do `md` para cima, `contents`: some do layout e nada muda). */
+  const bubble = cn(
+    "md:contents",
+    !editing &&
+      "max-md:relative max-md:rounded-2xl max-md:px-2.5 max-md:pt-1 max-md:pb-1.5 max-md:shadow-[0_1px_0.5px_rgb(0_0_0/0.12)]",
+    // O "rabinho": na primeira mensagem de cada sequência, no canto de cima, para o lado de quem escreveu.
+    !editing &&
+      !continued &&
+      "max-md:before:absolute max-md:before:top-0 max-md:before:h-2.5 max-md:before:w-2 max-md:before:bg-inherit",
+    !editing && !continued && own && "max-md:rounded-tr-none max-md:before:-right-2 max-md:before:[clip-path:polygon(0_0,100%_0,0_100%)]",
+    !editing && !continued && !own && "max-md:rounded-tl-none max-md:before:-left-2 max-md:before:[clip-path:polygon(0_0,100%_0,100%_100%)]"
+  )
+
   return (
     <li
+      {...longPress}
       className={cn(
         "group/message relative flex gap-2.5 px-4 py-1 transition-colors hover:bg-muted/40",
         own && "justify-end",
         !continued && "mt-2 pt-1.5",
         pending && "bg-attention-soft/40",
-        message.internal && !pending && "bg-muted/30"
+        message.internal && !pending && "bg-muted/30",
+        // Celular: o fundo vai para o balão; segurar não seleciona o texto (a folha tem "Copiar texto").
+        "max-md:gap-1.5 max-md:bg-transparent max-md:px-3 max-md:py-0.5 max-md:select-none max-md:[-webkit-touch-callout:none]",
+        !continued && "max-md:mt-1.5 max-md:pt-0.5"
       )}
       aria-label={`${own ? "Você" : author.name}, ${messageTime(message)}`}
     >
@@ -539,13 +758,13 @@ export function MessageItem({
           </span>
         ) : null
       ) : (
-        <div className="w-8 shrink-0">
+        <div className={cn("w-8 shrink-0 max-md:w-7", oneToOne && "max-md:hidden")}>
           {continued ? (
-            <span className="invisible block pt-0.5 text-right text-[10px] text-muted-foreground tabular-nums group-hover/message:visible">
+            <span className="invisible block pt-0.5 text-right text-[10px] text-muted-foreground tabular-nums group-hover/message:visible max-md:hidden">
               {messageTime(message)}
             </span>
           ) : (
-            <MessageAvatar authorId={message.author_id} />
+            <MessageAvatar authorId={message.author_id} className="max-md:size-7" />
           )}
         </div>
       )}
@@ -555,49 +774,80 @@ export function MessageItem({
       {own ? (
         <div className={cn("flex min-w-0 max-w-[85%] flex-col items-end md:max-w-[75%]", (editing || taskOpen) && "w-full")}>
           {continued ? null : (
-            <p className="mb-0.5 flex items-center gap-2">
+            <p className={cn("mb-0.5 flex items-center gap-2", !message.internal && "max-md:hidden")}>
               {message.internal ? <InternalBadge /> : null}
-              <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
+              <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums max-md:hidden">
                 {toTimeLabel(message.created_at)}
               </time>
             </p>
           )}
           {continued && message.internal ? <InternalBadge className="mb-0.5" /> : null}
-          {editing ? (
-            body
-          ) : (
-            <div
-              className={cn(
-                "max-w-full rounded-2xl rounded-tr-md px-3 py-1.5",
-                message.internal ? "border border-dashed border-foreground/20 bg-muted" : "bg-brand-soft"
-              )}
-            >
-              {body}
-            </div>
-          )}
-          {details}
-          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} className="justify-end" /> : null}
+          <div
+            className={cn(
+              bubble,
+              !editing &&
+                (pending
+                  ? "max-md:bg-attention-soft"
+                  : message.internal
+                    ? "max-md:border max-md:border-dashed max-md:border-foreground/20 max-md:bg-muted"
+                    : "max-md:bg-brand-soft")
+            )}
+          >
+            {editing ? (
+              body
+            ) : (
+              <div
+                className={cn(
+                  "max-w-full md:rounded-2xl md:rounded-tr-md md:px-3 md:py-1.5",
+                  message.internal ? "md:border md:border-dashed md:border-foreground/20 md:bg-muted" : "md:bg-brand-soft"
+                )}
+              >
+                {body}
+              </div>
+            )}
+            {details}
+          </div>
+          {taskForm}
+          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} className="justify-end max-md:hidden" /> : null}
         </div>
       ) : (
         <div className="min-w-0 flex-1">
-          {continued ? null : (
-            <p className="flex items-baseline gap-2">
-              <span className="text-[13px] font-semibold text-foreground">{author.name}</span>
-              <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums">
-                {toTimeLabel(message.created_at)}
-              </time>
-              {message.internal ? <InternalBadge className="self-center" /> : null}
-            </p>
-          )}
-          {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
-          {body}
-          {details}
-          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} /> : null}
+          <div
+            className={cn(
+              bubble,
+              "max-md:w-fit max-md:max-w-[85%]",
+              pending ? "max-md:bg-attention-soft" : message.internal ? "max-md:border max-md:border-dashed max-md:border-foreground/20 max-md:bg-muted" : "max-md:bg-card"
+            )}
+          >
+            {continued ? null : (
+              <p className={cn("flex items-baseline gap-2", oneToOne && !message.internal && "max-md:hidden")}>
+                <span className="text-[13px] font-semibold text-foreground max-md:text-[12.5px]">{author.name}</span>
+                <time dateTime={message.created_at} className="text-[11px] text-muted-foreground tabular-nums max-md:hidden">
+                  {toTimeLabel(message.created_at)}
+                </time>
+                {message.internal ? <InternalBadge className="self-center" /> : null}
+              </p>
+            )}
+            {continued && message.internal ? <InternalBadge className="mt-0.5" /> : null}
+            {body}
+            {details}
+          </div>
+          {taskForm}
+          {seenBy && seenBy.length > 0 ? <SeenBy ids={seenBy} className="max-md:hidden" /> : null}
         </div>
       )}
 
       {own ? null : actions}
+      {sheetTrigger}
 
+      <MessageActionsSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        message={message}
+        own={own}
+        readers={readers ?? []}
+        actions={sheetActions}
+      />
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>

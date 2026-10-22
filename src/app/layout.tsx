@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Poppins } from "next/font/google"
 
+import { VisualViewportVars } from "@/components/layout/visual-viewport"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme"
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
         {/* No celular, os avisos ficam acima do menu de baixo. */}
         <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
+        <VisualViewportVars />
       </body>
     </html>
   )

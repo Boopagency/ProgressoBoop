@@ -613,6 +613,17 @@ menos nas mensagens internas.
   30 segundos).
 - Links: `?canal=<id>` abre um canal, `?cliente=<id>` abre o do cliente e
   `&ver=pendentes` abre os pendentes.
+- **No celular, como no WhatsApp:** a tela abre na lista de conversas (a
+  mais recente primeiro, com a foto, o nome, a última mensagem, a hora e as
+  não lidas; busca pelo nome; filtros Não lidas, Pendentes e Arquivadas; e
+  o botão redondo de nova conversa). Tocar abre a conversa em tela cheia,
+  com voltar, a foto e o nome no topo; os balões têm a hora dentro e, nas
+  suas mensagens, os tiques: ✓ ninguém leu ainda, ✓✓ azul alguém leu. O
+  campo fica embaixo e sobe com o teclado; o **+** marca Pedido de ajuste ou
+  Interno, e Enter pula linha (envia pelo botão redondo). **Segurar uma
+  mensagem** abre as ações (virar tarefa, resolver, editar, apagar, copiar
+  o texto) e quem viu. O chat do post, a conversa do projeto e a
+  Comunicação do portal funcionam do mesmo jeito.
 
 ### 2.19 Decisões (`/decisoes`)
 

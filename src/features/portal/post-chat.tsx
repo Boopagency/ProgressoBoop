@@ -92,6 +92,8 @@ export function PostChat({ target, initialMessages }: { target: ChatTarget; init
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    // No celular (toque) não há Shift: Enter quebra a linha e o botão envia.
+    if (window.matchMedia("(pointer: coarse) and (max-width: 767px)").matches) return
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault()
       send()
@@ -110,7 +112,7 @@ export function PostChat({ target, initialMessages }: { target: ChatTarget; init
           {CHAT_COPY[kind].empty}
         </p>
       ) : (
-        <ol ref={listRef} className="flex-1 overflow-y-auto pt-1 pb-4" aria-live="polite">
+        <ol ref={listRef} className="flex-1 overflow-y-auto pt-1 pb-4 max-md:bg-muted/50" aria-live="polite">
           {messages.map((message) => (
             <PortalMessageBubble key={message.id} message={message} time={sentAt(message.created_at, today)} />
           ))}
@@ -132,9 +134,9 @@ export function PostChat({ target, initialMessages }: { target: ChatTarget; init
           aria-label="Mensagem para a equipe"
           maxLength={MESSAGE_MAX}
           rows={1}
-          className="max-h-40 min-h-9 resize-none"
+          className="max-h-40 min-h-9 resize-none max-md:min-h-10 max-md:rounded-[1.25rem] max-md:px-4"
         />
-        <Button type="submit" size="icon" className="size-9 shrink-0" disabled={isPending || !draft.trim()} aria-label="Enviar">
+        <Button type="submit" size="icon" className="size-9 shrink-0 max-md:size-10 max-md:rounded-full" disabled={isPending || !draft.trim()} aria-label="Enviar">
           <SendHorizontal />
         </Button>
       </form>

@@ -162,6 +162,32 @@ export async function fetchPortalDirectThread(
   }
 }
 
+/**
+ * A última mensagem de cada conversa (a lista do celular): a do canal do
+ * cliente (`team`) e a de cada conversa direta, pelo id. É um extra: se
+ * falhar, a lista mostra as conversas sem o texto.
+ */
+export async function getPortalConversationPreviews(
+  clientId: string,
+  directIds: readonly string[]
+): Promise<Record<string, PortalChannelMessage>> {
+  await requirePortalUser()
+  const supabase = await createClient()
+  const [team, ...directs] = await Promise.all([
+    supabase.rpc("portal_channel_messages", { target_client: clientId, max_count: 1 }),
+    ...directIds.map((channelId) => supabase.rpc("portal_direct_messages", { target_channel: channelId, max_count: 1 })),
+  ])
+  const previews: Record<string, PortalChannelMessage> = {}
+  const teamRow = team.error ? undefined : team.data?.[0]
+  if (teamRow) previews.team = toChannelMessage(teamRow)
+  directIds.forEach((channelId, index) => {
+    const result = directs[index]
+    const row = result && !result.error ? result.data?.[0] : undefined
+    if (row) previews[channelId] = toChannelMessage(row)
+  })
+  return previews
+}
+
 /** Não lidas do menu: o canal do cliente e as conversas diretas da conta. */
 export async function fetchPortalUnreadMessages(supabase: SupabaseServerClient, clientId: string): Promise<number> {
   const [channel, directs] = await Promise.all([

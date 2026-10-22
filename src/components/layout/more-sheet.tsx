@@ -13,17 +13,20 @@ import { cn } from "@/lib/utils"
 
 /*
  * "Mais" do menu de baixo do celular (admin e portal): uma folha que sobe de
- * baixo com o resto do menu, a conta, o tema e "Sair".
+ * baixo com o resto do menu, a conta, o tema e "Sair". As mesmas linhas
+ * servem a outras folhas de ações (ex.: as de uma mensagem).
  */
 
 export function MoreSheet({
   open,
   onOpenChange,
+  title = "Mais",
   description,
   children,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  title?: string
   description: string
   children: ReactNode
 }) {
@@ -31,10 +34,15 @@ export function MoreSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[88dvh] gap-0 overflow-y-auto overscroll-contain rounded-t-2xl px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
+        // Abre com o foco na folha, não na primeira linha (que ficaria destacada ao abrir pelo toque longo).
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus()
+        }}
+        className="max-h-[88dvh] gap-0 overflow-y-auto overscroll-contain rounded-t-2xl px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none md:hidden"
       >
         <SheetHeader className="p-0 px-3 pt-2 pb-1">
-          <SheetTitle className="text-base">Mais</SheetTitle>
+          <SheetTitle className="text-base">{title}</SheetTitle>
           <SheetDescription className="sr-only">{description}</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 pt-2">{children}</div>
@@ -64,19 +72,31 @@ export function MoreSheetItem({
   active = false,
   detail,
   count = 0,
+  destructive = false,
+  disabled = false,
 }: {
   title: string
-  icon: LucideIcon
+  icon?: LucideIcon
   href?: string
   onClick: () => void
   active?: boolean
   /** Texto pequeno à direita (ex.: o cliente escolhido). */
   detail?: string
   count?: number
+  /** Apaga ou tira algo (em vermelho). */
+  destructive?: boolean
+  disabled?: boolean
 }) {
   const content = (
     <>
-      <Icon className={cn("size-5 shrink-0 text-muted-foreground", active && "text-brand-ink")} aria-hidden="true" />
+      {Icon ? (
+        <Icon
+          className={cn("size-5 shrink-0 text-muted-foreground", active && "text-brand-ink", destructive && "text-destructive")}
+          aria-hidden="true"
+        />
+      ) : (
+        <span className="size-5 shrink-0" aria-hidden="true" />
+      )}
       <span className={cn("min-w-0 flex-1 truncate", active && "font-semibold")}>{title}</span>
       {count > 0 ? (
         <span className="rounded-full bg-brand px-1.5 text-[11px] leading-5 font-semibold text-brand-navy tabular-nums">
@@ -94,7 +114,7 @@ export function MoreSheetItem({
           {content}
         </Link>
       ) : (
-        <button type="button" onClick={onClick} className={ROW}>
+        <button type="button" onClick={onClick} disabled={disabled} className={cn(ROW, destructive && "text-destructive", "disabled:opacity-50")}>
           {content}
         </button>
       )}

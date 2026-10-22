@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { loadProjectThread, markChannelRead, sendMessage } from "@/features/channels/actions"
 import { Composer, type ComposerOptions } from "@/features/channels/composer"
 import { buildThread, channelHref } from "@/features/channels/logic"
-import { MessageItem, useSeenBy } from "@/features/channels/message-item"
+import { MessageItem, useReadReceipts } from "@/features/channels/message-item"
 import { ThreadView } from "@/features/channels/thread-view"
 import { useUnread } from "@/features/channels/unread-provider"
 import { useThread } from "@/features/channels/use-thread"
@@ -30,7 +30,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
     if (result.ok && !before) setChannelId(result.data.channelId)
     return result
   })
-  const seenBy = useSeenBy(thread.messages, thread.reads)
+  const { seenBy, readers } = useReadReceipts(thread.messages, thread.reads)
   const days = buildThread(thread.messages ?? [], [], today)
 
   async function send(body: string, kind: "text" | "change_request" | "approval", options: ComposerOptions) {
@@ -102,6 +102,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
               key={item.key}
               message={item.message}
               seenBy={seenBy.get(item.message.id)}
+              readers={readers.get(item.message.id)}
               continued={item.continued}
               showProject={false}
               allowInternal
@@ -111,7 +112,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
           ) : null
         }
       />
-      <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong">
+      <p className="shrink-0 border-t bg-attention-soft/60 px-4 py-2 text-xs text-attention-ink-strong max-md:py-1.5 max-md:text-[11.5px] max-md:leading-4">
         O cliente lê esta conversa no portal (inclusive o que foi escrito antes). Para falar só com a equipe, marque
         Interno ao escrever.
       </p>

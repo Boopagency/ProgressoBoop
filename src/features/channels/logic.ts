@@ -1,4 +1,4 @@
-import { addDaysToKey, capitalize, formatShortDate, formatWeekdayLong, toDateKey, toTimeLabel } from "@/lib/dates"
+import { addDaysToKey, capitalize, daysBetween, formatShortDate, formatWeekdayLong, toDateKey, toTimeLabel } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import type {
   Channel,
@@ -83,6 +83,18 @@ export interface ThreadData {
   reads: ChannelRead[]
 }
 
+/** Até quando cada pessoa viu o fio: a leitura dela ou a própria mensagem mais nova (quem escreve viu). */
+function readTimes(messages: readonly ThreadMessage[], reads: readonly ChannelRead[]): Map<string, number> {
+  const readAt = new Map<string, number>()
+  for (const read of reads) readAt.set(read.user_id, Date.parse(read.last_read_at))
+  for (const message of messages) {
+    if (!message.author_id) continue
+    const at = Date.parse(message.created_at)
+    if (at > (readAt.get(message.author_id) ?? -Infinity)) readAt.set(message.author_id, at)
+  }
+  return readAt
+}
+
 /**
  * "Visto por": cada pessoa aparece embaixo da última mensagem que já viu, como
  * nos aplicativos de conversa. Quem escreveu viu até a própria mensagem; no
@@ -95,16 +107,8 @@ export function seenByMessage(
   viewerId: string,
   isClient: (userId: string) => boolean
 ): Map<string, string[]> {
-  const readAt = new Map<string, number>()
-  for (const read of reads) readAt.set(read.user_id, Date.parse(read.last_read_at))
-  for (const message of messages) {
-    if (!message.author_id) continue
-    const at = Date.parse(message.created_at)
-    if (at > (readAt.get(message.author_id) ?? -Infinity)) readAt.set(message.author_id, at)
-  }
-
   const seen = new Map<string, string[]>()
-  for (const [userId, at] of readAt) {
+  for (const [userId, at] of readTimes(messages, reads)) {
     if (userId === viewerId) continue
     const client = isClient(userId)
     let last: ThreadMessage | undefined
@@ -117,6 +121,34 @@ export function seenByMessage(
     seen.set(last.id, [...(seen.get(last.id) ?? []), userId])
   }
   return seen
+}
+
+/**
+ * Quem já viu cada mensagem (os tiques das próprias mensagens no celular e o
+ * "Visto por" da folha de ações): todo mundo que leu até ela ou depois. Ficam
+ * de fora quem escreveu, quem está olhando a tela e, nas internas, quem é do
+ * cliente (não as vê).
+ */
+export function readersByMessage(
+  messages: readonly ThreadMessage[],
+  reads: readonly ChannelRead[],
+  viewerId: string,
+  isClient: (userId: string) => boolean
+): Map<string, string[]> {
+  const readAt = readTimes(messages, reads)
+  const readers = new Map<string, string[]>()
+  for (const message of messages) {
+    if (message.kind === "system") continue
+    const at = Date.parse(message.created_at)
+    const ids: string[] = []
+    for (const [userId, until] of readAt) {
+      if (userId === viewerId || userId === message.author_id || until < at) continue
+      if (message.internal && isClient(userId)) continue
+      ids.push(userId)
+    }
+    if (ids.length > 0) readers.set(message.id, ids)
+  }
+  return readers
 }
 
 /** Pedido pendente com o canal (tela Hoje). */
@@ -216,6 +248,36 @@ export function totalsOf(channels: Pick<ChannelEntry, "archived" | "counts">[]):
     pending += channel.counts.pending
   }
   return { unread, pending }
+}
+
+/** A última mensagem do canal, para a lista de conversas do celular. */
+export type ChannelPreview = Pick<Message, "author_id" | "kind" | "body" | "internal" | "created_at">
+
+/** Quando foi a última conversa do canal (ou quando ele foi criado, se não tem mensagem). */
+export function lastActivityAt(channel: ChannelEntry, preview?: ChannelPreview): Timestamp {
+  return channel.counts.last_message_at ?? preview?.created_at ?? channel.created_at
+}
+
+/** Lista de conversas do celular: a mais recente primeiro, como nos aplicativos de conversa. */
+export function sortByRecent(
+  channels: ChannelEntry[],
+  previews: Readonly<Record<string, ChannelPreview>>,
+  ctx: NameContext
+): ChannelEntry[] {
+  return [...channels].sort(
+    (a, b) =>
+      lastActivityAt(b, previews[b.id]).localeCompare(lastActivityAt(a, previews[a.id])) ||
+      channelLabel(a, ctx).localeCompare(channelLabel(b, ctx), "pt-BR")
+  )
+}
+
+/** Hora na lista de conversas: "14:32" hoje, "Ontem", o dia da semana até 6 dias atrás e depois "21/10". */
+export function listTimeLabel(at: Timestamp, today: DateKey): string {
+  const day = toDateKey(at)
+  if (day === today) return toTimeLabel(at)
+  if (day === addDaysToKey(today, -1)) return "Ontem"
+  if (daysBetween(day, today) < 7) return capitalize(formatWeekdayLong(day))
+  return formatShortDate(day, today)
 }
 
 /* ------------------------------------------------------------------ */

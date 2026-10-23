@@ -799,6 +799,7 @@ export type Database = {
           term_months: number | null
           title: string
           updated_at: string
+          utm: Json | null
         }
         Insert: {
           client_id?: string | null
@@ -829,6 +830,7 @@ export type Database = {
           term_months?: number | null
           title: string
           updated_at?: string
+          utm?: Json | null
         }
         Update: {
           client_id?: string | null
@@ -859,6 +861,7 @@ export type Database = {
           term_months?: number | null
           title?: string
           updated_at?: string
+          utm?: Json | null
         }
         Relationships: [
           {
@@ -2673,6 +2676,17 @@ export type Database = {
         }
         Returns: string
       }
+      site_lead: {
+        Args: {
+          lead_company: string
+          lead_name: string
+          lead_phone: string
+          lead_profile: string
+          lead_service: string
+          lead_utm: Json
+        }
+        Returns: undefined
+      }
       win_deal: {
         Args: {
           client_id?: string
@@ -2784,6 +2798,7 @@ export type Database = {
         | "client_change_request"
         | "task_assigned"
         | "client_referral"
+        | "site_lead"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -3020,6 +3035,7 @@ export const Constants = {
         "client_change_request",
         "task_assigned",
         "client_referral",
+        "site_lead",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

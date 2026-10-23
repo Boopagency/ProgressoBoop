@@ -747,6 +747,13 @@ O funil de vendas, do lead ao cliente.
 - **Perder** pede o motivo (preço, escolheu outra agência, sem orçamento
   agora, parou de responder, adiou o projeto, fora do nosso perfil, ou um
   texto livre); **Reabrir** devolve ao funil.
+- **Leads do link da bio** (deumboop.com.br/link, ou /jabez e /boop): quem
+  preenche nome e WhatsApp antes de abrir a conversa vira um negócio na
+  etapa Lead, com a frente escolhida, a origem pela `utm_source` (Instagram
+  quando não há UTM), as UTMs em `deals.utm` e um resumo nas notas
+  ("Veio pelo link da bio (instagram · bio · jabez). Perfil: …"). O
+  responsável é quem cuida das indicações, que recebe o aviso no sino e no
+  celular. O mesmo WhatsApp em 24 h não duplica o negócio.
 
 ### 2.23 Indicadores (`/indicadores`)
 

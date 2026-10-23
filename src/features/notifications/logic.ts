@@ -23,6 +23,7 @@ export type NotificationKind =
   | "client_change_request"
   | "task_assigned"
   | "client_referral"
+  | "site_lead"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -90,6 +91,14 @@ export function describeNotification(notification: AppNotification, clientName?:
     case "client_referral":
       // Título: a empresa ou o nome de quem foi indicado; trecho: o contato.
       return { actor: fromClient, action: "indicou", subject: item.title, excerpt: item.body }
+    case "site_lead":
+      // Lead do link da bio: o nome, a empresa (título) e o contato no trecho.
+      return {
+        actor: item.title ? `${actor} (${item.title})` : actor,
+        action: "chegou pelo link da bio",
+        subject: null,
+        excerpt: item.body,
+      }
   }
 }
 

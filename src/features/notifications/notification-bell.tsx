@@ -11,6 +11,7 @@ import {
   MessageCircle,
   MessageSquare,
   PencilLine,
+  UserPlus,
   Volume2,
   VolumeX,
   type LucideIcon,
@@ -64,6 +65,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   client_change_request: PencilLine,
   task_assigned: ListTodo,
   client_referral: HeartHandshake,
+  site_lead: UserPlus,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

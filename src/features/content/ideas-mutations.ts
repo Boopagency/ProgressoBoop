@@ -4,7 +4,7 @@ import { ideaBrief } from "@/features/content/ideas-logic"
 import { IDEA_COLUMNS } from "@/features/content/ideas-queries"
 import { parseIdeaInput, parseIdeaPatch } from "@/features/content/ideas-validation"
 import type { PostSummary } from "@/features/content/logic"
-import { POST_SUMMARY_COLUMNS } from "@/features/content/queries"
+import { POST_SUMMARY_COLUMNS, withPublishStatus } from "@/features/content/queries"
 import { BRIEF_MAX, parsePostInput } from "@/features/content/validation"
 import { isContentFormat } from "@/lib/labels"
 import { dbFailure } from "@/lib/supabase/errors"
@@ -103,5 +103,5 @@ export async function ideaToPost(
     return linkError ? dbFailure(linkError, "Não foi possível criar o post.") : ALREADY_POST
   }
 
-  return { ok: true, data: post }
+  return { ok: true, data: withPublishStatus(post) }
 }

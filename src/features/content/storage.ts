@@ -19,14 +19,15 @@ export async function removeContentImages(supabase: SupabaseServerClient, paths:
   if (error) console.error(`[storage] ${error.message}`)
 }
 
-/** Todas as imagens de um cliente (foto do perfil, capas e slides dos posts), antes de excluí-lo. */
+/** Todas as imagens de um cliente (foto do perfil, capas, slides e cópias em JPEG do Instagram), antes de excluí-lo. */
 export async function clientContentImages(supabase: SupabaseServerClient, clientId: string): Promise<string[]> {
   const [client, posts] = await Promise.all([
     supabase.from("clients").select("avatar_path").eq("id", clientId).maybeSingle(),
-    supabase.from("content_posts").select("cover_path, slides").eq("client_id", clientId),
+    supabase.from("content_posts").select("cover_path, slides, publish_jpeg_paths").eq("client_id", clientId),
   ])
-  const paths = (posts.data ?? []).flatMap((post) =>
-    postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) })
-  )
+  const paths = (posts.data ?? []).flatMap((post) => [
+    ...postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) }),
+    ...post.publish_jpeg_paths,
+  ])
   return client.data?.avatar_path ? [client.data.avatar_path, ...paths] : paths
 }

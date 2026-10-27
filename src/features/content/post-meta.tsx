@@ -7,6 +7,7 @@ import {
   Clock,
   GalleryHorizontalEnd,
   Image as ImageIcon,
+  Send,
   Smartphone,
   Type,
   Video,
@@ -28,11 +29,13 @@ import {
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import {
+  AUTO_PUBLISH_LABEL,
   CONTENT_FORMAT_LABEL,
   CONTENT_FRONT_LABEL,
   CONTENT_FRONT_STATUS_LABEL,
   CONTENT_FRONTS,
   CONTENT_STAGE_LABEL,
+  PUBLISH_STATUS_LABEL,
 } from "@/lib/labels"
 import type { ContentFormat, ContentFrontStatus, ContentStage, DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -258,6 +261,29 @@ export function PostFlags({ post, today, compact = false }: { post: PostSummary;
           {compact ? <span className="sr-only">Falta material</span> : "Falta material"}
         </span>
       ) : null}
+    </span>
+  )
+}
+
+/**
+ * "Publica sozinho": o post está na fila do Instagram (ou publicando agora);
+ * em vermelho quando a publicação automática desistiu.
+ */
+export function AutoPublishMark({
+  post,
+  className,
+}: {
+  post: Pick<PostSummary, "auto_publish" | "publish_status">
+  className?: string
+}) {
+  const status = post.publish_status
+  if (!post.auto_publish || !status || status === "published") return null
+  const failed = status === "failed"
+  const label = failed ? `${PUBLISH_STATUS_LABEL.failed} no Instagram` : AUTO_PUBLISH_LABEL
+  return (
+    <span title={label} className={cn("inline-flex shrink-0", failed ? "text-overdue" : "text-brand-ink", className)}>
+      <Send className="size-3" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
     </span>
   )
 }

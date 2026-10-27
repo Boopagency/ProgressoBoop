@@ -351,7 +351,8 @@ const editPost: Tool<McpContext> = {
     if (Object.keys(patch.value).length === 0) return toolError("Diga o que mudar.")
     const saved = await patchPost(context.supabase, found.value.id, patch.value)
     if (!saved.ok) return toolError(saved.error)
-    return textResult(`Post "${found.value.title}" salvo.\n${context.origin}/conteudo?post=${found.value.id}`)
+    const notice = saved.data ? `\n${saved.data}` : ""
+    return textResult(`Post "${found.value.title}" salvo.${notice}\n${context.origin}/conteudo?post=${found.value.id}`)
   },
 }
 

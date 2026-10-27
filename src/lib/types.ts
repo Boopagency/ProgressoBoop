@@ -77,6 +77,8 @@ export type ContentNetwork = "instagram" | "tiktok" | "linkedin"
 /** Conta de rede social conectada (por enquanto só o Instagram). */
 export type SocialAccountStatus = "connected" | "refresh_failed" | "expired"
 export type InstagramAccountType = "business" | "media_creator"
+/** Publicação automática no Instagram: na fila, publicando, publicado ou falhou. */
+export type PublishStatus = "queued" | "publishing" | "published" | "failed"
 /** Conversão, Crescimento, Autoridade, Conexão ou Publi. */
 export type ContentIntent = "conversion" | "growth" | "authority" | "connection" | "sponsored"
 /** Em produção, Revisão interna, Aguardando cliente, Aprovado, Programado ou Publicado. */
@@ -573,6 +575,14 @@ export interface ContentPost {
   pinned: boolean
   /** Quando virou publicado. */
   published_at: Timestamp | null
+  /** "Publicar automaticamente" no Instagram (muda só pelas funções do banco). */
+  auto_publish: boolean
+  publish_status: PublishStatus | null
+  /** Último erro da publicação, ou o aviso de quando ficou para a próxima rodada. */
+  publish_error: string | null
+  publish_attempts: number
+  /** Link do post publicado no Instagram. */
+  instagram_permalink: string | null
   created_by: string
   created_at: Timestamp
   updated_at: Timestamp

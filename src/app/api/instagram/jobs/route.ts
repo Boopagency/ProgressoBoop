@@ -3,6 +3,7 @@ import { after } from "next/server"
 import { instagramJobsSecret } from "@/features/instagram/config"
 import { sameText } from "@/features/instagram/logic"
 import { refreshLongToken } from "@/features/instagram/meta"
+import { publishDue } from "@/features/instagram/publish-job"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 
 /**
@@ -12,13 +13,14 @@ import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
  * funções do banco conferem de novo. Responde na hora e trabalha depois
  * (`after`), para o pg_net não esperar.
  *
- * Hoje: `refresh_tokens` renova os tokens longos que vencem em até 15 dias.
- * Os próximos PRs entram aqui (publicar, métricas).
+ * `refresh_tokens` (todo dia) renova os tokens longos que vencem em até 15
+ * dias; `publish_due` (a cada 5 minutos) publica os posts que venceram
+ * (publish-job.ts). O próximo PR entra aqui (métricas).
  */
 
 export const maxDuration = 60
 
-const JOBS = ["refresh_tokens"] as const
+const JOBS = ["refresh_tokens", "publish_due"] as const
 type Job = (typeof JOBS)[number]
 
 async function refreshTokens(supabase: SupabaseServerClient, secret: string) {
@@ -61,8 +63,10 @@ export async function POST(request: Request) {
   const job = body && typeof body === "object" ? (body as { job?: unknown }).job : null
   if (!JOBS.includes(job as Job)) return Response.json({ error: "Job desconhecido." }, { status: 400 })
 
+  // Folga para gravar o resultado antes do limite da função.
+  const deadline = Date.now() + (maxDuration - 10) * 1000
   const supabase = await createClient()
-  after(() => refreshTokens(supabase, secret))
+  after(() => (job === "publish_due" ? publishDue(supabase, secret, deadline) : refreshTokens(supabase, secret)))
 
   return Response.json({ accepted: job }, { status: 202, headers: { "Cache-Control": "no-store" } })
 }

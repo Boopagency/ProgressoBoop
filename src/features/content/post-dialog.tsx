@@ -44,6 +44,7 @@ import {
   type PostTexts,
 } from "@/features/content/logic"
 import { ClientMark, FrontStatusDot } from "@/features/content/post-meta"
+import { AutoPublishPanel } from "@/features/instagram/auto-publish-panel"
 import {
   BRIEF_MAX,
   CAPTION_MAX,
@@ -252,6 +253,9 @@ function textPayloadOf(texts: TextFields): PostTexts {
   }
 }
 
+/** Campos que mudam o que vai para o Instagram (com a legenda e os slides). */
+const PUBLISH_FIELDS = ["client_id", "format", "networks", "stage", "publish_on", "publish_time", "cover_path"] as const
+
 /** Chave da imagem que está subindo: a capa ou o slide (pela posição). */
 type ImageTarget = "cover" | `slide-${number}`
 
@@ -292,7 +296,7 @@ function PostForm({
   const { clients, profiles, projects, currentUser, clientById } = useWorkspace()
   const { tasks, openTask } = useTasks()
   const [today] = useState<DateKey>(() => todayKey())
-  const [initial] = useState<Fields>(() => (post ? fieldsOf(post) : newFields(defaults, currentUser.id)))
+  const [initial, setInitial] = useState<Fields>(() => (post ? fieldsOf(post) : newFields(defaults, currentUser.id)))
   const [fields, setFields] = useState<Fields>(initial)
   const [frontsTouched, setFrontsTouched] = useState(false)
   // Posts novos já começam com os textos vazios; os existentes, ao carregar.
@@ -462,6 +466,8 @@ function PostForm({
             return
           }
           toast.success("Post salvo", { description: fields.title.trim() })
+          // Post na fila do Instagram que não pode mais sair sozinho: a publicação automática foi desligada.
+          if (result.data) toast.warning(result.data)
         }
         settleUploads(savedImages)
         onDone()
@@ -500,6 +506,12 @@ function PostForm({
   )
   const linkedTasks = post ? tasks.filter((task) => task.content_post_id === post.id) : []
   const drive = fields.drive_url.trim()
+  // Publicação automática: age sobre o post salvo; mudanças por salvar nestes campos pedem salvar antes.
+  const publishDirty =
+    PUBLISH_FIELDS.some((key) => JSON.stringify(initial[key]) !== JSON.stringify(fields[key])) ||
+    (texts !== null &&
+      initialTexts !== null &&
+      (texts.caption !== initialTexts.caption || JSON.stringify(texts.slides) !== JSON.stringify(initialTexts.slides)))
 
   const form = (
     <form
@@ -771,6 +783,32 @@ function PostForm({
             </label>
           </div>
         </section>
+
+        {post ? (
+          <AutoPublishPanel
+            post={post}
+            saved={
+              initialTexts
+                ? {
+                    format: post.format,
+                    networks: post.networks,
+                    stage: post.stage,
+                    publish_on: post.publish_on,
+                    publish_time: post.publish_time,
+                    caption: initialTexts.caption.trim() || null,
+                    cover_path: post.cover_path,
+                    slides: initialTexts.slides,
+                  }
+                : null
+            }
+            dirty={publishDirty}
+            onStageChange={(stage) => {
+              setInitial((current) => ({ ...current, stage }))
+              setFields((current) => ({ ...current, stage }))
+            }}
+            className="mt-3 max-md:order-6 max-md:mt-0"
+          />
+        ) : null}
 
         <section aria-label="Textos" className="mt-5 space-y-3 max-md:contents">
           {texts === null ? (

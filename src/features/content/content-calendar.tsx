@@ -13,6 +13,7 @@ import type { CalendarMode } from "@/features/content/filters"
 import { comparePosts, groupByDay, postsInRange, type PostSummary } from "@/features/content/logic"
 import {
   attentionDot,
+  AutoPublishMark,
   ClientMark,
   clientDotColor,
   FormatIcon,
@@ -332,6 +333,7 @@ function PostChip({
       <ClientMark clientId={post.client_id} size="xs" />
       <FormatIcon format={post.format} className="size-3 text-muted-foreground" />
       {withTime && post.publish_time ? <span className="shrink-0 text-muted-foreground tabular-nums">{post.publish_time.slice(0, 5)}</span> : null}
+      <AutoPublishMark post={post} />
       <span className={cn("min-w-0 flex-1 truncate text-foreground", post.stage === "published" && "text-muted-foreground")}>{post.title}</span>
       <StageDot stage={post.stage} className="size-1.5" />
       {attention ? <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", attention)} /> : null}
@@ -480,6 +482,7 @@ function WeekCard({ post, today, onOpen }: { post: PostSummary; today: DateKey; 
       <span className="mt-1 flex items-center gap-1 text-muted-foreground">
         <FormatIcon format={post.format} className="size-3" />
         <span className="truncate">{CONTENT_FORMAT_LABEL[post.format]}</span>
+        <AutoPublishMark post={post} />
         {post.publish_time ? <span className="ml-auto shrink-0 tabular-nums">{post.publish_time.slice(0, 5)}</span> : null}
       </span>
       <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">

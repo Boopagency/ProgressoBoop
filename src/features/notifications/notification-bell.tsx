@@ -5,6 +5,7 @@ import {
   BellOff,
   BellRing,
   CheckCheck,
+  CircleAlert,
   CircleCheck,
   HeartHandshake,
   ListTodo,
@@ -66,6 +67,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   task_assigned: ListTodo,
   client_referral: HeartHandshake,
   site_lead: UserPlus,
+  instagram_publish_failed: CircleAlert,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

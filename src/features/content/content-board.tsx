@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 
 import { BOARD_PUBLISHED_DAYS, boardColumns, publishLabel, type PostSummary } from "@/features/content/logic"
-import { ClientMark, FormatIcon, FrontDots, PostFlags, StageDot } from "@/features/content/post-meta"
+import { AutoPublishMark, ClientMark, FormatIcon, FrontDots, PostFlags, StageDot } from "@/features/content/post-meta"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { CONTENT_FORMAT_LABEL, CONTENT_STAGE_LABEL, CONTENT_STAGES } from "@/lib/labels"
@@ -180,6 +180,7 @@ function BoardCard({
         <span className="mt-1.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground" title={CONTENT_FORMAT_LABEL[post.format]}>
           <FormatIcon format={post.format} className="size-3" />
           <span className="truncate tabular-nums">{publishLabel(post, today)}</span>
+          <AutoPublishMark post={post} />
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           <PostFlags post={post} today={today} />

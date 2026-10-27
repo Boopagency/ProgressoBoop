@@ -20,7 +20,9 @@
 -- funções conferem o mesmo segredo. Endereço e segredo ficam no Vault
 -- (`instagram_jobs_url` e `instagram_jobs_secret`); sem eles, nada sai e nada
 -- falha. instagram_account_token fica pronto para os próximos jobs (publicar
--- e métricas): devolve o token de um cliente para quem tem o segredo.
+-- e métricas): devolve o token de um cliente para quem tem o segredo. Os
+-- avisos da Meta (desautorizar, excluir dados) apagam a conta por
+-- instagram_forget_user, com o mesmo segredo.
 
 create extension if not exists pg_cron with schema pg_catalog;
 grant usage on schema cron to postgres;
@@ -36,6 +38,9 @@ create table public.social_accounts (
   network text not null default 'instagram' check (network in ('instagram')),
   -- Id da conta profissional no Instagram (`user_id` do /me), usado para publicar.
   external_user_id text not null check (char_length(external_user_id) between 1 and 64),
+  -- Id da pessoa no app (`id` do /me, `user_id` da troca do código): é o que
+  -- a Meta manda no `signed_request` ao desautorizar ou pedir exclusão.
+  app_user_id text check (char_length(app_user_id) between 1 and 64),
   -- Sem @, como em clients.instagram_handle.
   username text not null check (username ~ '^[A-Za-z0-9._]{1,30}$'),
   display_name text check (char_length(display_name) <= 120),
@@ -63,6 +68,8 @@ comment on table public.social_accounts is
 
 create index social_accounts_connected_by_idx on public.social_accounts (connected_by);
 create index social_accounts_token_expires_at_idx on public.social_accounts (token_expires_at);
+create index social_accounts_app_user_id_idx on public.social_accounts (app_user_id);
+create index social_accounts_external_user_id_idx on public.social_accounts (external_user_id);
 
 alter table public.social_accounts enable row level security;
 
@@ -119,6 +126,7 @@ revoke all on function private.instagram_actor_name(uuid) from public;
 create function public.save_instagram_account(
   p_client_id uuid,
   p_external_user_id text,
+  p_app_user_id text,
   p_username text,
   p_display_name text,
   p_profile_picture_url text,
@@ -152,17 +160,18 @@ begin
   end if;
 
   insert into public.social_accounts as a (
-    client_id, network, external_user_id, username, display_name, profile_picture_url,
+    client_id, network, external_user_id, app_user_id, username, display_name, profile_picture_url,
     account_type, permissions, status, token_expires_at, token_refreshed_at, last_error,
     connected_at, connected_by, connected_by_name, updated_at
   )
   values (
-    p_client_id, 'instagram', p_external_user_id, p_username, left(nullif(trim(p_display_name), ''), 120),
+    p_client_id, 'instagram', p_external_user_id, left(nullif(p_app_user_id, ''), 64), p_username, left(nullif(trim(p_display_name), ''), 120),
     nullif(p_profile_picture_url, ''), p_account_type, coalesce(p_permissions, '{}'), 'connected',
     now() + make_interval(secs => p_expires_in), now(), null, now(), me, left(actor, 120), now()
   )
   on conflict (client_id, network) do update
     set external_user_id = excluded.external_user_id,
+        app_user_id = excluded.app_user_id,
         username = excluded.username,
         display_name = excluded.display_name,
         profile_picture_url = excluded.profile_picture_url,
@@ -191,8 +200,8 @@ begin
 end;
 $$;
 
-revoke all on function public.save_instagram_account(uuid, text, text, text, text, text, text[], text, integer) from public, anon;
-grant execute on function public.save_instagram_account(uuid, text, text, text, text, text, text[], text, integer) to authenticated;
+revoke all on function public.save_instagram_account(uuid, text, text, text, text, text, text, text[], text, integer) from public, anon;
+grant execute on function public.save_instagram_account(uuid, text, text, text, text, text, text, text[], text, integer) to authenticated;
 
 -- Desconectar apaga a conta e o token (cascata). O @ do feed fica.
 create function public.disconnect_instagram_account(p_client_id uuid)
@@ -358,6 +367,40 @@ $$;
 
 revoke all on function public.instagram_account_token(text, uuid) from public;
 grant execute on function public.instagram_account_token(text, uuid) to anon, authenticated;
+
+-- A pessoa tirou o app no Instagram (desautorizar) ou pediu a exclusão dos
+-- dados: a Meta avisa as rotas /api/instagram/deauthorize e /data-deletion,
+-- que conferem o `signed_request` com a chave secreta do app e chamam aqui
+-- com o segredo dos jobs. Apaga as contas daquela pessoa (e o token, em
+-- cascata) em todos os clientes. Devolve quantas saíram.
+create function public.instagram_forget_user(p_secret text, p_user_id text)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  removed integer;
+begin
+  if not private.instagram_secret_ok(p_secret) then
+    raise exception 'Não autorizado.' using errcode = '42501';
+  end if;
+  if coalesce(p_user_id, '') = '' then
+    return 0;
+  end if;
+  with gone as (
+    delete from public.social_accounts a
+     where a.network = 'instagram'
+       and (a.app_user_id = p_user_id or a.external_user_id = p_user_id)
+    returning 1
+  )
+  select count(*)::integer into removed from gone;
+  return removed;
+end;
+$$;
+
+revoke all on function public.instagram_forget_user(text, text) from public;
+grant execute on function public.instagram_forget_user(text, text) to anon, authenticated;
 
 -- Chama a rota de jobs do app. O POST sai depois do commit e não segura nada;
 -- a rota responde na hora e faz o trabalho em seguida.

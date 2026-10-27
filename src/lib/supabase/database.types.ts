@@ -2064,6 +2064,7 @@ export type Database = {
       social_accounts: {
         Row: {
           account_type: string
+          app_user_id: string | null
           client_id: string
           connected_at: string
           connected_by: string | null
@@ -2083,6 +2084,7 @@ export type Database = {
         }
         Insert: {
           account_type: string
+          app_user_id?: string | null
           client_id: string
           connected_at?: string
           connected_by?: string | null
@@ -2102,6 +2104,7 @@ export type Database = {
         }
         Update: {
           account_type?: string
+          app_user_id?: string | null
           client_id?: string
           connected_at?: string
           connected_by?: string | null
@@ -2430,6 +2433,10 @@ export type Database = {
           external_user_id: string
         }[]
       }
+      instagram_forget_user: {
+        Args: { p_secret: string; p_user_id: string }
+        Returns: number
+      }
       instagram_token_failed: {
         Args: {
           p_account_id: string
@@ -2459,6 +2466,7 @@ export type Database = {
         Args: {
           p_access_token: string
           p_account_type: string
+          p_app_user_id: string
           p_client_id: string
           p_display_name: string
           p_expires_in: number

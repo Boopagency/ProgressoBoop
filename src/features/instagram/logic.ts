@@ -21,7 +21,10 @@ export type InstagramScope = (typeof INSTAGRAM_SCOPES)[number]
 
 /** Caminhos das rotas do OAuth (a URL de retorno é cadastrada no app da Meta). */
 export const CONNECT_PATH = "/api/instagram/conectar"
-export const CALLBACK_PATH = "/api/instagram/retorno"
+export const CALLBACK_PATH = "/api/instagram/callback"
+/** Avisos da Meta (cadastrados no app): desautorizar e excluir dados. */
+export const DEAUTHORIZE_PATH = "/api/instagram/deauthorize"
+export const DATA_DELETION_PATH = "/api/instagram/data-deletion"
 /** Cookie que amarra o `state` ao navegador que começou a conexão. */
 export const STATE_COOKIE = "boop_ig_state"
 /** Quanto tempo a pessoa tem para autorizar na Meta e voltar. */
@@ -176,7 +179,10 @@ export function parseLongToken(json: unknown): LongToken | null {
 }
 
 export interface InstagramProfile {
+  /** Id da conta profissional (`user_id`), usado para publicar. */
   userId: string
+  /** Id da pessoa no app (`id`), o que vem no `signed_request` da Meta. */
+  appUserId: string | null
   username: string
   name: string | null
   accountType: "business" | "media_creator" | null
@@ -187,18 +193,71 @@ export interface InstagramProfile {
 export function parseProfile(json: unknown): InstagramProfile | null {
   if (!json || typeof json !== "object") return null
   const row = json as Record<string, unknown>
-  const id = row.user_id ?? row.id
-  const userId = typeof id === "number" || typeof id === "string" ? String(id) : ""
+  const asId = (value: unknown) => (typeof value === "number" || typeof value === "string" ? String(value).slice(0, 64) : "")
+  const userId = asId(row.user_id ?? row.id)
+  const appUserId = asId(row.id) || null
   const username = typeof row.username === "string" ? row.username.trim() : ""
   if (!userId || !/^[A-Za-z0-9._]{1,30}$/.test(username)) return null
   const picture = typeof row.profile_picture_url === "string" && row.profile_picture_url.startsWith("https://") ? row.profile_picture_url : null
   return {
-    userId: userId.slice(0, 64),
+    userId,
+    appUserId,
     username,
     name: typeof row.name === "string" && row.name.trim() ? row.name.trim().slice(0, 120) : null,
     accountType: professionalAccountType(row.account_type),
     pictureUrl: picture && picture.length <= 2000 ? picture : null,
   }
+}
+
+/**
+ * `signed_request` que a Meta manda ao desautorizar o app ou pedir exclusão
+ * dos dados: `<assinatura>.<payload>` em base64url, HMAC-SHA256 do payload
+ * com a chave secreta do app. Devolve o `user_id` (id da pessoa no app) ou
+ * null se a assinatura não bate.
+ */
+export function parseSignedRequest(value: unknown, appSecret: string): { userId: string } | null {
+  if (typeof value !== "string") return null
+  const [encodedSig, payload, ...rest] = value.split(".")
+  if (!encodedSig || !payload || rest.length > 0) return null
+  const expected = createHmac("sha256", appSecret).update(payload).digest()
+  const given = Buffer.from(encodedSig, "base64url")
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null
+  let data: unknown
+  try {
+    data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
+  } catch {
+    return null
+  }
+  if (!data || typeof data !== "object") return null
+  const { algorithm, user_id } = data as Record<string, unknown>
+  if (typeof algorithm !== "string" || algorithm.toUpperCase() !== "HMAC-SHA256") return null
+  const userId = typeof user_id === "number" || typeof user_id === "string" ? String(user_id) : ""
+  return userId ? { userId: userId.slice(0, 64) } : null
+}
+
+/**
+ * Código de confirmação da exclusão de dados (só letras e números): o
+ * instante do pedido em base 36 e uma assinatura, para a página de status
+ * reconhecer o código sem guardar nada.
+ */
+export function deletionCode(at: number, key: Buffer): string {
+  const stamp = Math.floor(at / 1000).toString(36)
+  return `${stamp}${createHmac("sha256", key).update(`deletion:${stamp}`).digest("hex").slice(0, 16)}`
+}
+
+/** Chave própria dos códigos de exclusão, derivada da chave secreta do app. */
+export function deletionKey(appSecret: string): Buffer {
+  return createHmac("sha256", appSecret).update("boop-admin:instagram-deletion").digest()
+}
+
+/** O instante do pedido, se o código é nosso; senão null. */
+export function readDeletionCode(code: unknown, key: Buffer): number | null {
+  if (typeof code !== "string" || !/^[0-9a-z]{17,30}$/.test(code)) return null
+  const stamp = code.slice(0, -16)
+  const expected = Buffer.from(deletionCode(parseInt(stamp, 36) * 1000, key))
+  const given = Buffer.from(code)
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null
+  return parseInt(stamp, 36) * 1000
 }
 
 /** Erro da Graph API que diz que o token não vale mais (OAuthException 190). */

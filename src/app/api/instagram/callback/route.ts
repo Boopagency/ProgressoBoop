@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.rpc("save_instagram_account", {
     p_client_id: payload.clientId,
     p_external_user_id: profile.value.userId,
+    p_app_user_id: profile.value.appUserId ?? short.value.userId,
     p_username: profile.value.username,
     p_display_name: profile.value.name ?? "",
     p_profile_picture_url: profile.value.pictureUrl ?? "",

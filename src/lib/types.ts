@@ -74,6 +74,9 @@ export type MetricUnit = "money" | "percent" | "count" | "number" | "days"
 /** Reels, Carrossel, Estático, Stories, Vídeo, Foto ou Texto. */
 export type ContentFormat = "reels" | "carousel" | "static" | "stories" | "video" | "photo" | "text"
 export type ContentNetwork = "instagram" | "tiktok" | "linkedin"
+/** Conta de rede social conectada (por enquanto só o Instagram). */
+export type SocialAccountStatus = "connected" | "refresh_failed" | "expired"
+export type InstagramAccountType = "business" | "media_creator"
 /** Conversão, Crescimento, Autoridade, Conexão ou Publi. */
 export type ContentIntent = "conversion" | "growth" | "authority" | "connection" | "sponsored"
 /** Em produção, Revisão interna, Aguardando cliente, Aprovado, Programado ou Publicado. */

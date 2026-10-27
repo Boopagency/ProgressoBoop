@@ -2061,6 +2061,77 @@ export type Database = {
         }
         Relationships: []
       }
+      social_accounts: {
+        Row: {
+          account_type: string
+          app_user_id: string | null
+          client_id: string
+          connected_at: string
+          connected_by: string | null
+          connected_by_name: string
+          display_name: string | null
+          external_user_id: string
+          id: string
+          last_error: string | null
+          network: string
+          permissions: string[]
+          profile_picture_url: string | null
+          status: string
+          token_expires_at: string
+          token_refreshed_at: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          account_type: string
+          app_user_id?: string | null
+          client_id: string
+          connected_at?: string
+          connected_by?: string | null
+          connected_by_name: string
+          display_name?: string | null
+          external_user_id: string
+          id?: string
+          last_error?: string | null
+          network?: string
+          permissions?: string[]
+          profile_picture_url?: string | null
+          status?: string
+          token_expires_at: string
+          token_refreshed_at?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          account_type?: string
+          app_user_id?: string | null
+          client_id?: string
+          connected_at?: string
+          connected_by?: string | null
+          connected_by_name?: string
+          display_name?: string | null
+          external_user_id?: string
+          id?: string
+          last_error?: string | null
+          network?: string
+          permissions?: string[]
+          profile_picture_url?: string | null
+          status?: string
+          token_expires_at?: string
+          token_refreshed_at?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_views: {
         Row: {
           created_at: string
@@ -2349,6 +2420,62 @@ export type Database = {
           created: boolean
           member_id: string
         }[]
+      }
+      disconnect_instagram_account: {
+        Args: { p_client_id: string }
+        Returns: boolean
+      }
+      instagram_account_token: {
+        Args: { p_client_id: string; p_secret: string }
+        Returns: {
+          access_token: string
+          account_id: string
+          external_user_id: string
+        }[]
+      }
+      instagram_forget_user: {
+        Args: { p_secret: string; p_user_id: string }
+        Returns: number
+      }
+      instagram_token_failed: {
+        Args: {
+          p_account_id: string
+          p_error: string
+          p_expired: boolean
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      instagram_token_refreshed: {
+        Args: {
+          p_access_token: string
+          p_account_id: string
+          p_expires_in: number
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      instagram_tokens_to_refresh: {
+        Args: { p_secret: string }
+        Returns: {
+          access_token: string
+          account_id: string
+        }[]
+      }
+      save_instagram_account: {
+        Args: {
+          p_access_token: string
+          p_account_type: string
+          p_app_user_id: string
+          p_client_id: string
+          p_display_name: string
+          p_expires_in: number
+          p_external_user_id: string
+          p_permissions: string[]
+          p_profile_picture_url: string
+          p_username: string
+        }
+        Returns: string
       }
       forget_push_endpoints: {
         Args: { p_endpoints: string[]; p_secret: string }

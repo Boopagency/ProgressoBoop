@@ -71,6 +71,9 @@ src/
 │   │                           # do layout com sidebar, exige sessão)
 │   ├── api/relatorios/excel/   # o .xlsx gerado no servidor (com a sessão da pessoa)
 │   ├── api/keepalive/          # visita diária ao banco (cron da Vercel)
+│   ├── api/instagram/          # OAuth do Instagram (conectar/, callback/), avisos da
+│   │                           # Meta (deauthorize/, data-deletion/) e os jobs
+│   │                           # chamados pelo banco (jobs/, com segredo próprio)
 │   ├── api/arquivos/           # imagens dos processos (confere a sessão, redireciona
 │   │                           # para uma URL assinada e temporária do Storage)
 │   ├── api/conteudo/           # imagens do conteúdo: capas, slides e foto do cliente
@@ -121,6 +124,8 @@ src/
 │   │                           # combinados, resumo e transcrição
 │   ├── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
 │   │                           # versões, checklist → tarefas
+│   ├── instagram/              # conta do Instagram do cliente: OAuth (state assinado),
+│   │                           # chamadas à Meta, cartão "Instagram" (cliente e portal)
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
 │   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
@@ -2000,10 +2005,13 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | CONFIG | Vercel (todos os ambientes): chave pública do Web Push |
 | `VAPID_PRIVATE_KEY`                    | SECRET | Vercel (todos os ambientes), sensível: assina o Web Push |
 | `PUSH_WEBHOOK_SECRET`                  | SECRET | Vercel (todos os ambientes), sensível: o mesmo valor de `push_webhook_secret` no Vault |
+| `INSTAGRAM_APP_ID`                     | CONFIG | Vercel (todos os ambientes): "ID do app do Instagram" (Instagram → API com login do Instagram; não é o ID do app da Meta) |
+| `INSTAGRAM_APP_SECRET`                 | SECRET | Vercel (todos os ambientes), sensível: "chave secreta do app do Instagram"; também assina o `state` e confere o `signed_request` da Meta |
+| `INSTAGRAM_JOBS_SECRET`                | SECRET | Vercel (Production), sensível: o mesmo valor de `instagram_jobs_secret` no Vault (jobs e avisos da Meta) |
 
 - **CONFIG**: valores públicos por natureza. A chave publicável
   (`sb_publishable_…`) pode estar no navegador; quem protege os dados é o RLS.
-- **SECRET**: só as do push. O app não usa `service_role` nem chave secreta
+- **SECRET**: só as do push e as do Instagram. O app não usa `service_role` nem chave secreta
   (`sb_secret_…`) do Supabase. Se um dia alguma rotina administrativa
   precisar, ela deve ficar só no servidor, como variável sensível, e nunca
   com prefixo `NEXT_PUBLIC_`.
@@ -2015,6 +2023,33 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
   sino), assina com as chaves VAPID e avisa o banco dos aparelhos encerrados
   (`forget_push_endpoints`). Sem os segredos no Vault, nada sai. O POST vai
   sempre para a produção, já que prévias e produção usam o mesmo banco.
+- **Instagram dos clientes (issue #89):** o OAuth começa em
+  `/api/instagram/conectar` (equipe ou conta do cliente; `state` assinado
+  com HMAC, amarrado à pessoa, ao cliente e a um cookie do navegador, vale
+  10 min) e volta em `/api/instagram/callback`, que troca o código pelo token
+  curto e depois pelo longo (60 dias), lê o `/me` (API v26.0), recusa conta
+  pessoal e grava por `save_instagram_account`. A tela lê
+  `social_accounts` (sem token; equipe vê todas, cliente a própria); o token
+  fica em `private.social_account_tokens`, que só funções `security definer`
+  leem. O `pg_cron` (job `instagram-refresh-tokens`, todo dia às 06:17 de
+  Brasília) chama `private.run_instagram_job`, que faz um POST (pg_net) para
+  `/api/instagram/jobs` com o segredo do Vault (`instagram_jobs_url` e
+  `instagram_jobs_secret`); a rota pede os tokens que vencem em até 15 dias
+  (`instagram_tokens_to_refresh`), renova na Meta e devolve
+  (`instagram_token_refreshed` / `instagram_token_failed`), sempre com o
+  segredo. `instagram_account_token` entrega o token de um cliente aos
+  próximos jobs (publicar, métricas). A URL de retorno sai da origem da
+  requisição: cada endereço (produção e prévia) precisa estar cadastrado no
+  app da Meta. O app usa o "ID do app do Instagram" e a "chave secreta do
+  app do Instagram" (Instagram → API com login do Instagram), não o ID do
+  app da Meta. Os avisos da Meta chegam sem sessão em
+  `/api/instagram/deauthorize` (a pessoa tirou o app) e
+  `/api/instagram/data-deletion` (pedido de exclusão): as rotas conferem o
+  `signed_request` (HMAC-SHA256 com a chave secreta do app) e apagam as
+  contas da pessoa, com o token, por `instagram_forget_user` (com o segredo
+  dos jobs). A exclusão devolve o JSON da Meta (`url` de status e
+  `confirmation_code`); o código é assinado, e a página de status
+  (`GET /api/instagram/data-deletion?codigo=`) o reconhece sem guardar nada.
 
 ## 13. Fora do escopo (por enquanto)
 

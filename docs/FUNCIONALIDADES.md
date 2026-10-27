@@ -941,6 +941,8 @@ post e no projeto aberto, o topo mostra o "voltar".
 - **Feed:** a prévia do Instagram como na Central de Conteúdo (foto, @,
   número de posts, bio e o grid na mesma ordem, fixados primeiro), só com os
   posts que o cliente vê. Stories não entram.
+  Em cima, o cartão **Instagram** (o mesmo da equipe): a própria cliente
+  conecta a conta pelo Instagram, sem passar a senha.
 - **Post aberto:** a situação, o formato, as redes e a data; as imagens
   dos slides uma de cada vez (a capa só aparece se não houver slide com
   imagem; ela também é a miniatura nesse caso), a legenda e o texto dos slides. Em "Para
@@ -981,6 +983,16 @@ post e no projeto aberto, o topo mostra o "voltar".
   "Nova senha" gera outra senha provisória para quem perdeu a sua. O "x"
   tira o acesso (com confirmação); dar acesso de novo com o mesmo e-mail
   devolve.
+- **Instagram** (página do cliente, coluna da direita, e Feed do portal):
+  "Conectar Instagram" leva à tela de autorização do Instagram (leitura,
+  publicação e métricas de uma vez) e volta com "Conectado como @fulano",
+  a foto, o tipo da conta, quem conectou e até quando vale o acesso (o app
+  renova sozinho antes de vencer). Conta pessoal é recusada com o passo a
+  passo para virar profissional; permissão desmarcada aparece em "Faltou
+  autorizar". "Reconectar" troca a conta; "Desconectar" apaga o acesso
+  guardado. Conectar preenche o @ do feed. Sem o app da Meta configurado, o
+  cartão diz "Integração com o Instagram não configurada". Publicar e
+  métricas vêm nos próximos PRs da issue #89.
 - **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
   do cliente: mensagens por dia, as seguidas da mesma pessoa juntas (as
   do cliente à direita; as da equipe à esquerda, com as iniciais e o nome;

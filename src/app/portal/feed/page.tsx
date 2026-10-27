@@ -4,6 +4,9 @@ import Link from "next/link"
 
 import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { ContentImage } from "@/features/content/content-image"
+import { InstagramCard } from "@/features/instagram/instagram-card"
+import { connectNotice } from "@/features/instagram/logic"
+import { getPortalInstagram } from "@/features/instagram/queries"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
 import { PORTAL_STATUS_LABEL, portalFeed, portalStatus, postThumbnail } from "@/features/portal/content-logic"
@@ -22,7 +25,11 @@ export const metadata: Metadata = { title: "Feed" }
 export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   const [user, searchParams] = await Promise.all([requirePortalUser(), props.searchParams])
   const client = pickPortalClient(user, searchParams.cliente)
-  const [posts, profile] = await Promise.all([getPortalPosts(client.id), getPortalProfile(client.id)])
+  const [posts, profile, instagram] = await Promise.all([
+    getPortalPosts(client.id),
+    getPortalProfile(client.id),
+    getPortalInstagram(client.id),
+  ])
   const today = todayKey()
   const tiles = portalFeed(posts)
 
@@ -32,6 +39,16 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
 
       <PageBody>
       <div className="w-full max-w-[600px]">
+        <InstagramCard
+          clientId={client.id}
+          clientName={client.name}
+          data={instagram}
+          notice={connectNotice(searchParams.instagram)}
+          audience="client"
+          today={today}
+          className="mb-6"
+        />
+
         <div className="flex items-center gap-4 sm:gap-6">
           <ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} />
           <div className="min-w-0 flex-1">

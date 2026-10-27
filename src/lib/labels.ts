@@ -16,11 +16,13 @@ import type {
   EventType,
   FinanceAccount,
   FinanceKind,
+  InstagramAccountType,
   LeadSource,
   MeetingStatus,
   MessageKind,
   MetricUnit,
   ProjectStatus,
+  SocialAccountStatus,
   TaskArea,
   TaskPriority,
   TaskStatus,
@@ -92,6 +94,24 @@ export const CLIENT_HEALTH_LABEL: Record<ClientHealth, string> = {
   healthy: "Saudável",
   attention: "Atenção",
   at_risk: "Em risco",
+}
+
+export const SOCIAL_ACCOUNT_STATUS_LABEL: Record<SocialAccountStatus, string> = {
+  connected: "Conectado",
+  refresh_failed: "Renovação falhou",
+  expired: "Conexão vencida",
+}
+
+export const INSTAGRAM_ACCOUNT_TYPE_LABEL: Record<InstagramAccountType, string> = {
+  business: "Conta Empresa",
+  media_creator: "Conta Criador de conteúdo",
+}
+
+/** Permissões pedidas à Meta, como aparecem no cartão do Instagram. */
+export const INSTAGRAM_SCOPE_LABEL: Record<string, string> = {
+  instagram_business_basic: "ler o perfil",
+  instagram_business_content_publish: "publicar",
+  instagram_business_manage_insights: "ver as métricas",
 }
 
 export const PROJECT_STATUSES = ["planned", "active", "paused", "done", "canceled"] as const satisfies readonly ProjectStatus[]

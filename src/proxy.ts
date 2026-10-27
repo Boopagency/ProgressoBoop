@@ -12,11 +12,11 @@ import { updateSession } from "@/lib/supabase/proxy"
  *
  * Rotas públicas: o login, a volta do link de confirmação por e-mail, a
  * visita diária ao banco (cron da Vercel), o envio das notificações no
- * celular (chamado pelo banco, com segredo próprio) e o conector do Claude, que se
- * autentica pelo token (Authorization: Bearer) e responde 401 com o
- * endereço dos metadados do OAuth.
+ * celular e os jobs do Instagram (chamados pelo banco, com segredo próprio) e
+ * o conector do Claude, que se autentica pelo token (Authorization: Bearer) e
+ * responde 401 com o endereço dos metadados do OAuth.
  */
-const PUBLIC_PATHS = new Set(["/login", "/auth/confirmar", "/api/keepalive", "/api/push", MCP_PATH, ...RESOURCE_METADATA_PATHS])
+const PUBLIC_PATHS = new Set(["/login", "/auth/confirmar", "/api/keepalive", "/api/push", "/api/instagram/jobs", MCP_PATH, ...RESOURCE_METADATA_PATHS])
 
 export async function proxy(request: NextRequest) {
   const { response, isAuthenticated } = await updateSession(request)

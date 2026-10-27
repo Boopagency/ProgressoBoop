@@ -13,6 +13,9 @@ import { getDeals } from "@/features/deals/queries"
 import { getDecisions } from "@/features/decisions/queries"
 import { getDocs } from "@/features/docs/queries"
 import { getFinance } from "@/features/finance/queries"
+import { InstagramCard } from "@/features/instagram/instagram-card"
+import { connectNotice } from "@/features/instagram/logic"
+import { getClientInstagram } from "@/features/instagram/queries"
 import { getMeetingRecords } from "@/features/meetings/queries"
 import { getClientMembers } from "@/features/portal/access-queries"
 import { getTasks } from "@/features/tasks/queries"
@@ -31,7 +34,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files, instagram] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
@@ -46,6 +49,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getContentIdeas(id),
     getClientMembers(id),
     getClientFiles(id),
+    getClientInstagram(id),
   ])
   if (!client) notFound()
 
@@ -74,6 +78,16 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
         ideas={ideas}
         members={members}
         files={files}
+        instagramCard={
+          <InstagramCard
+            clientId={client.id}
+            clientName={client.name}
+            data={instagram}
+            notice={connectNotice(searchParams.instagram)}
+            audience="team"
+            today={today}
+          />
+        }
       />
     </TasksProvider>
   )

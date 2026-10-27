@@ -101,6 +101,7 @@ export function ClientView({
   ideas,
   members,
   files,
+  instagramCard,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -124,6 +125,8 @@ export function ClientView({
   members: ClientMember[]
   /** Arquivos enviados para o cliente (Documentos no portal). */
   files: ClientFile[]
+  /** Cartão "Instagram" (conta conectada), montado pela página. */
+  instagramCard: ReactNode
 }) {
   const router = useRouter()
   const { today } = useTasks()
@@ -259,6 +262,7 @@ export function ClientView({
         <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
           <AboutCard client={client} />
           <ClientAccessCard clientId={client.id} clientName={client.name} members={members} />
+          {instagramCard}
           <ClientFinanceCard clientId={client.id} finance={finance} today={today} />
           <ClientDealsCard clientId={client.id} deals={deals} today={today} />
           <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />

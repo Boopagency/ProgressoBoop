@@ -61,22 +61,25 @@ export async function createPost(input: PostInput): Promise<ActionResult<{ id: s
  * Edita o post (inclusive mudar de etapa pelo quadro ou fixar no feed). Só os
  * campos enviados mudam (regra em mutations.ts).
  */
-export async function updatePost(id: string, patch: PostPatch): Promise<ActionResult> {
+export async function updatePost(id: string, patch: PostPatch): Promise<ActionResult<string | null>> {
   await requireUser()
   return refreshed(await patchPost(await createClient(), id, patch))
 }
 
-/** Exclui o post e as imagens dele. As tarefas geradas continuam, sem o vínculo (o banco limpa). */
+/** Exclui o post e as imagens dele (com as cópias em JPEG do Instagram). As tarefas geradas continuam, sem o vínculo (o banco limpa). */
 export async function deletePost(id: string): Promise<ActionResult> {
   await requireUser()
   if (!isUuid(id)) return NOT_FOUND
   const supabase = await createClient()
-  const { data, error } = await supabase.from("content_posts").delete().eq("id", id).select("cover_path, slides")
+  const { data, error } = await supabase.from("content_posts").delete().eq("id", id).select("cover_path, slides, publish_jpeg_paths")
   if (error) return dbFailure(error, "Não foi possível excluir o post.")
   if (data.length === 0) return NOT_FOUND
   await removeContentImages(
     supabase,
-    data.flatMap((post) => postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) }))
+    data.flatMap((post) => [
+      ...postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) }),
+      ...post.publish_jpeg_paths,
+    ])
   )
   refreshApp()
   return { ok: true, data: null }

@@ -151,7 +151,11 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
       moveOptimistic({ id, stage })
       const result = await updatePost(id, { stage })
       if (!result.ok) toast.error(result.error)
-      else if (stage === "published") toast.success("Post publicado", { description: post.title })
+      else {
+        if (stage === "published") toast.success("Post publicado", { description: post.title })
+        // Estava na fila do Instagram e a etapa nova não deixa publicar: a publicação automática foi desligada.
+        if (result.data) toast.warning(result.data, { description: post.title })
+      }
     })
   }
 

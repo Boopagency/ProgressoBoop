@@ -8,11 +8,11 @@ import { addDaysToKey, todayKey } from "@/lib/dates"
 import type { Json } from "@/lib/supabase/database.types"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
-import type { ContentPost, ContentSlide } from "@/lib/types"
+import type { ContentPost, ContentSlide, PublishStatus } from "@/lib/types"
 
 /** Colunas das listas (sem os textos longos, lidos ao abrir o post). */
 export const POST_SUMMARY_COLUMNS =
-  "id, client_id, project_id, title, format, networks, intents, publish_on, publish_time, stage, copy_status, design_status, video_status, owner_id, drive_url, cover_path, pinned, published_at, created_by, created_at, updated_at"
+  "id, client_id, project_id, title, format, networks, intents, publish_on, publish_time, stage, copy_status, design_status, video_status, owner_id, drive_url, cover_path, pinned, published_at, auto_publish, publish_status, publish_error, publish_attempts, instagram_permalink, created_by, created_at, updated_at"
 
 export const POST_COLUMNS = `${POST_SUMMARY_COLUMNS}, brief, design_notes, script, slides, caption`
 
@@ -32,11 +32,21 @@ export function asSlides(value: Json): ContentSlide[] {
   })
 }
 
+const PUBLISH_STATUSES: readonly string[] = ["queued", "publishing", "published", "failed"] satisfies PublishStatus[]
+
+/** `publish_status` vem do banco como texto (coluna com check): no tipo do app. */
+export function withPublishStatus<T extends { publish_status: string | null }>(
+  row: T
+): Omit<T, "publish_status"> & { publish_status: PublishStatus | null } {
+  const status = row.publish_status
+  return { ...row, publish_status: status && PUBLISH_STATUSES.includes(status) ? (status as PublishStatus) : null }
+}
+
 /** O post inteiro, com os textos (sessão do app ou token do conector, sob o RLS). `null` se não existe. */
 export async function fetchPost(supabase: SupabaseServerClient, id: string): Promise<ContentPost | null> {
   const { data, error } = await supabase.from("content_posts").select(POST_COLUMNS).eq("id", id).maybeSingle()
   if (error) throw loadError(error, "o post")
-  return data ? { ...data, slides: asSlides(data.slides) } : null
+  return data ? withPublishStatus({ ...data, slides: asSlides(data.slides) }) : null
 }
 
 /** Posts de todos os clientes (ou de um), sem os textos longos. */
@@ -51,7 +61,7 @@ export const getContentPosts = cache(async (clientId?: string): Promise<PostSumm
   if (clientId) query = query.eq("client_id", clientId)
   const { data, error } = await query.order("publish_on", { ascending: false, nullsFirst: true }).limit(1000)
   if (error) throw loadError(error, "os posts")
-  return data
+  return data.map(withPublishStatus)
 })
 
 export type PostSearchRow = Pick<

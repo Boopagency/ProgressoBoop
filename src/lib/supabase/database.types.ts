@@ -655,6 +655,7 @@ export type Database = {
       }
       content_posts: {
         Row: {
+          auto_publish: boolean
           brief: string | null
           caption: string | null
           client_id: string
@@ -667,12 +668,19 @@ export type Database = {
           drive_url: string | null
           format: Database["public"]["Enums"]["content_format"]
           id: string
+          instagram_media_id: string | null
+          instagram_permalink: string | null
           intents: Database["public"]["Enums"]["content_intent"][]
           networks: Database["public"]["Enums"]["content_network"][]
           owner_id: string | null
           pinned: boolean
           project_id: string | null
+          publish_attempted_at: string | null
+          publish_attempts: number
+          publish_error: string | null
+          publish_jpeg_paths: string[]
           publish_on: string | null
+          publish_status: string | null
           publish_time: string | null
           published_at: string | null
           script: string | null
@@ -683,6 +691,7 @@ export type Database = {
           video_status: Database["public"]["Enums"]["content_front_status"]
         }
         Insert: {
+          auto_publish?: boolean
           brief?: string | null
           caption?: string | null
           client_id: string
@@ -695,12 +704,19 @@ export type Database = {
           drive_url?: string | null
           format: Database["public"]["Enums"]["content_format"]
           id?: string
+          instagram_media_id?: string | null
+          instagram_permalink?: string | null
           intents?: Database["public"]["Enums"]["content_intent"][]
           networks?: Database["public"]["Enums"]["content_network"][]
           owner_id?: string | null
           pinned?: boolean
           project_id?: string | null
+          publish_attempted_at?: string | null
+          publish_attempts?: number
+          publish_error?: string | null
+          publish_jpeg_paths?: string[]
           publish_on?: string | null
+          publish_status?: string | null
           publish_time?: string | null
           published_at?: string | null
           script?: string | null
@@ -711,6 +727,7 @@ export type Database = {
           video_status: Database["public"]["Enums"]["content_front_status"]
         }
         Update: {
+          auto_publish?: boolean
           brief?: string | null
           caption?: string | null
           client_id?: string
@@ -723,12 +740,19 @@ export type Database = {
           drive_url?: string | null
           format?: Database["public"]["Enums"]["content_format"]
           id?: string
+          instagram_media_id?: string | null
+          instagram_permalink?: string | null
           intents?: Database["public"]["Enums"]["content_intent"][]
           networks?: Database["public"]["Enums"]["content_network"][]
           owner_id?: string | null
           pinned?: boolean
           project_id?: string | null
+          publish_attempted_at?: string | null
+          publish_attempts?: number
+          publish_error?: string | null
+          publish_jpeg_paths?: string[]
           publish_on?: string | null
+          publish_status?: string | null
           publish_time?: string | null
           published_at?: string | null
           script?: string | null
@@ -2421,6 +2445,10 @@ export type Database = {
           member_id: string
         }[]
       }
+      cancel_instagram_publish: {
+        Args: { p_post_id: string }
+        Returns: string[]
+      }
       disconnect_instagram_account: {
         Args: { p_client_id: string }
         Returns: boolean
@@ -2440,6 +2468,45 @@ export type Database = {
       instagram_forget_user: {
         Args: { p_secret: string; p_user_id: string }
         Returns: number
+      }
+      instagram_post_deferred: {
+        Args: {
+          p_container_id: string | null
+          p_note: string | null
+          p_post_id: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      instagram_post_failed: {
+        Args: {
+          p_error: string
+          p_final: boolean
+          p_post_id: string
+          p_secret: string
+        }
+        Returns: string
+      }
+      instagram_post_published: {
+        Args: {
+          p_media_id: string
+          p_permalink: string | null
+          p_post_id: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      instagram_posts_due: {
+        Args: { p_secret: string }
+        Returns: {
+          caption: string
+          client_id: string
+          container_created_at: string
+          container_id: string
+          format: string
+          media_urls: string[]
+          post_id: string
+        }[]
       }
       instagram_token_failed: {
         Args: {
@@ -2782,6 +2849,16 @@ export type Database = {
         }
         Returns: string
       }
+      schedule_instagram_publish: {
+        Args: {
+          p_jpeg_paths: string[]
+          p_media_urls: string[]
+          p_post_id: string
+          p_sources: string[]
+          p_urls_expire_at: string
+        }
+        Returns: string[]
+      }
       save_push_subscription: {
         Args: {
           p_auth: string
@@ -2926,6 +3003,7 @@ export type Database = {
         | "task_assigned"
         | "client_referral"
         | "site_lead"
+        | "instagram_publish_failed"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -3163,6 +3241,7 @@ export const Constants = {
         "task_assigned",
         "client_referral",
         "site_lead",
+        "instagram_publish_failed",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

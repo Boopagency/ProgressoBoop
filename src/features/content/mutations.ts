@@ -4,6 +4,7 @@ import type { PostgrestError } from "@supabase/supabase-js"
 
 import { frontOfTaskTitle, frontTaskTitle, MAX_PINNED, postImagePaths, removedImages } from "@/features/content/logic"
 import { asSlides } from "@/features/content/queries"
+import { refreshAutoPublish } from "@/features/instagram/publish"
 import { removeContentImages } from "@/features/content/storage"
 import { parseFrontTasks, parsePostInput, parsePostPatch } from "@/features/content/validation"
 import { formatShortDate } from "@/lib/dates"
@@ -74,9 +75,10 @@ export async function insertPost(supabase: SupabaseServerClient, input: unknown)
 /**
  * Edita o post (inclusive mudar de etapa pelo quadro ou fixar no feed). Só os
  * campos enviados mudam. Trocar ou tirar a capa ou a imagem de um slide apaga
- * o arquivo antigo.
+ * o arquivo antigo. Post na fila do Instagram: refaz as imagens e as URLs ou
+ * desliga a publicação automática; o aviso (se desligou) volta em `data`.
  */
-export async function patchPost(supabase: SupabaseServerClient, id: string, patch: unknown): Promise<ActionResult> {
+export async function patchPost(supabase: SupabaseServerClient, id: string, patch: unknown): Promise<ActionResult<string | null>> {
   if (!isUuid(id)) return NOT_FOUND
   const parsed = parsePostPatch(patch)
   if (!parsed.ok) return parsed
@@ -108,7 +110,7 @@ export async function patchPost(supabase: SupabaseServerClient, id: string, patc
     .from("content_posts")
     .update(slides ? { ...fields, slides: slidesJson(slides) } : fields)
     .eq("id", id)
-    .select("cover_path, slides")
+    .select("cover_path, slides, auto_publish")
   if (error) {
     if (error.code === "23514") return { ok: false, error: "Confira a data e o horário: sem dia, não há horário." }
     return saveFailure(error, "Não foi possível salvar o post.")
@@ -120,7 +122,8 @@ export async function patchPost(supabase: SupabaseServerClient, id: string, patc
     await removeContentImages(supabase, removedImages(imagesBefore, imagesAfter))
   }
 
-  return { ok: true, data: null }
+  const notice = saved.auto_publish ? await refreshAutoPublish(supabase, id, Object.keys(parsed.value)) : null
+  return { ok: true, data: notice }
 }
 
 /**

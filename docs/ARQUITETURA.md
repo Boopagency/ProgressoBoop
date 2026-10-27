@@ -125,7 +125,8 @@ src/
 │   ├── docs/                   # processos: biblioteca, editor (BlockNote), modelos,
 │   │                           # versões, checklist → tarefas
 │   ├── instagram/              # conta do Instagram do cliente: OAuth (state assinado),
-│   │                           # chamadas à Meta, cartão "Instagram" (cliente e portal)
+│   │                           # chamadas à Meta, cartão "Instagram" (cliente e portal),
+│   │                           # publicação automática (publish*.ts, painel do post)
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
 │   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
@@ -2050,6 +2051,33 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
   dos jobs). A exclusão devolve o JSON da Meta (`url` de status e
   `confirmation_code`); o código é assinado, e a página de status
   (`GET /api/instagram/data-deletion?codigo=`) o reconhece sem guardar nada.
+- **Publicação automática no Instagram (issue #89, PR 2/3):** colunas novas
+  em `content_posts` (`auto_publish`, `publish_status` — `queued`,
+  `publishing`, `published`, `failed` —, `publish_error`,
+  `publish_attempts`, `instagram_media_id`, `instagram_permalink`,
+  `publish_jpeg_paths`), que só mudam pelas funções (o trigger
+  `guard_content_post_publish` devolve o valor antigo quando vem da API).
+  Ligar (`publish.ts`, com a sessão de quem agenda): confere as regras
+  (`publish-logic.ts`), converte cada imagem para JPEG sRGB com o `sharp`
+  (a Meta só aceita JPEG), grava as cópias no bucket `content`, assina as
+  URLs até 3 dias depois do horário e chama `schedule_instagram_publish`,
+  que guarda as URLs em `private.content_post_publish_media` (fora da API)
+  com a assinatura do cliente, formato e imagens. O `pg_cron` (job
+  `instagram-publish-due`, a cada 5 minutos) chama
+  `private.run_instagram_job('publish_due')`; a rota pede
+  `instagram_posts_due` (desiste e avisa dos que não têm como sair — horário
+  vencido há mais de 24 h, imagens mudadas, links vencidos, conta
+  desconectada, publicação interrompida — e trava até 3 no estado
+  `publishing` com `for update skip locked`), cria os contêineres
+  (`/{ig-user-id}/media`, itens do carrossel com `is_carousel_item`, story
+  com `media_type=STORIES`), espera `status_code=FINISHED`, confere
+  `content_publishing_limit`, publica (`/media_publish`), lê o `permalink`
+  e devolve por `instagram_post_published` / `instagram_post_failed` (até 3
+  tentativas; na última, aviso `instagram_publish_failed` para a equipe) /
+  `instagram_post_deferred` (Meta processando, limite atingido ou tempo da
+  rodada: sem contar tentativa, com o contêiner guardado por até 23 h). Sem
+  resposta da Meta ao publicar, desiste na hora para não publicar duas
+  vezes.
 
 ## 13. Fora do escopo (por enquanto)
 

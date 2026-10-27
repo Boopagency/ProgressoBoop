@@ -22,6 +22,7 @@ import type {
   MessageKind,
   MetricUnit,
   ProjectStatus,
+  PublishStatus,
   SocialAccountStatus,
   TaskArea,
   TaskPriority,
@@ -105,6 +106,16 @@ export const SOCIAL_ACCOUNT_STATUS_LABEL: Record<SocialAccountStatus, string> = 
 export const INSTAGRAM_ACCOUNT_TYPE_LABEL: Record<InstagramAccountType, string> = {
   business: "Conta Empresa",
   media_creator: "Conta Criador de conteúdo",
+}
+
+/** Indicador do quadro e do calendário: post na fila do Instagram. */
+export const AUTO_PUBLISH_LABEL = "Publica sozinho no Instagram"
+
+export const PUBLISH_STATUS_LABEL: Record<PublishStatus, string> = {
+  queued: "Agendado",
+  publishing: "Publicando",
+  published: "Publicado no Instagram",
+  failed: "Não publicou",
 }
 
 /** Permissões pedidas à Meta, como aparecem no cartão do Instagram. */

@@ -991,8 +991,24 @@ post e no projeto aberto, o topo mostra o "voltar".
   passo para virar profissional; permissão desmarcada aparece em "Faltou
   autorizar". "Reconectar" troca a conta; "Desconectar" apaga o acesso
   guardado. Conectar preenche o @ do feed. Sem o app da Meta configurado, o
-  cartão diz "Integração com o Instagram não configurada". Publicar e
-  métricas vêm nos próximos PRs da issue #89.
+  cartão diz "Integração com o Instagram não configurada". As métricas vêm
+  no PR 3/3 da issue #89.
+- **Publicar automaticamente** (no post, admin; issue #89, PR 2/3): post do
+  Instagram estático, foto, carrossel (as imagens dos slides, na ordem, de 2
+  a 20) ou story com imagem, Aprovado ou Agendado, com dia e horário e com a
+  conta do cliente conectada, sai sozinho no horário (o job roda a cada 5
+  minutos). Ligar confere tudo antes (legenda até 2.200 caracteres, 30
+  hashtags e 20 menções; imagem até 8 MB; no feed, proporção de 4:5 a
+  1,91:1, ex.: 1080 × 1350) e diz o motivo se não der; converte as imagens
+  para JPEG e leva o post para Agendado. O painel mostra "Agendado: …",
+  "Publicando agora", "Publicado no Instagram" com o link, ou "Não publicou"
+  com o motivo e "Tentar de novo". Falhou: tenta de novo sozinho, até 3
+  vezes, e na última avisa a equipe no sino ("Instagram (cliente) não
+  publicou …"). Salvar o post na fila com outra imagem, cliente ou horário
+  atualiza a fila; se não der mais para publicar, a opção é desligada com o
+  motivo. No quadro e no calendário, um aviãozinho marca o post que publica
+  sozinho (vermelho quando não publicou). Reels e vídeo não publicam
+  sozinhos: o app ainda não guarda vídeo.
 - **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
   do cliente: mensagens por dia, as seguidas da mesma pessoa juntas (as
   do cliente à direita; as da equipe à esquerda, com as iniciais e o nome;

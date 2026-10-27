@@ -24,6 +24,7 @@ export type NotificationKind =
   | "task_assigned"
   | "client_referral"
   | "site_lead"
+  | "instagram_publish_failed"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -99,6 +100,9 @@ export function describeNotification(notification: AppNotification, clientName?:
         subject: null,
         excerpt: item.body,
       }
+    case "instagram_publish_failed":
+      // Publicação automática que desistiu: o post (título) e o motivo no trecho.
+      return { actor: clientName ? `Instagram (${clientName})` : "Instagram", action: "não publicou", subject: item.title, excerpt: item.body }
   }
 }
 

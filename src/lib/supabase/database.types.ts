@@ -2061,6 +2061,41 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_views: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          page: string
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name: string
+          page?: string
+          query?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          page?: string
+          query?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_views_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_accounts: {
         Row: {
           account_type: string
@@ -2128,41 +2163,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      saved_views: {
-        Row: {
-          created_at: string
-          created_by: string
-          id: string
-          name: string
-          page: string
-          query: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          name: string
-          page?: string
-          query?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          name?: string
-          page?: string
-          query?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "saved_views_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2425,6 +2425,10 @@ export type Database = {
         Args: { p_client_id: string }
         Returns: boolean
       }
+      forget_push_endpoints: {
+        Args: { p_endpoints: string[]; p_secret: string }
+        Returns: number
+      }
       instagram_account_token: {
         Args: { p_client_id: string; p_secret: string }
         Returns: {
@@ -2461,25 +2465,6 @@ export type Database = {
           access_token: string
           account_id: string
         }[]
-      }
-      save_instagram_account: {
-        Args: {
-          p_access_token: string
-          p_account_type: string
-          p_app_user_id: string
-          p_client_id: string
-          p_display_name: string
-          p_expires_in: number
-          p_external_user_id: string
-          p_permissions: string[]
-          p_profile_picture_url: string
-          p_username: string
-        }
-        Returns: string
-      }
-      forget_push_endpoints: {
-        Args: { p_endpoints: string[]; p_secret: string }
-        Returns: number
       }
       link_client_member: {
         Args: {
@@ -2780,6 +2765,21 @@ export type Database = {
       }
       restore_doc_version: {
         Args: { version_id: string; version_text: string }
+        Returns: string
+      }
+      save_instagram_account: {
+        Args: {
+          p_access_token: string
+          p_account_type: string
+          p_app_user_id: string
+          p_client_id: string
+          p_display_name: string
+          p_expires_in: number
+          p_external_user_id: string
+          p_permissions: string[]
+          p_profile_picture_url: string
+          p_username: string
+        }
         Returns: string
       }
       save_push_subscription: {

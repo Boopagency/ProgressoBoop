@@ -6,6 +6,7 @@ import { periodsFrom, periodsOf } from "@/features/finance/management"
 import { defaultDreStart } from "@/features/finance/ranges"
 import { getGoals } from "@/features/goals/queries"
 import { goalsView } from "@/features/goals/view-model"
+import { fetchMetricsSummaries } from "@/features/instagram/metrics-queries"
 import type { MetricsSource } from "@/features/metrics/catalog"
 import { buildContext } from "@/features/metrics/dashboard"
 import { parsePeriodParams } from "@/features/metrics/periods"
@@ -14,7 +15,8 @@ import { getMetricsSource } from "@/features/metrics/queries"
 import { parseSections } from "@/features/reports/sections"
 import type { ReportInput } from "@/features/reports/workbook"
 import { firstName } from "@/features/tasks/logic"
-import { formatShortDate, monthRangeOf, todayKey, toTimeLabel } from "@/lib/dates"
+import { addDaysToKey, formatShortDate, monthRangeOf, todayKey, toTimeLabel, zonedTimeToInstant } from "@/lib/dates"
+import { createClient } from "@/lib/supabase/server"
 import type { SessionUser } from "@/lib/types"
 import { isUuid } from "@/lib/utils"
 
@@ -52,6 +54,18 @@ export async function loadReport(params: Params, user: SessionUser): Promise<{ i
   const client = clientParam && isUuid(clientParam) ? fullSource.clients.find((candidate) => candidate.id === clientParam) : undefined
   const source = client ? scopeToClient(fullSource, client.id) : fullSource
   const ctx = buildContext(source, today)
+  const sections = parseSections(params.secoes)
+  // Instagram: os posts publicados no período (dias de São Paulo), pela última leitura de cada um.
+  const instagram = sections.includes("instagram")
+    ? await fetchMetricsSummaries(
+        await createClient(),
+        {
+          from: zonedTimeToInstant(period.range.start, "00:00"),
+          to: zonedTimeToInstant(addDaysToKey(period.range.end, 1), "00:00"),
+        },
+        client?.id
+      )
+    : []
 
   const de = single(params.de)
   const ate = single(params.ate)
@@ -75,11 +89,12 @@ export async function loadReport(params: Params, user: SessionUser): Promise<{ i
       ctx,
       period,
       compare,
-      sections: parseSections(params.secoes),
+      sections,
       dreMonths: dreMonths.length > 0 ? dreMonths : period.months,
       ledger: client ? { ...ledger, clientId: client.id } : ledger,
       profiles,
       goals: client ? [] : goalsView(ctx, goals.objectives, goals.keyResults),
+      instagram,
       generatedBy: firstName(user.full_name),
       generatedAt: `${formatShortDate(today)}/${today.slice(0, 4)} às ${toTimeLabel(now)}`,
     },

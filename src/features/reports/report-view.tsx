@@ -16,8 +16,8 @@ import { comparisonOf } from "@/features/metrics/periods"
 import { REPORT_SECTION_LABEL, type ReportSection } from "@/features/reports/sections"
 import type { ReportInput } from "@/features/reports/workbook"
 import { formatShortDate } from "@/lib/dates"
-import { formatPercent } from "@/lib/format"
-import { DEAL_STAGE_LABEL } from "@/lib/labels"
+import { formatNumber, formatPercent } from "@/lib/format"
+import { DEAL_STAGE_LABEL, INSTAGRAM_METRIC_LABEL } from "@/lib/labels"
 import { cn } from "@/lib/utils"
 
 /*
@@ -149,6 +149,52 @@ export function ReportView({ input, clientName, actions }: { input: ReportInput;
                   </div>
                 ))}
             </div>
+          </Section>
+        ) : null}
+
+        {has("instagram") ? (
+          <Section id="instagram" title={REPORT_SECTION_LABEL.instagram}>
+            {input.instagram.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">Nenhum post publicado no Instagram no período.</p>
+            ) : (
+              <div className="report-block overflow-x-auto">
+                <table className="w-full text-[13px] tabular-nums">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-muted-foreground">
+                      <th scope="col" className="py-1.5 pr-3 font-medium">Cliente</th>
+                      <th scope="col" className="py-1.5 pr-3 text-right font-medium">Posts</th>
+                      <th scope="col" className="py-1.5 pr-3 text-right font-medium">{INSTAGRAM_METRIC_LABEL.views}</th>
+                      <th scope="col" className="py-1.5 pr-3 text-right font-medium">Alcance médio</th>
+                      <th scope="col" className="py-1.5 pr-3 text-right font-medium">{INSTAGRAM_METRIC_LABEL.interactions}</th>
+                      <th scope="col" className="py-1.5 font-medium">Melhor post</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {input.instagram.map((row) => (
+                      <tr key={row.clientId} className="border-b last:border-0">
+                        <th scope="row" className="py-1.5 pr-3 text-left font-medium text-foreground">{clientOf(row.clientId)}</th>
+                        <td className="py-1.5 pr-3 text-right">
+                          {formatNumber(row.posts)}
+                          {row.measured < row.posts ? <span className="text-muted-foreground"> ({row.measured} com leitura)</span> : null}
+                        </td>
+                        <td className="py-1.5 pr-3 text-right">{formatNumber(row.views)}</td>
+                        <td className="py-1.5 pr-3 text-right">{formatNumber(row.avgReach)}</td>
+                        <td className="py-1.5 pr-3 text-right">{formatNumber(row.interactions)}</td>
+                        <td className="py-1.5 text-foreground">
+                          {row.bestTitle ?? "—"}
+                          {row.best?.views !== null && row.best?.views !== undefined ? (
+                            <span className="text-muted-foreground"> · {formatNumber(row.best.views)}</span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Pela última leitura das métricas de cada post publicado no período (o Instagram pode levar até 48 h para consolidar os números).
+                </p>
+              </div>
+            )}
           </Section>
         ) : null}
       </main>

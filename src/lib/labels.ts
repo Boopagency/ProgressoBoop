@@ -131,6 +131,33 @@ export const INSTAGRAM_SCOPE_LABEL: Record<string, string> = {
   instagram_business_manage_insights: "ver as métricas",
 }
 
+/** Métricas dos posts no Instagram (as colunas de content_post_metrics; `interactions` é a soma). */
+export const INSTAGRAM_METRIC_LABEL = {
+  views: "Visualizações",
+  reach: "Alcance",
+  likes: "Curtidas",
+  comments: "Comentários",
+  saved: "Salvos",
+  shares: "Compartilhamentos",
+  interactions: "Interações",
+  follows: "Seguidores ganhos",
+  profile_visits: "Visitas ao perfil",
+  replies: "Respostas",
+  navigation: "Navegação",
+  avg_watch_time_ms: "Tempo médio assistido",
+} as const
+
+/** Momento da leitura das métricas, contado da publicação. */
+export const METRICS_CHECKPOINT_LABEL: Record<string, string> = {
+  "1h": "+1 h",
+  "12h": "+12 h",
+  "23h": "+23 h",
+  "24h": "+24 h",
+  "3d": "+3 dias",
+  "7d": "+7 dias",
+  "30d": "+30 dias",
+}
+
 export const PROJECT_STATUSES = ["planned", "active", "paused", "done", "canceled"] as const satisfies readonly ProjectStatus[]
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
   planned: "Planejado",

@@ -11,6 +11,7 @@ import { ContentFeed } from "@/features/content/content-feed"
 import { groupByStage, nextPosts, type PostSummary } from "@/features/content/logic"
 import { PostDialog, usePostDialog } from "@/features/content/post-dialog"
 import { PostRow, StageDot } from "@/features/content/post-meta"
+import { ClientMetricsSummaryRow } from "@/features/instagram/client-metrics-summary"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { CONTENT_STAGE_LABEL, CONTENT_STAGES } from "@/lib/labels"
 import type { DateKey } from "@/lib/types"
@@ -28,7 +29,8 @@ const MODE_OPTIONS: { value: CardMode; label: string }[] = [
 
 /**
  * Página do cliente: quantos posts em cada etapa, os próximos e o atalho para
- * a visão central filtrada; ou o preview do feed do Instagram do cliente.
+ * a visão central filtrada, com o resumo do Instagram nos últimos 30 dias;
+ * ou o preview do feed do Instagram do cliente.
  */
 export function ClientContentCard({ clientId, posts, today }: { clientId: string; posts: PostSummary[]; today: DateKey }) {
   const dialog = usePostDialog()
@@ -86,6 +88,7 @@ export function ClientContentCard({ clientId, posts, today }: { clientId: string
               </li>
             ))}
           </ul>
+          <ClientMetricsSummaryRow clientId={clientId} posts={own} onOpen={dialog.openPost} />
           {upcoming.length === 0 ? (
             <p className="px-4 py-4 text-[13px] text-muted-foreground">Nada em produção: os posts deste cliente já foram publicados.</p>
           ) : (

@@ -11,6 +11,7 @@ export const REPORT_SECTIONS = [
   "comercial",
   "operacional",
   "metas",
+  "instagram",
 ] as const
 
 export type ReportSection = (typeof REPORT_SECTIONS)[number]
@@ -24,6 +25,7 @@ export const REPORT_SECTION_LABEL: Record<ReportSection, string> = {
   comercial: "Comercial (negócios)",
   operacional: "Operação (tarefas e projetos)",
   metas: "Metas",
+  instagram: "Instagram",
 }
 
 export const REPORT_SECTION_HINT: Record<ReportSection, string> = {
@@ -35,6 +37,7 @@ export const REPORT_SECTION_HINT: Record<ReportSection, string> = {
   comercial: "Negócios abertos e fechados no período, com valor ponderado.",
   operacional: "Tarefas concluídas, entregas no prazo e projetos.",
   metas: "Objetivos e resultados-chave com o progresso.",
+  instagram: "Posts publicados, visualizações, alcance e interações por cliente.",
 }
 
 export function parseSections(value: unknown): ReportSection[] {

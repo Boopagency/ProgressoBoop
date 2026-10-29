@@ -811,7 +811,9 @@ Todos os números da Boop num lugar, calculados dos dados do portal.
 - Escolha o **período** (mês, trimestre ou ano), a **comparação**, o
   **recorte** (toda a Boop ou um cliente) e o que entra: indicadores, DRE,
   projeção e divisão do resultado, contratos e margem por cliente,
-  lançamentos, comercial, operação e metas.
+  lançamentos, comercial, operação, metas e Instagram (por cliente: posts
+  publicados no período, visualizações, alcance médio, interações e o
+  melhor post, pela última leitura de cada post).
 - **Ver relatório:** uma página limpa para apresentar ou salvar em PDF
   (**Imprimir ou salvar em PDF** já ajusta para A4 deitado).
 - **Baixar Excel:** uma aba por seção, com as fórmulas da planilha
@@ -1003,8 +1005,8 @@ post e no projeto aberto, o topo mostra o "voltar".
   passo para virar profissional; permissão desmarcada aparece em "Faltou
   autorizar". "Reconectar" troca a conta; "Desconectar" apaga o acesso
   guardado. Conectar preenche o @ do feed. Sem o app da Meta configurado, o
-  cartão diz "Integração com o Instagram não configurada". As métricas vêm
-  no PR 3/3 da issue #89.
+  cartão diz "Integração com o Instagram não configurada". As métricas dos
+  posts estão em "Métricas do Instagram", abaixo.
 - **Publicar automaticamente** (no post, admin; issue #89, PR 2/3): post do
   Instagram estático, foto, carrossel (as imagens dos slides, na ordem, de 2
   a 20) ou story com imagem, Aprovado ou Agendado, com dia e horário e com a
@@ -1021,6 +1023,28 @@ post e no projeto aberto, o topo mostra o "voltar".
   motivo. No quadro e no calendário, um aviãozinho marca o post que publica
   sozinho (vermelho quando não publicou). Reels e vídeo não publicam
   sozinhos: o app ainda não guarda vídeo.
+- **Métricas do Instagram** (issue #89, PR 3/3): cada post publicado no
+  Instagram (pelo app ou ligado à mão) tem os números lidos sozinhos 1 h,
+  24 h, 3 dias, 7 dias e 30 dias depois da publicação (stories: 1 h, 12 h e
+  23 h, antes de sumirem); depois para. Os números: visualizações, alcance,
+  interações, curtidas, comentários, salvos e compartilhamentos; em stories,
+  respostas e navegação; em reels, o tempo médio assistido. O Instagram pode
+  levar até 48 h para consolidar.
+  - **No post (admin), bloco "Desempenho":** os números da última leitura,
+    quando foi lida, a evolução pelas leituras (+1 h → +30 dias), a próxima
+    leitura e "Ver no Instagram". Post publicado sem a publicação ligada
+    (reels, vídeo ou feito direto no Instagram) mostra **Ligar ao post do
+    Instagram**: lista as publicações recentes da conta do cliente
+    (miniatura, data e começo da legenda) para escolher uma; a data dela
+    passa a ser a da publicação e o post entra na coleta. Stories não
+    aparecem na lista (a Meta os lista em outro endpoint).
+  - **No feed** (Conteúdo, cartão do cliente e portal): ao passar o mouse
+    num post publicado, as visualizações; no celular, no post aberto.
+  - **No cartão Conteúdo do cliente:** "Instagram nos últimos 30 dias":
+    posts publicados, visualizações, alcance médio, interações e o post com
+    melhor desempenho (abre o post).
+  - **No portal:** o post publicado aberto mostra "Desempenho no
+    Instagram" com os mesmos números e a evolução, sem nada interno.
 - **Comunicação:** a conversa com a equipe da Boop, no canal "Alterações"
   do cliente: mensagens por dia, as seguidas da mesma pessoa juntas (as
   do cliente à direita; as da equipe à esquerda, com as iniciais e o nome;

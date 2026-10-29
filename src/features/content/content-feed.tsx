@@ -2,7 +2,7 @@
 
 import { Clapperboard, Copy, ImagePlus, Loader2, Pencil, Pin, PinOff, type LucideIcon } from "lucide-react"
 import Link from "next/link"
-import { useId, useOptimistic, useState, useTransition } from "react"
+import { useEffect, useId, useOptimistic, useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { SegmentedControl } from "@/components/segmented-control"
@@ -22,8 +22,11 @@ import {
 } from "@/features/content/logic"
 import { clientColor, StageDot } from "@/features/content/post-meta"
 import { BIO_MAX, HANDLE_MAX } from "@/features/content/validation"
+import { loadFeedViews } from "@/features/instagram/metrics-actions"
+import { formatCompact } from "@/features/instagram/metrics-logic"
+import { TileViews } from "@/features/instagram/metrics-view"
 import { useViewFade } from "@/hooks/use-view-fade"
-import { CONTENT_FORMAT_LABEL, CONTENT_STAGE_LABEL } from "@/lib/labels"
+import { CONTENT_FORMAT_LABEL, CONTENT_STAGE_LABEL, INSTAGRAM_METRIC_LABEL } from "@/lib/labels"
 import type { Client, ContentFormat, DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -31,7 +34,9 @@ import { cn } from "@/lib/utils"
  * Preview do feed do Instagram de um cliente: o cabeçalho do perfil (foto, @
  * e bio, editáveis ali mesmo) e o grid de 3 colunas em 3:4, como o
  * Instagram mostra hoje, na ordem `feedOrder` (fixados primeiro, depois do
- * mais recente para o mais antigo). Clicar num quadrado abre o post.
+ * mais recente para o mais antigo). Clicar num quadrado abre o post. Post
+ * publicado mostra as visualizações da última leitura do Instagram ao passar
+ * o mouse (no celular, no "Desempenho" do post aberto).
  */
 
 const FILTER_OPTIONS: { value: FeedFilter; label: string }[] = [
@@ -74,6 +79,17 @@ export function ContentFeed({
   const tiles = feedPosts(optimistic, client.id, filter)
   const shown = limit === undefined ? tiles : tiles.slice(0, limit)
   const pinned = pinnedCount(optimistic, client.id)
+  const [views, setViews] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let current = true
+    void loadFeedViews(client.id).then((result) => {
+      if (current && result.ok) setViews(result.data)
+    })
+    return () => {
+      current = false
+    }
+  }, [client.id])
 
   function togglePin(post: PostSummary) {
     const next = !post.pinned
@@ -109,7 +125,7 @@ export function ContentFeed({
       ) : (
         <ul ref={gridRef} aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
           {shown.map((post) => (
-            <FeedTile key={post.id} post={post} today={today} onOpen={onOpen} onTogglePin={togglePin} />
+            <FeedTile key={post.id} post={post} views={views[post.id] ?? null} today={today} onOpen={onOpen} onTogglePin={togglePin} />
           ))}
         </ul>
       )}
@@ -132,11 +148,14 @@ export function ContentFeed({
 
 function FeedTile({
   post,
+  views,
   today,
   onOpen,
   onTogglePin,
 }: {
   post: PostSummary
+  /** Visualizações da última leitura (post publicado), ou null. */
+  views: number | null
   today: DateKey
   onOpen: (post: PostSummary) => void
   onTogglePin: (post: PostSummary) => void
@@ -148,6 +167,7 @@ function FeedTile({
     publishLabel(post, today),
     CONTENT_STAGE_LABEL[post.stage],
     post.pinned ? "Fixado" : null,
+    views !== null ? `${formatCompact(views)} ${INSTAGRAM_METRIC_LABEL.views.toLocaleLowerCase("pt-BR")}` : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -180,6 +200,7 @@ function FeedTile({
         <span aria-hidden="true" className="absolute bottom-1.5 left-1.5 flex size-4 items-center justify-center rounded-full bg-background/90 shadow-sm">
           <StageDot stage={post.stage} />
         </span>
+        {views !== null ? <TileViews views={views} /> : null}
       </button>
       {/* Fixar pelo grid com mouse; no celular, pelo post ("Fixar no topo do feed"). */}
       <button

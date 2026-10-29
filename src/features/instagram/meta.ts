@@ -14,6 +14,16 @@ import {
   type ShortToken,
 } from "@/features/instagram/logic"
 import {
+  INSIGHT_METRICS,
+  metaErrorCode,
+  parseAccountMedia,
+  parseInsights,
+  parseMediaFields,
+  type AccountMedia,
+  type MediaFields,
+  type MediaKind,
+} from "@/features/instagram/metrics-logic"
+import {
   parseContainerStatus,
   parseId,
   parsePermalink,
@@ -29,8 +39,13 @@ import {
 
 const TIMEOUT_MS = 10_000
 
-/** `network`: sem resposta (tempo esgotado, conexão caiu): não dá para saber se a Meta fez o pedido. */
-type MetaResult<T> = { ok: true; value: T } | { ok: false; error: string; invalidToken: boolean; network?: boolean }
+/**
+ * `network`: sem resposta (tempo esgotado, conexão caiu): não dá para saber se a Meta fez o pedido.
+ * `code`: o `error.code` da Meta, quando veio.
+ */
+type MetaResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string; invalidToken: boolean; network?: boolean; code?: number | null }
 
 async function call<T>(input: string, init: RequestInit, parse: (json: unknown) => T | null): Promise<MetaResult<T>> {
   try {
@@ -38,7 +53,12 @@ async function call<T>(input: string, init: RequestInit, parse: (json: unknown) 
     const json: unknown = await response.json().catch(() => null)
     const value = response.ok ? parse(json) : null
     if (value) return { ok: true, value }
-    return { ok: false, error: metaErrorMessage(json, response.status), invalidToken: isInvalidTokenError(json) }
+    return {
+      ok: false,
+      error: metaErrorMessage(json, response.status),
+      invalidToken: isInvalidTokenError(json),
+      code: metaErrorCode(json),
+    }
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error), invalidToken: false, network: true }
   }
@@ -134,4 +154,43 @@ export function publishingLimit(userId: string, token: string): Promise<MetaResu
 /** O link público do post publicado. */
 export function mediaPermalink(mediaId: string, token: string): Promise<MetaResult<string>> {
   return call(getUrl(mediaId, token, "permalink"), { method: "GET" }, parsePermalink)
+}
+
+/* ------------------------------------------------------------------ */
+/* Métricas (Insights) e publicações da conta                          */
+/* ------------------------------------------------------------------ */
+
+/** Campos da publicação (tipo, curtidas, comentários, link, data), com a resposta como veio. */
+export function mediaFields(mediaId: string, token: string, fields: string): Promise<MetaResult<{ fields: MediaFields; raw: unknown }>> {
+  return call(getUrl(mediaId, token, fields), { method: "GET" }, (json) => {
+    const parsed = parseMediaFields(json)
+    return parsed ? { fields: parsed, raw: json } : null
+  })
+}
+
+/** Métricas da publicação (período `lifetime`), com a resposta como veio. */
+export function mediaInsights(
+  mediaId: string,
+  token: string,
+  metrics: readonly string[]
+): Promise<MetaResult<{ values: Record<string, number>; raw: unknown }>> {
+  const url = new URL(graphUrl(`${mediaId}/insights`))
+  url.searchParams.set("metric", metrics.join(","))
+  url.searchParams.set("access_token", token)
+  return call(url.toString(), { method: "GET" }, (json) => {
+    const values = parseInsights(json)
+    return values ? { values, raw: json } : null
+  })
+}
+
+/** As métricas pedidas para o tipo (INSIGHT_METRICS). */
+export function insightsFor(mediaId: string, token: string, kind: MediaKind) {
+  return mediaInsights(mediaId, token, INSIGHT_METRICS[kind])
+}
+
+/** Publicações recentes da conta (sem stories: a Meta os lista em outro endpoint). */
+export function accountMedia(userId: string, token: string, fields: string, limit: number): Promise<MetaResult<AccountMedia[]>> {
+  const url = new URL(getUrl(`${userId}/media`, token, fields))
+  url.searchParams.set("limit", String(limit))
+  return call(url.toString(), { method: "GET" }, parseAccountMedia)
 }

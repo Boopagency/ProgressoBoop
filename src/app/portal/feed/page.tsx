@@ -6,6 +6,9 @@ import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { ContentImage } from "@/features/content/content-image"
 import { InstagramCard } from "@/features/instagram/instagram-card"
 import { connectNotice } from "@/features/instagram/logic"
+import { formatCompact } from "@/features/instagram/metrics-logic"
+import { getPortalFeedViews } from "@/features/instagram/metrics-queries"
+import { TileViews } from "@/features/instagram/metrics-view"
 import { getPortalInstagram } from "@/features/instagram/queries"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
@@ -16,12 +19,16 @@ import { StatusDot } from "@/features/portal/post-meta"
 import { ProfilePhoto } from "@/features/portal/profile-photo"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
-import { CONTENT_FORMAT_LABEL } from "@/lib/labels"
+import { CONTENT_FORMAT_LABEL, INSTAGRAM_METRIC_LABEL } from "@/lib/labels"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Feed" }
 
-/** Prévia do Instagram do cliente: o perfil e o grid com os posts que já chegaram a ele. */
+/**
+ * Prévia do Instagram do cliente: o perfil e o grid com os posts que já
+ * chegaram a ele. Nos publicados, as visualizações ao passar o mouse (no
+ * celular, no post aberto).
+ */
 export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   const [user, searchParams] = await Promise.all([requirePortalUser(), props.searchParams])
   const client = pickPortalClient(user, searchParams.cliente)
@@ -32,6 +39,10 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   ])
   const today = todayKey()
   const tiles = portalFeed(posts)
+  // Visualizações da última leitura dos publicados (sem elas, o feed abre do mesmo jeito).
+  const views = await getPortalFeedViews(tiles.filter((post) => post.stage === "published").map((post) => post.id)).catch(
+    () => ({}) as Record<string, number>
+  )
 
   return (
     <PageContainer>
@@ -79,12 +90,14 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
           <ul aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
             {tiles.map((post) => {
               const path = postThumbnail(post)
+              const postViews = views[post.id] ?? null
               const label = [
                 post.title,
                 CONTENT_FORMAT_LABEL[post.format],
                 publishLabel(post, today),
                 PORTAL_STATUS_LABEL[portalStatus(post.stage)],
                 post.pinned ? "Fixado" : null,
+                postViews !== null ? `${formatCompact(postViews)} ${INSTAGRAM_METRIC_LABEL.views.toLocaleLowerCase("pt-BR")}` : null,
               ]
                 .filter(Boolean)
                 .join(" · ")
@@ -128,6 +141,7 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
                         <StatusDot stage={post.stage} />
                       </span>
                     ) : null}
+                    {postViews !== null ? <TileViews views={postViews} /> : null}
                   </Link>
                 </li>
               )

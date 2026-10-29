@@ -14,6 +14,7 @@ import {
   type DreStatus,
 } from "@/features/finance/management"
 import { GOAL_STATE_LABEL } from "@/features/goals/logic"
+import type { ClientMetricsSummary } from "@/features/instagram/metrics-queries"
 import type { ObjectiveView } from "@/features/goals/view-model"
 import { METRIC_AREA_LABEL, METRICS, type MetricContext } from "@/features/metrics/catalog"
 import { comparisonOf, type CompareMode, type MetricPeriod } from "@/features/metrics/periods"
@@ -46,6 +47,8 @@ export interface ReportInput {
   ledger: LedgerFilters
   profiles: Profile[]
   goals: ObjectiveView[]
+  /** Instagram por cliente: última leitura de cada post publicado no período. */
+  instagram: ClientMetricsSummary[]
   generatedBy: string
   generatedAt: string
 }
@@ -695,6 +698,42 @@ function goalsSheet(input: ReportInput): Sheet {
 }
 
 /* ------------------------------------------------------------------ */
+/* Instagram                                                           */
+/* ------------------------------------------------------------------ */
+
+function instagramSheet(input: ReportInput): Sheet {
+  const intro = [
+    `Instagram — ${input.period.label}`,
+    "Posts publicados no período, pela última leitura das métricas de cada um. Alcance médio: por post com leitura.",
+  ]
+  const rows: CellInput[][] = input.instagram.map((row) => [
+    clientName(input.ctx, row.clientId),
+    { value: row.posts, format: "integer" },
+    { value: row.measured, format: "integer" },
+    { value: row.views, format: "integer" },
+    { value: row.avgReach === null ? null : Math.round(row.avgReach), format: "integer" },
+    { value: row.interactions, format: "integer" },
+    row.bestTitle ?? "",
+    { value: row.best?.views ?? null, format: "integer" },
+  ])
+  return {
+    name: "Instagram",
+    intro,
+    columns: [
+      { header: "Cliente", width: 28 },
+      { header: "Posts publicados", width: 15 },
+      { header: "Com leitura", width: 12 },
+      { header: "Visualizações", width: 14 },
+      { header: "Alcance médio", width: 14 },
+      { header: "Interações", width: 12 },
+      { header: "Melhor post", width: 40 },
+      { header: "Visualizações do melhor", width: 20 },
+    ],
+    rows,
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Pasta                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -709,6 +748,7 @@ export function reportSheets(input: ReportInput): Sheet[] {
   if (has("comercial")) sheets.push(dealsSheet(input))
   if (has("operacional")) sheets.push(tasksSheet(input), projectsSheet(input))
   if (has("metas")) sheets.push(goalsSheet(input))
+  if (has("instagram")) sheets.push(instagramSheet(input))
   // As fórmulas do DRE leem a alíquota da aba Premissas.
   sheets.push(premissasSheet(input.ctx))
   return sheets

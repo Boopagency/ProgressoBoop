@@ -6,6 +6,8 @@ import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
 import { InstagramCaption, InstagramHeader } from "@/features/content/instagram-post"
 import { PostGallery } from "@/features/content/post-gallery"
+import { getPortalPostReadings } from "@/features/instagram/metrics-queries"
+import { MetricsEvolution, MetricsGrid, ReadingNote } from "@/features/instagram/metrics-view"
 import { canReview, portalStatus, postGallery, type PortalPost } from "@/features/portal/content-logic"
 import { getPortalPostMessages, getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
 import { PostChat } from "@/features/portal/post-chat"
@@ -19,7 +21,10 @@ import { isUuid } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Post" }
 
-/** Post aberto no portal: as imagens, a legenda, a resposta do cliente e o chat com a equipe. */
+/**
+ * Post aberto no portal: as imagens, a legenda, a resposta do cliente, os
+ * números do Instagram (publicado) e o chat com a equipe.
+ */
 export default async function PortalPostPage(props: PageProps<"/portal/posts/[id]">) {
   const [user, params, searchParams] = await Promise.all([requirePortalUser(), props.params, props.searchParams])
   if (!isUuid(params.id)) notFound()
@@ -38,11 +43,14 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
   if (!found) notFound()
   const { client, post } = found
 
-  const [messages, profile] = await Promise.all([
+  const [messages, profile, readings] = await Promise.all([
     getPortalPostMessages(post.id),
     // Sem o perfil, o post abre do mesmo jeito (o cabeçalho mostra o nome do cliente).
     getPortalProfile(client.id).catch(() => null),
+    // Os números do Instagram, só no publicado (sem eles, o post abre do mesmo jeito).
+    post.stage === "published" ? getPortalPostReadings(post.id).catch(() => []) : Promise.resolve([]),
   ])
+  const latest = readings.at(-1) ?? null
   const handle = profile?.instagram_handle ?? null
   const today = todayKey()
   const status = portalStatus(post.stage)
@@ -94,6 +102,17 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
             <PostGallery paths={gallery} title={post.title} />
             {post.caption ? <InstagramCaption className="md:hidden" handle={handle} name={client.name} text={post.caption} /> : null}
           </div>
+
+          {latest ? (
+            <section aria-labelledby="desempenho" className="space-y-2">
+              <h2 id="desempenho" className="text-sm font-semibold text-foreground">
+                Desempenho no Instagram
+              </h2>
+              <MetricsGrid reading={latest} />
+              <ReadingNote reading={latest} />
+              <MetricsEvolution readings={readings} />
+            </section>
+          ) : null}
 
           {post.caption ? (
             <section className="hidden space-y-1.5 md:block">

@@ -653,6 +653,86 @@ export type Database = {
           },
         ]
       }
+      content_post_metrics: {
+        Row: {
+          avg_watch_time_ms: number | null
+          checkpoint: string
+          collected_at: string
+          comments: number | null
+          error: string | null
+          follows: number | null
+          id: string
+          instagram_media_id: string
+          likes: number | null
+          media_kind: string
+          navigation: number | null
+          post_id: string
+          profile_visits: number | null
+          raw: Json
+          reach: number | null
+          replies: number | null
+          saved: number | null
+          shares: number | null
+          total_interactions: number | null
+          total_watch_time_ms: number | null
+          views: number | null
+        }
+        Insert: {
+          avg_watch_time_ms?: number | null
+          checkpoint: string
+          collected_at?: string
+          comments?: number | null
+          error?: string | null
+          follows?: number | null
+          id?: string
+          instagram_media_id: string
+          likes?: number | null
+          media_kind: string
+          navigation?: number | null
+          post_id: string
+          profile_visits?: number | null
+          raw?: Json
+          reach?: number | null
+          replies?: number | null
+          saved?: number | null
+          shares?: number | null
+          total_interactions?: number | null
+          total_watch_time_ms?: number | null
+          views?: number | null
+        }
+        Update: {
+          avg_watch_time_ms?: number | null
+          checkpoint?: string
+          collected_at?: string
+          comments?: number | null
+          error?: string | null
+          follows?: number | null
+          id?: string
+          instagram_media_id?: string
+          likes?: number | null
+          media_kind?: string
+          navigation?: number | null
+          post_id?: string
+          profile_visits?: number | null
+          raw?: Json
+          reach?: number | null
+          replies?: number | null
+          saved?: number | null
+          shares?: number | null
+          total_interactions?: number | null
+          total_watch_time_ms?: number | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_posts: {
         Row: {
           auto_publish: boolean
@@ -2421,7 +2501,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      content_post_latest_metrics: {
+        Row: {
+          avg_watch_time_ms: number | null
+          checkpoint: string | null
+          collected_at: string | null
+          comments: number | null
+          follows: number | null
+          likes: number | null
+          media_kind: string | null
+          navigation: number | null
+          post_id: string | null
+          profile_visits: number | null
+          reach: number | null
+          replies: number | null
+          saved: number | null
+          shares: number | null
+          total_interactions: number | null
+          total_watch_time_ms: number | null
+          views: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cancel_instagram_publish: {
@@ -2468,6 +2577,30 @@ export type Database = {
       instagram_forget_user: {
         Args: { p_secret: string; p_user_id: string }
         Returns: number
+      }
+      instagram_metrics_due: {
+        Args: { p_secret: string }
+        Returns: {
+          client_id: string
+          done: string[]
+          format: string
+          media_id: string
+          post_id: string
+          published_at: string
+        }[]
+      }
+      instagram_metrics_save: {
+        Args: {
+          p_checkpoint: string
+          p_error: string
+          p_media_id: string
+          p_media_kind: string
+          p_metrics: Json
+          p_post_id: string
+          p_raw: Json
+          p_secret: string
+        }
+        Returns: boolean
       }
       instagram_post_deferred: {
         Args: {
@@ -2540,6 +2673,15 @@ export type Database = {
           target_client: string
         }
         Returns: string
+      }
+      link_instagram_media: {
+        Args: {
+          p_media_id: string
+          p_permalink: string
+          p_post_id: string
+          p_published_at: string
+        }
+        Returns: undefined
       }
       open_client_direct_channel: {
         Args: { member_id: string }

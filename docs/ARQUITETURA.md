@@ -126,7 +126,8 @@ src/
 │   │                           # versões, checklist → tarefas
 │   ├── instagram/              # conta do Instagram do cliente: OAuth (state assinado),
 │   │                           # chamadas à Meta, cartão "Instagram" (cliente e portal),
-│   │                           # publicação automática (publish*.ts, painel do post)
+│   │                           # publicação automática (publish*.ts, painel do post),
+│   │                           # métricas (metrics*.ts, "Desempenho", ligar à mão)
 │   ├── clients/                # clientes: cadastro, revisão mensal, saúde, quadros
 │   │                           # da tela Hoje e da weekly
 │   ├── notifications/          # sino do topo: avisos (lista, lidas), som e aviso do
@@ -2078,6 +2079,34 @@ loading/vazio/erro e responsivo. Aprovada visualmente.
   rodada: sem contar tentativa, com o contêiner guardado por até 23 h). Sem
   resposta da Meta ao publicar, desiste na hora para não publicar duas
   vezes.
+- **Métricas do Instagram (issue #89, PR 3/3):** tabela
+  `content_post_metrics` (uma linha por post e momento — `checkpoint`
+  `1h`, `12h`, `23h`, `24h`, `3d`, `7d`, `30d` —, com visualizações,
+  alcance, curtidas, comentários, salvos, compartilhamentos, interações,
+  seguidores, visitas ao perfil, respostas, navegação, tempo de reels, o
+  erro da Meta e o JSON bruto em `raw`) e a view `content_post_latest_metrics`
+  (`security_invoker`, a última leitura sem erro de cada post). Equipe lê
+  tudo; o cliente, as leituras sem erro dos posts publicados dele
+  (`private.portal_can_see_post_metrics`). `raw` não tem permissão de
+  leitura pela API (grant por coluna). Grava só `instagram_metrics_save`
+  (com o segredo). O `pg_cron` (job `instagram-collect-metrics`, de hora em
+  hora aos 23 min) chama `private.run_instagram_job('collect_metrics')`; a
+  rota pede `instagram_metrics_due` (publicados com `instagram_media_id`, há
+  menos de 35 dias — stories, 24 h —, conta conectada, sem leitura nos
+  últimos 30 min, com os momentos já lidos), escolhe os vencidos
+  (`metrics-logic.ts`: o último momento que passou e ainda não foi lido;
+  stories primeiro; até 20 por rodada), lê `GET /{ig-media-id}`
+  (`media_type`, curtidas, comentários, link) e `GET /{ig-media-id}/insights`
+  com as métricas do tipo (sem `impressions` e `plays`, trocadas por
+  `views`; se a Meta recusa, tenta só as comuns aos três tipos). Erro da
+  Meta grava a leitura com o erro (não insiste no momento); sem resposta,
+  fica para a próxima rodada; token recusado deixa a conta vencida. Ligar à
+  mão (`metrics-actions.ts`, sessão da equipe): o servidor lê o token com o
+  segredo dos jobs, lista `GET /{ig-user-id}/media`, confere que a
+  publicação escolhida está entre as recentes da conta e chama
+  `link_instagram_media` (equipe; post publicado, do Instagram, sem
+  publicação ligada; uma publicação por post), que grava o id, o link, a
+  data da publicação e `publish_status = published`.
 
 ## 13. Fora do escopo (por enquanto)
 

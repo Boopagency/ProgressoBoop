@@ -2424,6 +2424,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_instagram_publish: {
+        Args: { p_post_id: string }
+        Returns: string[]
+      }
       channel_counts: {
         Args: never
         Returns: {
@@ -2444,10 +2448,6 @@ export type Database = {
           created: boolean
           member_id: string
         }[]
-      }
-      cancel_instagram_publish: {
-        Args: { p_post_id: string }
-        Returns: string[]
       }
       disconnect_instagram_account: {
         Args: { p_client_id: string }
@@ -2471,8 +2471,8 @@ export type Database = {
       }
       instagram_post_deferred: {
         Args: {
-          p_container_id: string | null
-          p_note: string | null
+          p_container_id: string
+          p_note: string
           p_post_id: string
           p_secret: string
         }
@@ -2490,7 +2490,7 @@ export type Database = {
       instagram_post_published: {
         Args: {
           p_media_id: string
-          p_permalink: string | null
+          p_permalink: string
           p_post_id: string
           p_secret: string
         }
@@ -2849,6 +2849,15 @@ export type Database = {
         }
         Returns: string
       }
+      save_push_subscription: {
+        Args: {
+          p_auth: string
+          p_device?: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: undefined
+      }
       schedule_instagram_publish: {
         Args: {
           p_jpeg_paths: string[]
@@ -2858,15 +2867,6 @@ export type Database = {
           p_urls_expire_at: string
         }
         Returns: string[]
-      }
-      save_push_subscription: {
-        Args: {
-          p_auth: string
-          p_device?: string
-          p_endpoint: string
-          p_p256dh: string
-        }
-        Returns: undefined
       }
       send_audio_message: {
         Args: {

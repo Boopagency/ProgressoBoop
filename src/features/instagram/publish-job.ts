@@ -135,7 +135,7 @@ async function record(supabase: SupabaseServerClient, secret: string, row: DueRo
           p_secret: secret,
           p_post_id: row.post_id,
           p_media_id: outcome.mediaId,
-          p_permalink: outcome.permalink,
+          p_permalink: outcome.permalink ?? "",
         })
       : outcome.kind === "failed"
         ? await supabase.rpc("instagram_post_failed", {
@@ -147,8 +147,9 @@ async function record(supabase: SupabaseServerClient, secret: string, row: DueRo
         : await supabase.rpc("instagram_post_deferred", {
             p_secret: secret,
             p_post_id: row.post_id,
-            p_container_id: outcome.containerId,
-            p_note: outcome.note,
+            // O gerador de tipos marca todo argumento como obrigatório; a função aceita null nos dois.
+            p_container_id: outcome.containerId as string,
+            p_note: outcome.note as string,
           })
   if (error) console.error(`[instagram] publicação ${row.post_id}: ${error.message}`)
 }

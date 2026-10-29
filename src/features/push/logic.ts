@@ -78,6 +78,7 @@ const TEAM_KINDS = new Set<string>([
   "client_referral",
   "site_lead",
   "instagram_publish_failed",
+  "payment_overdue",
 ] satisfies NotificationKind[])
 
 const CLIENT_KINDS = new Set<string>([
@@ -86,6 +87,7 @@ const CLIENT_KINDS = new Set<string>([
   "step_approval",
   "step_done",
   "file_shared",
+  "payment_overdue",
 ] satisfies PortalNotificationKind[])
 
 function clip(text: string, max: number): string {

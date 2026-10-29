@@ -705,6 +705,18 @@ o botão **Novo lançamento**.
 - No **cliente** aparecem mensalidade, margem e fim do contrato; no
   **projeto**, receita, custos e resultado; na tela **Hoje**, o financeiro
   em atraso e o quadro Gestão.
+- **Pagamento em atraso:** todo dia às 08:07, o sistema confere as receitas
+  de cliente vencidas e não marcadas como recebidas (lançamentos e meses
+  das recorrências, a mesma conta do "Em atraso") e avisa a equipe toda no
+  sino e no celular no dia seguinte ao vencimento ("Mensalidade (Velmont)
+  não foi marcada como recebida · R$ 3.500,00 · venceu ontem") e de novo 7
+  dias depois, abrindo os lançamentos atrasados do cliente. Três dias depois
+  do vencimento, o cliente recebe um aviso gentil no portal e no celular
+  (2.27). Cada aviso sai uma vez por cobrança; pago ou pulado não avisa;
+  mudar o vencimento arma os avisos de novo. Na página do cliente, no
+  cartão Financeiro, **Avisar o cliente sobre pagamentos em atraso** (ligado
+  por padrão): desligado, o cliente continua vendo a aba Financeiro e o
+  selo, mas não recebe o aviso nem vê o banner; a equipe é sempre avisada.
 
 ### 2.21 Histórico e comentários
 
@@ -914,7 +926,7 @@ juntos**, sem entrar cliente por cliente.
 
 A área em que a pessoa de um cliente entra com a própria conta e vê só o
 que é daquele cliente. Mesma lógica visual do admin: **menu lateral** com
-Início, Calendário, Feed, Projetos, **Documentos**, **Comunicação**,
+Início, Calendário, Feed, Projetos, **Documentos**, **Financeiro**, **Comunicação**,
 **Notificações** e **Indicar** (Comunicação e Notificações últimas com o contador de não lidas; no celular, o mesmo menu
 recolhível, pelo botão no topo), a troca de cliente no topo do menu (para
 quem acompanha mais de um) e, no rodapé, quem está logado, o **Tema**
@@ -1023,10 +1035,23 @@ post e no projeto aberto, o topo mostra o "voltar".
   nome, descrição, data e tamanho; **Abrir** (PDF, imagem, vídeo e texto
   abrem no navegador) e **Baixar** (com o nome original). Só os que a
   equipe deixou visíveis; o do aviso "Novo documento" vem destacado.
+- **Financeiro:** o selo **Em dia** ou **Pagamento em aberto** (quantas
+  cobranças vencidas e o total); **Em aberto** (com "Venceu há 3 dias" e o
+  vencimento), **Próximos vencimentos** (60 dias) e **Pagos nos últimos 12
+  meses** (com a data do pagamento), cada um com a descrição e o valor. Só
+  as receitas de cliente daquele cliente (os meses de contrato ainda não
+  lançados entram pelo dia do vencimento; os pulados não), pela mesma conta
+  do "Em atraso" da página do cliente. Nada interno: observações,
+  categoria, taxa, custos, margem, projeto e outros clientes ficam de fora.
+  Com atraso (e o aviso ligado para o cliente), um banner gentil no topo do
+  Financeiro e do Início: "Consta um pagamento em aberto de R$ 3.500,00,
+  vencido em 25/10. Se já pagou, desconsidere ou avise a gente pela
+  Comunicação." No celular, fica em Mais.
 - **Notificações:** os avisos da conta, do mais novo para o mais antigo,
   com os não lidos marcados e **Marcar todas como lidas**: a equipe
   respondeu (num post, num projeto ou na Comunicação), post para aprovar,
-  etapa para aprovar, etapa concluída e documento novo. Abrir um aviso o
+  etapa para aprovar, etapa concluída, documento novo e pagamento em
+  aberto (3 dias depois do vencimento sem registro, uma vez por cobrança). Abrir um aviso o
   marca como lido e leva ao item. O contador do menu chega na hora (Realtime).
 - **Indicar:** o cliente indica alguém para a Boop (nome, empresa,
   WhatsApp ou e-mail, pelo menos um dos dois, e do que a pessoa precisa).
@@ -1118,7 +1143,9 @@ de **Buscar…**. O contador (até "99+") mostra os avisos não lidos.
   tarefas de uma vez (modelo de projeto, checklist, frentes do post) viram
   um aviso só ("atribuiu 12 tarefas a você em Site Velmont"). Mensagem da
   equipe no canal do cliente não avisa (já conta nas não lidas de
-  Comunicações).
+  Comunicações). Receita de cliente vencida e não marcada como recebida
+  avisa a equipe toda no dia seguinte e 7 dias depois do vencimento
+  (2.20).
 - **A lista:** os 30 avisos mais recentes, com quem fez, do que se trata, o
   trecho da mensagem e quando. Os não lidos têm o ponto azul. Clicar abre o
   canal, o post, a tarefa ou o projeto e marca o aviso como lido.

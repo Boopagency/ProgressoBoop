@@ -96,6 +96,7 @@ export function ClientView({
   communications,
   decisions,
   finance,
+  paymentReminders,
   deals,
   posts,
   ideas,
@@ -116,6 +117,8 @@ export function ClientView({
   communications: Communication[]
   decisions: Decision[]
   finance: FinanceData
+  /** "Avisar o cliente sobre pagamentos em atraso"; null antes da migration (sem o interruptor). */
+  paymentReminders: boolean | null
   deals: Deal[]
   /** Posts do cliente (Central de Conteúdo). */
   posts: PostSummary[]
@@ -263,7 +266,7 @@ export function ClientView({
           <AboutCard client={client} />
           <ClientAccessCard clientId={client.id} clientName={client.name} members={members} />
           {instagramCard}
-          <ClientFinanceCard clientId={client.id} finance={finance} today={today} />
+          <ClientFinanceCard clientId={client.id} finance={finance} today={today} reminders={paymentReminders} />
           <ClientDealsCard clientId={client.id} deals={deals} today={today} />
           <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
           <DecisionsCard

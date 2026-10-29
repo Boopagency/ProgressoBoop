@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCheck, CircleCheck, FileText, ListChecks, Megaphone, MessageCircle, type LucideIcon } from "lucide-react"
+import { Banknote, CheckCheck, CircleCheck, FileText, ListChecks, Megaphone, MessageCircle, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useEffectEvent, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -28,6 +28,7 @@ const KIND_ICON: Record<PortalNotificationKind, LucideIcon> = {
   step_approval: ListChecks,
   step_done: CircleCheck,
   file_shared: FileText,
+  payment_overdue: Banknote,
 }
 
 /**

@@ -1,5 +1,6 @@
 import { addPeriods, periodOf, SERVICE_SUGGESTIONS } from "@/features/clients/logic"
-import { daysBetween, monthRangeOf } from "@/lib/dates"
+import { formatMoney } from "@/features/finance/money"
+import { addDaysToKey, daysBetween, monthRangeOf } from "@/lib/dates"
 import type { DateKey, FinanceAccount, FinanceEntry, FinanceKind, FinanceRecurrence } from "@/lib/types"
 
 /*
@@ -242,6 +243,123 @@ export function clientFinance(
       .filter((entry) => entry.kind === "income" && entry.paid_on && entry.paid_on.slice(0, 4) === today.slice(0, 4))
       .reduce((sum, entry) => sum + entry.amount_cents, 0),
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Financeiro do cliente no portal e avisos de atraso                  */
+/* ------------------------------------------------------------------ */
+
+/** Próximos vencimentos mostrados no portal (dias a partir de hoje). */
+export const STATEMENT_UPCOMING_DAYS = 60
+
+export interface ClientStatement {
+  /** Vencidos e não recebidos, o mais antigo primeiro (o mesmo "Em atraso" da página do cliente). */
+  overdue: FinanceItem[]
+  overdueTotal: number
+  /** Vencem de hoje até STATEMENT_UPCOMING_DAYS dias. */
+  upcoming: FinanceItem[]
+  /** Recebidos nos últimos 12 meses (com o atual), o mais recente primeiro. */
+  paid: FinanceItem[]
+}
+
+const isClientRevenue = (clientId: string) => (item: FinanceItem) =>
+  item.account === "client_revenue" && item.client_id === clientId
+
+/**
+ * O que o cliente vê no portal: só as receitas de cliente dele (sem os
+ * pulados), com as ocorrências das recorrências ainda não gravadas.
+ */
+export function clientStatement(
+  clientId: string,
+  entries: FinanceEntry[],
+  recurrences: FinanceRecurrence[],
+  today: DateKey
+): ClientStatement {
+  const own = isClientRevenue(clientId)
+  const overdue = clientOverdue(clientId, entries, recurrences, today).filter(own)
+  const limit = addDaysToKey(today, STATEMENT_UPCOMING_DAYS)
+  const upcoming: FinanceItem[] = []
+  for (let period = periodOf(today); period <= limit; period = addPeriods(period, 1)) {
+    for (const item of monthItems(entries, recurrences, period)) {
+      if (own(item) && !item.paid_on && !item.skipped && item.due_on >= today && item.due_on <= limit) upcoming.push(item)
+    }
+  }
+  const since = addPeriods(periodOf(today), -11)
+  const byId = new Map(recurrences.map((recurrence) => [recurrence.id, recurrence]))
+  const paid = entries
+    .filter((entry) => entry.paid_on && entry.paid_on >= since && !entry.skipped)
+    .map((entry) => fromEntry(entry, byId))
+    .filter(own)
+    .sort((a, b) => (a.paid_on === b.paid_on ? compareItems(b, a) : a.paid_on! < b.paid_on! ? 1 : -1))
+  return { overdue, overdueTotal: overdue.reduce((sum, item) => sum + item.amount_cents, 0), upcoming, paid }
+}
+
+/**
+ * Chave da cobrança nos avisos: a recorrência e o mês (a mesma para a
+ * ocorrência ainda não gravada e para o lançamento que nasce dela) ou o id do
+ * lançamento avulso. Igual a private.finance_overdue_charges.
+ */
+export function chargeKey(item: Pick<FinanceItem, "key" | "entry" | "recurrence" | "period">): string {
+  const recurrenceId = item.entry ? item.entry.recurrence_id : (item.recurrence?.id ?? null)
+  return recurrenceId && item.period ? occurrenceKey(recurrenceId, item.period) : item.key
+}
+
+export type OverdueNoticeStage = "team_due" | "client_due" | "team_week"
+
+/**
+ * Avisos automáticos de atraso (job diário no banco,
+ * private.notify_finance_overdue): a equipe no dia seguinte ao vencimento e
+ * 7 dias depois; o cliente 3 dias depois, o tempo de a equipe registrar o
+ * que já foi pago (a baixa é manual).
+ */
+export const OVERDUE_NOTICE_STAGES: readonly { stage: OverdueNoticeStage; audience: "team" | "client"; afterDays: number }[] = [
+  { stage: "team_due", audience: "team", afterDays: 1 },
+  { stage: "client_due", audience: "client", afterDays: 3 },
+  { stage: "team_week", audience: "team", afterDays: 7 },
+]
+
+/** Se o job não rodar num dia, a etapa ainda sai nos dias seguintes (atrasos mais antigos não avisam). */
+export const OVERDUE_NOTICE_GRACE_DAYS = 2
+
+/**
+ * Etapas que saem hoje para uma cobrança em atraso: as que venceram (com a
+ * folga) e ainda não foram enviadas para este vencimento (`sent` tem
+ * "<chave>|<etapa>|<vencimento>"). O cliente só é avisado com o interruptor
+ * ligado (e o cliente ativo); a equipe, sempre.
+ */
+export function overdueNoticesDue(
+  item: FinanceItem,
+  today: DateKey,
+  sent: ReadonlySet<string>,
+  clientReminders: boolean
+): OverdueNoticeStage[] {
+  if (item.paid_on || item.skipped) return []
+  const late = daysBetween(item.due_on, today)
+  const key = chargeKey(item)
+  return OVERDUE_NOTICE_STAGES.filter(
+    (stage) =>
+      late >= stage.afterDays &&
+      late <= stage.afterDays + OVERDUE_NOTICE_GRACE_DAYS &&
+      (stage.audience === "team" || clientReminders) &&
+      !sent.has(noticeKey(key, stage.stage, item.due_on))
+  ).map((stage) => stage.stage)
+}
+
+export function noticeKey(charge: string, stage: OverdueNoticeStage, dueOn: DateKey): string {
+  return `${charge}|${stage}|${dueOn}`
+}
+
+/**
+ * Aviso do portal sobre o atraso: "Consta um pagamento em aberto de R$ 3.500,00,
+ * vencido em 25/10." (ou o total, quando são vários, com o mais antigo).
+ */
+export function overdueNoticeText(overdue: FinanceItem[]): string | null {
+  const first = overdue[0]
+  if (!first) return null
+  const date = `${first.due_on.slice(8, 10)}/${first.due_on.slice(5, 7)}`
+  if (overdue.length === 1) return `Consta um pagamento em aberto de ${formatMoney(first.amount_cents)}, vencido em ${date}.`
+  const total = overdue.reduce((sum, item) => sum + item.amount_cents, 0)
+  return `Constam ${overdue.length} pagamentos em aberto, somando ${formatMoney(total)}. O mais antigo venceu em ${date}.`
 }
 
 /**

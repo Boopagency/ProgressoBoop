@@ -11,6 +11,7 @@ import {
   Megaphone,
   Menu,
   MessagesSquare,
+  Wallet,
 } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useState } from "react"
@@ -27,7 +28,7 @@ import { PersonAvatar } from "@/features/workspace/person-avatar"
 /**
  * Menu de baixo do portal no celular: Início, Conteúdo (calendário e feed),
  * Comunicação e Notificações, com as não lidas, e Mais (projetos,
- * documentos, indicar, a troca de cliente, a conta e o tema).
+ * documentos, financeiro, indicar, a troca de cliente, a conta e o tema).
  */
 export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clients: readonly PortalClient[] }) {
   const pathname = usePathname()
@@ -38,7 +39,11 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
   const [moreOpen, setMoreOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const href = (path: string) => (client ? portalHref(path, client, clients) : path)
-  const inMore = section === "/portal/projetos" || section === "/portal/documentos" || section === "/portal/indicar"
+  const inMore =
+    section === "/portal/projetos" ||
+    section === "/portal/documentos" ||
+    section === "/portal/financeiro" ||
+    section === "/portal/indicar"
   // Na troca de cliente, um post ou projeto aberto volta para a seção (o item é do cliente anterior).
   const switchTarget = isPortalDetail(pathname) ? (section ?? "/portal") : pathname
 
@@ -76,7 +81,7 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
         <TabBarItem title="Mais" icon={Menu} active={inMore || moreOpen} onClick={() => setMoreOpen(true)} />
       </TabBar>
 
-      <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} description="Projetos, documentos, indicações, a conta e o tema.">
+      <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} description="Projetos, documentos, financeiro, indicações, a conta e o tema.">
         <MoreSheetAccount
           avatar={<PersonAvatar name={user.name} avatarUrl={user.avatarUrl} colorIndex={0} className="size-10" />}
           name={user.name}
@@ -96,6 +101,13 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
             title="Documentos"
             icon={FileText}
             active={section === "/portal/documentos"}
+            onClick={() => closeThen()}
+          />
+          <MoreSheetItem
+            href={href("/portal/financeiro")}
+            title="Financeiro"
+            icon={Wallet}
+            active={section === "/portal/financeiro"}
             onClick={() => closeThen()}
           />
           <MoreSheetItem

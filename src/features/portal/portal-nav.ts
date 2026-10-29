@@ -7,6 +7,7 @@ import {
   House,
   LayoutGrid,
   MessagesSquare,
+  Wallet,
   type LucideIcon,
 } from "lucide-react"
 
@@ -30,6 +31,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { title: "Feed", href: "/portal/feed", icon: LayoutGrid },
   { title: "Projetos", href: "/portal/projetos", icon: FolderKanban },
   { title: "Documentos", href: "/portal/documentos", icon: FileText },
+  { title: "Financeiro", href: "/portal/financeiro", icon: Wallet },
   { title: "Comunicação", href: "/portal/comunicacao", icon: MessagesSquare, badge: "messages" },
   { title: "Notificações", href: "/portal/notificacoes", icon: Bell, badge: "notifications" },
   { title: "Indicar", href: "/portal/indicar", icon: HeartHandshake },

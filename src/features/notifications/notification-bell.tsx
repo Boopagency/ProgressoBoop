@@ -4,6 +4,7 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Banknote,
   CheckCheck,
   CircleAlert,
   CircleCheck,
@@ -68,6 +69,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   client_referral: HeartHandshake,
   site_lead: UserPlus,
   instagram_publish_failed: CircleAlert,
+  payment_overdue: Banknote,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

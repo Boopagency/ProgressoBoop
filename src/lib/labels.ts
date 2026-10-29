@@ -111,6 +111,12 @@ export const INSTAGRAM_ACCOUNT_TYPE_LABEL: Record<InstagramAccountType, string> 
 /** Indicador do quadro e do calendário: post na fila do Instagram. */
 export const AUTO_PUBLISH_LABEL = "Publica sozinho no Instagram"
 
+/** Interruptor do cliente (admin): o aviso automático e o do portal sobre pagamentos em atraso. */
+export const PAYMENT_REMINDERS_LABEL = "Avisar o cliente sobre pagamentos em atraso"
+
+/** Selo do financeiro no portal. */
+export const PORTAL_FINANCE_STATUS_LABEL = { ok: "Em dia", overdue: "Pagamento em aberto" } as const
+
 export const PUBLISH_STATUS_LABEL: Record<PublishStatus, string> = {
   queued: "Agendado",
   publishing: "Publicando",

@@ -1,11 +1,14 @@
 "use client"
 
-import { Plus } from "lucide-react"
+import { Loader2, Plus } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useTransition } from "react"
+import { toast } from "sonner"
 
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { setPaymentReminders } from "@/features/clients/actions"
 import { FinanceDialog, type FinanceDialogState } from "@/features/finance/finance-dialog"
 import { clientFinance, clientOverdue, overdueItems, projectItems, totalsOf, type FinanceItem } from "@/features/finance/logic"
 import { FinanceRows } from "@/features/finance/finance-rows"
@@ -14,6 +17,7 @@ import { formatMoney } from "@/features/finance/money"
 import { addPeriods, periodOf } from "@/features/clients/logic"
 import { formatShortDate } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
+import { PAYMENT_REMINDERS_LABEL } from "@/lib/labels"
 import type { DateKey, FinanceEntry, FinanceRecurrence, Project } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -46,8 +50,55 @@ function Line({ label, value, tone }: { label: string; value: string; tone?: "la
   )
 }
 
+/**
+ * "Avisar o cliente sobre pagamentos em atraso": o aviso automático (3 dias
+ * depois do vencimento) e o do portal. A equipe é sempre avisada, e o cliente
+ * continua vendo a aba Financeiro.
+ */
+function PaymentReminders({ clientId, initial }: { clientId: string; initial: boolean }) {
+  const [on, setOn] = useState(initial)
+  const [isPending, startTransition] = useTransition()
+
+  function change(next: boolean) {
+    setOn(next)
+    startTransition(async () => {
+      const result = await setPaymentReminders(clientId, next)
+      if (!result.ok) {
+        setOn(!next)
+        toast.error(result.error)
+      }
+    })
+  }
+
+  return (
+    <div className="space-y-1 border-t px-4 py-3">
+      <label className={cn("flex w-fit items-center gap-2 text-[13px] text-foreground", isPending ? "cursor-default" : "cursor-pointer")}>
+        <Checkbox checked={on} disabled={isPending} onCheckedChange={(checked) => change(checked === true)} />
+        {PAYMENT_REMINDERS_LABEL}
+        {isPending ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden="true" /> : null}
+      </label>
+      <p className="text-xs leading-5 text-muted-foreground">
+        {on
+          ? "Três dias depois do vencimento sem pagamento, o cliente recebe um aviso gentil no portal e no celular."
+          : "O cliente vê a aba Financeiro, mas não recebe o aviso. A equipe é avisada do mesmo jeito."}
+      </p>
+    </div>
+  )
+}
+
 /** Página do cliente: mensalidade, margem, fim do contrato, atrasos e o que já entrou no ano. */
-export function ClientFinanceCard({ clientId, finance, today }: { clientId: string; finance: FinanceData; today: DateKey }) {
+export function ClientFinanceCard({
+  clientId,
+  finance,
+  today,
+  reminders = null,
+}: {
+  clientId: string
+  finance: FinanceData
+  today: DateKey
+  /** O interruptor dos avisos ao cliente; null esconde (antes da migration). */
+  reminders?: boolean | null
+}) {
   const { entries, recurrences } = finance
   const summary = clientFinance(clientId, entries, recurrences, today)
   const overdue = clientOverdue(clientId, entries, recurrences, today)
@@ -102,6 +153,7 @@ export function ClientFinanceCard({ clientId, finance, today }: { clientId: stri
       >
         Lançamentos do cliente (12 meses)
       </Link>
+      {reminders === null ? null : <PaymentReminders clientId={clientId} initial={reminders} />}
       {element}
     </PanelCard>
   )

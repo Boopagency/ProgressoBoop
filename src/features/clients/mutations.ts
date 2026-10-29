@@ -59,6 +59,16 @@ export async function writeClientActive(supabase: SupabaseServerClient, id: stri
   return { ok: true, data: null }
 }
 
+/** "Avisar o cliente sobre pagamentos em atraso" (o aviso automático e o do portal). */
+export async function writePaymentReminders(supabase: SupabaseServerClient, id: string, on: unknown): Promise<ActionResult> {
+  if (!isUuid(id) || typeof on !== "boolean") return NOT_FOUND
+
+  const { data, error } = await supabase.from("clients").update({ payment_reminders: on }).eq("id", id).select("id")
+  if (error) return dbFailure(error, "Não foi possível salvar o aviso de pagamentos.")
+  if (data.length === 0) return NOT_FOUND
+  return { ok: true, data: null }
+}
+
 /* ------------------------------------------------------------------ */
 /* Revisão mensal                                                      */
 /* ------------------------------------------------------------------ */

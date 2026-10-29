@@ -1209,6 +1209,29 @@ botão **Novo lançamento** em todas.
   **repetir todo mês** (contrato ou custo fixo, com fim ou número de
   parcelas). Num mês de recorrência dá para mudar só aquele mês, pular o mês
   ou editar a recorrência inteira.
+- **Pagamento em atraso** (migration `20261030120000_portal_finance`): o
+  `pg_cron` roda `private.notify_finance_overdue()` todo dia às 08:07 de São
+  Paulo (11:07 UTC). `private.finance_overdue_charges(dia)` espelha em SQL a
+  regra de `overdueItems` (lançamentos de `client_revenue` não pagos nem
+  pulados e, das recorrências, os meses dos últimos 12 ainda não gravados,
+  com o dia ajustado ao fim do mês por `private.finance_occurrence_due`).
+  Etapas (`OVERDUE_NOTICE_STAGES` em `logic.ts`): equipe no dia 1 e no 7
+  depois do vencimento (`notifications`, tipo `payment_overdue`, link para
+  `/financeiro/lancamentos?cliente=…&situacao=atrasado`) e cliente no dia 3
+  (`client_notifications`, tipo `payment_overdue`, só com
+  `clients.payment_reminders` e o cliente ativo), com 2 dias de folga se o
+  job falhar. O que já saiu fica em `private.finance_overdue_notices`
+  (chave da cobrança — `r:<recorrência>:<mês>` ou o id do lançamento —,
+  etapa e vencimento). O push sai pelos triggers de sempre. O teste
+  `src/features/finance/overdue-sql.test.mjs` compara SQL e TS num Postgres
+  descartável (`FINANCE_SQL_TEST_DB`); `logic.test.mjs` cobre as regras
+  puras.
+- **No portal** (`/portal/financeiro`): `portal_finance(cliente)` (security
+  definer, membro do cliente e cliente ativo) devolve só descrição, valor,
+  vencimento, pagamento e o mês das receitas de cliente dele, mais o
+  interruptor; `features/portal/finance-logic.ts` monta lançamentos e
+  recorrências no formato do admin e `clientStatement` (`logic.ts`) separa
+  em aberto, próximos e pagos, pelas mesmas funções do "Em atraso".
 
 ### Comercial (`/comercial`)
 

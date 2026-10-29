@@ -3,6 +3,7 @@ import { after } from "next/server"
 import { instagramJobsSecret } from "@/features/instagram/config"
 import { sameText } from "@/features/instagram/logic"
 import { refreshLongToken } from "@/features/instagram/meta"
+import { collectMetrics } from "@/features/instagram/metrics-job"
 import { publishDue } from "@/features/instagram/publish-job"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
 
@@ -15,12 +16,13 @@ import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
  *
  * `refresh_tokens` (todo dia) renova os tokens longos que vencem em até 15
  * dias; `publish_due` (a cada 5 minutos) publica os posts que venceram
- * (publish-job.ts). O próximo PR entra aqui (métricas).
+ * (publish-job.ts); `collect_metrics` (de hora em hora) lê as métricas dos
+ * posts publicados (metrics-job.ts).
  */
 
 export const maxDuration = 60
 
-const JOBS = ["refresh_tokens", "publish_due"] as const
+const JOBS = ["refresh_tokens", "publish_due", "collect_metrics"] as const
 type Job = (typeof JOBS)[number]
 
 async function refreshTokens(supabase: SupabaseServerClient, secret: string) {
@@ -66,7 +68,13 @@ export async function POST(request: Request) {
   // Folga para gravar o resultado antes do limite da função.
   const deadline = Date.now() + (maxDuration - 10) * 1000
   const supabase = await createClient()
-  after(() => (job === "publish_due" ? publishDue(supabase, secret, deadline) : refreshTokens(supabase, secret)))
+  after(() =>
+    job === "publish_due"
+      ? publishDue(supabase, secret, deadline)
+      : job === "collect_metrics"
+        ? collectMetrics(supabase, secret, deadline)
+        : refreshTokens(supabase, secret)
+  )
 
   return Response.json({ accepted: job }, { status: 202, headers: { "Cache-Control": "no-store" } })
 }

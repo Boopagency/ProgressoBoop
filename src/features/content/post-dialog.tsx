@@ -45,6 +45,7 @@ import {
 } from "@/features/content/logic"
 import { ClientMark, FrontStatusDot } from "@/features/content/post-meta"
 import { AutoPublishPanel } from "@/features/instagram/auto-publish-panel"
+import { PerformancePanel } from "@/features/instagram/performance-panel"
 import {
   BRIEF_MAX,
   CAPTION_MAX,
@@ -809,6 +810,8 @@ function PostForm({
             className="mt-3 max-md:order-6 max-md:mt-0"
           />
         ) : null}
+
+        {post ? <PerformancePanel post={post} className="mt-3 max-md:order-6 max-md:mt-0" /> : null}
 
         <section aria-label="Textos" className="mt-5 space-y-3 max-md:contents">
           {texts === null ? (

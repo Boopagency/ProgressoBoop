@@ -13,7 +13,13 @@ export const PORTAL_NOTIFICATIONS_LIMIT = 50
 /** O menu confere as contagens a cada tanto (o Realtime avisa antes, quando está no ar). */
 export const PORTAL_COUNTS_POLL_MS = 30000
 
-export type PortalNotificationKind = "team_message" | "post_review" | "step_approval" | "step_done" | "file_shared"
+export type PortalNotificationKind =
+  | "team_message"
+  | "post_review"
+  | "step_approval"
+  | "step_done"
+  | "file_shared"
+  | "payment_overdue"
 
 /** Aviso da conta do cliente. O texto é uma cópia do momento em que nasceu. */
 export interface PortalNotification {
@@ -65,6 +71,13 @@ export function describePortalNotification(notification: PortalNotification): Po
       return { lead: "Etapa concluída:", subject: item.title, excerpt: item.body ? `Projeto ${item.body}` : null }
     case "file_shared":
       return { lead: "Novo documento:", subject: item.title, excerpt: null }
+    case "payment_overdue":
+      // Título: a cobrança; trecho: "R$ 3.500,00 · venceu em 25/10".
+      return {
+        lead: "Consta um pagamento em aberto:",
+        subject: item.title,
+        excerpt: item.body ? `${item.body}. Se já pagou, desconsidere ou avise a gente pela Comunicação.` : null,
+      }
   }
 }
 

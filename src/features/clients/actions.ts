@@ -10,6 +10,7 @@ import {
   NOT_FOUND,
   writeClient,
   writeClientActive,
+  writePaymentReminders,
   writeReview,
   writeReviewDone,
   type ReviewStepInput,
@@ -46,6 +47,12 @@ export async function updateClient(id: string, input: ClientInput): Promise<Acti
 export async function setClientActive(id: string, active: boolean): Promise<ActionResult> {
   await requireUser()
   return refreshed(await writeClientActive(await createClient(), id, active))
+}
+
+/** "Avisar o cliente sobre pagamentos em atraso" (a equipe é sempre avisada). */
+export async function setPaymentReminders(id: string, on: boolean): Promise<ActionResult> {
+  await requireUser()
+  return refreshed(await writePaymentReminders(await createClient(), id, on))
 }
 
 /**

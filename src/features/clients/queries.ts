@@ -45,6 +45,22 @@ export async function getClient(id: string): Promise<ClientDetail | null> {
 }
 
 /**
+ * "Avisar o cliente sobre pagamentos em atraso". Fica fora de CLIENT_COLUMNS:
+ * antes da migration do financeiro no portal, a coluna não existe e a página
+ * do cliente abre sem o interruptor (null).
+ */
+export async function getPaymentReminders(id: string): Promise<boolean | null> {
+  await requireUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("clients").select("payment_reminders").eq("id", id).maybeSingle()
+  if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") return null
+    throw loadError(error, "o aviso de pagamentos do cliente")
+  }
+  return data?.payment_reminders ?? null
+}
+
+/**
  * Revisões mensais (todas, ou de um cliente). O volume é pequeno: uma por
  * cliente por mês.
  */

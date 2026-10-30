@@ -25,6 +25,7 @@ export type NotificationKind =
   | "client_referral"
   | "site_lead"
   | "instagram_publish_failed"
+  | "payment_overdue"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -103,6 +104,14 @@ export function describeNotification(notification: AppNotification, clientName?:
     case "instagram_publish_failed":
       // Publicação automática que desistiu: o post (título) e o motivo no trecho.
       return { actor: clientName ? `Instagram (${clientName})` : "Instagram", action: "não publicou", subject: item.title, excerpt: item.body }
+    case "payment_overdue":
+      // Cobrança vencida sem recebimento (job diário): a descrição (título), o valor e há quanto venceu no trecho.
+      return {
+        actor: clientName ? `${item.title ?? "Cobrança"} (${clientName})` : (item.title ?? "Cobrança"),
+        action: "não foi marcada como recebida",
+        subject: null,
+        excerpt: item.body,
+      }
   }
 }
 

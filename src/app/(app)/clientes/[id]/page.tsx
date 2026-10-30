@@ -5,7 +5,7 @@ import { getEvents } from "@/features/calendar/queries"
 import { getClientFiles } from "@/features/client-files/queries"
 import { ClientView } from "@/features/clients/client-view"
 import { parsePeriodParam, periodOf } from "@/features/clients/logic"
-import { getClient, getClientReviews } from "@/features/clients/queries"
+import { getClient, getClientReviews, getPaymentReminders } from "@/features/clients/queries"
 import { getCommunications } from "@/features/communications/queries"
 import { getContentIdeas } from "@/features/content/ideas-queries"
 import { getContentPosts } from "@/features/content/queries"
@@ -34,7 +34,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files, instagram] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files, instagram, paymentReminders] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
@@ -50,6 +50,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getClientMembers(id),
     getClientFiles(id),
     getClientInstagram(id),
+    getPaymentReminders(id),
   ])
   if (!client) notFound()
 
@@ -73,6 +74,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
         communications={communications}
         decisions={decisions.filter((decision) => decision.client_id === client.id)}
         finance={finance}
+        paymentReminders={paymentReminders}
         deals={deals}
         posts={posts}
         ideas={ideas}

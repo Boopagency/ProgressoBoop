@@ -477,6 +477,7 @@ export type Database = {
           name: string
           notes: string | null
           owner_id: string | null
+          payment_reminders: boolean
           review_day: number | null
           services: string[]
           since: string | null
@@ -495,6 +496,7 @@ export type Database = {
           name: string
           notes?: string | null
           owner_id?: string | null
+          payment_reminders?: boolean
           review_day?: number | null
           services?: string[]
           since?: string | null
@@ -513,6 +515,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner_id?: string | null
+          payment_reminders?: boolean
           review_day?: number | null
           services?: string[]
           since?: string | null
@@ -2790,6 +2793,7 @@ export type Database = {
           resolved: boolean
         }[]
       }
+      portal_finance: { Args: { target_client: string }; Returns: Json }
       portal_my_clients: {
         Args: never
         Returns: {
@@ -3064,6 +3068,7 @@ export type Database = {
         | "step_approval"
         | "step_done"
         | "file_shared"
+        | "payment_overdue"
       communication_channel: "whatsapp" | "email" | "call" | "meeting" | "other"
       communication_kind:
         | "update"
@@ -3146,6 +3151,7 @@ export type Database = {
         | "client_referral"
         | "site_lead"
         | "instagram_publish_failed"
+        | "payment_overdue"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -3300,6 +3306,7 @@ export const Constants = {
         "step_approval",
         "step_done",
         "file_shared",
+        "payment_overdue",
       ],
       communication_channel: ["whatsapp", "email", "call", "meeting", "other"],
       communication_kind: [
@@ -3384,6 +3391,7 @@ export const Constants = {
         "client_referral",
         "site_lead",
         "instagram_publish_failed",
+        "payment_overdue",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

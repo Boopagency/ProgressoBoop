@@ -35,7 +35,7 @@ export function TaskSection({
   return (
     <section id={id} aria-label={title} className={cn("scroll-mt-20 rounded-2xl border bg-card px-4 pt-2.5 pb-1.5 sm:px-5", className)}>
       <div className="flex h-10 items-center justify-between gap-2 border-b border-border">
-        <SectionTitle count={openCount}>
+        <SectionTitle count={openCount} className="font-display font-medium tracking-[-0.01em]">
           {tone !== "default" && openCount > 0 ? (
             <span
               aria-hidden="true"

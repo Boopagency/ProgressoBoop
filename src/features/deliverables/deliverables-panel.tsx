@@ -6,11 +6,13 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { addDeliverableLink, loadDeliverables, removeDeliverable } from "@/features/deliverables/actions"
+import { addDeliverableLink, removeDeliverable } from "@/features/deliverables/actions"
 import { DeliverableList } from "@/features/deliverables/deliverable-list"
 import { DELIVERABLE_ACCEPT, DELIVERABLE_TITLE_MAX, type Deliverable } from "@/features/deliverables/logic"
 import { uploadDeliverable } from "@/features/deliverables/upload"
+import { SHEET_HEADING, useTaskSheetData } from "@/features/tasks/task-sheet-data"
 import type { Task } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 /**
  * O bloco "Entregas para o cliente" no painel da tarefa (etapa de projeto de
@@ -24,6 +26,7 @@ export function DeliverablesPanel({ task }: { task: Pick<Task, "id" | "client_vi
   const [url, setUrl] = useState("")
   const [title, setTitle] = useState("")
   const [saving, startSaving] = useTransition()
+  const { loadDeliverables } = useTaskSheetData()
   const items = loaded?.taskId === task.id ? loaded.items : null
   const visible = task.client_visible || task.client_approval_required
 
@@ -37,7 +40,7 @@ export function DeliverablesPanel({ task }: { task: Pick<Task, "id" | "client_vi
     return () => {
       active = false
     }
-  }, [task.id])
+  }, [loadDeliverables, task.id])
 
   function append(item: Deliverable) {
     setLoaded((current) =>
@@ -84,8 +87,8 @@ export function DeliverablesPanel({ task }: { task: Pick<Task, "id" | "client_vi
   }
 
   return (
-    <section aria-labelledby="task-deliverables" className="border-t px-5 pt-5 pb-1">
-      <h3 id="task-deliverables" className="text-[13px] font-medium text-foreground">
+    <section aria-labelledby="task-deliverables" className="px-5 pt-6 pb-1">
+      <h3 id="task-deliverables" className={cn(SHEET_HEADING, "mb-1")}>
         Entregas para o cliente
       </h3>
       <p className="mt-0.5 mb-3 text-xs leading-5 text-muted-foreground">
@@ -108,7 +111,7 @@ export function DeliverablesPanel({ task }: { task: Pick<Task, "id" | "client_vi
       ) : null}
 
       {linkOpen ? (
-        <form onSubmit={onAddLink} className="mb-3 space-y-2 rounded-lg border bg-muted/40 p-3">
+        <form onSubmit={onAddLink} className="mb-3 space-y-2 rounded-2xl border bg-card p-3">
           <Input
             value={url}
             onChange={(event) => setUrl(event.target.value)}

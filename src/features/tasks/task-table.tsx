@@ -45,11 +45,16 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
   }
 
   return (
-    <div className={cn("overflow-x-auto rounded-xl border bg-card", className)}>
+    <div
+      className={cn(
+        "overflow-x-auto rounded-2xl border border-glass-edge bg-card-solid shadow-card",
+        className
+      )}
+    >
       <table className="w-full min-w-[1080px] border-collapse text-[13px]">
         <thead>
-          <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-            <th scope="col" className="w-10 px-3 py-2">
+          <tr className="border-b text-left text-muted-foreground">
+            <th scope="col" className="w-11 py-3 pr-2 pl-4">
               <span className="sr-only">Concluir</span>
             </th>
             {COLUMNS.map((column) => {
@@ -59,14 +64,14 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
                   key={column.key}
                   scope="col"
                   aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
-                  className={cn("px-2 py-1.5 font-medium", column.className)}
+                  className={cn("px-2 py-2 font-medium", column.className)}
                 >
                   <button
                     type="button"
                     onClick={() => toggleSort(column.key)}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded px-1 py-0.5 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
-                      active && "text-foreground"
+                      "inline-flex h-7 items-center gap-1 rounded-full px-2 eyebrow text-[10.5px] outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
+                      active && "bg-glow-soft text-brand-ink hover:bg-glow-soft hover:text-brand-ink"
                     )}
                   >
                     {column.label}
@@ -81,7 +86,7 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
                 </th>
               )
             })}
-            <th scope="col" className="w-[92px] px-2 py-1.5 font-medium">
+            <th scope="col" className="w-[92px] px-4 py-2 eyebrow text-[10.5px] font-medium">
               Pessoas
             </th>
           </tr>
@@ -95,9 +100,16 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
               <tr
                 key={task.id}
                 onClick={() => openTask(task.id)}
-                className="cursor-pointer border-b last:border-b-0 hover:bg-muted/50"
+                className="group/row cursor-pointer border-b transition-colors duration-150 last:border-b-0 hover:bg-glow-soft/40"
               >
-                <td className="px-3 py-2 align-middle" onClick={(event) => event.stopPropagation()}>
+                <td
+                  className="relative py-2.5 pr-2 pl-4 align-middle"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-glow opacity-0 shadow-[0_0_8px_var(--glow)] transition-opacity group-hover/row:opacity-100"
+                  />
                   <TaskCheckbox
                     checked={done}
                     onCheckedChange={() => toggleDone(task)}
@@ -112,7 +124,7 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
                       openTask(task.id)
                     }}
                     className={cn(
-                      "line-clamp-2 text-left text-sm font-medium text-foreground outline-none hover:underline focus-visible:underline",
+                      "line-clamp-2 text-left text-sm font-medium text-foreground underline-offset-4 outline-none hover:underline hover:decoration-glow/60 focus-visible:underline",
                       done && "text-muted-foreground line-through decoration-muted-foreground/50"
                     )}
                   >
@@ -120,8 +132,17 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
                   </button>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap text-foreground">
-                  <span className="inline-flex items-center gap-1.5">
-                    <StatusDot status={task.status} />
+                  <span
+                    className={cn(
+                      "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium",
+                      task.status === "doing"
+                        ? "border-attention-line/20 bg-attention-soft text-attention-ink"
+                        : task.status === "done"
+                          ? "border-success/25 bg-success/10 text-success-strong"
+                          : "border-border text-muted-foreground"
+                    )}
+                  >
+                    <StatusDot status={task.status} className="size-1.5" />
                     {TASK_STATUS_LABEL[task.status]}
                   </span>
                 </td>
@@ -141,7 +162,7 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
                 <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                   {task.area ? TASK_AREA_LABEL[task.area] : "—"}
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-4 py-2">
                   <AvatarStack ids={task.assignee_ids} profiles={profiles} />
                 </td>
               </tr>

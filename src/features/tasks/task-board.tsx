@@ -58,21 +58,32 @@ export function TaskBoard({ tasks, className }: { tasks: Task[]; className?: str
             if (id) move(id, status)
           }}
           className={cn(
-            "flex w-[85%] shrink-0 snap-start flex-col rounded-xl border bg-muted/30 transition-colors sm:w-auto",
-            over === status && "border-brand/50 bg-brand-soft/30"
+            "flex w-[85%] shrink-0 snap-start flex-col rounded-2xl border bg-card transition-[border-color,box-shadow,background-color] duration-150 sm:w-auto",
+            over === status && "border-glow/60 bg-glow-soft/40 shadow-[0_0_0_3px_var(--glow-soft),var(--shadow-card)]"
           )}
         >
-          <header className="flex items-center gap-2 px-3 pt-3 pb-2">
-            <StatusDot status={status} />
-            <h2 className="text-[13px] font-semibold text-foreground">{TASK_STATUS_LABEL[status]}</h2>
-            <span className="text-xs text-muted-foreground tabular-nums">{columns[status].length}</span>
+          <header className="flex items-end gap-2.5 px-4 pt-4 pb-3">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+                <StatusDot
+                  status={status}
+                  className={cn(
+                    "size-1.5",
+                    status === "doing" && "shadow-[0_0_8px_var(--warning)]",
+                    status === "done" && "shadow-[0_0_8px_var(--success)]"
+                  )}
+                />
+                <h2>{TASK_STATUS_LABEL[status]}</h2>
+              </div>
+              <span className="display-number text-[34px] leading-[0.85] text-foreground">{columns[status].length}</span>
+            </div>
             {status === "done" ? (
-              <span className="ml-auto text-[11px] text-subtle-foreground">últimos {BOARD_DONE_DAYS} dias</span>
+              <span className="ml-auto pb-0.5 text-[11px] text-subtle-foreground">últimos {BOARD_DONE_DAYS} dias</span>
             ) : null}
           </header>
-          <div role="list" className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
+          <div role="list" className="flex min-h-24 flex-1 flex-col gap-2 border-t border-border px-2 pt-2 pb-2">
             {columns[status].length === 0 ? (
-              <p className="px-2 py-6 text-center text-xs text-subtle-foreground">
+              <p className="m-1 rounded-xl border border-dashed border-foreground/15 px-2 py-6 text-center text-xs text-subtle-foreground">
                 {status === "done" ? "Nada concluído nesses dias." : "Arraste uma tarefa para cá."}
               </p>
             ) : (
@@ -102,12 +113,12 @@ function BoardCard({ task }: { task: Task }) {
         event.dataTransfer.setData(DRAG_TYPE, task.id)
         event.dataTransfer.effectAllowed = "move"
       }}
-      className="group rounded-lg border bg-card shadow-[0_1px_2px_0_rgb(0_0_0/0.04)] transition-shadow hover:shadow-[0_2px_6px_0_rgb(0_0_0/0.08)]"
+      className="group cursor-grab rounded-xl border border-glass-edge bg-card-solid shadow-[inset_0_1px_0_var(--glass-highlight),0_1px_2px_rgb(0_0_0/0.06)] transition-[border-color,box-shadow,transform] duration-150 ease-glide hover:border-glow/40 hover:shadow-[inset_0_1px_0_var(--glass-highlight),0_10px_24px_-14px_var(--glow)] active:cursor-grabbing motion-safe:hover:-translate-y-px"
     >
       <button
         type="button"
         onClick={() => openTask(task.id)}
-        className="block w-full rounded-lg px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-xl px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <span className="flex items-start gap-1.5">
           <span
@@ -120,8 +131,12 @@ function BoardCard({ task }: { task: Task }) {
           </span>
           {task.priority === "high" && !done ? <HighPriorityIcon className="mt-0.5" /> : null}
         </span>
-        {context ? <span className="mt-1 block truncate text-xs text-muted-foreground">{context}</span> : null}
-        <span className="mt-2 flex items-center gap-2">
+        {context ? (
+          <span className="mt-1.5 inline-flex max-w-full items-center rounded-full border border-border px-2 py-0.5 text-[11px] leading-4 text-muted-foreground">
+            <span className="truncate">{context}</span>
+          </span>
+        ) : null}
+        <span className="mt-2.5 flex items-center gap-2">
           <TaskDateLabel task={task} today={today} className="text-xs" />
           <span className="ml-auto flex items-center gap-1.5">
             {owners.length === 1 ? (

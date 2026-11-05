@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { loadClientMemberName } from "@/features/portal/access-actions"
 import { clientApprovalState, type ClientApprovalState } from "@/features/tasks/logic"
+import { SHEET_HEADING } from "@/features/tasks/task-sheet-data"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { formatShortDate, todayKey, toDateKey } from "@/lib/dates"
 import type { DateKey, Task } from "@/lib/types"
@@ -70,8 +71,8 @@ export function ClientApprovalPanel({ task }: { task: Task }) {
   const who = authorId ? (names[authorId] ?? null) : null
 
   return (
-    <section aria-labelledby="task-client-approval" className="border-t px-5 pt-5 pb-1">
-      <h3 id="task-client-approval" className="mb-2 text-[13px] font-medium text-foreground">
+    <section aria-labelledby="task-client-approval" className="px-5 pt-6 pb-1">
+      <h3 id="task-client-approval" className={cn(SHEET_HEADING, "mb-2.5")}>
         Aprovação do cliente
       </h3>
       {state === "on_done" ? (
@@ -79,14 +80,14 @@ export function ClientApprovalPanel({ task }: { task: Task }) {
           Ao concluir esta etapa, ela vai para o cliente aprovar no portal.
         </p>
       ) : state === "awaiting" ? (
-        <p className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[13px] leading-5 text-foreground">
+        <p className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/10 px-3.5 py-2.5 text-[13px] leading-5 text-foreground">
           <Clock className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden="true" />
           Esperando o cliente aprovar no portal.
         </p>
       ) : (
         <div
           className={cn(
-            "rounded-lg border px-3 py-2 text-[13px] leading-5",
+            "rounded-2xl border px-3.5 py-2.5 text-[13px] leading-5",
             state === "approved" ? "border-success/30 bg-success/10" : "border-warning/40 bg-warning/10"
           )}
         >

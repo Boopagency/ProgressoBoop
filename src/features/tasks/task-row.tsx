@@ -41,8 +41,12 @@ export function TaskRow({
   return (
     <div
       role="listitem"
-      className="group/task @container relative flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/70 has-[button:focus-visible]:bg-muted/70"
+      className="group/task @container relative flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-foreground/[0.04] has-[button:focus-visible]:bg-foreground/[0.04]"
     >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-2.5 left-0 w-[2px] rounded-full bg-glow opacity-0 shadow-[0_0_8px_var(--glow)] transition-opacity duration-150 group-hover/task:opacity-100 group-has-[button:focus-visible]/task:opacity-100"
+      />
       <TaskCheckbox
         checked={done}
         onCheckedChange={() => toggleDone(task)}
@@ -52,7 +56,7 @@ export function TaskRow({
       <button
         type="button"
         onClick={() => openTask(task.id)}
-        className="flex min-w-0 flex-1 items-start gap-4 text-left outline-none after:absolute after:inset-0 after:rounded-lg"
+        className="flex min-w-0 flex-1 items-start gap-4 text-left outline-none after:absolute after:inset-0 after:rounded-xl"
       >
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-2">

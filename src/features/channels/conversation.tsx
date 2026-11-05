@@ -39,6 +39,7 @@ import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { sendAudioMessage } from "@/features/voice/actions"
 import { deliverRecording, type Recording } from "@/features/voice/upload"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { formatShortDate, toDateKey } from "@/lib/dates"
 import type { ActionResult, Communication } from "@/lib/types"
@@ -181,7 +182,8 @@ export function Conversation({
   const { profileById, clientById, clientPersonById } = useWorkspace()
   const { today } = useTasks()
   const withClient = isClientDirect(channel)
-  const thread = useThread(channel.id, (before) => loadThread(channel.id, before))
+  const demo = useDemoLoaders()
+  const thread = useThread(channel.id, (before) => (demo.loadThread ?? loadThread)(channel.id, before))
   const { seenBy, readers } = useReadReceipts(thread.messages, thread.reads)
   const [query, setQuery] = useState(initialQuery)
   const [searchOpen, setSearchOpen] = useState(initialQuery !== "")

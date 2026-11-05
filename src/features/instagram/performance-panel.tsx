@@ -15,6 +15,7 @@ import {
 } from "@/features/instagram/metrics-actions"
 import { captionStart } from "@/features/instagram/metrics-logic"
 import { MetricsEvolution, MetricsGrid, ReadingNote, readingTime } from "@/features/instagram/metrics-view"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import { cn } from "@/lib/utils"
 
 /**
@@ -26,20 +27,22 @@ import { cn } from "@/lib/utils"
 export function PerformancePanel({ post, className }: { post: PostSummary; className?: string }) {
   const [data, setData] = useState<PostPerformance | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const demo = useDemoLoaders()
+  const loadPerformance = demo.loadPostPerformance ?? loadPostPerformance
   const relevant = post.stage === "published" && post.networks.includes("instagram") && post.format !== "text"
 
   const reload = useCallback(async () => {
-    const result = await loadPostPerformance(post.id)
+    const result = await loadPerformance(post.id)
     if (result.ok) {
       setData(result.data)
       setError(null)
     } else setError(result.error)
-  }, [post.id])
+  }, [post.id, loadPerformance])
 
   useEffect(() => {
     if (!relevant) return
     let current = true
-    void loadPostPerformance(post.id).then((result) => {
+    void loadPerformance(post.id).then((result) => {
       if (!current) return
       if (result.ok) setData(result.data)
       else setError(result.error)
@@ -47,7 +50,7 @@ export function PerformancePanel({ post, className }: { post: PostSummary; class
     return () => {
       current = false
     }
-  }, [post.id, relevant])
+  }, [post.id, relevant, loadPerformance])
 
   if (!relevant) return null
 

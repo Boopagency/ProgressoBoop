@@ -16,6 +16,7 @@ import { useThread } from "@/features/channels/use-thread"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { sendAudioMessage } from "@/features/voice/actions"
 import { deliverRecording, type Recording } from "@/features/voice/upload"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import type { ActionResult } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -33,8 +34,9 @@ export function PostSidePanel({ postId, internal, className }: { postId: string;
   const [sentCount, setSentCount] = useState(0)
   const { today } = useTasks()
   const unread = useUnread()
+  const demo = useDemoLoaders()
   const thread = useThread(postId, async (before) => {
-    const result = await loadPostThread(postId, before)
+    const result = await (demo.loadPostThread ?? loadPostThread)(postId, before)
     if (result.ok && !before) setChannelId(result.data.channelId)
     return result
   })

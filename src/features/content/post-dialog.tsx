@@ -91,6 +91,7 @@ import type {
   DateKey,
   Task,
 } from "@/lib/types"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import { cn } from "@/lib/utils"
 
 export interface PostDialogState {
@@ -294,6 +295,9 @@ function PostForm({
   onDone: () => void
 }) {
   const ids = useId()
+  const demo = useDemoLoaders()
+  const readPost = demo.loadPost ?? loadPost
+  const readActivity = demo.loadActivity ?? loadActivity
   const { clients, profiles, projects, currentUser, clientById } = useWorkspace()
   const { tasks, openTask } = useTasks()
   const [today] = useState<DateKey>(() => todayKey())
@@ -330,7 +334,7 @@ function PostForm({
   useEffect(() => {
     if (!post) return
     let current = true
-    loadPost(post.id)
+    readPost(post.id)
       .then((result) => {
         if (!current) return
         if (!result.ok) {
@@ -347,18 +351,18 @@ function PostForm({
     return () => {
       current = false
     }
-  }, [post])
+  }, [post, readPost])
 
   useEffect(() => {
     if (!post) return
     let current = true
-    void loadActivity("content_post", post.id).then((result) => {
+    void readActivity("content_post", post.id).then((result) => {
       if (current && result.ok) setActivity(result.data)
     })
     return () => {
       current = false
     }
-  }, [post, activityVersion])
+  }, [post, activityVersion, readActivity])
 
   function set<K extends keyof Fields>(key: K, value: Fields[K]) {
     setFields((current) => ({ ...current, [key]: value }))

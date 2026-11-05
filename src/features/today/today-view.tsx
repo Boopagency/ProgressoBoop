@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { PageBody, PageContainer } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import type { PendingRequest } from "@/features/channels/logic"
 import { TodayRequestsCard } from "@/features/channels/today-requests-card"
@@ -29,7 +29,7 @@ import { Agenda } from "@/features/today/agenda"
 import { DocsToReview, NextMeetingCompact, OpenAgreements } from "@/features/today/dashboard-cards"
 import { TODAY_SCOPE_COOKIE, type TodayScope } from "@/features/today/constants"
 import { ProgressCard } from "@/features/today/progress-card"
-import { SummaryStats } from "@/features/today/summary-stats"
+import { TodayHero } from "@/features/today/today-hero"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useViewFade } from "@/hooks/use-view-fade"
 import { formatLongDate } from "@/lib/dates"
@@ -104,27 +104,25 @@ export function TodayView({
 
   return (
     <PageContainer>
-      <PageHeader
-        title={
+      <TodayHero
+        greeting={greeting}
+        name={firstName(currentUser.full_name)}
+        date={formatLongDate(today)}
+        summary={summary}
+        controls={
           <>
-            {greeting}, <span className="text-brand-ink">{firstName(currentUser.full_name)}</span>
+            <SegmentedControl
+              aria-label="Quais tarefas mostrar"
+              value={scope}
+              onValueChange={changeScope}
+              options={SCOPE_OPTIONS}
+            />
+            <NewTaskButton />
           </>
         }
-        description={formatLongDate(today)}
-        actions={<NewTaskButton />}
       />
 
-      <PageToolbar>
-        <SegmentedControl
-          aria-label="Quais tarefas mostrar"
-          value={scope}
-          onValueChange={changeScope}
-          options={SCOPE_OPTIONS}
-        />
-      </PageToolbar>
-
-      <PageBody ref={bodyRef}>
-        <SummaryStats summary={summary} />
+      <PageBody ref={bodyRef} className="mt-8">
 
         {/*
           Celular: resumo → progresso → listas → agenda.

@@ -70,7 +70,7 @@ export function PageHeader({
       <div className="min-w-0 space-y-1">
         <h1
           title={typeof title === "string" ? title : undefined}
-          className="truncate font-display text-[28px] leading-9 font-semibold tracking-[-0.02em] text-foreground sm:text-[34px] sm:leading-[2.75rem]"
+          className="truncate font-display text-[28px] leading-9 font-medium tracking-[-0.03em] text-foreground sm:text-[34px] sm:leading-[2.75rem] [&_em]:emphasis [&_em]:pr-[0.04em] [&_em]:text-[1.14em] [&_em]:leading-none [&_em]:text-brand-ink"
         >
           {title}
         </h1>

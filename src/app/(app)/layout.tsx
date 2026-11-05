@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         {/* No celular, o menu fica embaixo (AppTabBar); --app-bottom-bar é a altura dele. */}
         <SidebarProvider defaultOpen={sidebarOpen} className="max-md:[--app-bottom-bar:calc(3.5rem+env(safe-area-inset-bottom))]">
           <AppSidebar />
-          <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden bg-canvas md:peer-data-[variant=inset]:rounded-[1.375rem] md:peer-data-[variant=inset]:shadow-none">
+          <SidebarInset className="min-w-0 md:h-[calc(100svh-1rem)] md:overflow-hidden">
             <AppTopbar notifications={notifications} />
             <div className="flex-1 max-md:pb-(--app-bottom-bar) md:overflow-y-auto md:[scrollbar-gutter:stable]">{children}</div>
           </SidebarInset>

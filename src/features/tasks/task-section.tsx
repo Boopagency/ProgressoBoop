@@ -33,13 +33,13 @@ export function TaskSection({
   const openCount = tasks.filter((task) => !isDone(task)).length
 
   return (
-    <section id={id} aria-label={title} className={cn("scroll-mt-20 rounded-xl bg-card px-4 pt-2.5 pb-1.5 shadow-card sm:px-5", className)}>
-      <div className="flex h-10 items-center justify-between gap-2 border-b border-border/70">
+    <section id={id} aria-label={title} className={cn("scroll-mt-20 rounded-2xl border bg-card px-4 pt-2.5 pb-1.5 sm:px-5", className)}>
+      <div className="flex h-10 items-center justify-between gap-2 border-b border-border">
         <SectionTitle count={openCount}>
           {tone !== "default" && openCount > 0 ? (
             <span
               aria-hidden="true"
-              className={cn("size-1.5 rounded-full", tone === "danger" ? "bg-overdue" : "bg-brand")}
+              className={cn("size-1.5 rounded-full", tone === "danger" ? "bg-overdue shadow-[0_0_8px_var(--overdue)]" : "bg-glow shadow-[0_0_8px_var(--glow)]")}
             />
           ) : null}
           {title}

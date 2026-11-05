@@ -7,6 +7,7 @@ import { useState, useTransition } from "react"
 
 import { BoopMark } from "@/components/layout/boop-mark"
 import { ThemeMenuItems } from "@/components/layout/theme-menu"
+import { NAV_ITEM_CLASS } from "@/components/layout/shell-classes"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,7 +93,7 @@ export function PortalSidebar({
                     asChild
                     isActive={active?.href === item.href}
                     tooltip={item.title}
-                    className="h-9 gap-2.5 rounded-full px-3 text-[13.5px] text-sidebar-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-[0_6px_16px_-8px_rgb(11_27_44/0.5)] data-[active=true]:hover:bg-sidebar-primary data-[active=true]:hover:text-sidebar-primary-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-(--sidebar-primary-icon)"
+                    className={NAV_ITEM_CLASS}
                   >
                     <Link href={client ? portalHref(item.href, client, clients) : item.href} onClick={closeOnMobile}>
                       <item.icon />

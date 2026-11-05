@@ -70,8 +70,11 @@ export function ProgressCard({
   return (
     <Card role="region" aria-labelledby="progress-title" className={className}>
       <CardHeader className="gap-1">
-        <p className="text-xs text-muted-foreground">Em foco</p>
-        <CardTitle id="progress-title" role="heading" aria-level={2} className="leading-snug">
+        <p className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+          Em foco
+        </p>
+        <CardTitle id="progress-title" role="heading" aria-level={2} className="font-display text-[17px] leading-snug font-medium tracking-[-0.01em]">
           <Link href={`/projetos/${project.id}`} className="hover:text-brand-ink hover:underline">
             {project.name}
           </Link>
@@ -79,8 +82,9 @@ export function ProgressCard({
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline justify-between gap-3">
-          <p className="font-display text-[32px] leading-none font-semibold tracking-tight tabular-nums">
-            {stats.percent}%
+          <p className="display-number text-[64px] leading-[0.8] text-foreground">
+            {stats.percent}
+            <span className="ml-0.5 align-top font-sans text-lg not-italic text-muted-foreground">%</span>
           </p>
           <p className="text-xs text-muted-foreground tabular-nums">
             {stats.done} de {stats.total} {stats.total === 1 ? "tarefa" : "tarefas"}

@@ -29,10 +29,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
         {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-border": "var(--glass-edge)",
+          "--border-radius": "calc(var(--radius) + 2px)",
         } as React.CSSProperties
       }
+      // Aviso de vidro, como os menus: desfoque e a sombra das superfícies que flutuam.
+      toastOptions={{ classNames: { toast: "backdrop-blur-xl !shadow-float" } }}
       {...props}
     />
   )

@@ -163,12 +163,12 @@ export function DreView({
           </PanelCard>
         </div>
 
-        <PanelCard id="dre-tabela" title="DRE mês a mês" className="mt-6">
+        <PanelCard id="dre-tabela" title="DRE mês a mês" className="mt-6 bg-card-solid">
           <div className="overflow-x-auto">
             <table className="w-full min-w-max border-separate border-spacing-0 text-[13px] tabular-nums">
               <thead>
                 <tr className="text-xs text-muted-foreground">
-                  <th scope="col" className="sticky left-0 z-10 bg-card px-4 py-2 text-left font-medium">
+                  <th scope="col" className="sticky left-0 z-10 bg-card-solid px-4 py-2 text-left font-medium">
                     Linha
                   </th>
                   {months.map((month) => (
@@ -192,7 +192,7 @@ export function DreView({
                         scope="row"
                         title={COMPUTED_HINT[line.key]}
                         className={cn(
-                          "sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap",
+                          "sticky left-0 z-10 border-t bg-card-solid px-4 py-2 text-left font-normal whitespace-nowrap",
                           strong ? "font-medium text-foreground" : "text-muted-foreground"
                         )}
                       >
@@ -219,7 +219,7 @@ export function DreView({
                 </tr>
                 {OUTSIDE_LINES.map((line) => (
                   <tr key={line.key}>
-                    <th scope="row" className="sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
+                    <th scope="row" className="sticky left-0 z-10 border-t bg-card-solid px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
                       {line.label}
                     </th>
                     {months.map((month) => (
@@ -279,7 +279,7 @@ function PercentRow({
 }) {
   return (
     <tr>
-      <th scope="row" className="sticky left-0 z-10 border-t bg-card px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
+      <th scope="row" className="sticky left-0 z-10 border-t bg-card-solid px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground">
         {label}
       </th>
       {months.map((month) => {

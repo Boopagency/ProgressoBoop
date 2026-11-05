@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { TOPBAR_CLASS, TOPBAR_SECTION_CLASS, TOPBAR_TRIGGER_CLASS } from "@/components/layout/shell-classes"
 import { portalHref, selectedClient } from "@/features/portal/links"
 import { isPortalDetail, PORTAL_CONTENT_HREFS, PORTAL_NAV, portalSectionOf } from "@/features/portal/portal-nav"
 import type { PortalClient } from "@/features/portal/session"
@@ -26,8 +27,8 @@ export function PortalTopbar({ clients }: { clients: readonly PortalClient[] }) 
   const inContent = current !== null && PORTAL_CONTENT_HREFS.includes(current.href)
 
   return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 bg-canvas/85 px-3 backdrop-blur-md max-md:h-[calc(3rem+env(safe-area-inset-top))] max-md:border-b max-md:border-border/70 md:h-16 md:px-6 max-md:pt-[env(safe-area-inset-top)] md:px-4">
-      <SidebarTrigger className="-ml-1 size-9 rounded-full bg-card text-muted-foreground shadow-card hover:bg-card hover:text-foreground max-md:hidden" />
+    <header className={TOPBAR_CLASS}>
+      <SidebarTrigger className={TOPBAR_TRIGGER_CLASS} />
       
       {inContent ? (
         <nav aria-label="Conteúdo" className="flex flex-1 rounded-lg bg-muted p-0.5 md:hidden">
@@ -52,13 +53,13 @@ export function PortalTopbar({ clients }: { clients: readonly PortalClient[] }) 
         isPortalDetail(pathname) ? (
           <Link
             href={href(current.href)}
-            className="-ml-1 flex items-center gap-1 rounded-full px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 max-md:h-11 max-md:pr-3 md:ml-0 md:h-9 md:bg-card md:px-3.5 md:shadow-card"
+            className="-ml-1 flex items-center gap-1 rounded-full px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 max-md:h-11 max-md:pr-3 md:ml-0 md:h-9 md:border md:border-glass-edge md:bg-card md:px-3.5 md:shadow-[inset_0_1px_0_var(--glass-highlight)]"
           >
             <ChevronLeft className="size-3.5" aria-hidden="true" />
             {current.title}
           </Link>
         ) : (
-          <span className={cn("flex items-center gap-2 text-[13px] font-medium text-foreground md:h-9 md:rounded-full md:bg-card md:px-3.5 md:shadow-card", inContent && "max-md:hidden")}>
+          <span className={cn(TOPBAR_SECTION_CLASS, inContent && "max-md:hidden")}>
             <current.icon className="size-3.5 text-muted-foreground" aria-hidden="true" />
             {current.title}
           </span>

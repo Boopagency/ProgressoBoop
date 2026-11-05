@@ -227,7 +227,9 @@ function TranscriptReader({ text }: { text: string }) {
       <div
         className={cn(
           "relative px-4 py-3 text-sm leading-6 text-foreground",
-          showAll && "max-h-[70vh] overflow-y-auto"
+          showAll && "max-h-[70vh] overflow-y-auto",
+          // Recolhida, o fim do texto some aos poucos (máscara: funciona sobre o cartão de vidro).
+          !showAll && collapsible && "[mask-image:linear-gradient(to_bottom,#000_calc(100%-4rem),transparent)]"
         )}
       >
         {visibleLines.map((line, lineIndex) => {
@@ -274,12 +276,6 @@ function TranscriptReader({ text }: { text: string }) {
             </p>
           )
         })}
-        {!showAll && collapsible ? (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent"
-          />
-        ) : null}
       </div>
 
       {collapsible && !searching ? (

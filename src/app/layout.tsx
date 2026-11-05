@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Poppins } from "next/font/google"
+import { Instrument_Serif, Inter, Poppins } from "next/font/google"
 
 import { VisualViewportVars } from "@/components/layout/visual-viewport"
 import { Toaster } from "@/components/ui/sonner"
@@ -18,7 +18,15 @@ const inter = Inter({
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["500", "600"],
+  weight: ["400", "500", "600"],
+})
+
+// Serifada itálica de destaque: a palavra de ênfase dos títulos e os números grandes.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
 })
 
 export const metadata: Metadata = {
@@ -45,11 +53,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // O script põe a classe `dark` no <html> antes da pintura (veja src/lib/theme.ts).
-    <html lang="pt-BR" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${inter.variable} ${poppins.variable} ${instrumentSerif.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-svh font-sans">
+        {/* Os brilhos azuis do fundo, numa camada fixa atrás de tudo (globals.css). */}
+        <div aria-hidden="true" className="app-backdrop" />
         <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
         {/* No celular, os avisos ficam acima do menu de baixo. */}
         <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />

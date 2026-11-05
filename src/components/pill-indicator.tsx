@@ -56,7 +56,7 @@ export function PillIndicator({ selector, active }: {
       ref={ref}
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute top-0 left-0 rounded-full bg-primary opacity-0 shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)]",
+        "pointer-events-none absolute top-0 left-0 rounded-full bg-primary opacity-0 shadow-glow",
         "group-data-[pill]/pill:opacity-100 motion-safe:group-data-[pill]/pill:transition-[translate,width,height] motion-safe:group-data-[pill]/pill:duration-300 motion-safe:group-data-[pill]/pill:ease-[cubic-bezier(0.2,0,0,1)]"
       )}
     />
@@ -65,4 +65,4 @@ export function PillIndicator({ selector, active }: {
 
 /** Classes da opção escolhida: fundo próprio até a pílula aparecer, depois só a cor do texto. */
 export const PILL_ACTIVE =
-  "bg-primary text-primary-foreground shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] hover:text-primary-foreground group-data-[pill]/pill:bg-transparent group-data-[pill]/pill:shadow-none"
+  "bg-primary text-primary-foreground shadow-glow hover:text-primary-foreground group-data-[pill]/pill:bg-transparent group-data-[pill]/pill:shadow-none"

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export interface NumberTileItem {
@@ -32,13 +33,13 @@ export function NumberTiles({ items, className }: { items: NumberTileItem[]; cla
       {items.map((item) => {
         const body = (
           <>
-            <span className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+            <span className="flex items-start gap-1.5 eyebrow text-muted-foreground max-sm:text-[10px] max-sm:tracking-[0.1em]">
               {item.alert ? (
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
+                <span aria-hidden="true" className="mt-[5px] size-1.5 shrink-0 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
               ) : item.accent ? (
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+                <span aria-hidden="true" className="mt-[5px] size-1.5 shrink-0 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
               ) : null}
-              <span className="truncate">{item.label}</span>
+              <span className="line-clamp-2 min-w-0">{item.label}</span>
             </span>
             <span className="mt-2.5 flex min-w-0 items-baseline gap-1.5">
               <span
@@ -75,6 +76,17 @@ export function NumberTiles({ items, className }: { items: NumberTileItem[]; cla
           </div>
         )
       })}
+    </div>
+  )
+}
+
+/** Os indicadores carregando, com a mesma altura dos cartões (nada pula quando chegam). */
+export function NumberTilesSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4", className)}>
+      {[0, 1, 2, 3].map((tile) => (
+        <Skeleton key={tile} className="h-[134px] rounded-2xl" />
+      ))}
     </div>
   )
 }

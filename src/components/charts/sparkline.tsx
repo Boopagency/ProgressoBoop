@@ -24,7 +24,7 @@ export function Sparkline({ values, className }: { values: (number | null)[]; cl
         <path d={d} fill="none" vectorEffect="non-scaling-stroke" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" className="stroke-chart-muted" />
       </svg>
       <span
-        className="absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-chart-1 ring-2 ring-card"
+        className="absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-glow shadow-[0_0_8px_var(--glow)] ring-2 ring-card-solid"
         style={{ left: `${x(last.index)}%`, top: `${scale.y(last.value)}%` }}
       />
     </span>

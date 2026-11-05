@@ -16,7 +16,7 @@ export interface BarListItem {
   tone?: "primary" | "negative" | "muted"
 }
 
-const TONE = { primary: "bg-chart-1", negative: "bg-overdue", muted: "bg-chart-muted" }
+const TONE = { primary: "bg-linear-to-r from-chart-1 to-glow", negative: "bg-overdue", muted: "bg-chart-muted" }
 
 /**
  * Lista com barras horizontais finas (funil, origens, concentração, idade das

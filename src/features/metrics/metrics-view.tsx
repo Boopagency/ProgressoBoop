@@ -8,8 +8,10 @@ import { useState } from "react"
 import { BarList } from "@/components/charts/bar-list"
 import { ColumnChart } from "@/components/charts/column-chart"
 import { LineChart } from "@/components/charts/line-chart"
+import { DisplayValue } from "@/components/display-value"
 import { KpiTile } from "@/components/kpi-tile"
-import { PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
+import { PageContainer, PageHeader } from "@/components/layout/page"
 import { PanelCard } from "@/components/panel-card"
 import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { Button } from "@/components/ui/button"
@@ -66,86 +68,100 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
         }
       />
 
-      <PageToolbar role="group" aria-label="Período">
-        <nav aria-label="Tipo de período" className="group/pill relative inline-flex rounded-full bg-card p-1 shadow-card">
-          <PillIndicator selector="[aria-current=page]" active={links.kinds.find((kind) => kind.active)?.key ?? ""} />
-          {links.kinds.map((kind) => (
-            <Link
-              key={kind.key}
-              href={kind.href}
-              scroll={false}
-              aria-current={kind.active ? "page" : undefined}
-              className={cn(
-                "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground",
-                kind.active && PILL_ACTIVE
-              )}
-            >
-              {kind.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon-sm" asChild aria-label="Período anterior">
-            <Link href={links.previous} scroll={false}>
-              <ChevronLeft />
-            </Link>
-          </Button>
-          <h2 className="min-w-40 px-1 text-center font-display text-base font-semibold text-foreground">{dashboard.period.label}</h2>
-          <Button variant="outline" size="icon-sm" asChild aria-label="Próximo período">
-            <Link href={links.next} scroll={false}>
-              <ChevronRight />
-            </Link>
-          </Button>
-          {links.today ? (
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
-              <Link href={links.today} scroll={false}>
-                Atual
+      {/* O período em destaque: tipo, setas, comparação e as áreas, num painel só. */}
+      <HeroPanel aria-label="Período" className="mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <HeroEyebrow>
+            {dashboard.period.future ? "Período futuro" : dashboard.period.current ? "Período em andamento" : "Período fechado"} · {compareShort}
+          </HeroEyebrow>
+          <Select
+            value={links.compare.find((option) => option.active)?.key}
+            onValueChange={(value) => {
+              const target = links.compare.find((option) => option.key === value)
+              if (target) router.push(target.href, { scroll: false })
+            }}
+          >
+            <SelectTrigger size="sm" aria-label="Comparar com" className="h-8 w-auto rounded-full shadow-none">
+              <span className="text-muted-foreground">Comparar com</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="end">
+              {links.compare.map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-5 sm:mt-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="outline" size="icon-sm" asChild aria-label="Período anterior" className="shrink-0">
+              <Link href={links.previous} scroll={false}>
+                <ChevronLeft />
               </Link>
             </Button>
-          ) : null}
-        </div>
-        <Select value={links.compare.find((option) => option.active)?.key} onValueChange={(value) => {
-          const target = links.compare.find((option) => option.key === value)
-          if (target) router.push(target.href, { scroll: false })
-        }}>
-          <SelectTrigger size="sm" aria-label="Comparar com" className="h-8 w-auto shadow-none sm:ml-auto">
-            <span className="text-muted-foreground">Comparar com</span>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent position="popper" align="end">
-            {links.compare.map((option) => (
-              <SelectItem key={option.key} value={option.key}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </PageToolbar>
-
-      <nav aria-label="Áreas" className="-mx-4 mt-5 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
-        <ul className="flex min-w-max gap-1">
-          {links.areas.map((item) => (
-            <li key={item.key}>
+            <h2 className="min-w-0 font-display text-[30px] leading-none font-medium tracking-[-0.04em] text-foreground sm:text-[44px]">
+              <PeriodTitle label={dashboard.period.label} />
+            </h2>
+            <Button variant="outline" size="icon-sm" asChild aria-label="Próximo período" className="shrink-0">
+              <Link href={links.next} scroll={false}>
+                <ChevronRight />
+              </Link>
+            </Button>
+            {links.today ? (
+              <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+                <Link href={links.today} scroll={false}>
+                  Atual
+                </Link>
+              </Button>
+            ) : null}
+          </div>
+          <nav aria-label="Tipo de período" className="group/pill relative inline-flex w-fit rounded-full border border-glass-edge bg-glass p-1 shadow-[inset_0_1px_0_var(--glass-highlight)]">
+            <PillIndicator selector="[aria-current=page]" active={links.kinds.find((kind) => kind.active)?.key ?? ""} />
+            {links.kinds.map((kind) => (
               <Link
-                href={item.href}
+                key={kind.key}
+                href={kind.href}
                 scroll={false}
-                aria-current={item.key === area ? "page" : undefined}
+                aria-current={kind.active ? "page" : undefined}
                 className={cn(
-                  "relative inline-flex h-9 items-center px-2.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
-                  item.key === area && "text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand"
+                  "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground",
+                  kind.active && PILL_ACTIVE
                 )}
               >
-                {item.label}
+                {kind.label}
               </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+            ))}
+          </nav>
+        </div>
+
+        <nav aria-label="Áreas" className="-mx-5 mt-6 overflow-x-auto px-5 sm:mx-0 sm:mt-8 sm:px-0">
+          <ul className="flex min-w-max gap-2">
+            {links.areas.map((item) => (
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  scroll={false}
+                  aria-current={item.key === area ? "page" : undefined}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-full border border-foreground/15 px-3.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-[color,border-color,box-shadow] hover:border-foreground/35 hover:text-foreground",
+                    item.key === area && "border-glow bg-glow-soft text-foreground shadow-[0_0_18px_-6px_var(--glow)]"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </HeroPanel>
 
       {/* Troca de área, período ou comparação: os números entram com fade; título e filtros ficam. */}
       <ViewFade view={`${area}:${dashboard.period.label}:${dashboard.comparison.label}`}>
         {dashboard.period.current || dashboard.period.future ? (
-          <p className="mt-4 text-xs text-muted-foreground">
+          <p className="mt-5 text-xs text-muted-foreground">
             {dashboard.period.future
               ? "Período futuro: o financeiro mostra a previsão (contratos, custos fixos e lançamentos agendados)."
               : "Período em andamento: o financeiro soma o realizado e o que ainda vence até o fim do período, como no DRE."}
@@ -154,7 +170,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
 
         <section aria-label="Indicadores" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {dashboard.snapshots.map((snapshot) => (
-            <KpiTile
+            <KpiTile display
               key={snapshot.key}
               label={snapshot.label}
               value={formatMetric(snapshot.value, snapshot.unit)}
@@ -180,6 +196,18 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
 
       <MetricSheet snapshot={selected} period={dashboard.period.label} comparison={dashboard.comparison.label} onOpenChange={(open) => !open && setSelected(null)} />
     </PageContainer>
+  )
+}
+
+/** "Novembro de 2026" / "4º trimestre de 2026" / "2026": a primeira parte na serifada itálica. */
+function PeriodTitle({ label }: { label: string }) {
+  const cut = label.lastIndexOf(" de ")
+  const head = cut < 0 ? label : label.slice(0, cut)
+  return (
+    <>
+      <em className="emphasis pr-[0.05em] text-[1.16em] leading-none text-brand-ink">{head}</em>
+      {cut < 0 ? null : label.slice(cut)}
+    </>
   )
 }
 
@@ -438,18 +466,22 @@ function MetricSheet({
         {snapshot ? (
           <>
             <SheetHeader className="border-b px-5 py-4">
-              <SheetTitle>{snapshot.label}</SheetTitle>
-              <SheetDescription>{period}</SheetDescription>
+              <SheetTitle className="font-display text-lg font-medium tracking-tight">{snapshot.label}</SheetTitle>
+              <SheetDescription>De onde vem o número e como ele andou</SheetDescription>
             </SheetHeader>
             <div className="px-5 py-4">
-              <p className="font-display text-3xl font-semibold tracking-tight text-foreground">{formatMetric(snapshot.value, snapshot.unit, true)}</p>
-              <p className="mt-1 text-xs text-muted-foreground tabular-nums">
-                {comparison}: {formatMetric(snapshot.previous, snapshot.unit, true)}
+              <p className="eyebrow text-muted-foreground">{period}</p>
+              <DisplayValue
+                value={formatMetric(snapshot.value, snapshot.unit, true)}
+                className="mt-2 block text-[52px] leading-none text-foreground [text-shadow:0_0_36px_var(--glow-soft)] sm:text-[60px]"
+              />
+              <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+                {comparison}: <span className="font-medium text-foreground">{formatMetric(snapshot.previous, snapshot.unit, true)}</span>
               </p>
-              <p className="mt-3 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{snapshot.formula}</p>
+              <p className="mt-4 rounded-xl border border-glass-edge bg-glow-soft/50 px-3.5 py-2.5 text-xs leading-5 text-muted-foreground">{snapshot.formula}</p>
               {snapshot.trend.some((value) => value !== null) ? (
                 <div className="mt-4">
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">Últimos 12 meses</p>
+                  <p className="mb-3 eyebrow text-muted-foreground">Últimos 12 meses</p>
                   <ColumnChart
                     ariaLabel={`${snapshot.label} nos últimos 12 meses`}
                     data={snapshot.trend.map((value, index) => {
@@ -474,13 +506,13 @@ function MetricSheet({
                 </div>
               ) : null}
               <div className="mt-5">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="eyebrow text-muted-foreground">
                   De onde vem o número {snapshot.details.total > 0 ? `(${snapshot.details.total})` : ""}
                 </p>
                 {snapshot.details.rows.length === 0 ? (
                   <p className="mt-2 text-[13px] text-muted-foreground">Nada no período.</p>
                 ) : (
-                  <ul className="mt-2 divide-y rounded-lg border">
+                  <ul className="mt-2 divide-y overflow-hidden rounded-xl border bg-card-solid">
                     {snapshot.details.rows.map((row) => {
                       const content = (
                         <>

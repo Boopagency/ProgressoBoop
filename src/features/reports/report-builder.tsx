@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState, type ReactNode } from "react"
 
 import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
+import { PeriodTitle } from "@/components/month-title"
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -140,7 +141,7 @@ export function ReportBuilder({
             <ul className="divide-y">
               {REPORT_SECTIONS.map((section) => (
                 <li key={section}>
-                  <label className="flex cursor-pointer items-start gap-3 px-4 py-3">
+                  <label className="flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40 has-data-[state=checked]:[&_.secao]:text-foreground">
                     <Checkbox
                       checked={sections.includes(section)}
                       onCheckedChange={(checked) =>
@@ -151,7 +152,7 @@ export function ReportBuilder({
                       className="mt-0.5"
                     />
                     <span>
-                      <span className="block text-[13px] font-medium text-foreground">{REPORT_SECTION_LABEL[section]}</span>
+                      <span className="secao block text-[13px] font-medium text-muted-foreground transition-colors">{REPORT_SECTION_LABEL[section]}</span>
                       <span className="block text-xs text-muted-foreground">{REPORT_SECTION_HINT[section]}</span>
                     </span>
                   </label>
@@ -162,13 +163,20 @@ export function ReportBuilder({
         </div>
 
         <aside className="space-y-3 md:sticky md:top-6">
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Período</p>
-            <p className="font-display text-lg font-semibold text-foreground">{periodFor(kind, selected).label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {sections.length} {sections.length === 1 ? "seção" : "seções"} · {clientId ? clients.find((client) => client.id === clientId)?.name : "toda a Boop"}
+          {/* O resumo do que vai sair, em destaque: período, quantas seções e o recorte. */}
+          <div className="relative isolate overflow-hidden rounded-[1.75rem] glass-panel p-5">
+            <span aria-hidden="true" className="pointer-events-none absolute -top-1/3 -right-1/3 -z-10 size-[140%] bg-[radial-gradient(closest-side,var(--glow-soft),transparent)]" />
+            <p className="eyebrow text-muted-foreground">Período</p>
+            <p className="mt-2 font-display text-[24px] leading-tight font-medium tracking-[-0.03em] text-foreground">
+              <PeriodTitle label={periodFor(kind, selected).label} />
             </p>
-            <div className="mt-4 grid gap-2">
+            <div className="mt-4 flex items-end gap-2 border-t border-foreground/15 pt-3">
+              <span className="display-number text-[44px] leading-[0.85] text-foreground">{sections.length}</span>
+              <span className="pb-0.5 text-xs text-muted-foreground">
+                {sections.length === 1 ? "seção" : "seções"} · {clientId ? clients.find((client) => client.id === clientId)?.name : "toda a Boop"}
+              </span>
+            </div>
+            <div className="mt-5 grid gap-2">
               <Button asChild disabled={!ready} className="gap-1.5">
                 <Link href={ready ? `/relatorio?${search}` : "#"} aria-disabled={!ready}>
                   <FileText className="size-4" />
@@ -196,7 +204,7 @@ export function ReportBuilder({
 function BuilderField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground" aria-hidden="true">
+      <p className="eyebrow text-muted-foreground" aria-hidden="true">
         {label}
       </p>
       {children}

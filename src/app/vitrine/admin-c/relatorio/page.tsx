@@ -25,7 +25,7 @@ export default function VitrineReportPage() {
   const goals = gestaoGoals(today)
   return (
     <WorkspaceProvider workspace={gestaoWorkspace(today)} currentUser={VITRINE_USER}>
-      <div className="min-h-svh bg-background">
+      <div className="min-h-svh bg-background print:bg-transparent">
         <ReportView
           clientName={null}
           input={{

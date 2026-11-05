@@ -12,6 +12,7 @@ import { DisplayValue } from "@/components/display-value"
 import { KpiTile } from "@/components/kpi-tile"
 import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
 import { PageContainer, PageHeader } from "@/components/layout/page"
+import { PeriodTitle } from "@/components/month-title"
 import { PanelCard } from "@/components/panel-card"
 import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { Button } from "@/components/ui/button"
@@ -196,18 +197,6 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
 
       <MetricSheet snapshot={selected} period={dashboard.period.label} comparison={dashboard.comparison.label} onOpenChange={(open) => !open && setSelected(null)} />
     </PageContainer>
-  )
-}
-
-/** "Novembro de 2026" / "4º trimestre de 2026" / "2026": a primeira parte na serifada itálica. */
-function PeriodTitle({ label }: { label: string }) {
-  const cut = label.lastIndexOf(" de ")
-  const head = cut < 0 ? label : label.slice(0, cut)
-  return (
-    <>
-      <em className="emphasis pr-[0.05em] text-[1.16em] leading-none text-brand-ink">{head}</em>
-      {cut < 0 ? null : label.slice(cut)}
-    </>
   )
 }
 

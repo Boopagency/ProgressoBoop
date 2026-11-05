@@ -110,21 +110,21 @@ export function ContentCalendar({
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon-sm" aria-label={mode === "week" ? "Semana anterior" : "Mês anterior"} onClick={() => step(-1)}>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon-sm" className="rounded-full" aria-label={mode === "week" ? "Semana anterior" : "Mês anterior"} onClick={() => step(-1)}>
               <ChevronLeft />
             </Button>
-            <Button variant="ghost" size="icon-sm" aria-label={mode === "week" ? "Próxima semana" : "Próximo mês"} onClick={() => step(1)}>
+            <Button variant="outline" size="icon-sm" className="rounded-full" aria-label={mode === "week" ? "Próxima semana" : "Próximo mês"} onClick={() => step(1)}>
               <ChevronRight />
             </Button>
           </div>
-          <h2 className="truncate text-base font-semibold tracking-tight text-foreground" aria-live="polite">
+          <h2 className="ml-1 truncate font-display text-lg font-medium tracking-tight text-foreground first-letter:uppercase sm:text-xl" aria-live="polite">
             {label}
           </h2>
           <Button
             variant="outline"
             size="sm"
-            className={cn("ml-1 h-7 px-2.5 text-xs shadow-none", showsToday && "invisible")}
+            className={cn("ml-1 h-7 rounded-full px-3 text-xs shadow-none", showsToday && "invisible")}
             onClick={() => go(today)}
           >
             Hoje
@@ -176,10 +176,10 @@ function MonthGrid({
   onOpen: (post: PostSummary) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card max-md:hidden">
-      <div className="grid grid-cols-7 border-b bg-muted/40">
+    <div className="overflow-hidden rounded-3xl border bg-card max-md:hidden">
+      <div className="grid grid-cols-7 border-b">
         {days.slice(0, 7).map((day) => (
-          <div key={day} className="px-1 py-2 text-center text-xs text-muted-foreground @3xl:px-2 @3xl:text-left">
+          <div key={day} className="px-1 py-2.5 text-center eyebrow text-[10.5px] text-subtle-foreground @3xl:px-2.5 @3xl:text-left">
             {formatWeekdayShort(day)}
           </div>
         ))}
@@ -234,7 +234,7 @@ function MonthCell({
     <span
       className={cn(
         "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-medium tabular-nums",
-        isToday && "bg-brand font-semibold text-brand-navy",
+        isToday && "bg-primary font-semibold text-primary-foreground shadow-glow",
         !isToday && outside && "text-subtle-foreground"
       )}
     >
@@ -251,7 +251,8 @@ function MonthCell({
             firstColumn && "border-l-0",
             firstRow && "border-t-0",
             isWeekend(day) && "bg-muted/25",
-            outside && "bg-muted/40"
+            outside && "bg-muted/40",
+            isToday && "bg-glow-soft/60"
           )}
         >
           {/* Estreito: o dia é um botão com um ponto por post (na cor do cliente). */}
@@ -361,16 +362,16 @@ function WeekGrid({
 }) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-xl border bg-card @3xl:grid @3xl:grid-cols-7">
+      <div className="hidden overflow-hidden rounded-3xl border bg-card @3xl:grid @3xl:grid-cols-7">
         {days.map((day) => (
-          <div key={day} className={cn("group/day flex min-h-[420px] min-w-0 flex-col border-l first:border-l-0", isWeekend(day) && "bg-muted/30")}>
+          <div key={day} className={cn("group/day flex min-h-[420px] min-w-0 flex-col border-l first:border-l-0", isWeekend(day) && "bg-muted/30", day === today && "bg-glow-soft/50")}>
             <div className="flex h-11 items-center justify-between gap-1 border-b px-2.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">{formatWeekdayShort(day)}</span>
+                <span className="eyebrow text-[10.5px] text-subtle-foreground">{formatWeekdayShort(day)}</span>
                 <span
                   className={cn(
                     "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-semibold tabular-nums",
-                    day === today ? "bg-brand text-brand-navy" : "text-foreground"
+                    day === today ? "bg-primary text-primary-foreground shadow-glow" : "text-foreground"
                   )}
                 >
                   {Number(day.slice(8))}
@@ -424,7 +425,7 @@ function DayList({
 }) {
   if (days.length === 0) {
     return emptyText ? (
-      <p className={cn("rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground", className)}>{emptyText}</p>
+      <p className={cn("rounded-2xl border border-dashed border-foreground/15 px-4 py-5 text-center text-[13px] text-muted-foreground", className)}>{emptyText}</p>
     ) : null
   }
   return (
@@ -432,7 +433,7 @@ function DayList({
       {days.map((day) => {
         const list = byDay.get(day) ?? []
         return (
-          <section key={day} aria-label={formatDayMonth(day)} className="rounded-xl bg-card px-4 pt-1.5 pb-1.5 shadow-card">
+          <section key={day} aria-label={formatDayMonth(day)} className="rounded-2xl border bg-card px-4 pt-1.5 pb-1.5">
             <div className="flex min-h-10 items-center justify-between border-b border-border/70 pb-1.5">
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
@@ -470,7 +471,7 @@ function WeekCard({ post, today, onOpen }: { post: PostSummary; today: DateKey; 
     <button
       type="button"
       onClick={() => onOpen(post)}
-      className="block w-full rounded-md border bg-card px-2 py-1.5 text-left text-xs shadow-[0_1px_2px_0_rgb(0_0_0/0.04)] transition-shadow hover:shadow-[0_2px_6px_0_rgb(0_0_0/0.08)]"
+      className="block w-full rounded-xl border bg-card-solid/70 px-2 py-1.5 text-left text-xs transition-[border-color,box-shadow] hover:border-glow/40 hover:shadow-float"
     >
       <span className="flex min-w-0 items-center gap-1.5">
         <ClientMark clientId={post.client_id} size="xs" />
@@ -503,7 +504,7 @@ function WeekCard({ post, today, onOpen }: { post: PostSummary; today: DateKey; 
 function UndatedPosts({ posts, today, onOpen }: { posts: PostSummary[]; today: DateKey; onOpen: (post: PostSummary) => void }) {
   const [open, setOpen] = useState(false)
   return (
-    <section aria-label="Posts sem data" className="mt-4 rounded-xl border bg-card">
+    <section aria-label="Posts sem data" className="mt-4 rounded-2xl border bg-card">
       <button
         type="button"
         aria-expanded={open}

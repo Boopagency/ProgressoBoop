@@ -62,21 +62,21 @@ export function ContentBoard({
               if (id) onMove(id, stage)
             }}
             className={cn(
-              "flex w-[80%] shrink-0 snap-start flex-col rounded-xl border bg-muted/30 transition-colors sm:w-64 xl:w-auto xl:min-w-0 xl:flex-1",
-              over === stage && "border-brand/50 bg-brand-soft/30"
+              "flex w-[80%] shrink-0 snap-start flex-col rounded-3xl border bg-card transition-[border-color,background-color,box-shadow] sm:w-64 xl:w-auto xl:min-w-0 xl:flex-1",
+              over === stage && "border-glow/60 bg-glow-soft shadow-glow"
             )}
           >
-            <header className="flex items-center gap-2 px-3 pt-3 pb-2">
+            <header className="flex items-center gap-2 px-3.5 pt-3.5 pb-2.5">
               <StageDot stage={stage} />
               <h2 className="truncate text-[13px] font-semibold text-foreground">{CONTENT_STAGE_LABEL[stage]}</h2>
-              <span className="text-xs text-muted-foreground tabular-nums">{columns[stage].length}</span>
+              <span className="display-number text-xl leading-none text-muted-foreground">{columns[stage].length}</span>
               {stage === "published" ? (
                 <span className="ml-auto shrink-0 text-[11px] text-subtle-foreground">{BOARD_PUBLISHED_DAYS} dias</span>
               ) : null}
             </header>
             <div role="list" className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
               {columns[stage].length === 0 ? (
-                <p className="px-2 py-6 text-center text-xs text-subtle-foreground">{EMPTY_TEXT[stage] ?? "Arraste um post para cá."}</p>
+                <p className="rounded-2xl border border-dashed border-foreground/12 px-2 py-6 text-center text-xs text-subtle-foreground">{EMPTY_TEXT[stage] ?? "Arraste um post para cá."}</p>
               ) : (
                 columns[stage].map((post) => <BoardCard key={post.id} post={post} today={today} onOpen={onOpen} />)
               )}
@@ -105,7 +105,7 @@ function BoardList({
         const open = !closed.includes(stage)
         const list = columns[stage]
         return (
-          <section key={stage} aria-label={CONTENT_STAGE_LABEL[stage]} className="rounded-xl border bg-muted/30">
+          <section key={stage} aria-label={CONTENT_STAGE_LABEL[stage]} className="rounded-2xl border bg-card">
             <button
               type="button"
               aria-expanded={open}
@@ -156,12 +156,12 @@ function BoardCard({
         event.dataTransfer.setData(DRAG_TYPE, post.id)
         event.dataTransfer.effectAllowed = "move"
       }}
-      className="rounded-lg border bg-card shadow-[0_1px_2px_0_rgb(0_0_0/0.04)] transition-shadow hover:shadow-[0_2px_6px_0_rgb(0_0_0/0.08)]"
+      className="cursor-grab rounded-2xl border bg-card-solid/80 transition-[border-color,box-shadow,translate] duration-150 hover:border-glow/40 hover:shadow-float active:cursor-grabbing motion-safe:hover:-translate-y-px"
     >
       <button
         type="button"
         onClick={() => onOpen(post)}
-        className="block w-full rounded-lg px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl px-3 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <span className="flex min-w-0 items-center gap-1.5">
           <ClientMark clientId={post.client_id} size="xs" />

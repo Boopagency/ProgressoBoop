@@ -1,12 +1,13 @@
 "use client"
 
-import { Building2, ChevronDown, Clapperboard, Layers, Plus, Share2, UserRound } from "lucide-react"
+import { Building2, CalendarRange, ChevronDown, Clapperboard, Grid3x3, Layers, Plus, Share2, UserRound } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, useOptimistic, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
-import { KpiTile } from "@/components/kpi-tile"
+import { EmptyPanel } from "@/components/empty-panel"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { NumberTiles } from "@/components/number-tiles"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -49,6 +50,10 @@ import {
 } from "@/lib/labels"
 import type { ContentIdea, ContentStage } from "@/lib/types"
 import { cn, isUuid } from "@/lib/utils"
+
+/** Filtro em pílula de vidro; ligado, ganha o contorno e o fundo azuis. */
+const FILTER_PILL = "h-9 gap-1.5 rounded-full border-glass-edge bg-card px-3.5 text-[13px] shadow-[inset_0_1px_0_var(--glass-highlight)]"
+const FILTER_PILL_ACTIVE = "border-glow/45 bg-glow-soft font-medium text-foreground dark:bg-glow-soft [&_svg]:text-brand-ink"
 
 const VIEW_OPTIONS: { value: ContentViewMode; label: string }[] = [
   { value: "calendar", label: "Calendário" },
@@ -176,7 +181,11 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
   return (
     <PageContainer className="@container">
       <PageHeader
-        title="Conteúdo"
+        title={
+          <>
+            Central de <em>conteúdo</em>
+          </>
+        }
         description="Os posts de todos os clientes: calendário, etapas e o que falta produzir"
         actions={
           <Button onClick={() => openNew()} className="gap-1.5">
@@ -215,8 +224,9 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
               size="sm"
               aria-label="Responsável"
               className={cn(
-                "h-8 max-w-[200px] gap-1.5 rounded-md px-2.5 text-[13px] shadow-none [&>svg:first-child]:size-3.5",
-                filters.person !== EMPTY_FILTERS.person && "border-foreground/20 bg-accent font-medium text-foreground"
+                FILTER_PILL,
+                "max-w-[200px] dark:bg-card dark:hover:bg-accent [&>svg:first-child]:size-3.5",
+                filters.person !== EMPTY_FILTERS.person && FILTER_PILL_ACTIVE
               )}
             >
               <UserRound />
@@ -267,31 +277,37 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
       </PageToolbar>
 
       <PageBody>
-        <section aria-label="Números do conteúdo" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <KpiTile
-            label="Nesta semana"
-            value={`${week.length} ${week.length === 1 ? "post" : "posts"}`}
-            hint={`${publishedThisWeek} ${publishedThisWeek === 1 ? "publicado" : "publicados"}`}
-            onSelect={() => navigate({ ...state, view: "calendar", calendar: "week", anchor: null })}
-          />
-          <KpiTile
-            label="Atrasados"
-            value={late.length}
-            alert={late.length > 0}
-            hint="a data passou e não foi programado"
-            onSelect={() => navigate({ ...state, view: "list" })}
-          />
-          <KpiTile
-            label="Aguardando cliente"
-            value={awaiting.length}
-            hint="para aprovar"
-            onSelect={() => navigate({ ...state, view: "board" })}
-          />
-          <KpiTile
-            label="Falta material"
-            value={blocked.length}
-            hint="alguma frente parada pelo cliente"
-            onSelect={() => navigate({ ...state, view: "board" })}
+        <section aria-label="Números do conteúdo">
+          <NumberTiles
+            items={[
+              {
+                label: "Nesta semana",
+                value: week.length,
+                unit: week.length === 1 ? "post" : "posts",
+                hint: `${publishedThisWeek} ${publishedThisWeek === 1 ? "publicado" : "publicados"}`,
+                accent: true,
+                onSelect: () => navigate({ ...state, view: "calendar", calendar: "week", anchor: null }),
+              },
+              {
+                label: "Atrasados",
+                value: late.length,
+                alert: late.length > 0,
+                hint: "a data passou e não foi programado",
+                onSelect: () => navigate({ ...state, view: "list" }),
+              },
+              {
+                label: "Aguardando cliente",
+                value: awaiting.length,
+                hint: "para aprovar",
+                onSelect: () => navigate({ ...state, view: "board" }),
+              },
+              {
+                label: "Falta material",
+                value: blocked.length,
+                hint: "alguma frente parada pelo cliente",
+                onSelect: () => navigate({ ...state, view: "board" }),
+              },
+            ]}
           />
         </section>
 
@@ -307,23 +323,28 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
               onOpenPost={dialog.openPost}
             />
           ) : posts.length === 0 ? (
-            <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-              <h2 className="text-sm font-semibold">Planeje aqui os posts de todos os clientes</h2>
-              <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram
-                tarefas com prazo antes da publicação.
-              </p>
-              <Button size="sm" className="mt-5" onClick={() => openNew()}>
-                Primeiro post
-              </Button>
-            </div>
+            <EmptyPanel
+              icon={CalendarRange}
+              title="Planeje aqui os posts de todos os clientes"
+              action={
+                <Button onClick={() => openNew()} className="gap-1.5">
+                  <Plus />
+                  Primeiro post
+                </Button>
+              }
+            >
+              Cada post tem cliente, formato, redes, data, etapa e o que falta em copy, design e vídeo. As frentes viram tarefas
+              com prazo antes da publicação.
+            </EmptyPanel>
           ) : state.view === "board" ? (
             <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
           ) : state.view === "list" ? (
             <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
           ) : state.view === "feed" ? (
             feedClient ? (
-              <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} />
+              <div className="mx-auto w-full max-w-[660px] rounded-[2rem] glass-panel px-4 py-5 sm:px-8 sm:py-8">
+                <ContentFeed client={feedClient} posts={optimistic} today={today} onOpen={dialog.openPost} />
+              </div>
             ) : (
               <FeedClientPicker
                 clients={clients.filter((client) => client.active)}
@@ -353,18 +374,23 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
 /** O feed é de um cliente só: sem um (ou com vários) filtrado, escolha qual. */
 function FeedClientPicker({ clients, onPick }: { clients: { id: string; name: string }[]; onPick: (id: string) => void }) {
   return (
-    <div className="rounded-xl border border-dashed px-6 py-10 text-center">
-      <h2 className="text-sm font-semibold">De qual cliente é o feed?</h2>
-      <p className="mt-1 text-sm text-muted-foreground">O preview mostra o perfil do Instagram de um cliente, com os posts planejados.</p>
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {clients.map((client) => (
-          <Button key={client.id} type="button" variant="outline" size="sm" onClick={() => onPick(client.id)} className="gap-1.5 shadow-none">
-            <ClientMark clientId={client.id} size="xs" />
-            {client.name}
-          </Button>
-        ))}
-      </div>
-    </div>
+    <EmptyPanel
+      icon={Grid3x3}
+      title="De qual cliente é o feed?"
+      action={clients.map((client) => (
+        <button
+          key={client.id}
+          type="button"
+          onClick={() => onPick(client.id)}
+          className="inline-flex h-9 items-center gap-2 rounded-full border border-glass-edge bg-card pr-3.5 pl-1.5 text-[13px] font-medium text-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] outline-none transition-[border-color,box-shadow] hover:border-glow/50 hover:shadow-glow focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        >
+          <ClientMark clientId={client.id} size="sm" />
+          {client.name}
+        </button>
+      ))}
+    >
+      O preview mostra o perfil do Instagram de um cliente, com os posts planejados.
+    </EmptyPanel>
   )
 }
 
@@ -405,8 +431,9 @@ function MultiFilter<T extends string>({
           type="button"
           aria-label={`${label}: ${active ? text : "todos"}`}
           className={cn(
-            "inline-flex h-8 max-w-[220px] items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-[13px] text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[state=open]:bg-accent [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
-            active && "border-foreground/20 bg-accent font-medium"
+            FILTER_PILL,
+            "inline-flex max-w-[220px] items-center border text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[state=open]:bg-accent [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
+            active && FILTER_PILL_ACTIVE
           )}
         >
           {icon}
@@ -414,7 +441,7 @@ function MultiFilter<T extends string>({
           <ChevronDown className="opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-60 p-1">
+      <PopoverContent align="start" className="w-60 rounded-2xl p-1.5">
         <div className="max-h-72 overflow-y-auto">
           {options.map((option) => (
             <label

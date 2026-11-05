@@ -294,6 +294,17 @@ segunda, 07:00).
 
 ### 2.10 Página do cliente (`/clientes/…`)
 
+- **Topo:** quatro números grandes (tarefas abertas e atrasadas, posts
+  aguardando o cliente, posts dos próximos 7 dias e a saúde); cada um abre a
+  seção que o forma.
+- **Seções em abas** (pílulas que ficam presas no topo ao rolar; a aberta vai
+  na URL, `?aba=`): **Visão geral** (revisão do mês, Sobre o cliente e Saúde
+  mês a mês), **Trabalho** (projetos, tarefas, reuniões e decisões),
+  **Conteúdo** (conteúdo com o feed, ideias e o cartão Instagram),
+  **Conversas** (canal do cliente, comunicações e acesso ao portal),
+  **Documentos** (documentos e arquivos do cliente) e **Financeiro**
+  (financeiro e negócios). A volta da conexão do Instagram abre Conteúdo.
+  Os cartões de cada seção estão descritos abaixo.
 - **Revisão do mês:**
   - **Como está o cliente?** Saudável, Atenção ou Em risco (clicar de novo
     desmarca). A saúde da revisão mais recente vira o selo do cliente.

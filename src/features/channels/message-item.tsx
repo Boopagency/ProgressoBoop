@@ -287,7 +287,7 @@ export function PostCard({ post, today, onOpen }: { post: MessagePost; today: Da
       </span>
     </>
   )
-  const className = "mt-1.5 flex w-full max-w-xs items-center gap-2.5 rounded-lg border bg-background p-1.5 pr-3 text-left transition-colors hover:bg-muted/50"
+  const className = "mt-1.5 flex w-full max-w-xs items-center gap-2.5 rounded-2xl border bg-card-solid p-1.5 pr-3 text-left transition-[border-color,box-shadow] hover:border-glow/40 hover:shadow-float"
   return onOpen ? (
     <button type="button" onClick={() => onOpen(post.id)} className={className} aria-label={`Abrir o post ${post.title}`}>
       {content}

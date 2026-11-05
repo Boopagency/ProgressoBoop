@@ -15,6 +15,21 @@ import { VITRINE_USER } from "../fixtures"
 import { VitrineShell } from "../vitrine-shell"
 import { vbPosts, vbTasks, vbThread, vbWorkspace } from "./fixtures"
 
+/*
+ * Na vitrine não há sessão: uma Server Action (marcar como lido, contagens,
+ * resumo de métricas…) responderia mandando para o login. Aqui elas ficam
+ * esperando para sempre, e a tela continua com os dados de exemplo.
+ */
+if (typeof window !== "undefined" && !("__vitrineHold" in window)) {
+  Object.assign(window, { __vitrineHold: true })
+  const original = window.fetch.bind(window)
+  window.fetch = (input, init) => {
+    const headers = new Headers(init?.headers)
+    if (headers.has("next-action")) return new Promise<Response>(() => {})
+    return original(input, init)
+  }
+}
+
 const CAPTIONS: Record<string, string> = {
   p1: "O inverno chegou com notas de chocolate amargo e laranja. ☕🍊\n\nNosso blend de inverno está de volta, só por tempo limitado. Vem provar!",
 }

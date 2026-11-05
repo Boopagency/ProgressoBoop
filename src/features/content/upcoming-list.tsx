@@ -1,5 +1,8 @@
 "use client"
 
+import { CalendarCheck } from "lucide-react"
+
+import { EmptyPanel } from "@/components/empty-panel"
 import { upcomingPosts, type PostSummary } from "@/features/content/logic"
 import { PostRow } from "@/features/content/post-meta"
 import { addDaysToKey, capitalize, formatDayMonth, formatWeekdayLong } from "@/lib/dates"
@@ -20,9 +23,9 @@ export function UpcomingList({ posts, today, onOpen }: { posts: PostSummary[]; t
   const { late, days } = upcomingPosts(posts, today)
   if (late.length === 0 && days.length === 0) {
     return (
-      <p className="mt-8 rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+      <EmptyPanel icon={CalendarCheck} title="Semana tranquila">
         Nenhum post para os próximos 7 dias nem atrasado.
-      </p>
+      </EmptyPanel>
     )
   }
   return (
@@ -53,9 +56,10 @@ function DaySection({
   brand?: boolean
 }) {
   return (
-    <section aria-labelledby={id} className="rounded-xl bg-card px-4 pt-1 pb-1.5 shadow-card sm:px-5">
-      <div className="flex h-10 items-center gap-2 border-b border-border/70">
-        {brand ? <span aria-hidden="true" className="size-1.5 rounded-full bg-brand" /> : null}
+    <section aria-labelledby={id} className="rounded-3xl border bg-card px-4 pt-1.5 pb-2 sm:px-5">
+      <div className="flex h-11 items-center gap-2 border-b border-border/70">
+        {brand ? <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" /> : null}
+        {danger ? <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" /> : null}
         <h2 id={id} className={cn("flex items-center gap-2 text-sm font-semibold", danger ? "text-overdue" : "text-foreground")}>
           {title}
           <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{posts.length}</span>

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils"
 export interface NumberTileItem {
   label: string
   value: ReactNode
+  /** Texto do valor por extenso (ex.: o valor exato quando o número aparece abreviado). */
+  title?: string
   /** Unidade ou complemento pequeno ao lado do número (ex.: "posts", "/mês"). */
   unit?: ReactNode
   /** Linha de apoio, abaixo do número. */
@@ -40,6 +42,7 @@ export function NumberTiles({ items, className }: { items: NumberTileItem[]; cla
             </span>
             <span className="mt-2.5 flex min-w-0 items-baseline gap-1.5">
               <span
+                title={item.title}
                 className={cn(
                   "display-number text-[40px] leading-[0.9] sm:text-[48px]",
                   item.alert ? "text-overdue" : item.accent ? "text-brand-ink" : "text-foreground"

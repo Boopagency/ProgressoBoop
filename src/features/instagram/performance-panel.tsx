@@ -57,7 +57,7 @@ export function PerformancePanel({ post, className }: { post: PostSummary; class
   const latest = data?.readings.at(-1) ?? null
 
   return (
-    <section aria-label="Desempenho no Instagram" className={cn("space-y-2.5 rounded-lg border p-3", className)}>
+    <section aria-label="Desempenho no Instagram" className={cn("space-y-2.5 rounded-2xl border bg-card p-3.5", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <BarChart3 className={cn("size-3.5", latest ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
@@ -168,7 +168,7 @@ function LinkMedia({ postId, canLink, onLinked }: { postId: string; canLink: boo
               type="button"
               disabled={item.taken || isPending}
               onClick={() => link(item)}
-              className="flex w-full items-center gap-2.5 rounded-md p-1.5 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+              className="flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
             >
               <span className="relative block size-11 shrink-0 overflow-hidden rounded bg-muted">
                 {item.thumbnailUrl ? (

@@ -288,14 +288,14 @@ export function Conversation({
         "max-md:fixed max-md:inset-x-0 max-md:top-[var(--vv-top,0px)] max-md:z-50 max-md:h-[var(--vv-height,100dvh)] max-md:bg-background max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]"
       )}
     >
-      <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2 max-md:min-h-0 max-md:gap-1.5 max-md:px-1 max-md:pt-[calc(0.25rem+env(safe-area-inset-top))] max-md:pb-1">
+      <header className="flex min-h-16 shrink-0 items-center gap-2.5 border-b px-5 py-2 max-md:min-h-0 max-md:gap-1.5 max-md:px-1 max-md:pt-[calc(0.25rem+env(safe-area-inset-top))] max-md:pb-1">
         <Button type="button" variant="ghost" size="icon" onClick={onBack} aria-label="Voltar para as conversas" className="size-10 shrink-0 md:hidden">
           <ChevronLeft className="size-6" />
         </Button>
         <ChannelGlyph channel={channel} size="md" className="max-md:hidden" />
         <ChannelGlyph channel={channel} size="lg" className="size-9 text-sm md:hidden [&_[data-slot=avatar-fallback]]:text-sm [&_svg]:size-4" />
         <div className="min-w-0 flex-1 max-md:pl-1">
-          <h2 className="truncate text-[15px] leading-5 font-semibold text-foreground">
+          <h2 className="truncate font-display text-base leading-6 font-medium tracking-tight text-foreground">
             <span className="max-md:hidden">{title}</span>
             {/* No celular, o nome curto (o cliente ou a pessoa), como nos aplicativos de conversa. */}
             <span className="md:hidden">{shortTitle}</span>
@@ -323,7 +323,7 @@ export function Conversation({
             {pendingCount} {pendingCount === 1 ? "pendente" : "pendentes"}
           </button>
         ) : null}
-        <div role="tablist" aria-label="O que mostrar" className="flex shrink-0 rounded-full bg-muted p-0.5 max-md:hidden">
+        <div role="tablist" aria-label="O que mostrar" className="flex shrink-0 rounded-full border border-glass-edge bg-card p-1 max-md:hidden">
           {(
             [
               ["thread", "Conversa"],
@@ -338,7 +338,7 @@ export function Conversation({
               onClick={() => onView(value)}
               className={cn(
                 "flex h-7 items-center gap-1.5 rounded-full px-3 text-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                view === value ? "bg-background font-medium text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                view === value ? "bg-primary font-medium text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {label}

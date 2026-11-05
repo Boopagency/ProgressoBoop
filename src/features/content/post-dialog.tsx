@@ -131,7 +131,7 @@ export function PostDialog({ state, onOpenChange }: { state: PostDialogState; on
           // teclado aberto, a conversa e o campo sobem junto); do md para cima, o diálogo centralizado.
           "top-[var(--vv-top,0px)] left-0 h-[var(--vv-height,100dvh)] max-h-none max-w-none translate-x-0 translate-y-0 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none",
           "md:grid-rows-none",
-          "md:top-[5%] md:left-[50%] md:h-auto md:max-h-[94svh] md:max-w-[760px] md:translate-x-[-50%] md:rounded-lg md:border",
+          "md:top-[5%] md:left-[50%] md:h-auto md:max-h-[94svh] md:max-w-[760px] md:translate-x-[-50%] md:rounded-[1.75rem] md:border",
           state.post && "lg:top-[3%] lg:max-w-[1160px]"
         )}
       >
@@ -683,7 +683,7 @@ function PostForm({
                     type="button"
                     aria-pressed={on}
                     onClick={() => set("networks", toggle(fields.networks, network))}
-                    className={cn(CHIP, on ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+                    className={cn(CHIP, on ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:text-foreground")}
                   >
                     {CONTENT_NETWORK_LABEL[network]}
                   </button>
@@ -702,7 +702,7 @@ function PostForm({
                     type="button"
                     aria-pressed={on}
                     onClick={() => set("intents", toggle(fields.intents, intent))}
-                    className={cn(CHIP, on ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+                    className={cn(CHIP, on ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:text-foreground")}
                   >
                     {CONTENT_INTENT_LABEL[intent]}
                   </button>
@@ -712,7 +712,7 @@ function PostForm({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 rounded-lg border bg-muted/30 p-3 max-md:order-8 max-md:mt-0 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 rounded-2xl border bg-card p-3.5 max-md:order-8 max-md:mt-0 sm:grid-cols-3">
           {CONTENT_FRONTS.map((front) => {
             const key = `${front}_status` as const
             return (
@@ -741,7 +741,7 @@ function PostForm({
           })}
         </div>
 
-        <section aria-label="Capa e feed" className="mt-4 flex gap-3 rounded-lg border p-3 max-md:order-11 max-md:mt-0">
+        <section aria-label="Capa e feed" className="mt-4 flex gap-3 rounded-2xl border bg-card p-3.5 max-md:order-11 max-md:mt-0">
           <CoverPicker
             path={fields.cover_path}
             uploading={uploading.includes("cover")}
@@ -819,7 +819,7 @@ function PostForm({
 
         <section aria-label="Textos" className="mt-5 space-y-3 max-md:contents">
           {texts === null ? (
-            <p className="rounded-lg border border-dashed px-3 py-4 text-center text-xs text-muted-foreground max-md:order-11">
+            <p className="rounded-2xl border border-dashed border-foreground/15 px-3 py-4 text-center text-xs text-muted-foreground max-md:order-11">
               {loadError ?? "Carregando os textos…"}
             </p>
           ) : (
@@ -941,7 +941,7 @@ function PostForm({
                 </p>
               ) : null
             ) : (
-              <ul className="mt-1.5 divide-y rounded-lg border">
+              <ul className="mt-1.5 divide-y rounded-2xl border bg-card">
                 {linkedTasks.map((task) => (
                   <LinkedTask
                     key={task.id}
@@ -1107,7 +1107,7 @@ function CoverPicker({
       label={path ? "Trocar a capa" : "Enviar a capa"}
       disabled={disabled || uploading}
       onPick={onPick}
-      className="relative flex aspect-[3/4] w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted"
+      className="relative flex aspect-[3/4] w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted"
     >
       {path ? <ContentImage key={path} path={path} alt="Capa do post" /> : <ImagePlus className="size-5" aria-hidden="true" />}
       {uploading ? (
@@ -1175,7 +1175,7 @@ function SlidesEditor({
       {images.length > 0 ? (
         mobile ? (
           // No celular, a prévia como no Instagram: a foto e o @, o carrossel e a legenda.
-          <div className="space-y-2.5 rounded-lg border p-3">
+          <div className="space-y-2.5 rounded-2xl border bg-card p-3.5">
             <InstagramHeader
               avatar={clientId ? <ClientMark clientId={clientId} size="md" /> : null}
               handle={handle}
@@ -1189,7 +1189,7 @@ function SlidesEditor({
             </p>
           </div>
         ) : (
-          <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="rounded-2xl border bg-card p-3.5">
             <p className="mb-2 text-xs text-muted-foreground">
               Como fica o carrossel{images.length < slides.length ? ` (${images.length} de ${slides.length} slides com imagem)` : ""}. É o que
               o cliente vê, sem a capa.
@@ -1203,7 +1203,7 @@ function SlidesEditor({
           // No celular, cada slide é um cartão grande: a imagem, o texto e as setas para mudar a ordem.
           <ol className="space-y-2.5">
             {slides.map((slide, index) => (
-              <li key={index} className="rounded-lg border p-2.5">
+              <li key={index} className="rounded-xl border p-2.5">
                 <div className="flex items-center">
                   <span className="pl-1 text-[13px] font-medium text-foreground">Slide {index + 1}</span>
                   <div className="ml-auto flex">
@@ -1343,7 +1343,7 @@ function SlideImage({
         disabled={disabled || uploading}
         onPick={onPick}
         className={cn(
-          "relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted",
+          "relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted",
           large ? "w-20" : "w-10"
         )}
       >
@@ -1464,7 +1464,7 @@ function FrontTasksPanel({
 
   if (rows.length === 0) {
     return (
-      <div className="mt-2 flex items-center gap-2 rounded-lg border border-dashed px-3 py-3 text-xs text-muted-foreground">
+      <div className="mt-2 flex items-center gap-2 rounded-2xl border border-dashed px-3 py-3 text-xs text-muted-foreground">
         Nenhuma frente por fazer: todas finalizadas ou sem necessidade.
         <Button type="button" variant="ghost" size="sm" onClick={onClose} className="ml-auto h-7 px-2 text-xs">
           Fechar
@@ -1474,7 +1474,7 @@ function FrontTasksPanel({
   }
 
   return (
-    <div className="mt-2 rounded-lg border p-3">
+    <div className="mt-2 rounded-2xl border bg-card p-3.5">
       <ul className="space-y-2">
         {rows.map((row) => (
           <li key={row.front} className="flex flex-wrap items-center gap-x-3 gap-y-1.5">

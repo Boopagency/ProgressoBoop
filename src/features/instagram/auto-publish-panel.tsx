@@ -196,7 +196,7 @@ export function AutoPublishPanel({
   }
 
   return (
-    <section aria-label="Publicação no Instagram" className={cn("space-y-2 rounded-lg border p-3", className)}>
+    <section aria-label="Publicação no Instagram" className={cn("space-y-2 rounded-2xl border bg-card p-3.5", className)}>
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Send className={cn("size-3.5", state.auto_publish && status !== "failed" ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
         Publicação no Instagram

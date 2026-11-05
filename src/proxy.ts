@@ -22,7 +22,9 @@ const PUBLIC_PATHS = new Set(["/login", "/auth/confirmar", "/api/keepalive", "/a
 export async function proxy(request: NextRequest) {
   const { response, isAuthenticated } = await updateSession(request)
 
-  if (!isAuthenticated && !PUBLIC_PATHS.has(request.nextUrl.pathname)) {
+  // A vitrine do visual (dados de exemplo) abre sem login só em desenvolvimento.
+  const isDevShowcase = process.env.NODE_ENV !== "production" && request.nextUrl.pathname.startsWith("/vitrine")
+  if (!isAuthenticated && !isDevShowcase && !PUBLIC_PATHS.has(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.search = ""

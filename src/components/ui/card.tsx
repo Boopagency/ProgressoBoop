@@ -2,14 +2,14 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 // Adaptado do shadcn/ui para o visual do Boop Admin: espaçamento de 20px e
-// sem sombra (só a borda suave).
+// vidro discreto (borda translúcida, brilho no topo e sombra suave, em globals.css).
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-4 rounded-xl border bg-card py-5 text-card-foreground",
+        "flex flex-col gap-4 rounded-2xl border bg-card py-5 text-card-foreground",
         className
       )}
       {...props}

@@ -21,8 +21,8 @@ export const DARK_QUERY = "(prefers-color-scheme: dark)"
 
 /** Cor da barra do navegador no celular: o fundo geral (`--canvas`) de cada tema. */
 export const THEME_COLOR: Record<ResolvedTheme, string> = {
-  light: "#f7f7f5",
-  dark: "#131211",
+  light: "#e9edf8",
+  dark: "#0b0d12",
 }
 
 export function isThemeChoice(value: unknown): value is ThemeChoice {

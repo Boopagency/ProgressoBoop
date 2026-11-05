@@ -16,28 +16,45 @@ export interface StatItem {
   progress?: number
 }
 
-/** Linha de indicadores, cada um no seu cartão. */
-export function StatGrid({ items, className }: { items: StatItem[]; className?: string }) {
+/**
+ * Linha de indicadores: rótulo pequeno em caixa alta e o número grande na
+ * serifada itálica. `cards` põe cada um no seu cartão de vidro; `line` é a
+ * versão dos painéis de destaque (Hoje, Início do portal): sem cartão, com
+ * uma linha-guia fina em cima de cada número.
+ */
+export function StatGrid({
+  items,
+  variant = "cards",
+  className,
+}: {
+  items: StatItem[]
+  variant?: "cards" | "line"
+  className?: string
+}) {
+  const line = variant === "line"
   return (
     <dl
       className={cn(
-        "grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4",
+        "grid",
+        line ? "gap-x-5 gap-y-6 sm:gap-x-8" : "gap-3 sm:gap-4",
+        items.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4",
         className
       )}
     >
       {items.map((item) => {
         const content = (
           <>
-            <dt className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <dt className="flex items-center gap-1.5 eyebrow text-muted-foreground">
               {item.alert ? (
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-overdue" />
+                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
               ) : null}
               {item.label}
             </dt>
-            <dd className="mt-1.5 flex items-baseline gap-2">
+            <dd className="mt-3 flex items-baseline gap-2">
               <span
                 className={cn(
-                  "font-display text-[30px] leading-9 font-semibold tracking-tight tabular-nums",
+                  "display-number",
+                  line ? "text-[52px] leading-[0.85] sm:text-[68px]" : "text-[44px] leading-[0.9] sm:text-[52px]",
                   item.alert ? "text-overdue" : "text-foreground"
                 )}
               >
@@ -56,14 +73,14 @@ export function StatGrid({ items, className }: { items: StatItem[]; className?: 
             ) : null}
           </>
         )
-        const cellClass =
-          "relative flex flex-col justify-between overflow-hidden rounded-xl bg-card px-4 py-4 shadow-card transition-[background-color,box-shadow] outline-none sm:px-5 sm:py-5"
+        const cellClass = line
+          ? "group/stat relative flex flex-col justify-between border-t border-foreground/15 pt-3 outline-none transition-colors duration-150"
+          : "relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card px-4 py-4 transition-[background-color,box-shadow,border-color] duration-150 outline-none sm:px-5 sm:py-5"
+        const hover = line
+          ? "hover:border-glow focus-visible:ring-[3px] focus-visible:ring-ring/40"
+          : "hover:border-glow/40 hover:shadow-float focus-visible:ring-[3px] focus-visible:ring-ring/40"
         return item.href ? (
-          <a
-            key={item.label}
-            href={item.href}
-            className={cn(cellClass, "hover:shadow-float focus-visible:ring-[3px] focus-visible:ring-ring/40")}
-          >
+          <a key={item.label} href={item.href} className={cn(cellClass, hover)}>
             {content}
           </a>
         ) : (

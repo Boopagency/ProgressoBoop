@@ -32,11 +32,16 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
   tarefas, projetos, reuniões, decisões, comunicações, processos, clientes,
   negócios, lançamentos, posts e ideias de conteúdo e cria qualquer coisa
   (2.14).
-- **Visual:** base neutra (branco, off-white, cinzas). A cor da Boop aparece
-  só em detalhes: barras de progresso, item ativo do menu, dia de hoje, foco e
-  pontos indicadores. O logo é o oficial (o "olhar") e os títulos usam Poppins.
+- **Visual:** fundo escuro profundo com brilhos azuis vindos dos cantos e
+  painéis de vidro fosco por cima (no tema claro, o mesmo vidro sobre um
+  gradiente azul-lavanda). O item ativo do menu, o foco e o botão principal
+  brilham no azul elétrico; etiquetas e filtros são pílulas de contorno fino.
+  Os títulos usam Poppins, com uma palavra de destaque em serifada itálica (o
+  nome na saudação do Hoje e do Início do portal), e os indicadores mostram
+  números grandes na mesma itálica. O logo é o oficial (o "olhar").
   Vermelho indica atrasado, verde indica concluído e laranja indica em
-  andamento ou atenção.
+  andamento ou atenção. Com "reduzir transparência" ou "reduzir movimento"
+  no sistema, o vidro vira sólido e as animações somem.
 - **Celular:** todas as telas funcionam. As listas e o calendário se
   reorganizam para a tela menor.
 
@@ -62,10 +67,11 @@ Para pedir um ajuste, cite a seção. Exemplo: "2.3: abrir Tarefas em Minhas".
 
 - Saudação conforme o horário ("Bom dia", "Boa tarde" ou "Boa noite",
   seguida do nome) e a data por extenso.
-- A alternância **Minhas / Todas**, na linha logo abaixo do título. O padrão
-  é Minhas, e a escolha fica salva no navegador por um ano.
-- Quatro indicadores: Atrasadas, Para hoje, Esta semana e Concluídas na
-  semana. Clicar em um deles leva à lista correspondente. Atrasadas fica
+- Tudo isso num painel de destaque no topo, junto com a alternância
+  **Minhas / Todas** e o "Nova tarefa". O padrão é Minhas, e a escolha fica
+  salva no navegador por um ano.
+- Quatro indicadores, com números grandes no mesmo painel: Atrasadas, Para
+  hoje, Esta semana e Concluídas na semana. Clicar em um deles leva à lista correspondente. Atrasadas fica
   vermelho quando o número é maior que zero.
 - **Em foco:** os projetos fixados (até quatro). O primeiro vem em destaque
   ("Estruturação da Boop até 31/10"): percentual grande, barra, "X de Y
@@ -941,8 +947,11 @@ post e no projeto aberto, o topo mostra o "voltar".
   ideia, orientação de design, roteiro, frentes, responsável e link do
   Drive ficam de fora. Para o cliente, as etapas aparecem como Para
   aprovar, Em ajuste, Aprovado, Programado e Publicado.
-- **Início (painel):** a saudação com o nome de quem acessa e quantos itens
-  esperam a aprovação; **Esperando você** (posts em "Para aprovar" e as
+- **Início (painel):** no topo, um painel de destaque com o cliente em
+  pílula, a saudação com o nome de quem acessa (em serifada itálica), quantos
+  itens esperam a aprovação, uma seta que leva a eles e três números grandes
+  (esperando você, projetos em aberto e próximos posts, que levam aos
+  quadros); depois, **Esperando você** (posts em "Para aprovar" e as
   etapas de projeto que pedem a aprovação); **Projetos** (os em aberto, até
   quatro, com a porcentagem concluída e "Ver todos"); **Últimas mensagens**
   (as cinco mais novas da conversa com a equipe; a de um post ou projeto

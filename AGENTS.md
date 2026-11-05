@@ -23,8 +23,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   `src/lib/supabase/database.types.ts`. Acesso ao banco só no servidor
   (`queries.ts`, `actions.ts`, `features/auth`), com a sessão da pessoa e RLS.
   Nunca usar service role nem chave secreta no app.
-- Cor da marca só em detalhes (progresso, item ativo, foco, hoje, indicadores):
-  `brand` (#2B8FD9) como preenchimento, `brand-ink` (#155E9C) quando for texto.
+- Visual (repaginada de nov/2026, detalhes em `docs/ARQUITETURA.md` §10.1):
+  escuro profundo com brilhos azuis, vidro fosco e pílulas; o claro é o mesmo
+  vidro sobre azul-lavanda. Use só os tokens de `globals.css`, nunca cor fixa.
+  - **Vidro:** `bg-card` + `border` nos cartões e listas (sem desfoque);
+    `glass-panel` só no painel de destaque de uma tela; `glass-surface` em
+    barras, folhas, diálogos e menus. Nunca `backdrop-filter` em linha de
+    lista; tabela densa usa `bg-card-solid`.
+  - **Brilho e cor:** azul elétrico (`glow`, `primary`) para o que está ativo,
+    o foco, o botão principal e os indicadores; `brand` no progresso;
+    `brand-ink` quando o azul é texto. Vermelho, verde e laranja só para status.
+  - **Tipografia:** Poppins nos títulos; `emphasis` (Instrument Serif itálica)
+    numa palavra de destaque por título, no máximo; `display-number` nos
+    números grandes; `eyebrow` nos rótulos pequenos em caixa alta.
 - Antes de concluir uma mudança: `npm run lint`, `npm run typecheck` e `npm run build`.
 
 ## Trabalho com vários agentes

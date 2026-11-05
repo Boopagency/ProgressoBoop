@@ -17,8 +17,8 @@ export function PanelCard({
   className?: string
 }) {
   return (
-    <section aria-labelledby={id} className={cn("overflow-hidden rounded-xl border bg-card", className)}>
-      <header className="flex min-h-14 items-center gap-2 border-b border-border/70 px-5 py-3">
+    <section aria-labelledby={id} className={cn("overflow-hidden rounded-2xl border bg-card", className)}>
+      <header className="flex min-h-14 items-center gap-2 border-b border-border px-5 py-3">
         <h2 id={id} className="flex items-center gap-2 text-[15px] font-semibold tracking-tight text-foreground">
           {title}
         </h2>

@@ -144,7 +144,7 @@ export function ColumnChart({
               className="absolute inset-x-0 border-t border-dashed border-muted-foreground/60"
               style={{ top: `${scale.y(reference.value)}%` }}
             >
-              <span className="absolute -top-4 right-0 rounded bg-card/90 px-1 text-[11px] whitespace-nowrap text-muted-foreground">
+              <span className="absolute -top-4 right-0 rounded bg-card-solid/90 px-1 text-[11px] whitespace-nowrap text-muted-foreground">
                 {reference.label}
               </span>
             </span>

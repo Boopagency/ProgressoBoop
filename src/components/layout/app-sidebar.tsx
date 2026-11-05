@@ -7,6 +7,7 @@ import { useState } from "react"
 import { BoopMark } from "@/components/layout/boop-mark"
 import { CLAUDE_NAV_ITEM, isActivePath, NAV_GROUPS } from "@/components/layout/nav-items"
 import { NavUser } from "@/components/layout/nav-user"
+import { NAV_ITEM_CLASS } from "@/components/layout/shell-classes"
 import {
   Sidebar,
   SidebarContent,
@@ -70,7 +71,7 @@ export function AppSidebar() {
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.label ?? "principal"} className="py-1.5">
             {group.label ? (
-              <SidebarGroupLabel className="h-7 text-[11px] tracking-wide text-subtle-foreground uppercase">
+              <SidebarGroupLabel className="h-7 eyebrow text-[10.5px] text-subtle-foreground">
                 {group.label}
               </SidebarGroupLabel>
             ) : null}
@@ -82,7 +83,7 @@ export function AppSidebar() {
                       asChild
                       isActive={isActivePath(pathname, item.href) && !(item.href === "/tarefas" && savedViews.some((view) => sameQuery(view.query, currentQuery) && currentQuery !== ""))}
                       tooltip={item.title}
-                      className="h-9 gap-2.5 rounded-full px-3 text-[13.5px] text-sidebar-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-[0_6px_16px_-8px_rgb(11_27_44/0.5)] data-[active=true]:hover:bg-sidebar-primary data-[active=true]:hover:text-sidebar-primary-foreground [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-(--sidebar-primary-icon)"
+                      className={NAV_ITEM_CLASS}
                     >
                       <Link href={item.href} onClick={closeOnMobile}>
                         <item.icon />

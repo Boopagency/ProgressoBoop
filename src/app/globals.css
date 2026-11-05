@@ -14,70 +14,97 @@
 }
 
 /*
- * Boop Admin — tokens do design system.
- * Painel cinza-azulado bem claro com cartões brancos flutuando por cima
- * (cantos bem arredondados, sombra suave e sem borda), texto no navy da
- * marca e controles em pílula.
+ * Boop Admin — tokens do design system (repaginada de nov/2026).
  *
- * Cor de destaque (versão "azul profundo", escolhida pelo Leo em 22/10/2026:
- * o ciano do site, #00C2FF, ficava estridente no claro e apagado no escuro),
- * usada em 5–10% da interface: progresso, item ativo, foco, indicadores.
- *   azul     #2B8FD9 — "sinal": preenchimento/traço (com navy por cima)
- *   azul-ink #155E9C — o mesmo azul legível como texto/ícone
- *   navy-800 #0B1B2C — "tinta": botão principal e texto sobre o sinal
+ * Linguagem: base escura profunda com brilhos azuis grandes e desfocados
+ * vindos dos cantos (uma camada fixa, `.app-backdrop`), painéis de vidro
+ * fosco por cima (borda de 1 px translúcida, brilho interno no topo, cantos
+ * bem arredondados), pílulas de contorno fino e tipografia de alto contraste:
+ * Poppins nos títulos, Inter no texto e Instrument Serif itálica nas palavras
+ * de ênfase e nos números grandes. O escuro é o protagonista; o claro é o
+ * mesmo vidro sobre um gradiente azul-lavanda.
+ *
+ * Família de azuis (todos derivados do azul da Boop):
+ *   brand    #2B8FD9  o azul da Boop: preenchimento de progresso e dados
+ *   glow     #3D7EFF  o azul elétrico: brilhos, item ativo, foco, indicadores
+ *   primary  #2F6BF0  o mesmo elétrico um passo mais fundo: botão principal
+ *                     (texto branco com contraste AA, 4,7:1)
+ *   brand-ink         o azul como texto: #1E56C8 no claro, #8AB8FF no escuro
+ * O gradiente da marca vai do brand ao glow (`--gradient-brand`).
+ *
+ * Superfícies de vidro em três níveis:
+ *   shell   o painel grande das telas (sem desfoque: o fundo já é liso)
+ *   card    cartões e listas: translúcido, discreto (sem desfoque)
+ *   glass   painéis de destaque, barras, folhas, diálogos e menus: com
+ *           desfoque de fundo (`backdrop-filter`) — só em superfícies grandes
+ * Com "reduzir transparência" no sistema, tudo vira sólido (veja abaixo).
  */
 :root {
-  --radius: 0.875rem;
+  --radius: 1rem;
 
   --brand: #2b8fd9;
-  --brand-ink: #155e9c;
-  --brand-soft: #e9f1fa;
+  --brand-ink: #1e56c8;
+  --brand-soft: rgb(61 126 255 / 0.1);
   --brand-navy: #0b1b2c;
   --brand-paper: #fffdf5;
+  --glow: #3d7eff;
+  --glow-soft: rgb(61 126 255 / 0.16);
+  --gradient-brand: linear-gradient(90deg, #2b8fd9, #3d7eff);
   /* Tons de apoio da mesma paleta (avatares e tipos de evento) */
-  --brand-sky: #cfe0f3;
-  --brand-mist: #dce4ea; /* navy-100 */
-  --brand-slate: #4c6f8c; /* navy-400 */
-  --brand-sand: #ede9dd; /* osso-300 */
+  --brand-sky: #d3defc;
+  --brand-mist: #e2e6f0;
+  --brand-slate: #4c6f8c;
+  --brand-sand: #ede9dd;
 
   /*
-   * Fundo do painel (onde ficam as telas) e superfícies. O painel é um
-   * cinza com um toque do azul da marca; cartões, campos e menus são brancos.
+   * Fundo geral (atrás de tudo, com os brilhos por cima) e superfícies. No
+   * claro, um lavanda bem claro; os cartões são vidro branco.
    */
-  --canvas: #f2f5f8;
-  --background: oklch(1 0 0);
+  --canvas: #e9edf8;
+  --background: #f7f8fd;
   --foreground: #0f1d2b;
-  --card: oklch(1 0 0);
+  --shell: rgb(255 255 255 / 0.34);
+  --shell-edge: rgb(255 255 255 / 0.75);
+  --card: rgb(255 255 255 / 0.74);
+  --card-solid: #ffffff;
   --card-foreground: #0f1d2b;
-  --popover: oklch(1 0 0);
+  --popover: rgb(255 255 255 / 0.9);
   --popover-foreground: #0f1d2b;
-  /* Cartão sobre o painel: sem borda, com uma sombra curta e uma longa bem leve. */
-  --card-edge: transparent;
-  --shadow-card: 0 1px 2px rgb(15 29 43 / 0.04), 0 6px 20px -6px rgb(15 29 43 / 0.08);
-  --shadow-float: 0 2px 6px rgb(15 29 43 / 0.06), 0 16px 40px -12px rgb(15 29 43 / 0.18);
+  --glass: rgb(255 255 255 / 0.5);
+  --glass-strong: rgb(250 251 255 / 0.82);
+  --glass-edge: rgb(255 255 255 / 0.85);
+  --glass-highlight: rgb(255 255 255 / 0.9);
+  --card-edge: rgb(255 255 255 / 0.9);
+  --shadow-card:
+    inset 0 1px 0 var(--glass-highlight), 0 0 0 1px rgb(15 29 43 / 0.035), 0 1px 2px rgb(15 29 43 / 0.04),
+    0 10px 30px -12px rgb(40 60 140 / 0.16);
+  --shadow-float:
+    inset 0 1px 0 var(--glass-highlight), 0 0 0 1px rgb(15 29 43 / 0.05), 0 2px 6px rgb(15 29 43 / 0.06),
+    0 24px 60px -18px rgb(40 60 140 / 0.28);
+  --shadow-glow: 0 0 0 1px rgb(61 126 255 / 0.35), 0 8px 24px -8px rgb(47 107 240 / 0.55);
 
-  --primary: var(--brand-navy);
-  --primary-foreground: var(--brand-paper);
-  --secondary: #edf1f5;
+  --primary: #2f6bf0;
+  --primary-foreground: #ffffff;
+  --secondary: rgb(15 29 43 / 0.06);
   --secondary-foreground: #0f1d2b;
-  --muted: #eef2f6;
-  --muted-foreground: #5a6b7c;
-  --subtle-foreground: #8c9aa8;
-  --accent: #eef2f6;
+  --muted: rgb(15 29 43 / 0.05);
+  --muted-foreground: #48566b;
+  --subtle-foreground: #6b778b;
+  --accent: rgb(15 29 43 / 0.055);
   --accent-foreground: #0f1d2b;
   --destructive: oklch(0.577 0.215 27.3);
 
-  --border: #e6ebf0;
-  --input: #dde4ea;
-  --ring: var(--brand);
+  --border: rgb(15 29 43 / 0.08);
+  --input: rgb(15 29 43 / 0.14);
+  --ring: var(--glow);
 
-  /* Semânticas do produto */
+  /* Semânticas do produto (vermelho, verde e laranja de status ficam claros nos dois temas). */
   --overdue: oklch(0.56 0.19 27);
   --success: oklch(0.6 0.13 158);
   --warning: oklch(0.74 0.15 72);
-  /* Versões para texto (contraste ≥ 4,5:1 no branco): variação boa e atenção. */
-  --success-ink: oklch(0.5 0.11 158);
-  --warning-ink: oklch(0.55 0.12 70);
+  /* Versões para texto (contraste ≥ 4,5:1 no vidro claro): variação boa e atenção. */
+  --success-ink: oklch(0.48 0.11 158);
+  --warning-ink: oklch(0.52 0.12 70);
   /* Texto do "concluído" sobre o fundo verde claro dos badges. */
   --success-strong: oklch(0.42 0.1 158);
   /* Prioridade alta (a bandeira laranja). */
@@ -96,124 +123,176 @@
   /* Texto sobre os fundos suaves da marca (brand-soft, brand-mist, brand-sky, brand-sand). */
   --tint-foreground: var(--brand-navy);
   /* Fundo escurecido atrás de diálogos e painéis. */
-  --overlay: rgb(0 0 0 / 0.2);
+  --overlay: rgb(15 23 50 / 0.28);
 
   /*
-   * Gráficos (validados contra a superfície branca: contraste e daltonismo).
+   * Gráficos (validados contra o vidro: contraste e daltonismo).
    * chart-1: o azul de destaque (marcas com ≥ 3:1);
    * chart-1-light: o mesmo tom mais claro para o previsto (escala ordinal);
    * chart-2: segunda série, quando houver; chart-muted: contexto.
    */
-  --chart-1: #2b8fd9;
-  --chart-1-light: #8dbde8;
+  --chart-1: #2f6bf0;
+  --chart-1-light: #9db8f7;
   --chart-2: #e8743b;
-  --chart-muted: #d3dce4;
-  --chart-grid: #edf1f5;
+  --chart-muted: #ccd4e3;
+  --chart-grid: rgb(15 29 43 / 0.07);
+
+  /* Brilhos do fundo (camada fixa `.app-backdrop`). */
+  --backdrop-1: rgb(70 110 255 / 0.72);
+  --backdrop-2: rgb(160 140 255 / 0.5);
+  --backdrop-3: rgb(43 143 217 / 0.5);
+  --backdrop-noise: 0.05;
 
   /*
-   * Menu lateral (e a moldura em volta do painel): no claro, quase branco,
-   * com o item ativo numa pílula azul; no escuro, o navy-800 com a pílula
-   * num azul mais aberto. Dentro do menu, os tons de texto viram os do menu
-   * (veja `[data-sidebar="sidebar"]` abaixo).
+   * Menu lateral: sem fundo próprio no computador (fica sobre os brilhos);
+   * no celular, a folha e o menu de baixo são de vidro. O item ativo é uma
+   * pílula azul elétrica que brilha.
    */
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #3b4e62;
-  --sidebar-primary: var(--brand-ink);
+  --sidebar: transparent;
+  --sidebar-foreground: #33445a;
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-primary-icon: #bfe0fa;
-  --sidebar-accent: #edf2f7;
+  --sidebar-primary-icon: #dbe6ff;
+  --sidebar-accent: rgb(255 255 255 / 0.55);
   --sidebar-accent-foreground: var(--brand-navy);
-  --sidebar-border: #e3e9ef;
-  --sidebar-ring: var(--brand);
+  --sidebar-border: rgb(15 29 43 / 0.08);
+  --sidebar-ring: var(--glow);
   --sidebar-ink: var(--brand-navy);
-  --sidebar-muted: #6a7c8e;
+  --sidebar-muted: #46536a;
   --sidebar-icon-active: var(--brand-ink);
+
+  /* Movimento: curvas e tempos usados nas transições. */
+  --ease-glide: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-swift: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --duration-slow: 480ms;
 }
 
 /*
- * Tema escuro, nos navys da marca: painel mais fundo, cartões um passo acima,
- * bordas discretas. O azul de destaque abre um pouco (`brand` #4BA6EE, com
- * `brand-navy` por cima) e vira também o botão principal; `brand-ink` vira
- * um azul claro, legível (AA) como texto no fundo escuro; os fundos suaves
- * da marca escurecem.
+ * Tema escuro (o protagonista): fundo quase preto azulado (#0B0D12, perto do
+ * #0D0F14 das referências), painel em #141720 translúcido e cartões de vidro
+ * que só clareiam o que está atrás. O texto fica em branco frio; o cinza de
+ * apoio tem contraste AA mesmo sobre a parte mais clara dos brilhos.
  */
 @media screen {
   .dark {
-    --brand: #4ba6ee;
-    --brand-ink: #86c3f5;
-    --brand-soft: #132b45;
-    --brand-sky: #1c3f63;
-    --brand-mist: #233039;
-    --brand-slate: #7f9db4;
-    --brand-sand: #312d26;
+    --brand: #4d9bff;
+    --brand-ink: #8ab8ff;
+    --brand-soft: rgb(61 126 255 / 0.15);
+    --glow: #3d7eff;
+    --glow-soft: rgb(61 126 255 / 0.22);
+    --gradient-brand: linear-gradient(90deg, #3a9de6, #4d84ff);
+    --brand-sky: rgb(61 126 255 / 0.26);
+    --brand-mist: rgb(255 255 255 / 0.07);
+    --brand-slate: #8aa2c4;
+    --brand-sand: rgb(237 225 196 / 0.12);
 
-    /* Escuro nos navys da marca: painel mais fundo, cartões um passo acima. */
-    --canvas: #08121c;
-    --background: #0f1b28;
-    --foreground: #e9eef3;
-    --card: #0f1b28;
-    --card-foreground: #e9eef3;
-    --popover: #142333;
-    --popover-foreground: #e9eef3;
-    --card-edge: rgb(255 255 255 / 0.05);
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px -8px rgb(0 0 0 / 0.45);
-    --shadow-float: 0 2px 6px rgb(0 0 0 / 0.4), 0 16px 40px -12px rgb(0 0 0 / 0.6);
+    --canvas: #0b0d12;
+    --background: #12151d;
+    --foreground: #eef1f7;
+    --shell: rgb(16 19 27 / 0.5);
+    --shell-edge: rgb(255 255 255 / 0.07);
+    --card: rgb(255 255 255 / 0.04);
+    --card-solid: #171b25;
+    --card-foreground: #eef1f7;
+    --popover: rgb(23 27 38 / 0.9);
+    --popover-foreground: #eef1f7;
+    --glass: rgb(22 26 37 / 0.55);
+    --glass-strong: rgb(18 21 30 / 0.84);
+    --glass-edge: rgb(255 255 255 / 0.1);
+    --glass-highlight: rgb(255 255 255 / 0.07);
+    --card-edge: rgb(255 255 255 / 0.075);
+    --shadow-card:
+      inset 0 1px 0 var(--glass-highlight), 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 40px -16px rgb(0 0 0 / 0.55);
+    --shadow-float:
+      inset 0 1px 0 var(--glass-highlight), 0 2px 6px rgb(0 0 0 / 0.35), 0 28px 70px -20px rgb(0 0 0 / 0.75);
+    --shadow-glow: 0 0 0 1px rgb(110 155 255 / 0.45), 0 10px 32px -8px rgb(61 126 255 / 0.75);
 
-    --primary: var(--brand);
-    --primary-foreground: var(--brand-navy);
-    --secondary: #172739;
-    --secondary-foreground: #e9eef3;
-    --muted: #152434;
-    --muted-foreground: #9aabbc;
-    --subtle-foreground: #6c8195;
-    --accent: #18293b;
-    --accent-foreground: #e9eef3;
+    --primary: #2f6bf0;
+    --primary-foreground: #ffffff;
+    --secondary: rgb(255 255 255 / 0.07);
+    --secondary-foreground: #eef1f7;
+    --muted: rgb(255 255 255 / 0.055);
+    --muted-foreground: #b0b9c9;
+    --subtle-foreground: #8590a3;
+    --accent: rgb(255 255 255 / 0.07);
+    --accent-foreground: #eef1f7;
     --destructive: oklch(0.64 0.2 25);
 
-    --border: #1d2e40;
-    --input: #243649;
+    --border: rgb(255 255 255 / 0.08);
+    --input: rgb(255 255 255 / 0.13);
 
-    --overdue: oklch(0.7 0.17 25);
-    --success: oklch(0.66 0.13 158);
-    --warning: oklch(0.78 0.14 75);
-    --success-ink: oklch(0.76 0.12 158);
-    --warning-ink: oklch(0.8 0.12 75);
-    --success-strong: oklch(0.8 0.11 158);
+    --overdue: oklch(0.72 0.17 25);
+    --success: oklch(0.7 0.14 158);
+    --warning: oklch(0.8 0.14 75);
+    --success-ink: oklch(0.78 0.12 158);
+    --warning-ink: oklch(0.82 0.12 75);
+    --success-strong: oklch(0.82 0.11 158);
     --priority: #fb923c;
 
-    --attention-soft: #2a2213;
-    --attention-muted: #3d3014;
+    --attention-soft: rgb(240 168 48 / 0.1);
+    --attention-muted: rgb(240 168 48 / 0.18);
     --attention-line: #f0a830;
     --attention-ink: #f6c66f;
     --attention-ink-strong: #fad796;
 
-    --tint-foreground: oklch(0.93 0.012 230);
-    --overlay: rgb(0 0 0 / 0.55);
+    --tint-foreground: oklch(0.94 0.012 250);
+    --overlay: rgb(3 5 10 / 0.6);
 
-    --chart-1: #4ba6ee;
-    --chart-1-light: #2c5f8c;
+    --chart-1: #4d8dff;
+    --chart-1-light: #2b4f94;
     --chart-2: #f0874f;
-    --chart-muted: #2c3f52;
-    --chart-grid: #1a2a3b;
+    --chart-muted: rgb(255 255 255 / 0.14);
+    --chart-grid: rgb(255 255 255 / 0.06);
 
-    --sidebar: #0c1a29;
-    --sidebar-foreground: #b3c3d3;
-    --sidebar-primary: #2a6fb0;
+    --backdrop-1: rgb(47 98 255 / 0.62);
+    --backdrop-2: rgb(43 143 217 / 0.3);
+    --backdrop-3: rgb(38 70 255 / 0.55);
+    --backdrop-noise: 0.06;
+
+    --sidebar: transparent;
+    --sidebar-foreground: #b7c0d0;
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-primary-icon: #cde6fb;
-    --sidebar-accent: #152a40;
-    --sidebar-accent-foreground: var(--brand-paper);
-    --sidebar-border: #1b3a55; /* navy-600 */
-    --sidebar-ink: var(--brand-paper);
-    --sidebar-muted: #7d93a8;
-    --sidebar-icon-active: #86c3f5;
+    --sidebar-primary-icon: #d6e3ff;
+    --sidebar-accent: rgb(255 255 255 / 0.06);
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: rgb(255 255 255 / 0.08);
+    --sidebar-ink: #f4f6fb;
+    --sidebar-muted: #98a2b4;
+    --sidebar-icon-active: #8ab8ff;
+  }
+}
+
+/*
+ * "Reduzir transparência" no sistema: o vidro vira sólido e os brilhos somem
+ * (fica o fundo liso). Os textos continuam com o mesmo contraste.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --shell: #f1f3f9;
+    --card: #ffffff;
+    --popover: #ffffff;
+    --glass: #ffffff;
+    --glass-strong: #ffffff;
+    --sidebar-accent: #ffffff;
+  }
+
+  .dark {
+    --shell: #12151d;
+    --card: #171b25;
+    --popover: #1a1e29;
+    --glass: #171b25;
+    --glass-strong: #12151d;
+    --sidebar-accent: #1c212c;
   }
 }
 
 /*
  * Dentro do menu lateral, os tons neutros de texto usados nos itens viram os
- * do menu (navys do site). Menus e dicas abertos a partir dele ficam fora
- * desse elemento e seguem o tema normal.
+ * do menu. Menus e dicas abertos a partir dele ficam fora desse elemento e
+ * seguem o tema normal.
  */
 [data-sidebar="sidebar"],
 [data-slot="tab-bar"] {
@@ -225,8 +304,10 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* Poppins, a fonte da marca: só em títulos e números de destaque. */
+  /* Poppins, a fonte da marca: só em títulos. */
   --font-display: var(--font-poppins), var(--font-inter), ui-sans-serif, sans-serif;
+  /* Instrument Serif (itálica): palavra de ênfase nos títulos e números grandes. */
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
 
   --color-brand: var(--brand);
   --color-brand-ink: var(--brand-ink);
@@ -237,11 +318,18 @@
   --color-brand-mist: var(--brand-mist);
   --color-brand-slate: var(--brand-slate);
   --color-brand-sand: var(--brand-sand);
+  --color-glow: var(--glow);
+  --color-glow-soft: var(--glow-soft);
 
   --color-canvas: var(--canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-solid: var(--card-solid);
+  --color-shell: var(--shell);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-edge: var(--glass-edge);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
@@ -295,8 +383,14 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
 
+  --radius-3xl: calc(var(--radius) + 12px);
+
   --shadow-card: var(--shadow-card);
   --shadow-float: var(--shadow-float);
+  --shadow-glow: var(--shadow-glow);
+
+  --ease-glide: var(--ease-glide);
+  --ease-swift: var(--ease-swift);
 }
 
 /*
@@ -412,14 +506,175 @@
 
 /*
  * Cartões: toda superfície `bg-card` com borda (os cartões das telas, os
- * quadros e os indicadores) vira um cartão branco sem borda e com sombra
- * suave sobre o painel cinza. No escuro, um contorno bem discreto no lugar.
+ * quadros e os indicadores) vira vidro discreto: borda de 1 px translúcida,
+ * um brilho interno no topo e sombra suave. Sem desfoque de fundo (o fundo
+ * atrás já é liso), então listas longas continuam leves.
  */
 @layer components {
   .bg-card.border,
   [data-slot="card"] {
     border-color: var(--card-edge);
     box-shadow: var(--shadow-card);
+  }
+}
+
+/*
+ * Vidro com desfoque, só em superfícies grandes: painéis de destaque
+ * (`glass-panel`), barras fixas e folhas/diálogos/menus (`glass-surface`).
+ * Nunca em cada linha de lista.
+ */
+@utility glass-panel {
+  background-color: var(--glass);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@utility glass-surface {
+  background-color: var(--glass-strong);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Rótulo pequeno em caixa alta e espaçado (cantos, indicadores, seções). */
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Palavra de ênfase: Instrument Serif itálica, um pouco maior que o texto em volta. */
+@utility emphasis {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Número grande dos indicadores, na serifada itálica. */
+@utility display-number {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Texto no gradiente da marca (palavra de destaque em títulos grandes). */
+@utility text-gradient-brand {
+  background-image: linear-gradient(100deg, var(--brand-ink), var(--glow) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/*
+ * Camada fixa do fundo, atrás de tudo: os brilhos azuis dos cantos e um ruído
+ * bem fraco. Fica numa camada própria do compositor (sem repintura ao rolar).
+ */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  contain: strict;
+  transform: translateZ(0);
+  background:
+    radial-gradient(55% 60% at 0% 0%, var(--backdrop-1), transparent 70%),
+    radial-gradient(45% 50% at 100% 0%, var(--backdrop-2), transparent 72%),
+    radial-gradient(65% 55% at 90% 100%, var(--backdrop-3), transparent 70%),
+    radial-gradient(40% 40% at 20% 100%, var(--backdrop-2), transparent 75%),
+    var(--canvas);
+}
+
+.app-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: var(--backdrop-noise);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-backdrop {
+    background: var(--canvas);
+  }
+
+  .app-backdrop::after {
+    display: none;
+  }
+}
+
+/*
+ * Aurora dos painéis de destaque (login, Hoje e Início do portal): luz azul
+ * em faixas verticais por trás do vidro, como nas referências. Estática.
+ */
+.hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.hero-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% -40% 20%;
+  background:
+    radial-gradient(38% 50% at 62% 55%, rgb(61 126 255 / 0.75), transparent 70%),
+    radial-gradient(22% 60% at 80% 30%, rgb(90 160 255 / 0.55), transparent 70%),
+    radial-gradient(30% 35% at 92% 85%, rgb(40 60 255 / 0.6), transparent 70%);
+  filter: blur(10px);
+}
+
+.hero-aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 28%;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0 18px,
+    rgb(255 255 255 / 0.09) 18px 19px,
+    rgb(0 0 20 / 0.14) 19px 24px
+  );
+  mask-image: radial-gradient(55% 75% at 68% 50%, #000 20%, transparent 75%);
+}
+
+.hero-aurora:not(.dark *)::before {
+  background:
+    radial-gradient(38% 50% at 62% 55%, rgb(61 126 255 / 0.5), transparent 70%),
+    radial-gradient(22% 60% at 80% 30%, rgb(140 130 255 / 0.42), transparent 70%),
+    radial-gradient(30% 35% at 92% 85%, rgb(43 143 217 / 0.4), transparent 70%);
+}
+
+.hero-aurora:not(.dark *)::after {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0 22px,
+    rgb(255 255 255 / 0.35) 22px 23px,
+    rgb(40 60 140 / 0.03) 23px 26px
+  );
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hero-aurora {
+    display: none;
   }
 }
 
@@ -441,6 +696,13 @@
   ::selection {
     background-color: var(--brand-sky);
     color: var(--tint-foreground);
+  }
+
+  /* Na impressão e com "reduzir transparência", nada de brilho atrás do texto. */
+  @media print {
+    .app-backdrop {
+      display: none;
+    }
   }
 }
 

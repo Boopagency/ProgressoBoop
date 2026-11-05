@@ -32,14 +32,14 @@ export function SegmentedControl<T extends string>({
       }}
       spacing={0.5}
       aria-label={ariaLabel}
-      className={cn("group/pill relative rounded-full bg-card p-1 shadow-card", className)}
+      className={cn("group/pill relative rounded-full border border-glass-edge bg-card p-1 shadow-[inset_0_1px_0_var(--glass-highlight)]", className)}
     >
       <PillIndicator selector="[data-state=on]" active={value} />
       {options.map((option) => (
         <ToggleGroupItem
           key={option.value}
           value={option.value}
-          className="h-8 rounded-full! px-4 text-[13px] font-medium text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-[0_6px_14px_-8px_rgb(11_27_44/0.7)] group-data-[pill]/pill:data-[state=on]:bg-transparent group-data-[pill]/pill:data-[state=on]:shadow-none"
+          className="h-8 rounded-full! px-4 text-[13px] font-medium text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-glow group-data-[pill]/pill:data-[state=on]:bg-transparent group-data-[pill]/pill:data-[state=on]:shadow-none"
         >
           {option.label}
         </ToggleGroupItem>

@@ -1,15 +1,13 @@
 import type { Metadata } from "next"
 
-import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
 import { clientOverdue } from "@/features/finance/logic"
 import { getPortalLatestMessages } from "@/features/portal/channel-queries"
 import { portalHome } from "@/features/portal/content-logic"
 import { getPortalPosts } from "@/features/portal/content-queries"
-import { OverdueNotice } from "@/features/portal/finance-cards"
 import { EMPTY_PORTAL_FINANCE } from "@/features/portal/finance-logic"
 import { getPortalFinance } from "@/features/portal/finance-queries"
-import { MessagesCard, PendingCard, ProjectsCard, UpcomingCard } from "@/features/portal/home-cards"
 import { HOME_MESSAGES, HOME_UPCOMING, homeProjects, pendingApprovals } from "@/features/portal/home-logic"
+import { PortalHomeView } from "@/features/portal/home-view"
 import { portalHref } from "@/features/portal/links"
 import { getPortalProjects, getPortalStepApprovals } from "@/features/portal/project-queries"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
@@ -36,46 +34,27 @@ export default async function PortalPage(props: PageProps<"/portal">) {
   ])
   const today = todayKey()
   const pending = pendingApprovals(posts, steps)
-  const upcoming = portalHome(posts, today).upcoming.slice(0, HOME_UPCOMING)
+  const allUpcoming = portalHome(posts, today).upcoming
+  const upcoming = allUpcoming.slice(0, HOME_UPCOMING)
   const href = (path: string) => portalHref(path, client, user.clients)
   const overdue = finance.reminders
     ? clientOverdue(client.id, finance.entries, finance.recurrences, today).filter((item) => item.account === "client_revenue")
     : []
 
   return (
-    <PageContainer>
-      <PageHeader
-        title={
-          <>
-            {greetingFor()}, <span className="text-brand-ink">{user.name}</span>
-          </>
-        }
-        description={`${client.name} · ${
-          pending.length === 0
-            ? "nada esperando a sua aprovação"
-            : pending.length === 1
-              ? "1 item esperando a sua aprovação"
-              : `${pending.length} itens esperando a sua aprovação`
-        }`}
-      />
-
-      <PageBody>
-        {overdue.length > 0 ? <OverdueNotice overdue={overdue} communicationHref={href("/portal/comunicacao")} /> : null}
-        {/*
-          Celular: esperando → projetos → mensagens → próximos.
-          Computador: o que pede ação à esquerda; conversa e agenda à direita.
-        */}
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-x-10">
-          <div className="flex min-w-0 flex-col gap-8">
-            <PendingCard items={pending} href={href} today={today} />
-            <ProjectsCard projects={homeProjects(projects)} href={href} />
-          </div>
-          <div className="flex min-w-0 flex-col gap-8">
-            <MessagesCard messages={messages} href={href} today={today} />
-            <UpcomingCard posts={upcoming} href={href} today={today} />
-          </div>
-        </div>
-      </PageBody>
-    </PageContainer>
+    <PortalHomeView
+      greeting={greetingFor()}
+      userName={user.name}
+      clientName={client.name}
+      pending={pending}
+      projects={homeProjects(projects)}
+      messages={messages}
+      upcoming={upcoming}
+      overdue={overdue}
+      openProjects={projects.filter((project) => project.status !== "done").length}
+      upcomingTotal={allUpcoming.length}
+      today={today}
+      href={href}
+    />
   )
 }

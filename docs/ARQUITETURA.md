@@ -916,12 +916,13 @@ página limpa do relatório para apresentar ou imprimir.
 ### Hoje (`/hoje`)
 
 - É a tela inicial: o login leva para cá e a raiz `/` redireciona para cá.
-- Cabeçalho: "Bom dia, Jabez" (nome do usuário logado) + data por extenso +
-  botão "Nova tarefa".
+- Painel de destaque (`TodayHero`): a data em pílula, "Bom dia, Jabez" (o nome
+  em serifada itálica), a alternância e o botão "Nova tarefa", e os quatro
+  indicadores com números grandes.
 - Alternância **Minhas / Todas**, com **Minhas** como padrão. A escolha fica
   salva no navegador.
-- Quatro indicadores discretos: atrasadas, para hoje, esta semana,
-  concluídas na semana. Clicar leva à seção.
+- Os indicadores: atrasadas, para hoje, esta semana, concluídas na semana.
+  Clicar leva à seção.
 - Progresso: os **projetos em foco** (fixados, até quatro). O primeiro
   ("Estruturação da Boop até 31/10") é a informação principal: percentual
   grande, barra, "X de Y tarefas", dias restantes e atrasadas; os outros vêm
@@ -1631,11 +1632,11 @@ Abaixo do `md` (768 px), o admin e o portal funcionam como um aplicativo
 (issue #73). Do `md` para cima, nada muda.
 
 - **Menu de baixo** (`components/layout/tab-bar.tsx`), no lugar do menu
-  lateral, nas cores do menu (#62). Admin (`AppTabBar`): Hoje (com os pedidos
+  lateral, numa barra de vidro (`glass-surface`). Admin (`AppTabBar`): Hoje (com os pedidos
   de ajuste pendentes), Tarefas, Conteúdo, Comunicações (com as não lidas) e
   Mais. Portal (`PortalTabBar`): Início, Conteúdo (Calendário e Feed, que
   trocam pelo topo), Comunicação e Notificações (com os contadores) e Mais. O
-  item ativo leva a cor da marca. O topo perde o botão do menu lateral.
+  item ativo brilha no azul elétrico. O topo perde o botão do menu lateral.
 - **Mais** (`MoreSheet`): folha de baixo com a conta (Minha conta), o resto
   do menu, a busca e o Claude (admin), a troca de cliente (portal), o tema e
   "Sair".
@@ -1781,17 +1782,12 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
 
 ## 10. Decisões técnicas importantes
 
-1. **Identidade Boop em 5–10% da interface.** A base continua neutra
-   (branco, off-white, cinzas, quase preto). A cor da marca aparece só em
-   detalhes: barras de progresso, item ativo da sidebar, foco, o dia de hoje
-   no calendário, pontos indicadores e hover de links. Azul `#2B8FD9` só como
-   preenchimento; quando precisa ser texto, `#155E9C`; o botão principal é o
-   azul-marinho da marca (`#0B1B2C`); no escuro, o próprio azul com o navy
-   por cima. (Até 22/10/2026 era o ciano do site, `#00C2FF`: estridente no
-   claro e apagado no escuro.) Vermelho, verde e laranja continuam
-   reservados para atrasado, concluído e atenção. Logo: o "olhar" oficial, o
-   mesmo SVG do favicon do site, sem redesenho. Poppins (fonte da marca) só em
-   títulos e números de destaque; o resto da interface usa Inter.
+1. **Visual: escuro profundo, brilho azul e vidro (repaginada de nov/2026).**
+   Veja 10.1. Antes era uma base neutra com a cor da marca só em detalhes
+   (5–10% da interface); a pessoa pediu um painel "absurdo de lindo", para a
+   equipe e para os clientes, e essa regra deixou de valer. Vermelho, verde e
+   laranja continuam reservados para atrasado, concluído e atenção. Logo: o
+   "olhar" oficial, o mesmo SVG do favicon do site, sem redesenho.
 2. **Sem cache do Next (`cacheComponents` desligado).** As telas dependem da
    sessão e mudam o tempo todo. Renderização dinâmica é simples e correta
    para três usuários.
@@ -1915,6 +1911,50 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     entrada curta no `PageContainer` (montado de novo a cada tela) é mais
     simples, funciona em todos os navegadores, também suaviza a chegada da
     tela depois do esqueleto e não anima filtros nem `router.refresh()`.
+
+### 10.1 Sistema visual (repaginada de nov/2026)
+
+Referências em `docs/design/referencias/`; prints em `docs/design/prints/`.
+Tudo em tokens de `src/app/globals.css`, nos dois temas (o escuro é o
+protagonista). Nada de cor fixa nas telas.
+
+- **Fundo:** `.app-backdrop`, uma camada fixa atrás de tudo (no
+  `layout.tsx` da raiz) com os brilhos azuis dos cantos (gradientes radiais)
+  e um ruído bem fraco. Fica numa camada própria: não repinta ao rolar.
+  Escuro `#0B0D12`; claro, lavanda `#E9EDF8` com brilhos azul e lilás.
+- **Azuis:** `brand` `#2B8FD9` (o azul da Boop: progresso e dados); `glow`
+  `#3D7EFF` (o elétrico: brilhos, item ativo, foco, indicadores);
+  `primary` `#2F6BF0` (botão principal, texto branco com 4,7:1);
+  `brand-ink` (`#1E56C8` no claro, `#8AB8FF` no escuro) quando o azul é texto;
+  `--gradient-brand` vai do brand ao glow (barra de progresso).
+- **Vidro em três níveis:** `shell` (o painel das telas, `SidebarInset`),
+  `card` (cartões e listas, translúcido, sem desfoque; a regra
+  `.bg-card.border` põe a borda clara e o brilho no topo) e `glass` /
+  `glass-strong` (com desfoque: `glass-panel` nos painéis de destaque,
+  `glass-surface` no topo do celular, no menu de baixo, nas folhas, nos
+  diálogos e nos menus). O desfoque só vai em superfícies grandes; tabela
+  densa usa `card-solid`. `--background` continua opaco (telas cheias no
+  celular e fundos de campo).
+- **Tipografia:** Inter no texto; Poppins (500) nos títulos; Instrument Serif
+  itálica (`--font-serif`, via `next/font`) na palavra de ênfase
+  (`emphasis`, ou `<em>` dentro do `PageHeader`) e nos números grandes
+  (`display-number`); `eyebrow` para rótulos de 11 px em caixa alta e
+  espaçados.
+- **Peças:** botão `primary` com brilho, `outline` e `glass` de contorno
+  fino, `size="circle"` (o redondo da seta); `Badge` `pill`, `seal` (selo
+  branco) e `glass`; `StatGrid` em cartões ou `variant="line"` (linha-guia
+  fina e número grande) nos painéis de destaque; `hero-aurora` (luz em
+  faixas verticais atrás do vidro) só nos destaques do Hoje, do Início do
+  portal e do login.
+- **Movimento:** `--ease-glide` e `--ease-swift`, tempos de 150, 240 e 480 ms;
+  tudo com `motion-safe:` ou `prefers-reduced-motion`.
+- **Reduzir transparência:** com `prefers-reduced-transparency`, os tokens de
+  vidro viram sólidos, os brilhos e a aurora somem e não há desfoque.
+- **Vitrine** (`/vitrine`, só em desenvolvimento; em produção, `notFound()`):
+  as peças e as telas Hoje, Início do portal e Tarefas com dados de exemplo
+  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. A casca da vitrine
+  usa as mesmas classes do admin e do portal
+  (`components/layout/shell-classes.ts`).
 
 ## 11. Plano de implementação
 

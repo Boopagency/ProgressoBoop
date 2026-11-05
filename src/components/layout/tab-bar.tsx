@@ -19,7 +19,7 @@ export function TabBar({ label, children }: { label: string; children: ReactNode
     <nav
       aria-label={label}
       data-slot="tab-bar"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)] text-sidebar-foreground md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-glass-edge glass-surface pb-[env(safe-area-inset-bottom)] text-sidebar-foreground shadow-[0_-12px_32px_-16px_rgb(0_0_0/0.35)] md:hidden"
     >
       <ul className="mx-auto flex h-14 max-w-lg">{children}</ul>
     </nav>
@@ -46,13 +46,13 @@ export function TabBarItem({ title, icon: Icon, active = false, count = 0, count
     <>
       <span
         className={cn(
-          "relative flex h-7 w-12 items-center justify-center rounded-full text-muted-foreground transition-colors group-active/tab:bg-sidebar-accent",
-          active && "bg-sidebar-accent text-brand-ink"
+          "relative flex h-7 w-12 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,box-shadow] duration-150 group-active/tab:bg-sidebar-accent",
+          active && "bg-glow-soft text-brand-ink shadow-[0_0_18px_-4px_rgb(61_126_255/0.65)]"
         )}
       >
         <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 2} aria-hidden="true" />
         {count > 0 ? (
-          <span className="absolute -top-1 left-[calc(50%+4px)] flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] leading-none font-semibold text-brand-navy tabular-nums ring-2 ring-sidebar">
+          <span className="absolute -top-1 left-[calc(50%+4px)] flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] leading-none font-semibold text-brand-navy tabular-nums ring-2 ring-background">
             {count > 99 ? "99+" : count}
           </span>
         ) : null}

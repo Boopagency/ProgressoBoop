@@ -52,8 +52,15 @@ export interface HeroFigure {
  * o número grande e a linha de apoio. Com `href`, leva aos dados de origem.
  */
 export function HeroFigures({ items, className }: { items: HeroFigure[]; className?: string }) {
+  // Números curtos (contagens) cabem dois por linha no celular; dinheiro vai um por linha.
+  const short = items.every((item) => item.value.length <= 6)
   return (
-    <dl className={cn("grid grid-cols-1 gap-x-8 gap-y-6 min-[420px]:grid-cols-2 lg:grid-cols-[repeat(var(--cols),minmax(0,1fr))]", className)} style={{ "--cols": items.length } as CSSProperties}>
+    <dl
+      className={cn(
+        "grid gap-x-8 gap-y-6 lg:grid-cols-[repeat(var(--cols),minmax(0,1fr))]",
+        short ? "grid-cols-2" : "grid-cols-1 min-[420px]:grid-cols-2",
+        className
+      )} style={{ "--cols": items.length } as CSSProperties}>
       {items.map((item) => {
         const body = (
           <>

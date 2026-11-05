@@ -176,7 +176,9 @@ export function DecisionsView({
             {groups.map((group) => (
               <section key={group.month} aria-label={formatMonthYear(`${group.month}-01`)}>
                 <h2 className="flex items-baseline gap-2.5 font-display text-[19px] font-medium tracking-[-0.02em] text-foreground">
-                  <MonthTitle period={`${group.month}-01`} />
+                  <span>
+                    <MonthTitle period={`${group.month}-01`} />
+                  </span>
                   <span className="font-sans text-[13px] font-normal tracking-normal text-muted-foreground tabular-nums">{group.decisions.length}</span>
                 </h2>
                 <ul className="mt-3 divide-y overflow-hidden rounded-2xl border bg-card">

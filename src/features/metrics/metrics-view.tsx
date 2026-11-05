@@ -103,7 +103,7 @@ export function MetricsView({ dashboard, area, links }: { dashboard: Dashboard; 
                 <ChevronLeft />
               </Link>
             </Button>
-            <h2 className="min-w-0 font-display text-[30px] leading-none font-medium tracking-[-0.04em] text-foreground sm:text-[44px]">
+            <h2 className="min-w-0 font-display text-[24px] leading-none font-medium tracking-[-0.04em] text-foreground min-[400px]:text-[27px] sm:text-[44px]">
               <PeriodTitle label={dashboard.period.label} />
             </h2>
             <Button variant="outline" size="icon-sm" asChild aria-label="Próximo período" className="shrink-0">

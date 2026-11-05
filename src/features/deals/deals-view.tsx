@@ -1,13 +1,14 @@
 "use client"
 
-import { ArrowRight, Plus, Search } from "lucide-react"
+import { ArrowRight, Handshake, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useOptimistic, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
-import { KpiTile } from "@/components/kpi-tile"
+import { EmptyPanel } from "@/components/empty-panel"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { NumberTiles } from "@/components/number-tiles"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -115,7 +116,11 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
   return (
     <PageContainer>
       <PageHeader
-        title="Comercial"
+        title={
+          <>
+            Funil <em>comercial</em>
+          </>
+        }
         description="Leads, propostas e negócios, do primeiro contato ao contrato"
         actions={
           <>
@@ -144,11 +149,14 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
           ]}
         />
         <div className="relative w-full sm:w-56">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar negócio, empresa…" aria-label="Buscar" className="h-8 pl-8 text-[13px]" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar negócio, empresa…" aria-label="Buscar" className="h-9 rounded-full border-glass-edge bg-card pl-8 text-[13px] shadow-[inset_0_1px_0_var(--glass-highlight)] dark:bg-card" />
         </div>
         <Select value={owner} onValueChange={setOwner}>
-          <SelectTrigger size="sm" aria-label="Responsável" className={cn("h-8 w-auto shadow-none", owner !== ALL && "border-brand/60")}>
+          <SelectTrigger size="sm" aria-label="Responsável" className={cn(
+              "h-9 w-auto rounded-full border-glass-edge bg-card px-3.5 text-[13px] shadow-[inset_0_1px_0_var(--glass-highlight)] dark:bg-card",
+              owner !== ALL && "border-glow/45 bg-glow-soft font-medium dark:bg-glow-soft"
+            )}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" align="start">
@@ -179,47 +187,57 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
       </PageToolbar>
 
       <PageBody>
-        <section aria-label="Números do funil" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <KpiTile
-            label="Em aberto"
-            value={`${funnel.count} ${funnel.count === 1 ? "negócio" : "negócios"}`}
-            hint={`${formatMoneyShort(funnel.recurring)}/mês em potencial${funnel.oneTime > 0 ? ` + ${formatMoneyShort(funnel.oneTime)} pontual` : ""}`}
-          />
-          <KpiTile
-            label="Valor ponderado"
-            value={formatMoney(funnel.weighted)}
-            hint={`de ${formatMoneyShort(funnel.value)} em contratos, pela chance de cada um`}
-          />
-          <KpiTile
-            label="Ganhos no mês"
-            value={`${month.won.length} ${month.won.length === 1 ? "negócio" : "negócios"}`}
-            hint={`${formatMoneyShort(month.wonRecurring)}/mês${month.wonOneTime > 0 ? ` + ${formatMoneyShort(month.wonOneTime)} pontual` : ""} · ${month.leads.length} leads novos`}
-            href="/indicadores?area=comercial"
-          />
-          <KpiTile
-            label="Taxa de ganho (90 dias)"
-            value={formatPercent(quarter.winRate, true)}
-            hint={
-              quarter.cycleDays !== null
-                ? `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos · ciclo de ${Math.round(quarter.cycleDays)} dias`
-                : `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos`
-            }
-            href="/indicadores?area=comercial"
+        <section aria-label="Números do funil">
+          <NumberTiles
+            items={[
+              {
+                label: "Em aberto",
+                value: funnel.count,
+                unit: funnel.count === 1 ? "negócio" : "negócios",
+                hint: `${formatMoneyShort(funnel.recurring)}/mês em potencial${funnel.oneTime > 0 ? ` + ${formatMoneyShort(funnel.oneTime)} pontual` : ""}`,
+                accent: true,
+              },
+              {
+                label: "Valor ponderado",
+                value: formatMoneyShort(funnel.weighted),
+                hint: `de ${formatMoneyShort(funnel.value)} em contratos, pela chance de cada um`,
+                title: formatMoney(funnel.weighted),
+              },
+              {
+                label: "Ganhos no mês",
+                value: month.won.length,
+                unit: month.won.length === 1 ? "negócio" : "negócios",
+                hint: `${formatMoneyShort(month.wonRecurring)}/mês${month.wonOneTime > 0 ? ` + ${formatMoneyShort(month.wonOneTime)} pontual` : ""} · ${month.leads.length} leads novos`,
+                href: "/indicadores?area=comercial",
+              },
+              {
+                label: "Taxa de ganho (90 dias)",
+                value: formatPercent(quarter.winRate, true),
+                hint:
+                  quarter.cycleDays !== null
+                    ? `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos · ciclo de ${Math.round(quarter.cycleDays)} dias`
+                    : `${quarter.won.length} ganhos, ${quarter.lost.length} perdidos`,
+                href: "/indicadores?area=comercial",
+              },
+            ]}
           />
         </section>
 
         <ViewFade view={`${view}:${listFilter}`}>
           {deals.length === 0 ? (
-            <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-              <h2 className="text-sm font-semibold">Cadastre os leads que estão chegando</h2>
-              <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
-                cliente, contrato no financeiro e projeto, sem digitar de novo.
-              </p>
-              <Button size="sm" className="mt-5" onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))}>
-                Primeiro negócio
-              </Button>
-            </div>
+            <EmptyPanel
+              icon={Handshake}
+              title="Cadastre os leads que estão chegando"
+              action={
+                <Button onClick={() => setDialog((state) => ({ open: true, key: state.key + 1 }))} className="gap-1.5">
+                  <Plus />
+                  Primeiro negócio
+                </Button>
+              }
+            >
+              Cada negócio guarda a origem, o valor mensal e o pontual, a etapa e a previsão de fechamento. Ganhou? Ele vira
+              cliente, contrato no financeiro e projeto, sem digitar de novo.
+            </EmptyPanel>
           ) : view === "board" ? (
             <Board deals={visible} today={today} onOpen={openDeal} onMove={move} />
           ) : (
@@ -273,7 +291,11 @@ function DropZone({
         const id = event.dataTransfer.getData(DRAG_TYPE)
         if (id) onMove(id, stage)
       }}
-      className={cn("flex flex-col rounded-xl border bg-muted/30 transition-colors", over === stage && "border-brand/50 bg-brand-soft/30", className)}
+      className={cn(
+        "flex flex-col rounded-3xl border bg-card transition-[border-color,background-color,box-shadow]",
+        over === stage && "border-glow/60 bg-glow-soft shadow-glow",
+        className
+      )}
     >
       {children}
     </section>
@@ -282,19 +304,19 @@ function DropZone({
 
 function StageHeader({ stage, count, hint }: { stage: DealStage; count: number; hint: string }) {
   return (
-    <header className="px-3 pt-3 pb-2">
+    <header className="px-3.5 pt-3.5 pb-2.5">
       <div className="flex items-center gap-2">
         <span
           aria-hidden="true"
           className={cn(
             "size-2 rounded-full",
-            stage === "won" ? "bg-brand" : stage === "lost" ? "bg-muted-foreground/40" : "border-2 border-brand/60 bg-transparent"
+            stage === "won" ? "bg-glow shadow-[0_0_8px_var(--glow)]" : stage === "lost" ? "bg-muted-foreground/40" : "border-2 border-glow/70 bg-transparent"
           )}
         />
         <h2 className="text-[13px] font-semibold text-foreground">{DEAL_STAGE_LABEL[stage]}</h2>
-        <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+        <span className="display-number text-xl leading-none text-muted-foreground">{count}</span>
       </div>
-      <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">{hint}</p>
+      <p className="mt-1 text-xs text-brand-ink tabular-nums">{hint}</p>
     </header>
   )
 }
@@ -327,7 +349,7 @@ function Board({
             <StageHeader stage={stage} count={items.length} hint={total > 0 ? `${formatMoneyShort(total)}/mês` : " "} />
             <div role="list" className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
               {items.length === 0 ? (
-                <p className="px-2 py-6 text-center text-xs text-subtle-foreground">Nenhum negócio.</p>
+                <p className="rounded-2xl border border-dashed border-foreground/12 px-2 py-6 text-center text-xs text-subtle-foreground">Nenhum negócio.</p>
               ) : (
                 items.map((deal) => <DealCard key={deal.id} deal={deal} today={today} onOpen={onOpen} />)
               )}
@@ -369,19 +391,24 @@ function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen:
         event.dataTransfer.setData(DRAG_TYPE, deal.id)
         event.dataTransfer.effectAllowed = "move"
       }}
-      className="rounded-lg border bg-card shadow-[0_1px_2px_0_rgb(0_0_0/0.04)] transition-shadow hover:shadow-[0_2px_6px_0_rgb(0_0_0/0.08)]"
+      className="cursor-grab rounded-2xl border bg-card-solid/80 transition-[border-color,box-shadow,translate] duration-150 hover:border-glow/40 hover:shadow-float active:cursor-grabbing motion-safe:hover:-translate-y-px"
     >
       <button
         type="button"
         onClick={() => onOpen(deal)}
-        className="block w-full rounded-lg px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl px-3 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <span className="line-clamp-2 text-[13.5px] leading-5 font-medium text-foreground">{deal.title}</span>
         {company ? <span className="mt-0.5 block truncate text-xs text-muted-foreground">{company}</span> : null}
         <span className="mt-2 flex flex-wrap items-baseline gap-x-1.5 text-[13px] whitespace-nowrap text-foreground tabular-nums">
-          {deal.recurring_cents > 0 ? <span className="font-medium">{formatMoneyShort(deal.recurring_cents)}/mês</span> : null}
+          {deal.recurring_cents > 0 ? (
+            <span>
+              <span className="display-number text-[22px] leading-none">{formatMoneyShort(deal.recurring_cents)}</span>
+              <span className="text-xs text-muted-foreground">/mês</span>
+            </span>
+          ) : null}
           {deal.one_time_cents > 0 ? (
-            <span className={deal.recurring_cents > 0 ? "text-xs text-muted-foreground" : "font-medium"}>
+            <span className={deal.recurring_cents > 0 ? "text-xs text-muted-foreground" : "display-number text-[22px] leading-none"}>
               {deal.recurring_cents > 0 ? "+ " : ""}
               {formatMoneyShort(deal.one_time_cents)}
             </span>
@@ -396,7 +423,7 @@ function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen:
           ) : (
             <span className="tabular-nums">{deal.closed_on ? formatShortDate(deal.closed_on, today) : ""}</span>
           )}
-          {isOpenDeal(deal) ? <span className="tabular-nums">{probabilityOf(deal)}%</span> : null}
+          {isOpenDeal(deal) ? <span className="rounded-full border border-foreground/15 px-1.5 tabular-nums">{probabilityOf(deal)}%</span> : null}
           {owner ? (
             <PersonAvatar
               name={owner.full_name}
@@ -419,12 +446,17 @@ function DealList({ deals, today, onOpen }: { deals: Deal[]; today: DateKey; onO
     if (isOpenDeal(a) && isOpenDeal(b) && order !== 0) return order
     return b.updated_at.localeCompare(a.updated_at)
   })
-  if (sorted.length === 0) return <p className="pt-4 text-center text-[13px] text-muted-foreground">Nenhum negócio com esses filtros.</p>
+  if (sorted.length === 0)
+    return (
+      <p className="rounded-3xl border border-dashed border-foreground/15 px-4 py-8 text-center text-[13px] text-muted-foreground">
+        Nenhum negócio com esses filtros.
+      </p>
+    )
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    <div className="overflow-x-auto rounded-3xl border bg-card-solid">
       <table className="w-full min-w-[900px] text-[13px] tabular-nums">
         <thead>
-          <tr className="text-left text-xs text-muted-foreground">
+          <tr className="text-left text-[10.5px] text-subtle-foreground [&>th]:eyebrow [&>th]:py-3 [&>th]:text-[10.5px]">
             <th scope="col" className="px-4 py-2 font-medium">Negócio</th>
             <th scope="col" className="px-3 py-2 font-medium">Etapa</th>
             <th scope="col" className="px-3 py-2 text-right font-medium">Mensal</th>
@@ -523,7 +555,7 @@ function LostForm({ deal, onDone }: { deal: Deal; onDone: () => void }) {
             onClick={() => setReason(option)}
             className={cn(
               "h-7 rounded-full border px-2.5 text-xs transition-colors",
-              reason === option ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              reason === option ? "border-primary bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {option}

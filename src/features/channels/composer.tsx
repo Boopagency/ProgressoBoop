@@ -194,7 +194,7 @@ export function Composer({
       ) : null}
       <div
         className={cn(
-          "rounded-xl border bg-background transition-colors md:relative focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
+          "rounded-3xl border bg-card-solid transition-colors md:relative focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
           "max-md:min-w-0 max-md:flex-1 max-md:rounded-[1.375rem]",
           request && "border-attention-line/30 bg-attention-soft/30",
           allowInternal && internal && !request && "border-dashed border-foreground/25 bg-muted/50"

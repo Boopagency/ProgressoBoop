@@ -1,10 +1,19 @@
-import { ListSkeleton, PageSkeleton } from "@/components/layout/page-skeleton"
+import { PageSkeleton } from "@/components/layout/page-skeleton"
+import { Skeleton } from "@/components/ui/skeleton"
 
-/** Tela sem linha de filtros: o conteúdo começa logo abaixo do cabeçalho. */
+/** Clientes carregando: o painel das revisões e os cartões (sem linha de filtros). */
 export default function Loading() {
   return (
     <PageSkeleton>
-      <ListSkeleton className="max-w-3xl" />
+      <Skeleton className="h-[150px] w-full rounded-3xl" />
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-20" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((card) => (
+            <Skeleton key={card} className="h-[230px] rounded-3xl" />
+          ))}
+        </div>
+      </div>
     </PageSkeleton>
   )
 }

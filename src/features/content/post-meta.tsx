@@ -321,7 +321,7 @@ export function PostRow({
     <button
       type="button"
       onClick={() => onOpen(post)}
-      className={cn("flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted/50", className)}
+      className={cn("flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-muted/50", className)}
     >
       <ClientMark clientId={post.client_id} size="md" />
       <span className="min-w-0 flex-1">

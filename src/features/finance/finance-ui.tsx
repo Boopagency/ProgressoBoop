@@ -2,6 +2,7 @@ import { AlertTriangle, ChevronLeft, ChevronRight, Info } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { MonthTitle } from "@/components/month-title"
 import { Button } from "@/components/ui/button"
 import { addPeriods, periodParam } from "@/features/clients/logic"
 import type { DreStatus, FinanceAlert } from "@/features/finance/management"
@@ -88,10 +89,13 @@ export function MonthNav({
   current,
   basePath,
   hrefFor,
+  hero = false,
 }: {
   period: DateKey
   current: DateKey
   basePath: string
+  /** No painel de destaque: o nome do mês grande, na serifada itálica. */
+  hero?: boolean
   /** Endereço de outro mês (padrão: `?mes=`), para manter outros filtros. */
   hrefFor?: (period: DateKey) => string
 }) {
@@ -103,7 +107,13 @@ export function MonthNav({
           <ChevronLeft />
         </Link>
       </Button>
-      <h2 className="min-w-44 text-center font-display text-base font-semibold text-foreground">{formatMonthYear(period)}</h2>
+      {hero ? (
+        <h2 className="min-w-0 px-1 text-center font-display text-[22px] leading-none font-medium tracking-[-0.03em] text-foreground sm:min-w-52 sm:text-[26px]">
+          <MonthTitle period={period} />
+        </h2>
+      ) : (
+        <h2 className="min-w-44 text-center font-display text-base font-semibold text-foreground">{formatMonthYear(period)}</h2>
+      )}
       <Button variant="outline" size="icon-sm" asChild aria-label="Próximo mês">
         <Link href={href(addPeriods(period, 1))} scroll={false}>
           <ChevronRight />
@@ -117,6 +127,30 @@ export function MonthNav({
         </Button>
       ) : null}
     </nav>
+  )
+}
+
+/** Pílula de vidro com um número curto (margem, MRR) no painel de destaque. */
+export function HeroChip({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="inline-flex h-8 items-center gap-2 rounded-full border border-glass-edge bg-glass px-3.5 text-xs shadow-[inset_0_1px_0_var(--glass-highlight)]">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-foreground tabular-nums">{value}</dd>
+    </div>
+  )
+}
+
+/** Vazio do financeiro: ícone em vidro, o que fazer e o botão. */
+export function FinanceEmpty({ icon, title, children, action, className }: { icon: ReactNode; title: string; children?: ReactNode; action?: ReactNode; className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center rounded-2xl border border-dashed border-foreground/15 bg-card px-6 py-14 text-center", className)}>
+      <div className="flex size-12 items-center justify-center rounded-full border border-glass-edge bg-glow-soft text-brand-ink shadow-[0_0_24px_-6px_var(--glow)] [&_svg]:size-5">
+        {icon}
+      </div>
+      <h2 className="mt-4 font-display text-[17px] font-medium tracking-tight text-foreground">{title}</h2>
+      {children ? <div className="mt-1.5 max-w-md text-sm text-muted-foreground">{children}</div> : null}
+      {action ? <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div> : null}
+    </div>
   )
 }
 

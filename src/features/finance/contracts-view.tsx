@@ -50,19 +50,19 @@ export function ContractsView({ data, today }: { data: FinanceData; today: DateK
   return (
     <div>
       <section aria-label="Resumo dos contratos" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiTile label="MRR" value={formatMoney(monthly)} hint="contratos de clientes que valem neste mês" />
-        <KpiTile
+        <KpiTile display label="MRR" value={formatMoney(monthly)} hint="contratos de clientes que valem neste mês" />
+        <KpiTile display
           label="Clientes com contrato"
           value={String(clients)}
           hint={clients > 0 ? `ticket médio de ${formatMoneyShort(Math.round(monthly / clients))} por mês` : "nenhum contrato ativo"}
         />
-        <KpiTile
+        <KpiTile display
           label="Maior cliente"
           value={top && monthly > 0 ? formatPercent(top.mrr / monthly, true) : "—"}
           alert={Boolean(top && monthly > 0 && top.mrr / monthly >= 0.5)}
           hint={top && monthly > 0 ? `do MRR é de ${clientById.get(top.clientId)?.name ?? "um cliente"}` : "concentração da receita"}
         />
-        <KpiTile label="Custos fixos por mês" value={formatMoney(fixed)} hint={`caixa mínimo: ${formatMoneyShort(fixed * data.settings.reserve_months)}`} />
+        <KpiTile display label="Custos fixos por mês" value={formatMoney(fixed)} hint={`caixa mínimo: ${formatMoneyShort(fixed * data.settings.reserve_months)}`} />
       </section>
 
       <PanelCard
@@ -73,7 +73,7 @@ export function ContractsView({ data, today }: { data: FinanceData; today: DateK
             <PanelCount value={margins.length} />
           </>
         }
-        className="mt-6"
+        className="mt-6 bg-card-solid"
       >
         {margins.length === 0 ? (
           <p className="px-4 py-4 text-[13px] text-muted-foreground">

@@ -6,6 +6,8 @@ import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
+import { DisplayValue } from "@/components/display-value"
+import { HeroEyebrow, HeroFigures, HeroPanel } from "@/components/hero-panel"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { createStarterGoal } from "@/features/goals/actions"
@@ -25,20 +27,20 @@ import type { DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const STATE_STYLE: Record<GoalState, { className: string; icon: typeof CheckCircle2 }> = {
-  upcoming: { className: "text-muted-foreground", icon: Clock },
-  on_track: { className: "text-success-ink", icon: CheckCircle2 },
-  at_risk: { className: "text-warning-ink", icon: AlertTriangle },
-  behind: { className: "text-overdue", icon: AlertTriangle },
-  achieved: { className: "text-success-ink", icon: CheckCircle2 },
-  ended: { className: "text-muted-foreground", icon: Clock },
-  missed: { className: "text-overdue", icon: AlertTriangle },
+  upcoming: { className: "border-foreground/15 text-muted-foreground", icon: Clock },
+  on_track: { className: "border-success/30 text-success-ink", icon: CheckCircle2 },
+  at_risk: { className: "border-warning/35 text-warning-ink", icon: AlertTriangle },
+  behind: { className: "border-overdue/35 text-overdue", icon: AlertTriangle },
+  achieved: { className: "border-success/30 text-success-ink", icon: CheckCircle2 },
+  ended: { className: "border-foreground/15 text-muted-foreground", icon: Clock },
+  missed: { className: "border-overdue/35 text-overdue", icon: AlertTriangle },
 }
 
 /** Situação com ícone e texto (a cor nunca vem sozinha). */
 function StateLabel({ state, className }: { state: GoalState; className?: string }) {
   const { className: tone, icon: Icon } = STATE_STYLE[state]
   return (
-    <span className={cn("inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap", tone, className)}>
+    <span className={cn("inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-xs font-medium whitespace-nowrap", tone, className)}>
       <Icon className="size-3.5" aria-hidden="true" />
       {GOAL_STATE_LABEL[state]}
     </span>
@@ -57,7 +59,10 @@ function GoalMeter({ progress, expected, label, className }: { progress: number 
       aria-valuenow={Math.round(value * 100)}
       className={cn("relative block h-1.5 rounded-full bg-muted", className)}
     >
-      <span className="block h-full rounded-full bg-brand" style={{ width: `${value * 100}%` }} />
+      <span
+        className="block h-full rounded-full bg-(image:--gradient-brand) shadow-[0_0_12px_-2px_var(--glow)] motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-glide"
+        style={{ width: `${value * 100}%` }}
+      />
       {expected > 0 && expected < 1 ? (
         <span
           aria-hidden="true"
@@ -110,6 +115,8 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
         }
       />
 
+      {goals.length > 0 ? <GoalsHero goals={goals} /> : null}
+
       {goals.length > 0 ? (
         <PageToolbar className="-mx-4 flex-nowrap overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <SegmentedControl
@@ -129,11 +136,13 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
 
       <PageBody ref={bodyRef} width="reading">
         {goals.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-              <Target className="size-5 text-muted-foreground" />
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-foreground/15 bg-card px-6 py-14 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full border border-glass-edge bg-glow-soft text-brand-ink shadow-[0_0_24px_-6px_var(--glow)]">
+              <Target className="size-5" />
             </div>
-            <h2 className="mt-4 text-sm font-semibold">Defina o que a Boop quer alcançar</h2>
+            <h2 className="mt-4 font-display text-[17px] font-medium tracking-tight text-foreground">
+              Defina o que a Boop quer <em className="emphasis text-[1.14em] text-brand-ink">alcançar</em>
+            </h2>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
               Um objetivo tem período e resultados-chave. Ligue cada resultado a um indicador (MRR, faturamento, leads,
               entregas no prazo…) e o progresso se atualiza com os dados, sem planilha paralela.
@@ -177,6 +186,39 @@ export function GoalsView({ goals, metrics, today }: { goals: ObjectiveView[]; m
   )
 }
 
+/** Painel de destaque: as metas em andamento, contadas pela situação de cada resultado-chave. */
+function GoalsHero({ goals }: { goals: ObjectiveView[] }) {
+  const current = goals.filter((goal) => goal.timing === "current")
+  const keyResults = current.flatMap((goal) => goal.keyResults)
+  const count = (states: GoalState[]) => keyResults.filter((row) => states.includes(row.state)).length
+  const attention = count(["at_risk", "behind"])
+  const period = current[0]?.objective
+  return (
+    <HeroPanel aria-label="Resumo das metas" className="mt-6">
+      <HeroEyebrow>{period ? `${formatShortDate(period.starts_on)} a ${formatShortDate(period.ends_on)}` : "Sem metas em andamento"}</HeroEyebrow>
+      <p className="mt-6 max-w-2xl font-display text-[26px] leading-[1.15] font-medium tracking-[-0.03em] text-foreground sm:mt-8 sm:text-[34px]">
+        {current.length === 0 ? (
+          <>Nenhum objetivo <em className="emphasis text-[1.14em] text-brand-ink">em andamento</em></>
+        ) : (
+          <>
+            {current.length} {current.length === 1 ? "objetivo" : "objetivos"} em andamento,{" "}
+            <em className="emphasis text-[1.14em] text-brand-ink">{attention === 0 ? "tudo no ritmo" : `${attention} pede${attention === 1 ? "" : "m"} atenção`}</em>
+          </>
+        )}
+      </p>
+      <HeroFigures
+        className="mt-7 sm:mt-9"
+        items={[
+          { key: "krs", label: "Resultados-chave", value: String(keyResults.length) },
+          { key: "ritmo", label: "No ritmo", value: String(count(["on_track"])) },
+          { key: "atencao", label: "Pedem atenção", value: String(attention), alert: attention > 0 },
+          { key: "atingidos", label: "Atingidos", value: String(count(["achieved"])) },
+        ]}
+      />
+    </HeroPanel>
+  )
+}
+
 function ObjectiveCard({
   goal,
   today,
@@ -194,11 +236,11 @@ function ObjectiveCard({
   const { objective } = goal
   const owner = objective.owner_id ? profileById.get(objective.owner_id) : undefined
   return (
-    <section aria-labelledby={`objetivo-${objective.id}`} className="overflow-hidden rounded-xl border bg-card">
-      <header className="px-4 pt-4 pb-3 sm:px-5">
+    <section aria-labelledby={`objetivo-${objective.id}`} className="overflow-hidden rounded-2xl border bg-card">
+      <header className="px-4 pt-5 pb-4 sm:px-6">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 id={`objetivo-${objective.id}`} className="text-[15px] font-semibold text-foreground">
+            <h2 id={`objetivo-${objective.id}`} className="font-display text-[17px] font-medium tracking-tight text-foreground">
               {objective.title}
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -213,11 +255,12 @@ function ObjectiveCard({
           </Button>
         </div>
         {objective.description ? <p className="mt-2 text-[13px] text-muted-foreground">{objective.description}</p> : null}
-        <div className="mt-3 flex items-center gap-3">
-          <GoalMeter progress={goal.progress} expected={goal.expected} label={`Progresso de ${objective.title}`} className="flex-1" />
-          <span className="w-12 shrink-0 text-right text-[13px] font-semibold text-foreground tabular-nums">
-            {goal.progress === null ? "—" : formatPercent(Math.max(0, goal.progress), true)}
-          </span>
+        <div className="mt-4 flex items-end gap-4">
+          <GoalMeter progress={goal.progress} expected={goal.expected} label={`Progresso de ${objective.title}`} className="mb-2 flex-1" />
+          <DisplayValue
+            value={goal.progress === null ? "—" : formatPercent(Math.max(0, goal.progress), true)}
+            className="shrink-0 text-right text-[44px] leading-[0.85] text-foreground sm:text-[52px]"
+          />
         </div>
         {goal.timing === "current" ? (
           <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
@@ -230,7 +273,7 @@ function ObjectiveCard({
           <KeyResultRow key={row.keyResult.id} row={row} onEdit={() => onEditKeyResult(row)} />
         ))}
       </ul>
-      <div className="border-t px-2 py-1.5">
+      <div className="border-t px-2 py-1.5 sm:px-3">
         <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-muted-foreground" onClick={onAddKeyResult}>
           <Plus className="size-3.5" />
           Resultado-chave
@@ -244,7 +287,7 @@ function KeyResultRow({ row, onEdit }: { row: KeyResultView; onEdit: () => void 
   const { clientById } = useWorkspace()
   const client = row.keyResult.client_id ? clientById.get(row.keyResult.client_id) : undefined
   return (
-    <li className="px-4 py-3 sm:px-5">
+    <li className="px-4 py-3.5 sm:px-6">
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
         <div className="min-w-0 flex-1">
           <button type="button" onClick={onEdit} className="text-left text-[13.5px] font-medium text-foreground hover:underline">

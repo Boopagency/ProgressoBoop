@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import { ChartTooltip, type TooltipLine } from "@/components/charts/chart-tooltip"
 import { labelEvery, niceScale } from "@/components/charts/scale"
@@ -15,12 +15,13 @@ export interface LineSeries {
 
 const STROKE: Record<LineSeries["tone"], string> = {
   primary: "stroke-chart-1",
-  secondary: "stroke-chart-2",
+  // A segunda série fica neutra (o laranja é só para status).
+  secondary: "stroke-foreground/55",
   muted: "stroke-chart-muted",
 }
 const DOT: Record<LineSeries["tone"], string> = {
   primary: "bg-chart-1",
-  secondary: "bg-chart-2",
+  secondary: "bg-foreground/55",
   muted: "bg-chart-muted",
 }
 
@@ -61,6 +62,7 @@ export function LineChart({
   className?: string
 }) {
   const [active, setActive] = useState<number | null>(null)
+  const gradientId = `linha-${useId().replace(/:/g, "")}`
   const count = labels.length
   const scale = niceScale(
     [...series.flatMap((line) => line.values.filter((value): value is number => value !== null)), ...(reference ? [reference.value] : [])],
@@ -151,6 +153,13 @@ export function LineChart({
             <span aria-hidden="true" className="absolute inset-y-0 w-px bg-muted-foreground/40" style={{ left: `${x(active)}%` }} />
           ) : null}
           <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible">
+            <defs>
+              {/* Área sob a linha: o azul elétrico que some até o eixo. */}
+              <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="var(--glow)" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="var(--glow)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             {series.map((line) => {
               const points = line.values
                 .map((value, index) => (value === null ? null : { index, x: x(index), y: scale.y(value) }))
@@ -164,11 +173,19 @@ export function LineChart({
                   {area && series.length === 1 && points.length > 1 ? (
                     <path
                       d={`${pathOf(points)} L${points[points.length - 1]!.x},${scale.y(0)} L${points[0]!.x},${scale.y(0)} Z`}
-                      className="fill-chart-1 opacity-10"
+                      fill={`url(#${gradientId})`}
                     />
                   ) : null}
                   {solid.length > 1 ? (
-                    <path d={pathOf(solid)} fill="none" vectorEffect="non-scaling-stroke" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" className={STROKE[line.tone]} />
+                    <path
+                      d={pathOf(solid)}
+                      fill="none"
+                      vectorEffect="non-scaling-stroke"
+                      strokeWidth={line.tone === "primary" ? 2.25 : 2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      className={cn(STROKE[line.tone], line.tone === "primary" && "dark:drop-shadow-[0_0_6px_var(--glow)]")}
+                    />
                   ) : null}
                   {projected.length > 1 ? (
                     <path
@@ -194,7 +211,8 @@ export function LineChart({
                 key={`${line.key}-${index}`}
                 aria-hidden="true"
                 className={cn(
-                  "absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-card",
+                  "absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-card-solid",
+                  line.tone === "primary" && "shadow-[0_0_10px_var(--glow)]",
                   forecastFrom !== undefined && index >= forecastFrom && line.tone === "primary" ? "bg-chart-1-light" : DOT[line.tone]
                 )}
                 style={{ left: `${x(index)}%`, top: `${scale.y(line.values[index]!)}%` }}

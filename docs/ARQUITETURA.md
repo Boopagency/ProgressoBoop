@@ -1550,8 +1550,9 @@ Regras:
 - **Exceções:** Processo (o título é editável no próprio texto; a linha de
   cima tem a área, o salvamento e as ações, na altura do título das outras
   telas) e Comunicações (tela cheia, com a lista de canais; só a entrada
-  suave). Indicadores e Financeiro têm, abaixo da linha de filtros, as abas
-  das áreas e das seções.
+  suave). Indicadores tem o período, a comparação e as áreas num painel de
+  destaque logo abaixo do cabeçalho; Financeiro tem, abaixo do cabeçalho, as
+  abas das seções.
 - **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
 - **Carregamento:** cada `loading.tsx` usa `PageSkeleton`
   (`components/layout/page-skeleton.tsx`: moldura, cabeçalho, linha de
@@ -1946,13 +1947,26 @@ protagonista). Nada de cor fixa nas telas.
   fina e número grande) nos painéis de destaque; `hero-aurora` (luz em
   faixas verticais atrás do vidro) só nos destaques do Hoje, do Início do
   portal e do login.
+- **Telas de gestão (lote 2C):** `HeroPanel` (`components/hero-panel.tsx`,
+  o `glass-panel` com a luz azul no canto, um por tela: o mês do
+  Financeiro, o período dos Indicadores, o resumo das Metas), `HeroFigures`
+  (linha-guia, rótulo `eyebrow` e o número grande) e `DisplayValue`
+  (`components/display-value.tsx`: o número em `display-number` com o "R$",
+  os centavos ou a unidade menores, sem mudar o valor). `KpiTile` ganhou
+  `display` (número grande); os gráficos usam o gradiente do azul da marca
+  ao elétrico e a segunda série neutra (o laranja fica para status).
+  `MonthTitle`/`PeriodTitle` põem o mês na serifada itálica. O relatório
+  (`/relatorio`) tira o tema escuro na hora de imprimir.
 - **Movimento:** `--ease-glide` e `--ease-swift`, tempos de 150, 240 e 480 ms;
   tudo com `motion-safe:` ou `prefers-reduced-motion`.
 - **Reduzir transparência:** com `prefers-reduced-transparency`, os tokens de
   vidro viram sólidos, os brilhos e a aurora somem e não há desfoque.
 - **Vitrine** (`/vitrine`, só em desenvolvimento; em produção, `notFound()`):
   as peças e as telas Hoje, Início do portal e Tarefas com dados de exemplo
-  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. A casca da vitrine
+  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. As telas de gestão
+  (lote 2C: Indicadores, Metas, Financeiro, Relatórios, Decisões e Processos)
+  ficam em `/vitrine/admin-c`, com os exemplos em
+  `src/app/vitrine/admin-c/fixtures.ts`. A casca da vitrine
   usa as mesmas classes do admin e do portal
   (`components/layout/shell-classes.ts`).
   As telas de relacionamento (Conteúdo, post, Clientes, cliente,

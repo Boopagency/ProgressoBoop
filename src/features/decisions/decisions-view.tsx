@@ -4,6 +4,7 @@ import { Gavel, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
+import { MonthTitle } from "@/components/month-title"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
@@ -153,11 +154,13 @@ export function DecisionsView({
 
       <PageBody ref={bodyRef}>
         {decisions.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-              <Gavel className="size-5 text-muted-foreground" />
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-foreground/15 bg-card px-6 py-16 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full border border-glass-edge bg-glow-soft text-brand-ink shadow-[0_0_24px_-6px_var(--glow)]">
+              <Gavel className="size-5" />
             </div>
-            <h2 className="mt-4 text-sm font-semibold">Nenhuma decisão registrada</h2>
+            <h2 className="mt-4 font-display text-[17px] font-medium tracking-tight text-foreground">
+              Nenhuma decisão <em className="emphasis text-[1.14em] text-brand-ink">registrada</em>
+            </h2>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
               Preço mínimo, política de prazos, a escolha de um fornecedor: registre o que ficou definido e o porquê,
               para ninguém precisar lembrar de cabeça. Na reunião, use o cartão “Decisões”.
@@ -172,10 +175,13 @@ export function DecisionsView({
           <>
             {groups.map((group) => (
               <section key={group.month} aria-label={formatMonthYear(`${group.month}-01`)}>
-                <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  {formatMonthYear(`${group.month}-01`)}
+                <h2 className="flex items-baseline gap-2.5 font-display text-[19px] font-medium tracking-[-0.02em] text-foreground">
+                  <span>
+                    <MonthTitle period={`${group.month}-01`} />
+                  </span>
+                  <span className="font-sans text-[13px] font-normal tracking-normal text-muted-foreground tabular-nums">{group.decisions.length}</span>
                 </h2>
-                <ul className="mt-2 divide-y rounded-xl border bg-card">
+                <ul className="mt-3 divide-y overflow-hidden rounded-2xl border bg-card">
                   {group.decisions.map((decision) => {
                     const client = decision.client_id ? clientById.get(decision.client_id) : undefined
                     const project = decision.project_id ? projectById.get(decision.project_id) : undefined
@@ -183,7 +189,14 @@ export function DecisionsView({
                     const meetingDay = decision.meeting_id ? meetingDate.get(decision.meeting_id) : undefined
                     const revoked = decision.status === "revoked"
                     return (
-                      <li key={decision.id} className="group relative px-4 py-3.5 transition-colors hover:bg-muted/40">
+                      <li key={decision.id} className="group relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-4 sm:px-5">
+                        {/* O dia grande, na serifada itálica: a linha do tempo do mês. */}
+                        <span aria-hidden="true" className="row-span-3 flex flex-col items-center pt-0.5">
+                          <span className={cn("display-number text-[30px] leading-none sm:text-[36px]", revoked ? "text-muted-foreground" : "text-foreground")}>
+                            {decision.decided_on.slice(8, 10)}
+                          </span>
+                          <span className={cn("mt-1 size-1.5 rounded-full", revoked ? "bg-muted-foreground/50" : "bg-glow shadow-[0_0_8px_var(--glow)]")} />
+                        </span>
                         <button
                           type="button"
                           onClick={() => setDialog((current) => ({ open: true, key: current.key + 1, decision }))}
@@ -191,7 +204,7 @@ export function DecisionsView({
                         >
                           <span
                             className={cn(
-                              "block text-[14px] leading-6 font-medium text-foreground",
+                              "block font-display text-[15px] leading-6 font-medium tracking-[-0.01em] text-foreground",
                               revoked && "text-muted-foreground line-through"
                             )}
                           >
@@ -203,10 +216,12 @@ export function DecisionsView({
                             <Highlight text={decision.context} query={filters.query} />
                           </p>
                         ) : null}
-                        <p className="relative z-10 mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                        <p className="relative z-10 mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                           <span className="tabular-nums">{formatShortDate(decision.decided_on, today)}</span>
-                          {revoked ? <span className="rounded-full border border-dashed px-1.5">revogada</span> : null}
-                          {decision.area ? <><span aria-hidden="true">·</span>{TASK_AREA_LABEL[decision.area]}</> : null}
+                          {revoked ? <span className="inline-flex h-5 items-center rounded-full border border-dashed border-foreground/25 px-2">revogada</span> : null}
+                          {decision.area ? (
+                            <span className="inline-flex h-5 items-center rounded-full border border-foreground/15 px-2 text-foreground/85">{TASK_AREA_LABEL[decision.area]}</span>
+                          ) : null}
                           {client ? (
                             <>
                               <span aria-hidden="true">·</span>

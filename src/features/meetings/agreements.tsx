@@ -263,7 +263,7 @@ function AgreementForm({ api }: { api: MeetingItemsApi }) {
         maxLength={ITEM_MAX}
         placeholder="O que ficou combinado?"
         aria-label="Novo combinado"
-        className="field-sizing-content max-h-40 min-h-9 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm leading-5 text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="field-sizing-content max-h-40 min-h-9 w-full resize-none rounded-md border border-input bg-card dark:bg-input/30 px-3 py-2 text-sm leading-5 text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
       />
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <OwnerPicker value={owner} onChange={setOwner} className="h-7 px-2" />

@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary bg-[linear-gradient(180deg,rgb(255_255_255/0.14),transparent_60%)] text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_22px_-10px_rgb(47_107_240/0.9)] hover:bg-[#3a76f5] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_10px_28px_-8px_rgb(61_126_255/0.9)]",
+          "bg-primary bg-[linear-gradient(180deg,rgb(255_255_255/0.14),transparent_60%)] text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_22px_-10px_rgb(47_107_240/0.9)] hover:bg-glow hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_10px_28px_-8px_rgb(61_126_255/0.9)]",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
         outline:
@@ -35,7 +35,7 @@ const buttonVariants = cva(
         "icon-lg": "size-10",
         /* Botão redondo da seta (CTA das telas vitrine): contorno fino que brilha ao passar. */
         circle:
-          "size-12 border border-foreground/25 bg-transparent text-foreground shadow-none hover:border-glow hover:bg-glow hover:text-white hover:shadow-glow [&_svg:not([class*='size-'])]:size-5",
+          "size-12 border border-foreground/25 bg-transparent text-foreground shadow-none hover:border-glow hover:bg-glow hover:text-primary-foreground hover:shadow-glow [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {

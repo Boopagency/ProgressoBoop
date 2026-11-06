@@ -358,7 +358,7 @@ function CommentComposer({ target, onAdded }: { target: CommentTarget; onAdded: 
     <div
       role="group"
       aria-label="Novo comentário"
-      className="rounded-lg border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20"
+      className="rounded-lg border border-input bg-card focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20"
     >
       <Textarea
         value={body}

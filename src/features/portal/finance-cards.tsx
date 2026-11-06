@@ -1,7 +1,9 @@
 import { CircleAlert, CircleCheck } from "lucide-react"
 import Link from "next/link"
 
+import { HeroPanel } from "@/components/hero-panel"
 import { PanelCard, PanelCount } from "@/components/panel-card"
+import { StatGrid } from "@/components/stat-grid"
 import { dueLabel, overdueNoticeText, type FinanceItem } from "@/features/finance/logic"
 import { formatMoney } from "@/features/finance/money"
 import { formatShortDate } from "@/lib/dates"
@@ -39,17 +41,6 @@ export function OverdueNotice({ overdue, communicationHref }: { overdue: Finance
   )
 }
 
-/** Valor em reais com o "R$" pequeno e o número grande na serifada. */
-function Money({ cents, className }: { cents: number; className?: string }) {
-  const [symbol, ...rest] = formatMoney(cents).split(" ")
-  return (
-    <span className={cn("inline-flex items-baseline gap-1.5", className)}>
-      <span className="font-sans text-sm text-muted-foreground not-italic">{symbol}</span>
-      <span className="display-number">{rest.join(" ")}</span>
-    </span>
-  )
-}
-
 const sum = (items: FinanceItem[]) => items.reduce((total, item) => total + item.amount_cents, 0)
 
 /**
@@ -76,10 +67,7 @@ export function FinanceStatus({
   ]
 
   return (
-    <section
-      aria-label="Situação dos pagamentos"
-      className="relative isolate overflow-hidden rounded-[2rem] glass-panel px-5 pt-5 pb-6 sm:px-8 sm:pt-7 sm:pb-8"
-    >
+    <HeroPanel aria-label="Situação dos pagamentos" light="none">
       <span
         aria-hidden="true"
         className={cn(
@@ -110,22 +98,12 @@ export function FinanceStatus({
         </div>
       </div>
 
-      <div className={cn("mt-6 grid gap-x-6 gap-y-4 sm:mt-8 sm:gap-y-6", numbers.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
-        {numbers.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="border-t border-foreground/15 pt-3 outline-none transition-colors hover:border-glow focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          >
-            <p className="flex items-center gap-1.5 eyebrow text-muted-foreground">
-              {item.alert ? <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" /> : null}
-              {item.label}
-            </p>
-            <Money cents={item.cents} className={cn("mt-2 [&_.display-number]:text-[34px] [&_.display-number]:leading-[0.9] sm:[&_.display-number]:text-[46px]", item.alert && "[&_.display-number]:text-overdue")} />
-          </a>
-        ))}
-      </div>
-    </section>
+      <StatGrid
+        variant="line"
+        className="mt-6 sm:mt-8"
+        items={numbers.map((item) => ({ label: item.label, value: formatMoney(item.cents), href: item.href, alert: item.alert }))}
+      />
+    </HeroPanel>
   )
 }
 

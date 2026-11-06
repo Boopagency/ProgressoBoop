@@ -164,7 +164,7 @@ function ViewChip({
             className={cn(
               "mr-1 inline-flex size-5 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
               active
-                ? "text-primary-foreground/75 hover:bg-white/15 hover:text-primary-foreground"
+                ? "text-primary-foreground/75 hover:bg-primary-foreground/15 hover:text-primary-foreground"
                 : "text-subtle-foreground hover:bg-muted hover:text-foreground"
             )}
           >

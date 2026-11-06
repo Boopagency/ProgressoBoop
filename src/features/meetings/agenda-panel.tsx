@@ -206,7 +206,7 @@ function StaticCheck({ done }: { done: boolean }) {
       role="img"
       className={cn(
         "mt-[1px] grid size-[18px] shrink-0 place-content-center rounded-full border-[1.5px]",
-        done ? "border-success bg-success text-white" : "border-muted-foreground/35"
+        done ? "border-success bg-success text-primary-foreground" : "border-muted-foreground/35"
       )}
     >
       {done ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -416,7 +416,7 @@ function FrozenTaskRow({ task, showAssignees }: { task: AgendaTask; showAssignee
         aria-hidden="true"
         className={cn(
           "mt-[1px] grid size-[18px] shrink-0 place-content-center rounded-full border-[1.5px]",
-          done ? "border-success bg-success text-white" : "border-muted-foreground/35"
+          done ? "border-success bg-success text-primary-foreground" : "border-muted-foreground/35"
         )}
       >
         {done ? <Check className="size-3" strokeWidth={3} /> : null}

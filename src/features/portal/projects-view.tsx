@@ -2,8 +2,9 @@ import { ArrowUpRight, FolderOpen } from "lucide-react"
 import Link from "next/link"
 
 import { PageBody, PageContainer } from "@/components/layout/page"
+import { EmptyPanel } from "@/components/empty-panel"
 import { nextStep, projectPercent, templateName, type PortalProject, type PortalStep } from "@/features/portal/project-logic"
-import { PortalEmpty, PortalHeader } from "@/features/portal/portal-ui"
+import { PortalHeader } from "@/features/portal/portal-ui"
 import { ProjectStatusBadge, ProjectTiming } from "@/features/projects/project-meta"
 import { formatShortDate } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
@@ -57,10 +58,10 @@ export function PortalProjectsView({ clientName, projects, steps, today, project
 
       <PageBody>
         {projects.length === 0 ? (
-          <PortalEmpty icon={FolderOpen} title="Nenhum projeto por aqui ainda">
+          <EmptyPanel icon={FolderOpen} title="Nenhum projeto por aqui ainda">
             Quando a equipe começar um site, uma identidade visual ou outro projeto para você, ele aparece aqui com o
             andamento e as etapas.
-          </PortalEmpty>
+          </EmptyPanel>
         ) : (
           <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2 lg:gap-5">
             {projects.map((project, index) => {

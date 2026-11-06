@@ -834,9 +834,12 @@
 }
 
 /*
- * Editor dos Processos (BlockNote, variante shadcn): fonte, cores e escala de
- * títulos do app. Em telas médias e grandes o texto fica alinhado ao título
- * da página e o menu do bloco (arrastar / +) aparece na margem esquerda.
+ * Editor dos Processos (BlockNote, variante shadcn) no sistema visual: o texto
+ * em Inter, os títulos em Poppins, links e foco no azul, e os menus do editor
+ * (o "/", a barra de formatação, o menu do bloco, os seletores) em vidro
+ * fosco como os outros menus do app (`glass-surface` + borda de vidro). Em
+ * telas médias e grandes o texto fica alinhado ao título da página e o menu
+ * do bloco (arrastar / +) aparece na margem esquerda.
  */
 /* .bn-root.boop-editor: precisa vencer as variáveis que o BlockNote define em .bn-root. */
 .bn-root.boop-editor {
@@ -846,10 +849,15 @@
   --bn-colors-side-menu: var(--subtle-foreground);
   --bn-colors-border: var(--border);
   --bn-colors-hovered-background: var(--accent);
-  --bn-colors-menu-background: var(--popover);
+  --bn-colors-hovered-text: var(--foreground);
+  --bn-colors-selected-background: var(--brand-soft);
+  --bn-colors-selected-text: var(--foreground);
+  --bn-colors-menu-background: var(--glass-strong);
   --bn-colors-menu-text: var(--popover-foreground);
-  --bn-colors-tooltip-background: var(--primary);
-  --bn-colors-tooltip-text: var(--primary-foreground);
+  --bn-colors-tooltip-background: var(--foreground);
+  --bn-colors-tooltip-text: var(--background);
+  --bn-colors-shadow: transparent;
+  --bn-border-radius: var(--radius);
 }
 
 .boop-editor .bn-editor {
@@ -858,6 +866,21 @@
   font-family: var(--bn-font-family);
   font-size: 15px;
   line-height: 1.65;
+  color: var(--foreground);
+  caret-color: var(--glow);
+}
+
+.boop-editor .bn-editor ::selection {
+  background-color: color-mix(in oklab, var(--glow) 28%, transparent);
+  color: inherit;
+}
+
+/* Bloco selecionado (arrastar, imagem): o contorno azul do foco, não o azul padrão do editor. */
+.boop-editor .bn-block-content.ProseMirror-selectednode > ::after,
+.boop-editor .ProseMirror-selectednode > .bn-block-content > ::after {
+  background-color: var(--brand-soft);
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--glow) 55%, transparent);
+  border-radius: 0.5rem;
 }
 
 @media (min-width: 768px) {
@@ -876,11 +899,11 @@
 
 .boop-editor .bn-block-content[data-content-type="heading"] {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .boop-editor .bn-block-outer:not([data-prev-type]) > .bn-block > .bn-block-content[data-content-type="heading"] {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .boop-editor [data-content-type="heading"][data-level="1"] {
@@ -895,11 +918,48 @@
   --level: 1.1em;
 }
 
+.boop-editor .bn-inline-content::before,
+.boop-editor .bn-inline-content.is-empty::before {
+  color: var(--subtle-foreground);
+}
+
 .boop-editor .bn-editor a {
   color: var(--brand-ink);
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--brand-ink) 40%, transparent);
   text-underline-offset: 2px;
+}
+
+.boop-editor .bn-inline-content code {
+  border-radius: 0.375rem;
+  background-color: var(--muted);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+.boop-editor [data-content-type="quote"] blockquote {
+  border-left: 2px solid var(--glow);
+  color: var(--muted-foreground);
+}
+
+.boop-editor [data-content-type="codeBlock"] > pre {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--card-solid);
+  color: var(--foreground);
+}
+
+.boop-editor .bn-editor table {
+  border-color: var(--border);
+}
+
+.boop-editor .bn-editor th,
+.boop-editor .bn-editor td {
+  border-color: var(--border);
+}
+
+.boop-editor .bn-editor th {
+  background-color: var(--muted);
 }
 
 .boop-editor [data-file-block] .bn-visual-media {
@@ -908,6 +968,71 @@
 
 .boop-editor .bn-block-content[data-content-type="checkListItem"] > div > input {
   accent-color: var(--primary);
+}
+
+/* Menus do editor: o mesmo vidro dos menus do app (desfoque, borda clara, sombra flutuante). */
+.boop-editor .bg-popover {
+  border: 1px solid var(--glass-edge);
+  background-color: var(--glass-strong);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: var(--shadow-float);
+  --tw-ring-shadow: 0 0 #0000;
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.boop-editor .bn-suggestion-menu {
+  border-radius: 1rem;
+  padding: 0.375rem;
+}
+
+.boop-editor .bn-suggestion-menu-label {
+  padding-top: 0.625rem;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.boop-editor .bn-suggestion-menu-item {
+  border-radius: 0.625rem;
+}
+
+/* Item em foco no "/": o azul do que está ativo, com o ícone aceso. */
+.boop-editor .bn-suggestion-menu-item[aria-selected="true"] {
+  background-color: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--glow) 30%, transparent);
+}
+
+.boop-editor .bn-suggestion-menu-item[aria-selected="true"] svg {
+  color: var(--brand-ink);
+}
+
+.boop-editor .bn-formatting-toolbar,
+.boop-editor .bn-link-toolbar {
+  border-radius: 9999px;
+  padding: 0.25rem 0.375rem;
+}
+
+.boop-editor .bn-toolbar button[data-state="on"],
+.boop-editor .bn-toolbar button[aria-pressed="true"] {
+  background-color: var(--brand-soft);
+  color: var(--brand-ink);
+}
+
+.boop-editor .bn-side-menu button {
+  border-radius: 0.5rem;
+  color: var(--subtle-foreground);
+}
+
+.boop-editor .bn-side-menu button:hover {
+  background-color: var(--accent);
+  color: var(--foreground);
 }
 
 /* No celular (toque), a área de toque de um botão pequeno chega a 44 px (um

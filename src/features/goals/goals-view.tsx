@@ -7,7 +7,8 @@ import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { DisplayValue } from "@/components/display-value"
-import { HeroEyebrow, HeroFigures, HeroPanel } from "@/components/hero-panel"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
+import { StatGrid } from "@/components/stat-grid"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { createStarterGoal } from "@/features/goals/actions"
@@ -206,7 +207,8 @@ function GoalsHero({ goals }: { goals: ObjectiveView[] }) {
           </>
         )}
       </p>
-      <HeroFigures
+      <StatGrid
+        variant="line"
         className="mt-7 sm:mt-9"
         items={[
           { key: "krs", label: "Resultados-chave", value: String(keyResults.length) },

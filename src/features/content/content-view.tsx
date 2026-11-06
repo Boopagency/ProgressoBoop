@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { EmptyPanel } from "@/components/empty-panel"
 import { KANBAN_SCREEN_HEIGHT } from "@/components/kanban"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
-import { NumberTiles } from "@/components/number-tiles"
+import { StatGrid } from "@/components/stat-grid"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -279,7 +279,7 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
 
       <PageBody>
         <section aria-label="Números do conteúdo">
-          <NumberTiles
+          <StatGrid
             items={[
               {
                 label: "Nesta semana",

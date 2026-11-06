@@ -184,7 +184,7 @@ function KeyResultForm({
               onClick={() => setMode(option)}
               className={cn(
                 "h-7 rounded-md px-3 text-[13px] font-medium text-muted-foreground",
-                mode === option && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+                mode === option && "bg-card-solid text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
               )}
             >
               {option === "auto" ? "Indicador do sistema" : "Valor manual"}
@@ -249,7 +249,7 @@ function KeyResultForm({
                             type="button"
                             title={suggestion.hint}
                             onClick={() => setTarget(valueToInput(suggestion.value, metric.unit))}
-                            className="h-7 rounded-full border bg-background px-2.5 text-xs text-foreground transition-colors hover:border-foreground/40"
+                            className="h-7 rounded-full border bg-card px-2.5 text-xs text-foreground transition-colors hover:border-foreground/40"
                           >
                             {suggestion.label}: <span className="tabular-nums">{formatMetric(suggestion.value, metric.unit)}</span>
                           </button>

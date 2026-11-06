@@ -94,7 +94,7 @@ export function PortalMessageBubble({
         <div
           className={cn(
             "max-w-full rounded-2xl px-3 py-2 text-sm leading-5 break-words whitespace-pre-line text-foreground",
-            mine ? "rounded-tr-md bg-brand-soft" : "rounded-tl-md bg-muted max-md:bg-card",
+            mine ? "rounded-tr-md border border-glow/20 bg-glow-soft" : "rounded-tl-md border border-border bg-muted max-md:bg-card",
             "max-md:relative max-md:flow-root max-md:px-2.5 max-md:pt-1 max-md:pb-1.5 max-md:text-[15px] max-md:leading-[1.4] max-md:shadow-[0_1px_0.5px_rgb(0_0_0/0.12)]",
             // O "rabinho" da primeira mensagem de cada sequência, para o lado de quem escreveu.
             !continued && "max-md:before:absolute max-md:before:top-0 max-md:before:h-2.5 max-md:before:w-2 max-md:before:bg-inherit",

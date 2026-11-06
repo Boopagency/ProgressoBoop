@@ -84,25 +84,49 @@ export function ReviewPanel({ postId }: { postId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 sm:flex-row sm:items-center">
-      <p className="flex-1 text-[13px] leading-5 text-foreground">
-        Este post está esperando a sua resposta. Aprove ou conte o que precisa mudar.
-      </p>
-      {/* No celular, os botões ficam numa barra fixa embaixo, como num app. */}
-      <div
-        className={cn(
-          "flex gap-2",
-          "max-md:fixed max-md:inset-x-0 max-md:bottom-[var(--app-bottom-bar,0px)] max-md:z-30 max-md:border-t max-md:bg-background/95 max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:backdrop-blur"
-        )}
-      >
-        <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="flex-1 max-md:h-11 md:flex-none">
-          <PencilLine />
-          Pedir ajuste
-        </Button>
-        <Button type="button" size="sm" onClick={() => open("approve")} className="flex-1 max-md:h-11 md:flex-none">
-          <Check />
-          Aprovar
-        </Button>
+    <section
+      aria-labelledby="resposta-titulo"
+      // No celular, sem desfoque nem overflow escondido: os dois prenderiam a barra fixa dos botões dentro do painel.
+      className="relative rounded-[1.75rem] border bg-card px-5 py-5 sm:px-7 sm:py-6 md:isolate md:overflow-hidden md:glass-panel"
+    >
+      {/* Um brilho azul discreto no canto: é o destaque desta tela. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -right-16 -z-10 size-64 rounded-full bg-glow/25 blur-3xl max-md:hidden"
+      />
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 eyebrow text-muted-foreground">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_10px_var(--glow)]" />
+            Sua resposta
+          </p>
+          <h2
+            id="resposta-titulo"
+            className="mt-2.5 font-display text-[22px] leading-tight font-medium tracking-[-0.03em] text-foreground sm:text-[26px]"
+          >
+            Este post espera a sua{" "}
+            <em className="emphasis pr-[0.05em] text-[1.14em] leading-none text-gradient-brand">resposta</em>
+          </h2>
+          <p className="mt-1.5 max-w-xl text-[13.5px] leading-5 text-muted-foreground">
+            Aprove ou conte o que precisa mudar. A equipe recebe na hora.
+          </p>
+        </div>
+        {/* No celular, os botões ficam numa barra fixa de vidro embaixo, como num app. */}
+        <div
+          className={cn(
+            "flex shrink-0 gap-2",
+            "max-md:fixed max-md:inset-x-0 max-md:bottom-[var(--app-bottom-bar,0px)] max-md:z-30 max-md:border-t max-md:border-glass-edge max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:glass-surface"
+          )}
+        >
+          <Button type="button" variant="outline" onClick={() => open("changes")} className="flex-1 max-md:h-11 md:h-10 md:flex-none md:px-5">
+            <PencilLine />
+            Pedir ajuste
+          </Button>
+          <Button type="button" onClick={() => open("approve")} className="flex-1 max-md:h-11 md:h-10 md:flex-none md:px-6">
+            <Check />
+            Aprovar
+          </Button>
+        </div>
       </div>
       <DecisionDialog
         key={dialogKey}
@@ -112,7 +136,7 @@ export function ReviewPanel({ postId }: { postId: string }) {
         decision={decision}
         onOpenChange={(value) => (value ? null : setDecision(null))}
       />
-    </div>
+    </section>
   )
 }
 
@@ -130,12 +154,12 @@ export function StepReviewButtons({ stepId }: { stepId: string }) {
   }
 
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      <Button type="button" size="sm" onClick={() => open("approve")} className="h-8">
+    <div className="mt-3 flex flex-wrap gap-2">
+      <Button type="button" size="sm" onClick={() => open("approve")} className="h-9 px-4">
         <Check />
         Aprovar
       </Button>
-      <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="h-8">
+      <Button type="button" variant="outline" size="sm" onClick={() => open("changes")} className="h-9 px-4">
         <PencilLine />
         Pedir ajustes
       </Button>

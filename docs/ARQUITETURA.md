@@ -1966,7 +1966,10 @@ protagonista). Nada de cor fixa nas telas.
   (`src/app/vitrine/fixtures.ts`), sem consultar o banco. As telas de gestão
   (lote 2C: Indicadores, Metas, Financeiro, Relatórios, Decisões e Processos)
   ficam em `/vitrine/admin-c`, com os exemplos em
-  `src/app/vitrine/admin-c/fixtures.ts`. A casca da vitrine
+  `src/app/vitrine/admin-c/fixtures.ts`. As outras telas do portal ficam em
+  `/vitrine/portal-telas` (exemplos em `exemplos.ts`, ao lado): cada tela do
+  portal é uma view com props (`features/portal/*-view.tsx`), e a página só
+  busca os dados. A casca da vitrine
   usa as mesmas classes do admin e do portal
   (`components/layout/shell-classes.ts`).
   As telas de relacionamento (Conteúdo, post, Clientes, cliente,

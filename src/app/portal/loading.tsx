@@ -1,21 +1,21 @@
-import { PageSkeleton } from "@/components/layout/page-skeleton"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PortalPageSkeleton } from "@/features/portal/portal-skeleton"
 
 /**
- * Portal carregando, com a geometria das telas: o título e o primeiro bloco
- * já ficam onde a tela vai mostrá-los, e a troca de tela dá retorno na hora
- * (sem o esqueleto, a tela anterior ficava parada até a nova chegar).
+ * Portal carregando, com a geometria das telas: o cabeçalho e o primeiro
+ * bloco já ficam onde a tela vai mostrá-los, e a troca de tela dá retorno na
+ * hora (sem o esqueleto, a tela anterior ficava parada até a nova chegar).
  */
 export default function Loading() {
   return (
-    <PageSkeleton actions={false}>
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-x-10">
+    <PortalPageSkeleton stats={2}>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-8">
-          <Skeleton className="h-40 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-48 rounded-[1.75rem]" />
+          <Skeleton className="h-36 rounded-[1.75rem]" />
         </div>
-        <Skeleton className="hidden h-56 rounded-xl lg:block" />
+        <Skeleton className="hidden h-64 rounded-[1.75rem] lg:block" />
       </div>
-    </PageSkeleton>
+    </PortalPageSkeleton>
   )
 }

@@ -981,7 +981,8 @@ post e no projeto aberto, o topo mostra o "voltar".
 - **Feed:** a prévia do Instagram como na Central de Conteúdo (foto, @,
   número de posts, bio e o grid na mesma ordem, fixados primeiro), só com os
   posts que o cliente vê. Stories não entram.
-  Em cima, o cartão **Instagram** (o mesmo da equipe): a própria cliente
+  O cartão **Instagram** (o mesmo da equipe) fica em cima no celular e, no
+  computador, ao lado do feed, com a legenda dos pontos: a própria cliente
   conecta a conta pelo Instagram, sem passar a senha.
 - **Post aberto:** a situação, o formato, as redes e a data; as imagens
   dos slides uma de cada vez (a capa só aparece se não houver slide com
@@ -1082,7 +1083,8 @@ post e no projeto aberto, o topo mostra o "voltar".
   equipe vira só leitura.
 - **Documentos:** os arquivos que a equipe enviou para o cliente
   (contrato, briefing, marca, relatório, outro), separados por tipo, com
-  nome, descrição, data e tamanho; **Abrir** (PDF, imagem, vídeo e texto
+  nome, descrição, data e tamanho (no topo, as pílulas dos tipos levam a cada
+  grupo); **Abrir** (PDF, imagem, vídeo e texto
   abrem no navegador) e **Baixar** (com o nome original). Só os que a
   equipe deixou visíveis; o do aviso "Novo documento" vem destacado.
 - **Financeiro:** o selo **Em dia** ou **Pagamento em aberto** (quantas
@@ -1097,8 +1099,8 @@ post e no projeto aberto, o topo mostra o "voltar".
   Financeiro e do Início: "Consta um pagamento em aberto de R$ 3.500,00,
   vencido em 25/10. Se já pagou, desconsidere ou avise a gente pela
   Comunicação." No celular, fica em Mais.
-- **Notificações:** os avisos da conta, do mais novo para o mais antigo,
-  com os não lidos marcados e **Marcar todas como lidas**: a equipe
+- **Notificações:** os avisos da conta, do mais novo para o mais antigo
+  (separados em Hoje, Ontem e Antes), com os não lidos marcados e **Marcar todas como lidas**: a equipe
   respondeu (num post, num projeto ou na Comunicação), post para aprovar,
   etapa para aprovar, etapa concluída, documento novo e pagamento em
   aberto (3 dias depois do vencimento sem registro, uma vez por cobrança). Abrir um aviso o

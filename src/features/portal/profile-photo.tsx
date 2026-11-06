@@ -1,7 +1,7 @@
 "use client"
 
-import { ContentImage } from "@/features/content/content-image"
 import { clientColor } from "@/features/content/post-meta"
+import { PortalImage } from "@/features/portal/portal-image"
 import { cn } from "@/lib/utils"
 
 /**
@@ -40,7 +40,7 @@ export function ProfilePhoto({
         className
       )}
     >
-      {path ? <ContentImage path={path} alt={`Foto de ${name}`} fallback={initial} /> : initial}
+      {path ? <PortalImage path={path} alt={`Foto de ${name}`} fallback={initial} /> : initial}
     </span>
   )
 }

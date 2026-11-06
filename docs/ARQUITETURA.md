@@ -1952,7 +1952,10 @@ protagonista). Nada de cor fixa nas telas.
   vidro viram sólidos, os brilhos e a aurora somem e não há desfoque.
 - **Vitrine** (`/vitrine`, só em desenvolvimento; em produção, `notFound()`):
   as peças e as telas Hoje, Início do portal e Tarefas com dados de exemplo
-  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. A casca da vitrine
+  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. As outras telas do
+  portal ficam em `/vitrine/portal-telas` (exemplos em `exemplos.ts`, ao lado):
+  cada tela do portal é uma view com props (`features/portal/*-view.tsx`), e a
+  página só busca os dados. A casca da vitrine
   usa as mesmas classes do admin e do portal
   (`components/layout/shell-classes.ts`).
 

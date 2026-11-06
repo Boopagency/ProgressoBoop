@@ -1,33 +1,13 @@
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 
-import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
-import { Button } from "@/components/ui/button"
-import { groupByDay } from "@/features/content/logic"
+import { PortalCalendarView } from "@/features/portal/calendar-view"
 import { getPortalPosts } from "@/features/portal/content-queries"
 import { portalHref } from "@/features/portal/links"
-import { PostListItem, StatusDot } from "@/features/portal/post-meta"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
-import {
-  addMonthsToKey,
-  capitalize,
-  eachDayKey,
-  formatDayMonth,
-  formatMonthYear,
-  formatWeekdayShort,
-  isDateKey,
-  isWithin,
-  monthGridRangeOf,
-  monthRangeOf,
-  todayKey,
-} from "@/lib/dates"
+import { isDateKey, todayKey } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Calendário" }
-
-const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const
 
 /** Mês pedido em `?mes=aaaa-mm`; sem ele (ou inválido), o mês de hoje. */
 function monthAnchor(requested: unknown, today: DateKey): DateKey {
@@ -42,125 +22,16 @@ export default async function PortalCalendarPage(props: PageProps<"/portal/calen
   const today = todayKey()
   const anchor = monthAnchor(searchParams.mes, today)
   const posts = await getPortalPosts(client.id)
-
-  const month = monthRangeOf(anchor)
-  const days = eachDayKey(monthGridRangeOf(anchor))
-  const byDay = groupByDay(posts)
-  const monthDays = days.filter((day) => isWithin(day, month) && byDay.has(day))
-  const undated = posts.filter((post) => post.publish_on === null && post.stage !== "published")
-
   const href = (path: string, extra = "") => portalHref(path, client, user.clients, extra)
-  const postHref = (id: string) => href(`/portal/posts/${id}`)
-  const monthHref = (key: DateKey) => href("/portal/calendario", `mes=${key.slice(0, 7)}`)
 
   return (
-    <PageContainer>
-      <PageHeader title="Calendário" description={client.name} />
-
-      {/* A mesma ordem da linha do Calendário do admin: setas, o mês e "Hoje". */}
-      <PageToolbar>
-        <div className="flex items-center">
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link href={monthHref(addMonthsToKey(anchor, -1))} aria-label="Mês anterior">
-              <ChevronLeft />
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link href={monthHref(addMonthsToKey(anchor, 1))} aria-label="Próximo mês">
-              <ChevronRight />
-            </Link>
-          </Button>
-        </div>
-        <h2 className="text-base font-semibold tracking-tight text-foreground">{formatMonthYear(anchor)}</h2>
-        {anchor.slice(0, 7) !== today.slice(0, 7) ? (
-          <Button asChild variant="outline" size="sm" className="ml-1 h-7 px-2.5 text-xs shadow-none">
-            <Link href={monthHref(today)}>Hoje</Link>
-          </Button>
-        ) : null}
-      </PageToolbar>
-
-      {/* A chave por mês faz o corpo entrar de novo (como ao abrir a tela) a cada troca de mês. */}
-      <PageBody key={anchor.slice(0, 7)}>
-      {/* Do md para cima: o mês em grade, de segunda a domingo. */}
-      <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
-        <div className="grid grid-cols-7 border-b bg-muted/40">
-          {WEEKDAYS.map((label) => (
-            <div key={label} className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-              {label}
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7">
-          {days.map((day) => {
-            const list = byDay.get(day) ?? []
-            const inMonth = isWithin(day, month)
-            return (
-              <div
-                key={day}
-                className={cn("min-h-24 border-r border-b p-1.5 [&:nth-child(7n)]:border-r-0", !inMonth && "bg-muted/30")}
-              >
-                <span
-                  className={cn(
-                    "inline-flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
-                    inMonth ? "text-foreground" : "text-subtle-foreground",
-                    day === today && "bg-brand font-semibold text-brand-navy"
-                  )}
-                >
-                  {Number(day.slice(8))}
-                </span>
-                <ul className="mt-1 space-y-1">
-                  {list.map((post) => (
-                    <li key={post.id}>
-                      <Link
-                        href={postHref(post.id)}
-                        title={post.title}
-                        className="flex items-center gap-1.5 rounded px-1 py-0.5 text-xs text-foreground outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40"
-                      >
-                        <StatusDot stage={post.stage} />
-                        <span className="truncate">{post.title}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Celular: só os dias do mês que têm post, em lista. */}
-      <div className="space-y-4 md:hidden">
-        {monthDays.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-4 py-5 text-[13px] text-muted-foreground">
-            Nenhum post neste mês.
-          </p>
-        ) : (
-          monthDays.map((day) => (
-            <section key={day} className="space-y-1.5">
-              <h3 className={cn("text-[13px] font-medium text-muted-foreground", day === today && "text-brand-ink")}>
-                {capitalize(formatWeekdayShort(day))}, {formatDayMonth(day)}
-              </h3>
-              <ul className="rounded-xl border bg-card p-1.5">
-                {(byDay.get(day) ?? []).map((post) => (
-                  <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
-                ))}
-              </ul>
-            </section>
-          ))
-        )}
-      </div>
-
-      {undated.length > 0 ? (
-        <section className="space-y-1.5">
-          <h3 className="text-sm font-semibold text-foreground">Sem data</h3>
-          <ul className="rounded-xl border bg-card p-1.5">
-            {undated.map((post) => (
-              <PostListItem key={post.id} post={post} href={postHref(post.id)} today={today} />
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      </PageBody>
-    </PageContainer>
+    <PortalCalendarView
+      clientName={client.name}
+      anchor={anchor}
+      today={today}
+      posts={posts}
+      postHref={(id) => href(`/portal/posts/${id}`)}
+      monthHref={(key) => href("/portal/calendario", `mes=${key.slice(0, 7)}`)}
+    />
   )
 }

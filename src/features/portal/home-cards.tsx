@@ -49,20 +49,22 @@ export function PendingCard({ items, href, today }: { items: PendingApproval[]; 
             ) : (
               <li key={item.id}>
                 <Link href={href(`/portal/projetos/${item.step.project_id}`)} className={ROW}>
-                  <span className="flex aspect-[3/4] w-12 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <span className="flex aspect-[3/4] w-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <ListChecks className="size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{item.step.title}</p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{item.step.title}</p>
+                      {/* Mesma etiqueta do post "com o cliente": para o cliente, as duas pedem a mesma coisa. */}
+                      <StatusBadge stage="client_review" className="h-5 px-2 text-[11px] sm:h-6 sm:px-2.5 sm:text-xs" />
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
                       Etapa de {item.step.project_name}
                       {item.step.completed_at
                         ? ` · concluída ${formatShortDate(toDateKey(item.step.completed_at), today)}`
                         : ""}
                     </p>
                   </div>
-                  {/* Mesma etiqueta do post "com o cliente": para o cliente, as duas pedem a mesma coisa. */}
-                  <StatusBadge stage="client_review" />
                 </Link>
               </li>
             )

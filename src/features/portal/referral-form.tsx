@@ -56,11 +56,11 @@ export function ReferralForm({ clientId }: { clientId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-xl border bg-card p-4 sm:p-5" noValidate>
+    <form onSubmit={submit} className="space-y-4 rounded-[1.75rem] border bg-card p-5 sm:p-7" noValidate>
       {sent ? (
         <p
           role="status"
-          className="flex items-start gap-2.5 rounded-lg bg-brand-soft px-3 py-2.5 text-[13px] leading-5 text-foreground"
+          className="flex items-start gap-2.5 rounded-2xl border border-glow/25 bg-glow-soft px-4 py-3 text-[13px] leading-5 text-foreground"
         >
           <HeartHandshake className="mt-0.5 size-4 shrink-0 text-brand-ink" aria-hidden />
           <span>
@@ -146,7 +146,7 @@ export function ReferralForm({ clientId }: { clientId: string }) {
       ) : null}
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending} className="w-full gap-1.5 sm:w-auto">
+        <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
           <Send />
           {pending ? "Enviando…" : "Enviar indicação"}
         </Button>

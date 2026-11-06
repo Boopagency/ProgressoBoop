@@ -4,6 +4,7 @@ import { AlertTriangle, ChevronDown, Download, Search, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
+import { DisplayValue } from "@/components/display-value"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -210,7 +211,7 @@ export function LedgerView({ data, today, filters }: { data: FinanceData; today:
         ) : null}
       </div>
 
-      <section aria-label="Totais" className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-(--card-edge) bg-border text-[13px] shadow-card sm:grid-cols-4">
+      <section aria-label="Totais" className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-(--card-edge) bg-border text-[13px] shadow-card sm:grid-cols-4">
         <Total label="Entrou (bruto)" value={formatMoney(totals.paidIn)} />
         <Total label="Saiu" value={formatMoney(-totals.paidOut)} />
         <Total label="Taxas" value={formatMoney(-totals.fees)} />
@@ -230,7 +231,7 @@ export function LedgerView({ data, today, filters }: { data: FinanceData; today:
             <PanelCount value={items.length} />
           </>
         }
-        className="mt-4"
+        className="mt-4 bg-card-solid"
       >
         {items.length === 0 ? (
           <p className="px-4 py-6 text-center text-[13px] text-muted-foreground">Nada com esses filtros no período.</p>
@@ -289,7 +290,23 @@ export function LedgerView({ data, today, filters }: { data: FinanceData; today:
                         {item.paid_on ? formatMoney(sign * item.amount_cents - item.fee_cents) : "—"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap">
-                        <span className={cn("text-xs", status === "overdue" ? "font-medium text-overdue" : "text-muted-foreground")}>
+                        <span
+                          className={cn(
+                            "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs",
+                            status === "overdue"
+                              ? "border-overdue/35 font-medium text-overdue"
+                              : status === "paid"
+                                ? "border-success/30 text-success-ink"
+                                : "border-foreground/15 text-muted-foreground"
+                          )}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              "size-1.5 rounded-full",
+                              status === "overdue" ? "bg-overdue" : status === "paid" ? "bg-success" : status === "skipped" ? "bg-transparent ring-1 ring-muted-foreground" : "bg-muted-foreground/60"
+                            )}
+                          />
                           {status === "paid" ? (item.kind === "income" ? "Recebido" : "Pago") : STATUS_TEXT[status]}
                         </span>
                         {issues.length > 0 ? (
@@ -317,9 +334,12 @@ export function LedgerView({ data, today, filters }: { data: FinanceData; today:
 
 function Total({ label, value, strong = false, negative = false }: { label: string; value: string; strong?: boolean; negative?: boolean }) {
   return (
-    <div className="bg-card px-4 py-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("mt-0.5 tabular-nums", strong ? "font-semibold" : "font-medium", negative ? "text-overdue" : "text-foreground")}>{value}</p>
+    <div className="bg-card-solid px-4 py-3.5 sm:px-5">
+      <p className="eyebrow text-muted-foreground">{label}</p>
+      <DisplayValue
+        value={value}
+        className={cn("mt-2 block text-[26px] leading-none sm:text-[30px]", negative ? "text-overdue" : strong ? "text-brand-ink" : "text-foreground")}
+      />
     </div>
   )
 }

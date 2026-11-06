@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowUpRight,
   Building2,
   ChevronDown,
   CircleAlert,
@@ -310,7 +311,7 @@ export function DocsView({
                         ? `Nada encontrado para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}.`
                         : `${results.length} ${results.length === 1 ? "resultado" : "resultados"} para “${query}”${filterTitle ? ` em ${filterTitle}` : ""}`}
                     </p>
-                    <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+                    <ul className="mt-2 rounded-2xl border bg-card p-1.5">
                       {results.map((doc) => (
                         <DocRow
                           key={doc.id}
@@ -351,7 +352,7 @@ export function DocsView({
                               {group.area ? TASK_AREA_LABEL[group.area] : "Sem área"}
                             </SectionTitle>
                           )}
-                          <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+                          <ul className="mt-2 rounded-2xl border bg-card p-1.5">
                             {group.docs.map((doc) => (
                               <DocRow key={doc.id} doc={doc} today={today} />
                             ))}
@@ -449,7 +450,7 @@ function FilterNav({
                       className={cn(
                         "flex h-8 w-full items-center gap-2.5 rounded-full px-3 text-left text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                         active
-                          ? "bg-card font-medium text-foreground shadow-card"
+                          ? "bg-card font-medium text-foreground shadow-[var(--shadow-card),inset_0_0_0_1px_var(--card-edge)]"
                           : "text-sidebar-foreground hover:bg-card/70 hover:text-foreground",
                         item.count === 0 && !active && "text-subtle-foreground"
                       )}
@@ -556,21 +557,30 @@ function PinnedCard({ doc, today }: { doc: DocSummary; today: DateKey }) {
     <li>
       <Link
         href={`/processos/${doc.id}`}
-        className="group relative flex h-full flex-col rounded-xl border bg-card px-4 py-3.5 transition-colors outline-none hover:border-foreground/15 hover:bg-muted/30 focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border bg-card px-5 pt-4 pb-5 transition-[border-color,box-shadow] duration-150 outline-none hover:border-glow/40 hover:shadow-float focus-visible:ring-[3px] focus-visible:ring-ring/40"
       >
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Icon className="size-3.5" aria-hidden="true" />
+        {/* Luz azul no canto: os documentos de entrada da biblioteca. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-16 -right-16 -z-10 size-48 bg-[radial-gradient(closest-side,var(--glow-soft),transparent)] opacity-80 transition-opacity group-hover:opacity-100"
+        />
+        <span className="flex items-center gap-2 eyebrow text-muted-foreground">
+          <span className="flex size-7 items-center justify-center rounded-full border border-glass-edge bg-glow-soft text-brand-ink">
+            <Icon className="size-3.5" aria-hidden="true" />
+          </span>
           {DOC_KIND_LABEL[doc.kind]}
           {doc.area ? <> · {TASK_AREA_LABEL[doc.area]}</> : null}
           {effectiveStatus(doc, today) !== "active" ? (
             <DocStatusBadge doc={doc} today={today} className="ml-auto" />
-          ) : null}
+          ) : (
+            <ArrowUpRight className="ml-auto size-4 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground" aria-hidden="true" />
+          )}
         </span>
-        <span className="mt-2 font-display text-[15px] leading-6 font-semibold tracking-tight text-foreground">
+        <span className="mt-4 font-display text-[19px] leading-6 font-medium tracking-[-0.02em] text-foreground">
           {doc.title}
         </span>
         {doc.summary ? (
-          <span className="mt-1 line-clamp-2 text-[13px] leading-5 text-muted-foreground">{doc.summary}</span>
+          <span className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-muted-foreground">{doc.summary}</span>
         ) : null}
       </Link>
     </li>
@@ -679,7 +689,7 @@ function SuggestionsSection({ suggestions, startOpen }: { suggestions: IndexedSu
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open ? (
-        <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+        <ul className="mt-2 rounded-2xl border bg-card p-1.5">
           {suggestions.map((suggestion) => {
             const Icon = DOC_KIND_ICON[suggestion.kind]
             return (

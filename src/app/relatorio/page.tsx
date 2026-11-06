@@ -17,7 +17,7 @@ export default async function ReportPage(props: PageProps<"/relatorio">) {
   ).toString()
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="min-h-svh bg-background print:bg-transparent">
       <ReportView
         input={input}
         clientName={clientName}

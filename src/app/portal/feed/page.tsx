@@ -1,26 +1,16 @@
-import { Pin } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 
-import { PageBody, PageContainer, PageHeader } from "@/components/layout/page"
-import { ContentImage } from "@/features/content/content-image"
 import { InstagramCard } from "@/features/instagram/instagram-card"
 import { connectNotice } from "@/features/instagram/logic"
-import { formatCompact } from "@/features/instagram/metrics-logic"
 import { getPortalFeedViews } from "@/features/instagram/metrics-queries"
-import { TileViews } from "@/features/instagram/metrics-view"
 import { getPortalInstagram } from "@/features/instagram/queries"
-import { publishLabel } from "@/features/content/logic"
-import { FormatIcon } from "@/features/content/post-meta"
-import { PORTAL_STATUS_LABEL, portalFeed, portalStatus, postThumbnail } from "@/features/portal/content-logic"
+import { portalFeed } from "@/features/portal/content-logic"
 import { getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
+import { PortalFeedView } from "@/features/portal/feed-view"
 import { portalHref } from "@/features/portal/links"
-import { StatusDot } from "@/features/portal/post-meta"
 import { ProfilePhoto } from "@/features/portal/profile-photo"
 import { pickPortalClient, requirePortalUser } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
-import { CONTENT_FORMAT_LABEL, INSTAGRAM_METRIC_LABEL } from "@/lib/labels"
-import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Feed" }
 
@@ -45,11 +35,12 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
   )
 
   return (
-    <PageContainer>
-      <PageHeader title="Feed" description={client.name} />
-
-      <PageBody>
-      <div className="w-full max-w-[600px]">
+    <PortalFeedView
+      clientName={client.name}
+      handle={profile?.instagram_handle ?? null}
+      bio={profile?.instagram_bio ?? null}
+      photo={<ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} />}
+      instagram={
         <InstagramCard
           clientId={client.id}
           clientName={client.name}
@@ -57,99 +48,12 @@ export default async function PortalFeedPage(props: PageProps<"/portal/feed">) {
           notice={connectNotice(searchParams.instagram)}
           audience="client"
           today={today}
-          className="mb-6"
         />
-
-        <div className="flex items-center gap-4 sm:gap-6">
-          <ProfilePhoto clientId={client.id} name={client.name} path={profile?.avatar_path ?? null} />
-          <div className="min-w-0 flex-1">
-            {profile?.instagram_handle ? (
-              <p className="truncate text-base font-semibold text-foreground">@{profile.instagram_handle}</p>
-            ) : null}
-            <p className="mt-1 text-sm text-foreground">
-              <span className="font-semibold tabular-nums">{tiles.length}</span> {tiles.length === 1 ? "post" : "posts"}
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 text-sm">
-          <p className="font-semibold text-foreground">{client.name}</p>
-          {profile?.instagram_bio ? (
-            <p className="mt-0.5 break-words whitespace-pre-line text-foreground">{profile.instagram_bio}</p>
-          ) : null}
-        </div>
-
-        <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">
-          Como o perfil vai ficar com os posts que você já viu. Stories não entram no feed.
-        </p>
-
-        {tiles.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-dashed px-4 py-8 text-center text-[13px] text-muted-foreground">
-            Nenhum post do Instagram por aqui ainda.
-          </p>
-        ) : (
-          <ul aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
-            {tiles.map((post) => {
-              const path = postThumbnail(post)
-              const postViews = views[post.id] ?? null
-              const label = [
-                post.title,
-                CONTENT_FORMAT_LABEL[post.format],
-                publishLabel(post, today),
-                PORTAL_STATUS_LABEL[portalStatus(post.stage)],
-                post.pinned ? "Fixado" : null,
-                postViews !== null ? `${formatCompact(postViews)} ${INSTAGRAM_METRIC_LABEL.views.toLocaleLowerCase("pt-BR")}` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")
-              const title = (
-                <span className="absolute inset-0 flex items-center justify-center p-2 text-center sm:p-3">
-                  <span className="line-clamp-5 text-[11px] leading-snug font-medium break-words text-muted-foreground sm:text-xs">
-                    {post.title}
-                  </span>
-                </span>
-              )
-              return (
-                <li key={post.id} className="group relative">
-                  <Link
-                    href={portalHref(`/portal/posts/${post.id}`, client, user.clients)}
-                    aria-label={label}
-                    title={label}
-                    className="relative block aspect-[3/4] w-full overflow-hidden bg-muted outline-none focus-visible:z-10 focus-visible:ring-[3px] focus-visible:ring-ring"
-                  >
-                    {path ? (
-                      <ContentImage path={path} fallback={title} className="transition-opacity group-hover:opacity-90" />
-                    ) : (
-                      title
-                    )}
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "absolute top-1.5 right-1.5 flex items-center gap-1",
-                        path ? "text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.55)]" : "text-muted-foreground"
-                      )}
-                    >
-                      {post.pinned ? <Pin className="size-3.5 fill-current sm:size-4" /> : null}
-                      {post.format !== "static" && post.format !== "photo" ? (
-                        <FormatIcon format={post.format} className="size-3.5 sm:size-4" />
-                      ) : null}
-                    </span>
-                    {post.stage !== "published" ? (
-                      <span
-                        aria-hidden="true"
-                        className="absolute bottom-1.5 left-1.5 flex size-4 items-center justify-center rounded-full bg-background/90 shadow-sm"
-                      >
-                        <StatusDot stage={post.stage} />
-                      </span>
-                    ) : null}
-                    {postViews !== null ? <TileViews views={postViews} /> : null}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
-      </PageBody>
-    </PageContainer>
+      }
+      posts={posts}
+      views={views}
+      today={today}
+      postHref={(id) => portalHref(`/portal/posts/${id}`, client, user.clients)}
+    />
   )
 }

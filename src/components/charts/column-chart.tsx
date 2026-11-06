@@ -91,11 +91,11 @@ export function ColumnChart({
       {legend && data.some((datum) => (datum.forecast ?? 0) > 0 || datum.projected) ? (
         <figcaption className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden="true" className="size-2.5 rounded-[3px] bg-chart-1" />
+            <span aria-hidden="true" className="size-2.5 rounded-full bg-linear-to-t from-chart-1 to-glow" />
             {legend.realized}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden="true" className="size-2.5 rounded-[3px] bg-chart-1-light" />
+            <span aria-hidden="true" className="size-2.5 rounded-full bg-chart-1-light" />
             {legend.forecast}
           </span>
         </figcaption>
@@ -165,13 +165,13 @@ export function ColumnChart({
                 >
                   <span
                     aria-hidden="true"
-                    className={cn("absolute inset-x-0.5 inset-y-0 rounded-md bg-muted/70 opacity-0 transition-opacity", active === index && "opacity-100")}
+                    className={cn("absolute inset-x-0.5 inset-y-0 rounded-lg bg-muted/70 opacity-0 transition-opacity", active === index && "opacity-100")}
                   />
                   {negative ? (
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2 rounded-b-[4px]",
+                        "absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2 rounded-b-[6px]",
                         datum.projected ? "bg-overdue/45" : "bg-overdue"
                       )}
                       style={{ top: `${zero}%`, height: `${scale.y(datum.value) - zero}%` }}
@@ -180,9 +180,13 @@ export function ColumnChart({
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2",
-                        datum.projected ? "bg-chart-1-light" : "bg-chart-1",
-                        forecast === 0 && "rounded-t-[4px]"
+                        "absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2 transition-[filter] duration-150",
+                        // Realizado: do azul da marca ao elétrico, com um brilho no escuro (mais forte ao passar).
+                        datum.projected
+                          ? "bg-chart-1-light"
+                          : "bg-linear-to-t from-chart-1 to-glow dark:shadow-[0_-4px_18px_-6px_var(--glow)]",
+                        !datum.projected && active === index && "brightness-125",
+                        forecast === 0 && "rounded-t-[6px]"
                       )}
                       style={{ top: `${top}%`, height: `${zero - top}%` }}
                     />
@@ -190,7 +194,7 @@ export function ColumnChart({
                   {forecast > 0 ? (
                     <span
                       aria-hidden="true"
-                      className="absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2 rounded-t-[4px] bg-chart-1-light"
+                      className="absolute left-1/2 w-[min(24px,60%)] -translate-x-1/2 rounded-t-[6px] bg-chart-1-light"
                       style={{
                         top: `${stackTop}%`,
                         height: datum.value > 0 ? `calc(${top - stackTop}% - 2px)` : `${top - stackTop}%`,

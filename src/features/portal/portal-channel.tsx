@@ -53,6 +53,8 @@ export function PortalChannel({
   direct = null,
   mobile = null,
   hiddenOnMobile = false,
+  heading = null,
+  live = true,
 }: {
   client: PortalClient
   clients: readonly PortalClient[]
@@ -65,6 +67,10 @@ export function PortalChannel({
   mobile?: { backHref: string; avatar: ReactNode; title: string; subtitle: string } | null
   /** No celular, a lista de conversas está na tela no lugar desta. */
   hiddenOnMobile?: boolean
+  /** Topo da conversa no computador: a foto, o nome e a linha de baixo. */
+  heading?: { avatar: ReactNode; title: string; subtitle: string } | null
+  /** Busca mensagens novas e marca como lidas (desligado na vitrine, com dados de exemplo). */
+  live?: boolean
 }) {
   const clientId = client.id
   const directId = direct?.channelId ?? null
@@ -96,7 +102,7 @@ export function PortalChannel({
   }
 
   /** Escondida no celular (a lista está na tela): não busca nem marca como lido. */
-  const offScreen = () => hiddenOnMobile && window.matchMedia("(max-width: 767px)").matches
+  const offScreen = () => !live || (hiddenOnMobile && window.matchMedia("(max-width: 767px)").matches)
 
   const fetchLatest = useEffectEvent(() => (offScreen() ? undefined : loadLatest()))
 
@@ -171,13 +177,22 @@ export function PortalChannel({
     <section
       aria-label={direct ? `Conversa com ${direct.teamName}` : "Conversa com a equipe"}
       className={cn(
-        "flex h-[calc(100svh-15rem-var(--app-bottom-bar,0px))] min-h-96 flex-col overflow-hidden rounded-xl border bg-card md:h-[calc(100svh-17rem)]",
+        "flex h-[calc(100svh-15rem-var(--app-bottom-bar,0px))] min-h-96 flex-col overflow-hidden rounded-[1.75rem] border bg-card md:h-[calc(100svh-20rem)] md:min-h-[30rem]",
         hiddenOnMobile && "max-md:hidden",
         // Celular: tela cheia, por cima do topo e do menu de baixo, do tamanho da parte que se vê.
         mobile &&
-          "max-md:fixed max-md:inset-x-0 max-md:top-[var(--vv-top,0px)] max-md:z-50 max-md:h-[var(--vv-height,100dvh)] max-md:min-h-0 max-md:rounded-none max-md:border-0 max-md:bg-background max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]"
+          "max-md:fixed max-md:inset-x-0 max-md:top-[var(--vv-top,0px)] max-md:z-50 max-md:h-[var(--vv-height,100dvh)] max-md:min-h-0 max-md:rounded-none max-md:border-0 max-md:bg-background max-md:bg-[radial-gradient(70%_35%_at_100%_0%,var(--glow-soft),transparent_70%),radial-gradient(60%_30%_at_0%_100%,var(--glow-soft),transparent_70%)] max-md:pb-[var(--vv-safe-bottom,env(safe-area-inset-bottom))]"
       )}
     >
+      {heading ? (
+        <header className="hidden shrink-0 items-center gap-3 border-b px-5 py-3.5 md:flex">
+          {heading.avatar}
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-[15px] leading-5 font-semibold tracking-tight text-foreground">{heading.title}</h2>
+            <p className="truncate text-xs text-muted-foreground">{heading.subtitle}</p>
+          </div>
+        </header>
+      ) : null}
       {mobile ? (
         <header className="flex shrink-0 items-center gap-1.5 border-b px-1 pt-[calc(0.25rem+env(safe-area-inset-top))] pb-1 md:hidden">
           <Link
@@ -251,7 +266,7 @@ function PortalMessageRow({
       {context ? (
         <Link
           href={href(context.path)}
-          className="mt-1.5 flex items-center gap-1.5 rounded-md border bg-background/70 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="mt-1.5 flex items-center gap-1.5 rounded-lg border bg-background/70 px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-glow/40 hover:text-foreground"
         >
           <context.icon className="size-3.5 shrink-0" aria-hidden="true" />
           <span className="truncate">{context.label}</span>

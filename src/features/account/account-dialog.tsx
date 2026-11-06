@@ -41,7 +41,9 @@ export function AccountDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Minha conta</DialogTitle>
+          <DialogTitle className="font-display text-xl font-medium tracking-[-0.02em]">
+            Minha <em className="emphasis pr-[0.05em] text-[1.14em] leading-none text-gradient-brand">conta</em>
+          </DialogTitle>
           <DialogDescription>Sua foto, seu nome, os dados de acesso e as notificações no celular. Só você vê esta tela.</DialogDescription>
         </DialogHeader>
         {open ? (
@@ -96,14 +98,21 @@ function PhotoSection({ user, colorIndex }: { user: AccountDialogUser; colorInde
   }
 
   return (
-    <section className="flex items-center gap-4" aria-label="Foto">
-      <PersonAvatar
-        name={user.name}
-        avatarUrl={avatarUrl}
-        colorIndex={colorIndex}
-        size="lg"
-        className="size-16 [&_[data-slot=avatar-fallback]]:text-lg"
-      />
+    <section
+      className="flex items-center gap-4 rounded-2xl border bg-card p-4"
+      aria-label="Foto"
+    >
+      <span className="shrink-0 rounded-full bg-[image:var(--gradient-brand)] p-[3px] shadow-[0_0_24px_-6px_var(--glow)]">
+        <span className="block rounded-full bg-background p-[2px]">
+          <PersonAvatar
+            name={user.name}
+            avatarUrl={avatarUrl}
+            colorIndex={colorIndex}
+            size="lg"
+            className="size-16 [&_[data-slot=avatar-fallback]]:text-lg"
+          />
+        </span>
+      </span>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => input.current?.click()}>
@@ -117,7 +126,7 @@ function PhotoSection({ user, colorIndex }: { user: AccountDialogUser; colorInde
             </Button>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">PNG, JPG ou WebP. A foto aparece para a equipe e nas conversas.</p>
+        <p className="text-xs leading-4 text-muted-foreground">PNG, JPG ou WebP. A foto aparece para a equipe e nas conversas.</p>
         <ErrorLine error={error} />
         <input
           ref={input}

@@ -107,3 +107,11 @@ export function usePortalAlerts(): PortalAlerts {
   if (!context) throw new Error("usePortalAlerts precisa do PortalAlertsProvider.")
   return context
 }
+
+/**
+ * Contagens fixas, sem servidor nem Realtime: para montar as telas do portal
+ * com dados de exemplo (a vitrine, só em desenvolvimento).
+ */
+export function PortalAlertsPreview({ counts, children }: { counts: PortalCounts; children: ReactNode }) {
+  return <PortalAlertsContext value={{ counts, version: 0, refresh: () => {} }}>{children}</PortalAlertsContext>
+}

@@ -119,6 +119,11 @@ Minhas, os posts da pessoa e os sem responsável.
 
 ### 2.3 Tarefas (`/tarefas`)
 
+- **Título:** acompanha a pessoa escolhida ("Todas as tarefas", "Minhas
+  tarefas", "Tarefas de Leo").
+- **Painel de prazos** (logo abaixo do título): as abertas em Atrasadas,
+  Hoje, Esta semana, Depois e Sem prazo, com os outros filtros aplicados.
+  Clicar num número filtra a lista por aquele prazo; clicar de novo tira.
 - **Pessoa:** Todas (padrão), Minhas, Jabez, Renatha ou Léo.
 - **Filtros:**
   - Status: Abertas (padrão), A fazer, Fazendo, Concluídas ou Todos os status.
@@ -523,8 +528,10 @@ Um projeto junta as tarefas de uma entrega (site da Velmont, identidade
 visual da Hertmann) ou de um ciclo interno ("Estruturação da Boop até
 31/10", que era o "plano").
 
-- **Cartões por status:** Em andamento, Planejados e Pausados; Concluídos e
-  cancelados ficam recolhidos no fim. Cada cartão mostra o cliente (ou
+- **Em foco:** os projetos abertos com o alfinete ficam juntos num painel
+  no topo (são os que aparecem na tela Hoje e na weekly).
+- **Cartões por status:** Em andamento, Planejados e Pausados (sem os que
+  já estão em foco); Concluídos e cancelados ficam recolhidos no fim. Cada cartão mostra o cliente (ou
   "Interno"), o status, o prazo ("Faltam 24 dias", "Prazo passou há 2
   dias"), o progresso das tarefas, as atrasadas, o responsável e a próxima
   entrega.

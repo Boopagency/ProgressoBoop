@@ -43,7 +43,6 @@ import {
 } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
-import { loadActivity } from "@/features/activity/actions"
 import { ActivityFeed } from "@/features/activity/activity-feed"
 import { DeliverablesPanel } from "@/features/deliverables/deliverables-panel"
 import { ProjectSelect } from "@/features/projects/project-meta"
@@ -52,7 +51,8 @@ import { ClientApprovalPanel } from "@/features/tasks/client-approval"
 import { DueDatePicker } from "@/features/tasks/due-date-picker"
 import { firstName } from "@/features/tasks/logic"
 import { TaskCheckbox } from "@/features/tasks/task-checkbox"
-import { StatusDot } from "@/features/tasks/task-meta"
+import { DueLabel, HighPriorityIcon, StatusDot } from "@/features/tasks/task-meta"
+import { SHEET_HEADING, useTaskSheetData } from "@/features/tasks/task-sheet-data"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
@@ -74,7 +74,8 @@ import { cn } from "@/lib/utils"
 const NONE = "none"
 
 const PROPERTY_TRIGGER =
-  "h-8 w-full min-w-0 justify-start gap-2 border-transparent bg-transparent px-2 font-normal shadow-none hover:bg-accent data-[state=open]:bg-accent [&>svg:last-child]:hidden"
+  "h-8 w-full min-w-0 justify-start gap-2 rounded-full border-transparent bg-transparent px-2.5 font-normal shadow-none hover:bg-accent data-[state=open]:bg-accent [&>svg:last-child]:hidden"
+
 
 export function TaskSheet({
   task,
@@ -102,18 +103,19 @@ function TaskDetails({ task }: { task: Task }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [activity, setActivity] = useState<ActivityEntry[] | null>(null)
   const [activityVersion, setActivityVersion] = useState(0)
+  const data = useTaskSheetData()
 
   // Histórico e comentários: carrega ao abrir, quando a tarefa muda e depois
   // de cada comentário.
   useEffect(() => {
     let current = true
-    void loadActivity("task", task.id).then((result) => {
+    void data.loadActivity(task.id).then((result) => {
       if (current && result.ok) setActivity(result.data)
     })
     return () => {
       current = false
     }
-  }, [task.id, task.updated_at, activityVersion])
+  }, [data, task.id, task.updated_at, activityVersion])
 
   const done = task.status === "done"
   const project = task.project_id ? projectById.get(task.project_id) : undefined
@@ -147,17 +149,20 @@ function TaskDetails({ task }: { task: Task }) {
       <SheetTitle className="sr-only">{task.title}</SheetTitle>
       <SheetDescription className="sr-only">Detalhes e edição da tarefa.</SheetDescription>
 
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b pr-12 pl-5">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b pr-14 pl-5">
         {project ? (
           <Link
             href={`/projetos/${project.id}`}
-            className="inline-flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+            className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-full border border-glass-edge bg-card px-2.5 text-xs text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] transition-colors hover:border-glow/40 hover:text-foreground"
           >
-            <FolderKanban className="size-3.5 shrink-0" aria-hidden="true" />
+            <FolderKanban className="size-3.5 shrink-0 text-brand-ink" aria-hidden="true" />
             <span className="truncate">{project.name}</span>
           </Link>
         ) : (
-          <span className="truncate text-xs text-muted-foreground">Tarefa</span>
+          <span className="inline-flex items-center gap-1.5 eyebrow text-subtle-foreground">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+            Tarefa
+          </span>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -180,34 +185,62 @@ function TaskDetails({ task }: { task: Task }) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex items-start gap-3 px-5 pt-5 pb-4">
-          <TaskCheckbox
-            size="lg"
-            checked={done}
-            onCheckedChange={() => toggleDone(task)}
-            aria-label={done ? "Reabrir tarefa" : "Concluir tarefa"}
-            className="mt-1"
-          />
-          <textarea
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            onBlur={commitTitle}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault()
-                event.currentTarget.blur()
-              }
-            }}
-            rows={1}
-            aria-label="Título"
-            className={cn(
-              "field-sizing-content w-full resize-none rounded-md bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0",
-              done && "text-muted-foreground line-through decoration-muted-foreground/50"
-            )}
-          />
+        <div className="px-5 pt-6 pb-5">
+          <div className="flex items-start gap-3">
+            <TaskCheckbox
+              size="lg"
+              checked={done}
+              onCheckedChange={() => toggleDone(task)}
+              aria-label={done ? "Reabrir tarefa" : "Concluir tarefa"}
+              className="mt-1.5"
+            />
+            <textarea
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              onBlur={commitTitle}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+              }}
+              rows={1}
+              aria-label="Título"
+              className={cn(
+                "field-sizing-content w-full resize-none rounded-md bg-transparent font-display text-[22px] leading-8 font-medium tracking-[-0.025em] text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0",
+                done && "text-muted-foreground line-through decoration-muted-foreground/50"
+              )}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 pl-8">
+            <span
+              className={cn(
+                "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium",
+                task.status === "doing"
+                  ? "border-attention-line/20 bg-attention-soft text-attention-ink"
+                  : done
+                    ? "border-success/25 bg-success/10 text-success-strong"
+                    : "border-border text-muted-foreground"
+              )}
+            >
+              <StatusDot status={task.status} className="size-1.5" />
+              {TASK_STATUS_LABEL[task.status]}
+            </span>
+            {!done ? (
+              <span className="inline-flex h-6 items-center rounded-full border border-border px-2.5">
+                <DueLabel due={task.due_date} today={today} className="text-xs" />
+              </span>
+            ) : null}
+            {task.priority === "high" && !done ? (
+              <span className="inline-flex h-6 items-center gap-1 rounded-full border border-priority/25 bg-priority/10 pr-2.5 pl-1.5 text-xs font-medium text-priority">
+                <HighPriorityIcon />
+                Alta
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <dl className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5 px-5">
+        <dl className="mx-4 grid grid-cols-[116px_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5 rounded-2xl border bg-card px-3 py-2">
           <Property icon={<CircleDashed />} label="Status">
             <Select value={task.status} onValueChange={changeStatus}>
               <SelectTrigger size="sm" className={PROPERTY_TRIGGER} aria-label="Status">
@@ -228,7 +261,7 @@ function TaskDetails({ task }: { task: Task }) {
             <AssigneePicker
               value={task.assignee_ids}
               onChange={(ids) => updateTask(task.id, { assignee_ids: ids })}
-              className="h-8 w-full justify-start px-2"
+              className="h-8 w-full justify-start rounded-full px-2.5"
             />
           </Property>
 
@@ -237,7 +270,7 @@ function TaskDetails({ task }: { task: Task }) {
               value={task.due_date}
               today={today}
               onChange={(due) => updateTask(task.id, { due_date: due })}
-              className="h-8 w-full justify-start px-2"
+              className="h-8 w-full justify-start rounded-full px-2.5"
               placeholder="Sem prazo"
             />
           </Property>
@@ -352,8 +385,8 @@ function TaskDetails({ task }: { task: Task }) {
         {project?.client_id ? <ClientApprovalPanel task={task} /> : null}
         {project?.client_id ? <DeliverablesPanel task={task} /> : null}
 
-        <div className="mt-5 border-t px-5 pt-5 pb-6">
-          <label htmlFor="task-description" className="text-[13px] font-medium text-foreground">
+        <div className="px-5 pt-6 pb-2">
+          <label htmlFor="task-description" className={SHEET_HEADING}>
             Descrição
           </label>
           <Textarea
@@ -362,12 +395,12 @@ function TaskDetails({ task }: { task: Task }) {
             onChange={(event) => setDescription(event.target.value)}
             onBlur={commitDescription}
             placeholder="Adicione contexto, links ou próximos passos…"
-            className="mt-2 min-h-24 resize-none border-transparent bg-muted/50 shadow-none hover:bg-muted focus-visible:border-input focus-visible:bg-background"
+            className="mt-2.5 min-h-24 resize-none rounded-2xl border-border bg-card shadow-none hover:border-foreground/15 focus-visible:border-ring focus-visible:bg-card"
           />
         </div>
 
-        <section aria-labelledby="task-activity" className="border-t px-5 pt-5 pb-6">
-          <h3 id="task-activity" className="mb-3 text-[13px] font-medium text-foreground">
+        <section aria-labelledby="task-activity" className="px-5 pt-6 pb-6">
+          <h3 id="task-activity" className={cn(SHEET_HEADING, "mb-3")}>
             Atividade
           </h3>
           {activity === null ? (
@@ -384,7 +417,7 @@ function TaskDetails({ task }: { task: Task }) {
         </section>
       </div>
 
-      <div className="shrink-0 space-y-0.5 border-t px-5 py-3 text-xs text-muted-foreground">
+      <div className="shrink-0 space-y-0.5 border-t bg-foreground/[0.02] px-5 py-3 text-xs text-muted-foreground">
         <p>
           Criada por {creator ? firstName(creator.full_name) : "alguém da equipe"} em{" "}
           {formatShortDate(toDateKey(task.created_at))} às {toTimeLabel(task.created_at)}

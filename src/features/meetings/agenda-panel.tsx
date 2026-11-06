@@ -64,10 +64,10 @@ export function PreviousAgreementsCard({ source }: { source: AgendaSource }) {
   const pending = agreements.filter((agreement) => agreement.status !== "done").length
 
   return (
-    <section aria-labelledby="anteriores-titulo" className="overflow-hidden rounded-xl border bg-card">
-      <header className="border-b px-4 py-3.5">
+    <section aria-labelledby="anteriores-titulo" className="overflow-hidden rounded-2xl border bg-card">
+      <header className="min-h-14 border-b px-5 py-3.5">
         <div className="flex items-center gap-2">
-          <h2 id="anteriores-titulo" className="text-sm font-semibold text-foreground">
+          <h2 id="anteriores-titulo" className="text-[15px] font-semibold tracking-tight text-foreground">
             Combinados anteriores
           </h2>
           <span className="text-[13px] text-muted-foreground tabular-nums">{pending}</span>
@@ -245,9 +245,9 @@ export function TasksAgendaCard({
   }
 
   return (
-    <section aria-labelledby="tarefas-pauta-titulo" className="overflow-hidden rounded-xl border bg-card">
-      <header className="border-b px-4 py-3.5">
-        <h2 id="tarefas-pauta-titulo" className="text-sm font-semibold text-foreground">
+    <section aria-labelledby="tarefas-pauta-titulo" className="overflow-hidden rounded-2xl border bg-card">
+      <header className="min-h-14 border-b px-5 py-3.5">
+        <h2 id="tarefas-pauta-titulo" className="text-[15px] font-semibold tracking-tight text-foreground">
           {agenda.client ? `Tarefas ${clientName ? `de ${clientName}` : "do cliente"}` : "Tarefas da equipe"}
         </h2>
         <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground tabular-nums">

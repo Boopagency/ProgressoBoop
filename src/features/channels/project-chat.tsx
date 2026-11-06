@@ -24,13 +24,22 @@ import { cn } from "@/lib/utils"
  * mensagens marcadas com este projeto. O cliente lê e responde na página do
  * projeto no portal. O campo só libera depois de a conversa carregar.
  */
-export function ProjectClientChat({ projectId, className }: { projectId: string; className?: string }) {
+export function ProjectClientChat({
+  projectId,
+  className,
+  loadThread = loadProjectThread,
+}: {
+  projectId: string
+  className?: string
+  /** De onde vem o fio (a vitrine, só em desenvolvimento, passa dados de exemplo). */
+  loadThread?: typeof loadProjectThread
+}) {
   const [channelId, setChannelId] = useState<string | null>(null)
   const [sentCount, setSentCount] = useState(0)
   const { today } = useTasks()
   const unread = useUnread()
   const thread = useThread(projectId, async (before) => {
-    const result = await loadProjectThread(projectId, before)
+    const result = await loadThread(projectId, before)
     if (result.ok && !before) setChannelId(result.data.channelId)
     return result
   })
@@ -85,10 +94,11 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
   return (
     <section
       aria-labelledby="conversa-projeto"
-      className={cn("flex h-[520px] min-h-0 flex-col overflow-hidden rounded-xl border bg-card", className)}
+      className={cn("flex h-[540px] min-h-0 flex-col overflow-hidden rounded-2xl border bg-card", className)}
     >
-      <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
-        <h2 id="conversa-projeto" className="text-sm font-semibold text-foreground">
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-2 gap-y-1.5 border-b px-5 py-3">
+        <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+        <h2 id="conversa-projeto" className="text-[15px] font-semibold tracking-tight text-foreground">
           Conversa com o cliente
         </h2>
         {thread.pending.length > 0 ? (
@@ -102,7 +112,7 @@ export function ProjectClientChat({ projectId, className }: { projectId: string;
         {channelId ? (
           <Link
             href={channelHref(channelId)}
-            className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-glass-edge px-2.5 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:border-glow/40 hover:text-foreground"
           >
             Abrir o canal
             <ArrowUpRight className="size-3" aria-hidden="true" />

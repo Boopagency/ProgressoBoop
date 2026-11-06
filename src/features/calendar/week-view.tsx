@@ -38,7 +38,7 @@ export function WeekView({
 }) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-xl border bg-card @3xl:grid @3xl:grid-cols-7">
+      <div className="hidden overflow-hidden rounded-2xl border bg-card @3xl:grid @3xl:grid-cols-7">
         {days.map((day) => {
           const dayItems = items.get(day)
           const isToday = day === today
@@ -46,17 +46,26 @@ export function WeekView({
             <div
               key={day}
               className={cn(
-                "group/day flex min-h-[460px] min-w-0 flex-col border-l first:border-l-0",
-                isWeekend(day) && "bg-muted/30"
+                "group/day relative flex min-h-[460px] min-w-0 flex-col border-l first:border-l-0",
+                isWeekend(day) && "bg-foreground/[0.015]",
+                isToday && "bg-glow-soft/40"
               )}
             >
-              <div className="flex h-11 items-center justify-between gap-1 border-b px-2.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">{formatWeekdayShort(day)}</span>
+              {isToday ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-glow shadow-[0_0_14px_2px_var(--glow)]"
+                />
+              ) : null}
+              <div className="flex h-14 items-center justify-between gap-1 border-b px-3">
+                <div className="flex items-center gap-2">
+                  <span className={cn("eyebrow text-[10.5px]", isToday ? "text-brand-ink" : "text-muted-foreground")}>
+                    {formatWeekdayShort(day)}
+                  </span>
                   <span
                     className={cn(
-                      "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-semibold tabular-nums",
-                      isToday ? "bg-brand text-brand-navy" : "text-foreground"
+                      "flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 display-number text-[19px] tabular-nums",
+                      isToday ? "bg-primary text-primary-foreground shadow-glow" : "text-foreground"
                     )}
                   >
                     {Number(day.slice(8))}
@@ -92,10 +101,10 @@ export function WeekView({
           return (
             <section key={day} aria-label={formatDayMonth(day)}>
               <div className="flex items-center justify-between border-b pb-1.5">
-                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <h3 className="flex items-center gap-2 font-display text-sm font-medium tracking-[-0.01em]">
                   {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
                   {day === today ? (
-                    <Badge className="px-2 text-[11px]">Hoje</Badge>
+                    <Badge className="px-2 text-[11px] shadow-glow">Hoje</Badge>
                   ) : null}
                 </h3>
                 <Button

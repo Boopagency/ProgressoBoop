@@ -94,7 +94,7 @@ export function NewTaskProvider({ children }: { children: ReactNode }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="top-[12%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[18%] sm:max-w-[600px]"
+          className="top-[12%] translate-y-0 gap-0 overflow-hidden rounded-[1.75rem] p-0 sm:top-[18%] sm:max-w-[620px]"
         >
           <DialogTitle className="sr-only">Nova tarefa</DialogTitle>
           <DialogDescription className="sr-only">
@@ -136,7 +136,7 @@ export function NewTaskButton({
 
 const NONE = "none"
 const CHIP =
-  "h-8 rounded-md border border-input bg-background px-2.5 text-[13px] shadow-none hover:bg-accent"
+  "h-8 rounded-full border border-glass-edge bg-card px-3 text-[13px] shadow-[inset_0_1px_0_var(--glass-highlight)] transition-colors hover:border-foreground/20 hover:bg-accent data-[state=open]:border-glow/50"
 
 function NewTaskForm({
   defaults,
@@ -201,8 +201,15 @@ function NewTaskForm({
         }
       }}
     >
-      <div className="px-5 pt-5">
-        <p className="mb-3 text-xs font-medium text-muted-foreground">Nova tarefa</p>
+      <div className="relative isolate px-6 pt-6">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-10 -z-10 h-40 w-72 rounded-full bg-glow-soft blur-3xl"
+        />
+        <p className="mb-4 inline-flex h-6 items-center gap-2 rounded-full border border-foreground/15 px-2.5 eyebrow text-[10.5px] text-muted-foreground">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+          Nova tarefa
+        </p>
         <input
           autoFocus
           value={title}
@@ -214,7 +221,7 @@ function NewTaskForm({
           aria-label="Título"
           aria-invalid={error ? true : undefined}
           maxLength={200}
-          className="w-full bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none placeholder:font-normal placeholder:text-subtle-foreground"
+          className="w-full bg-transparent font-display text-[22px] leading-8 font-medium tracking-[-0.025em] text-foreground outline-none placeholder:text-subtle-foreground"
         />
         <textarea
           value={description}
@@ -226,7 +233,7 @@ function NewTaskForm({
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 px-5 pt-2 pb-4">
+      <div className="flex flex-wrap items-center gap-2 px-6 pt-3 pb-5">
         <AssigneePicker value={assigneeIds} onChange={setAssigneeIds} className={CHIP} />
         <DueDatePicker
           value={dueDate}
@@ -320,12 +327,12 @@ function NewTaskForm({
         </Select>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t bg-muted/40 px-5 py-3">
+      <div className="flex items-center justify-between gap-3 border-t bg-foreground/[0.025] px-6 py-3.5">
         <p className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")} role={error ? "alert" : undefined}>
           {error ?? (
             <>
-              <kbd className="font-sans">Ctrl</kbd> + <kbd className="font-sans">Enter</kbd> para
-              salvar
+              <kbd className="rounded-md border border-border px-1 font-sans text-[11px]">Ctrl</kbd> +{" "}
+              <kbd className="rounded-md border border-border px-1 font-sans text-[11px]">Enter</kbd> para salvar
             </>
           )}
         </p>

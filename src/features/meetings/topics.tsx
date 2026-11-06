@@ -24,9 +24,9 @@ export function TopicsCard({ api, closed = false }: { api: MeetingItemsApi; clos
   }
 
   return (
-    <section aria-labelledby="assuntos-titulo" className="overflow-hidden rounded-xl border bg-card">
-      <header className="flex items-center gap-2 border-b px-4 py-3.5">
-        <h2 id="assuntos-titulo" className="text-sm font-semibold text-foreground">
+    <section aria-labelledby="assuntos-titulo" className="overflow-hidden rounded-2xl border bg-card">
+      <header className="flex items-center gap-2 min-h-14 border-b px-5 py-3.5">
+        <h2 id="assuntos-titulo" className="text-[15px] font-semibold tracking-tight text-foreground">
           Assuntos
         </h2>
         <span className="text-[13px] text-muted-foreground tabular-nums">{api.topics.length}</span>

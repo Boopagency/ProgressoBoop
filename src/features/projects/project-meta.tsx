@@ -67,7 +67,10 @@ export function ProjectBar({ percent, className }: { percent: number; className?
       className={cn("block h-1.5 w-full overflow-hidden rounded-full bg-muted", className)}
     >
       <span
-        className={cn("block h-full rounded-full transition-[width]", percent >= 100 ? "bg-success" : "bg-brand")}
+        className={cn(
+          "block h-full rounded-full transition-[width] duration-500 ease-glide motion-reduce:transition-none",
+          percent >= 100 ? "bg-success" : "bg-brand bg-(image:--gradient-brand) dark:shadow-[0_0_10px_rgb(61_126_255/0.55)]"
+        )}
         style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
       />
     </span>

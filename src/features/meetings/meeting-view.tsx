@@ -41,6 +41,7 @@ import { deleteMeeting, setMeetingStatus } from "@/features/meetings/actions"
 import { FrozenNote, PreviousAgreementsCard, TasksAgendaCard, type AgendaSource } from "@/features/meetings/agenda-panel"
 import { AgreementsCard } from "@/features/meetings/agreements"
 import {
+  agreementStatus,
   buildAgenda,
   meetingKind,
   type Agenda,
@@ -55,7 +56,7 @@ import { useMeetingItems } from "@/features/meetings/use-meeting-items"
 import { firstName } from "@/features/tasks/logic"
 import { useTasks } from "@/features/tasks/tasks-provider"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
-import { formatLongDate, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
+import { formatLongDate, formatShortDate, formatWeekdayShort, toDateKey, toTimeLabel } from "@/lib/dates"
 import type { ClientDetail, ClientReview, Decision, MeetingItem, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -119,6 +120,7 @@ export function MeetingView({
   return (
     <PageContainer>
       <MeetingHeader entry={entry} kind={kind} clientName={clientName} siblings={siblings} />
+      <MeetingPulse date={date} today={today} time={timeLabel(entry)} api={api} closed={closed} />
 
       {/*
         Desktop: pauta e transcrição à esquerda; combinados e resumo fixos à
@@ -163,6 +165,84 @@ export function MeetingView({
         </div>
       </PageBody>
     </PageContainer>
+  )
+}
+
+/**
+ * Painel de destaque da reunião: o dia grande e os números da pauta
+ * (assuntos discutidos, combinados e os que ainda estão em aberto).
+ */
+function MeetingPulse({
+  date,
+  today,
+  time,
+  api,
+  closed,
+}: {
+  date: string
+  today: string
+  time: string
+  api: ReturnType<typeof useMeetingItems>
+  closed: boolean
+}) {
+  const { tasks } = useTasks()
+  const taskById = new Map(tasks.map((task) => [task.id, task]))
+  const discussed = api.topics.filter((topic) => topic.done).length
+  const open = api.agreements.filter((item) => agreementStatus(item, taskById) !== "done").length
+  const isToday = date === today
+  return (
+    <section
+      aria-label="Resumo da reunião"
+      className="relative isolate mt-6 flex flex-wrap items-stretch gap-x-8 gap-y-5 overflow-hidden rounded-[2rem] glass-panel px-5 py-5 sm:px-7"
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -left-10 -z-10 h-56 w-96 rounded-full bg-glow-soft blur-3xl"
+      />
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex w-[72px] flex-col items-center rounded-2xl border py-2.5 leading-none",
+            isToday ? "border-glow/50 bg-glow-soft shadow-[0_0_28px_-8px_var(--glow)]" : "border-glass-edge bg-card"
+          )}
+        >
+          <span className="eyebrow text-[10px] text-muted-foreground">{formatWeekdayShort(date)}</span>
+          <span className="mt-1 display-number text-[44px] leading-[0.85] text-foreground">{Number(date.slice(8))}</span>
+        </span>
+        <div>
+          <p className="eyebrow text-muted-foreground">{closed ? "Encerrada" : isToday ? "Hoje" : "Reunião"}</p>
+          <p className="mt-1 font-display text-xl leading-7 font-medium tracking-tight text-foreground tabular-nums">{time}</p>
+        </div>
+      </div>
+      <dl className="grid w-full grid-cols-3 gap-x-4 sm:w-auto sm:flex-1 sm:gap-x-8">
+        <PulseStat label="Assuntos" value={api.topics.length} detail={api.topics.length > 0 ? `${discussed} discutidos` : null} />
+        <PulseStat label="Combinados" value={api.agreements.length} />
+        <PulseStat label="Em aberto" value={open} alert={open > 0 && closed} />
+      </dl>
+    </section>
+  )
+}
+
+function PulseStat({
+  label,
+  value,
+  detail,
+  alert,
+}: {
+  label: string
+  value: number
+  detail?: string | null
+  alert?: boolean
+}) {
+  return (
+    <div className="border-t border-foreground/15 pt-3">
+      <dt className="eyebrow text-muted-foreground">{label}</dt>
+      <dd className="mt-2 flex flex-wrap items-baseline gap-x-2">
+        <span className={cn("display-number text-[40px] leading-[0.85]", alert ? "text-warning-ink" : "text-foreground")}>{value}</span>
+        {detail ? <span className="text-xs text-muted-foreground">{detail}</span> : null}
+      </dd>
+    </div>
   )
 }
 

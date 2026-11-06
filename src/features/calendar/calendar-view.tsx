@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
@@ -24,6 +24,7 @@ import { useViewFade } from "@/hooks/use-view-fade"
 import {
   addDaysToKey,
   addMonthsToKey,
+  capitalize,
   eachDayKey,
   formatMonthYear,
   formatRange,
@@ -43,8 +44,18 @@ const VIEW_OPTIONS = [
   { value: "month", label: "Mês" },
 ] as const
 
-function periodLabel(view: View, anchor: DateKey, range: DateRange): string {
-  if (view === "month") return formatMonthYear(anchor)
+function periodLabel(view: View, anchor: DateKey, range: DateRange): ReactNode {
+  if (view === "month") {
+    // "novembro de 2026": o mês na serifada itálica.
+    const label = formatMonthYear(anchor)
+    const [month, ...rest] = label.split(" ")
+    return (
+      <>
+        <em className="emphasis pr-[0.04em] text-[1.18em] leading-none text-brand-ink">{capitalize(month ?? label)}</em>{" "}
+        {rest.join(" ")}
+      </>
+    )
+  }
   const sameYear = range.start.slice(0, 4) === range.end.slice(0, 4)
   return sameYear ? `${formatRange(range)} de ${range.end.slice(0, 4)}` : formatRange(range)
 }
@@ -149,10 +160,10 @@ export function CalendarView({
           onValueChange={(next) => navigate({ view: next })}
           options={VIEW_OPTIONS}
         />
-        <div className="flex items-center gap-2">
-          <div className="flex items-center">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon-sm"
               aria-label={view === "week" ? "Semana anterior" : "Mês anterior"}
               onClick={() => step(-1)}
@@ -160,7 +171,7 @@ export function CalendarView({
               <ChevronLeft />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon-sm"
               aria-label={view === "week" ? "Próxima semana" : "Próximo mês"}
               onClick={() => step(1)}
@@ -168,15 +179,19 @@ export function CalendarView({
               <ChevronRight />
             </Button>
           </div>
-          <h2 className="text-base font-semibold tracking-tight text-foreground" aria-live="polite">
+          <h2
+            className="ml-1 truncate font-display text-lg leading-7 font-medium tracking-[-0.02em] text-foreground sm:text-xl"
+            aria-live="polite"
+          >
             {periodLabel(view, anchor, range)}
           </h2>
           <Button
             variant="outline"
             size="sm"
-            className={cn("ml-1 h-7 px-2.5 text-xs shadow-none", showsToday && "invisible")}
+            className={cn("ml-1 h-7 gap-1.5 px-3 text-xs", showsToday && "invisible")}
             onClick={() => navigate({ anchor: today })}
           >
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
             Hoje
           </Button>
         </div>
@@ -224,20 +239,22 @@ export function CalendarView({
   )
 }
 
+const LEGEND_PILL = "flex h-7 items-center gap-1.5 rounded-full border border-glass-edge bg-card px-2.5"
+
 function Legend() {
   return (
-    <ul className="ml-auto hidden items-center gap-4 text-xs text-muted-foreground @3xl:flex">
+    <ul className="ml-auto hidden items-center gap-1.5 text-xs text-muted-foreground @3xl:flex" aria-label="Legenda">
       {EVENT_TYPES.map((type) => (
-        <li key={type} className="flex items-center gap-1.5">
+        <li key={type} className={LEGEND_PILL}>
           <span className={cn("size-2 rounded-full", EVENT_TYPE_STYLE[type].dot)} />
           {EVENT_TYPE_LABEL[type]}
         </li>
       ))}
-      <li className="flex items-center gap-1.5">
+      <li className={LEGEND_PILL}>
         <span className="size-2 rounded-full border border-dashed border-brand-slate" />
         Post
       </li>
-      <li className="flex items-center gap-1.5">
+      <li className={LEGEND_PILL}>
         <span className="size-2 rounded-full border border-muted-foreground/60" />
         Tarefa
       </li>

@@ -45,7 +45,10 @@ export function SavedViewsBar({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)} aria-label="Visões salvas" role="group">
-      <Bookmark className="mr-0.5 size-3.5 text-subtle-foreground" aria-hidden="true" />
+      <span aria-hidden="true" className="mr-1 inline-flex items-center gap-1.5 eyebrow text-[10.5px] text-subtle-foreground">
+        <Bookmark className="size-3.5" />
+        Visões
+      </span>
       {savedViews.map((view) => (
         <ViewChip
           key={view.id}
@@ -137,8 +140,10 @@ function ViewChip({
   return (
     <span
       className={cn(
-        "inline-flex h-7 items-center rounded-full border text-[13px] transition-colors",
-        active ? "border-foreground/20 bg-accent font-medium text-foreground" : "bg-background text-muted-foreground hover:text-foreground",
+        "inline-flex h-7 items-center rounded-full border text-[13px] transition-[background-color,border-color,color,box-shadow] duration-150",
+        active
+          ? "border-transparent bg-primary font-medium text-primary-foreground shadow-glow"
+          : "border-glass-edge bg-card text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] hover:border-foreground/20 hover:text-foreground",
         isPending && "opacity-60"
       )}
     >
@@ -148,7 +153,7 @@ function ViewChip({
         aria-pressed={active}
         className="inline-flex h-full items-center gap-1 rounded-full pr-1 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
-        {active ? <Check className="size-3 text-brand-ink" aria-hidden="true" /> : null}
+        {active ? <Check className="size-3" aria-hidden="true" /> : null}
         {name}
       </button>
       <DropdownMenu>
@@ -156,7 +161,12 @@ function ViewChip({
           <button
             type="button"
             aria-label={`Opções da visão ${name}`}
-            className="mr-1 inline-flex size-5 items-center justify-center rounded-full text-subtle-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+            className={cn(
+              "mr-1 inline-flex size-5 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+              active
+                ? "text-primary-foreground/75 hover:bg-white/15 hover:text-primary-foreground"
+                : "text-subtle-foreground hover:bg-muted hover:text-foreground"
+            )}
           >
             <MoreHorizontal className="size-3.5" />
           </button>
@@ -222,7 +232,7 @@ function SaveViewButton({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-7 gap-1 rounded-full px-2.5 text-[13px] text-muted-foreground">
+        <Button variant="ghost" size="sm" className="h-7 gap-1 rounded-full border border-dashed border-foreground/20 px-2.5 text-[13px] text-muted-foreground hover:border-glow/50 hover:text-foreground">
           <BookmarkPlus className="size-3.5" />
           Salvar visão
         </Button>

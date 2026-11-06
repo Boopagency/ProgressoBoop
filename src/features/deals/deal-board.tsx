@@ -4,9 +4,8 @@ import { CalendarDays, CalendarX2, Check, ChevronsLeft, History, Hourglass, Phon
 import type { ReactNode } from "react"
 
 import {
-  dragSource,
-  KANBAN_CARD,
   KanbanBoard,
+  KanbanCard,
   KanbanColumn,
   KanbanColumnHeader,
   KanbanEmpty,
@@ -27,7 +26,6 @@ import {
 } from "@/features/deals/logic"
 import { formatMoneyShort } from "@/features/finance/money"
 import { firstName } from "@/features/tasks/logic"
-import { PersonAvatar } from "@/features/workspace/person-avatar"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { formatShortDate } from "@/lib/dates"
 import { DEAL_STAGE_LABEL, DEAL_STAGES, LEAD_SOURCE_LABEL, LEAD_SOURCES } from "@/lib/labels"
@@ -101,7 +99,7 @@ export function DealTag({
     <span
       title={title}
       className={cn(
-        "inline-flex h-6 max-w-full items-center gap-1 rounded-full px-2.5 text-[11.5px] leading-none font-medium whitespace-nowrap tabular-nums",
+        "inline-flex h-[22px] max-w-full items-center gap-1 rounded-full px-2 text-[11px] leading-none font-medium whitespace-nowrap tabular-nums",
         TAG_TONE[tone]
       )}
     >
@@ -148,7 +146,7 @@ export function DealBoard({
 
   return (
     <KanbanBoard className={className}>
-      {DEAL_STAGES.map((stage) => {
+      {DEAL_STAGES.map((stage, index) => {
         const items = columns[stage]
         const closed = stage === "won" || stage === "lost"
         if (collapsed.includes(stage) && isCollapsibleStage(stage)) {
@@ -156,6 +154,7 @@ export function DealBoard({
           return (
             <KanbanRail
               key={stage}
+              index={index}
               label={DEAL_STAGE_LABEL[stage]}
               dot={<StageDot stage={stage} />}
               count={items.length}
@@ -163,9 +162,10 @@ export function DealBoard({
                 flagged > 0 ? (
                   <span
                     title={`${flagged} ${flagged === 1 ? "pede" : "pedem"} atenção`}
-                    className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-overdue/10 px-1.5 text-[11px] font-semibold text-overdue tabular-nums"
+                    className="relative inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-overdue/10 px-1.5 text-[11px] font-semibold text-overdue tabular-nums"
                   >
-                    {flagged}
+                    <span aria-hidden="true" className="absolute inset-0 rounded-full bg-overdue/25 motion-safe:animate-ping" />
+                    <span className="relative">{flagged}</span>
                   </span>
                 ) : null
               }
@@ -186,6 +186,7 @@ export function DealBoard({
         return (
           <KanbanColumn
             key={stage}
+            index={index}
             label={DEAL_STAGE_LABEL[stage]}
             active={over === stage}
             {...dropTarget(stage)}
@@ -194,7 +195,7 @@ export function DealBoard({
                 dot={<StageDot stage={stage} />}
                 title={DEAL_STAGE_LABEL[stage]}
                 count={items.length}
-                hint={hint || " "}
+                hint={hint || null}
                 action={
                   isCollapsibleStage(stage) ? (
                     <button
@@ -216,7 +217,7 @@ export function DealBoard({
                 {stage === "won" ? "Arraste para cá ao fechar." : stage === "lost" ? "Nada perdido no período." : "Arraste um negócio para cá."}
               </KanbanEmpty>
             ) : (
-              items.map((deal) => <DealCard key={deal.id} deal={deal} today={today} onOpen={onOpen} />)
+              items.map((deal, position) => <DealCard key={deal.id} deal={deal} index={position} today={today} onOpen={onOpen} />)
             )}
           </KanbanColumn>
         )
@@ -239,14 +240,14 @@ function markInitials(name: string): string {
 function DealMark({ deal }: { deal: Deal }) {
   const { clientById } = useWorkspace()
   if (deal.client_id && clientById.has(deal.client_id)) {
-    return <ClientMark clientId={deal.client_id} size="md" className="size-10 text-sm" />
+    return <ClientMark clientId={deal.client_id} size="md" className="size-8 text-xs" />
   }
   const name = deal.company ?? deal.contact_name ?? deal.title.split(" — ")[0] ?? deal.title
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex size-10 shrink-0 items-center justify-center rounded-full text-sm leading-none font-semibold select-none",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs leading-none font-semibold select-none",
         clientColor(deal.company ?? deal.id)
       )}
     >
@@ -255,67 +256,58 @@ function DealMark({ deal }: { deal: Deal }) {
   )
 }
 
-/** Valor do negócio: o mensal grande e o pontual ao lado. */
-export function DealValue({ deal, className }: { deal: Deal; className?: string }) {
-  if (deal.recurring_cents === 0 && deal.one_time_cents === 0) {
-    return <span className={cn("block text-[13px] text-subtle-foreground", className)}>Sem valor ainda</span>
-  }
-  return (
-    <span className={cn("flex flex-wrap items-baseline gap-x-1.5 text-foreground tabular-nums", className)}>
-      {deal.recurring_cents > 0 ? (
-        <span className="whitespace-nowrap">
-          <span className="display-number text-[28px] leading-none">{formatMoneyShort(deal.recurring_cents)}</span>
-          <span className="text-[13px] text-muted-foreground">/mês</span>
-        </span>
-      ) : null}
-      {deal.one_time_cents > 0 ? (
-        deal.recurring_cents > 0 ? (
-          <span className="text-[13px] whitespace-nowrap text-muted-foreground">+ {formatMoneyShort(deal.one_time_cents)} pontual</span>
-        ) : (
-          <span className="whitespace-nowrap">
-            <span className="display-number text-[28px] leading-none">{formatMoneyShort(deal.one_time_cents)}</span>
-            <span className="ml-1 text-[13px] text-muted-foreground">pontual</span>
-          </span>
-        )
-      ) : null}
-    </span>
-  )
+/** Valor curto do negócio: o mensal ("R$ 2.800/mês") ou, sem mensal, o pontual. */
+function dealValueLabel(deal: Deal): string | null {
+  if (deal.recurring_cents > 0) return `${formatMoneyShort(deal.recurring_cents)}/mês`
+  if (deal.one_time_cents > 0) return formatMoneyShort(deal.one_time_cents)
+  return null
 }
 
-function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen: (deal: Deal) => void }) {
+/** Cartão compacto, do tamanho dos cartões da referência (cerca de 4 por coluna na tela). */
+function DealCard({ deal, index, today, onOpen }: { deal: Deal; index: number; today: DateKey; onOpen: (deal: Deal) => void }) {
   const { profiles, clientById } = useWorkspace()
-  const ownerIndex = profiles.findIndex((profile) => profile.id === deal.owner_id)
-  const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
+  const owner = profiles.find((profile) => profile.id === deal.owner_id)
   const company = deal.client_id ? clientById.get(deal.client_id)?.name : deal.company
   const secondary = [company && !includesText(deal.title, company) ? company : null, deal.contact_name].filter(Boolean).join(" · ")
   const open = isOpenDeal(deal)
   const alerts = dealAlerts(deal, today)
   const late = alerts.some((alert) => alert.kind === "late")
   const idle = idleDays(deal, today)
+  const value = dealValueLabel(deal)
+  const valueTitle = [
+    deal.recurring_cents > 0 ? `${formatMoneyShort(deal.recurring_cents)}/mês` : null,
+    deal.one_time_cents > 0 ? `${formatMoneyShort(deal.one_time_cents)} pontual` : null,
+  ]
+    .filter(Boolean)
+    .join(" + ")
 
   return (
-    <div role="listitem" {...dragSource(DRAG_TYPE, deal.id)} className={KANBAN_CARD}>
+    <KanbanCard id={deal.id} dragType={DRAG_TYPE} index={index}>
       <button
         type="button"
         onClick={() => onOpen(deal)}
-        className="block w-full rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
-        <span className="flex items-start gap-3">
+        <span className="flex items-start gap-2.5">
           <span className="min-w-0 flex-1">
-            <span className="line-clamp-2 text-[15px] leading-5 font-semibold text-foreground">{deal.title}</span>
-            {secondary ? <span className="mt-1 block truncate text-[13px] text-muted-foreground">{secondary}</span> : null}
+            <span className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">{deal.title}</span>
+            {secondary ? <span className="mt-0.5 block truncate text-[13px] leading-5 text-muted-foreground">{secondary}</span> : null}
           </span>
           <DealMark deal={deal} />
         </span>
 
-        <span className="mt-2 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+        <span className="mt-1.5 flex items-center gap-1.5 text-[13px] leading-5 text-muted-foreground">
           <SourceDot source={deal.source} />
-          <span className="truncate">{LEAD_SOURCE_LABEL[deal.source]}</span>
+          <span className="min-w-0 truncate">{LEAD_SOURCE_LABEL[deal.source]}</span>
+          {value ? (
+            <span className="ml-auto shrink-0 font-medium text-foreground tabular-nums" title={valueTitle}>
+              {value}
+              {deal.recurring_cents > 0 && deal.one_time_cents > 0 ? <span className="font-normal text-muted-foreground"> +</span> : null}
+            </span>
+          ) : null}
         </span>
 
-        <DealValue deal={deal} className="mt-3" />
-
-        <span className="mt-3 flex flex-wrap gap-1.5">
+        <span className="mt-2 flex flex-wrap gap-1">
           {deal.service ? (
             <DealTag tone="brand" icon={Tag}>
               {deal.service}
@@ -323,7 +315,7 @@ function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen:
           ) : null}
           {open ? (
             <DealTag tone="neutral" title="Chance de fechar">
-              {probabilityOf(deal)}% de chance
+              {probabilityOf(deal)}%
             </DealTag>
           ) : null}
           {deal.stage === "won" ? (
@@ -341,22 +333,11 @@ function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen:
           ))}
         </span>
 
-        <span className="mt-3.5 flex items-center gap-2 border-t border-border pt-3 text-[13px] text-muted-foreground">
-          {owner ? (
-            <>
-              <PersonAvatar
-                name={owner.full_name}
-                avatarUrl={owner.avatar_url}
-                colorIndex={ownerIndex}
-                size="sm"
-                className="size-5 shrink-0 [&_[data-slot=avatar-fallback]]:text-[10px]"
-              />
-              <span className="min-w-0 truncate">{firstName(owner.full_name)}</span>
-            </>
-          ) : (
-            <span className="text-subtle-foreground">Sem responsável</span>
-          )}
-          <span className="ml-auto flex shrink-0 items-center gap-3 tabular-nums">
+        <span className="mt-2.5 flex items-center gap-2 text-[13px] leading-5 text-muted-foreground">
+          <span className="min-w-0 truncate">
+            Resp: <span className="text-foreground">{owner ? firstName(owner.full_name) : "—"}</span>
+          </span>
+          <span className="ml-auto flex shrink-0 items-center gap-2.5 tabular-nums">
             {open ? (
               <span className="flex items-center gap-1" title={idle === 0 ? "Mudou hoje" : `Última mudança há ${idle} ${idle === 1 ? "dia" : "dias"}`}>
                 <History className="size-3.5" aria-hidden="true" />
@@ -380,6 +361,6 @@ function DealCard({ deal, today, onOpen }: { deal: Deal; today: DateKey; onOpen:
           </span>
         </span>
       </button>
-    </div>
+    </KanbanCard>
   )
 }

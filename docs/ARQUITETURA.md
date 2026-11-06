@@ -1494,7 +1494,7 @@ rodapé tem quem está logado e "Sair".
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
 | `FinanceShell`       | cabeçalho e abas do Financeiro; o diálogo de lançamento compartilhado (`useFinanceDialog`) |
 | `DreView` / `ProjectionView` / `ContractsView` / `LedgerView` / `ClosingView` / `SettingsView` | as abas do Financeiro |
-| `DealsView` / `DealBoard` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: frase do funil, filtros e lista; quadro com pré-venda e saída recolhíveis; negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
+| `DealsView` / `DealBoard` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: resumo do funil, filtros e lista; quadro com pré-venda e saída recolhíveis; negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
 | `ContentView` / `ContentCalendar` / `ContentBoard` / `UpcomingList` | Central de Conteúdo: calendário, quadro por etapa e próximos 7 dias, com filtros na URL |
 | `ContentFeed` | preview do feed do Instagram de um cliente: perfil editável, grid 3:4, filtro e fixados |
 | `PostDialog` / `ClientContentCard` / `TodayContentCard` | post (campos, textos por formato, tarefas das frentes, histórico) e os cartões no cliente e no Hoje |
@@ -1552,11 +1552,9 @@ Regras:
   telas) e Comunicações (tela cheia, com a lista de canais; só a entrada
   suave). Indicadores tem o período, a comparação e as áreas num painel de
   destaque logo abaixo do cabeçalho; Financeiro tem, abaixo do cabeçalho, as
-  abas das seções. Comercial tem, no lugar do `PageHeader`, a frase do funil
-  (etiqueta, duas linhas em Poppins grande e, à direita, as ações e os
-  valores); no Quadro, a moldura ocupa a altura da janela e o quadro
-  preenche o resto, sem rolar a página (`comercial/loading.tsx` tem a mesma
-  geometria).
+  abas das seções. No Quadro do Comercial, a moldura ocupa a altura da janela e o
+  quadro preenche o resto, sem rolar a página (`comercial/loading.tsx` tem
+  a mesma geometria).
 - **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
 - **Carregamento:** cada `loading.tsx` usa `PageSkeleton`
   (`components/layout/page-skeleton.tsx`: moldura, cabeçalho, linha de
@@ -1857,7 +1855,7 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
     As peças dos quadros (Comercial, Conteúdo e Tarefas) ficam em
     `components/kanban.tsx`: `KanbanBoard`, `KanbanColumn` (cabeçalho fixo e
     a lista rolando por dentro), `KanbanRail` (coluna recolhida),
-    `useKanbanDrop`/`dragSource` e o contorno `KANBAN_CARD`.
+    `KanbanCard` (arrastar, brilho e entrada) e `useKanbanDrop`.
 17. **Todo número leva à origem.** Cada indicador tem as linhas que o formam
     e um link para a tela de dados com os filtros certos (`/financeiro/
     lancamentos?mes=…&conta=…`, `/comercial?negocio=…`, `/tarefas?…`). Nas
@@ -1969,7 +1967,18 @@ protagonista). Nada de cor fixa nas telas.
   abaixo no claro, quase preto translúcido no escuro) e o cartão é sólido e
   mais claro (`--board-card`), para o cartão se separar bem do fundo. As
   colunas e as listas longas usam `scrollbar-soft`: sem a barra grossa do
-  sistema, só um fio que aparece ao passar o mouse.
+  sistema, só um fio que aparece ao passar o mouse. Movimento dos quadros
+  (`kanban.tsx` e o bloco `kanban-*` do `globals.css`): na entrada, as
+  colunas sobem uma a uma e os cartões em cascata (CSS, enquanto o quadro
+  tem `data-kanban-intro="true"`, 1,6 s); depois, a coluna que abre se
+  desdobra (`clip-path`), a faixa que recolhe aparece de lado e os cartões
+  novos surgem (Web Animations, ao montar). Ao arrastar, a imagem é uma
+  cópia inclinada e o lugar do cartão fica tracejado; a coluna de destino
+  pulsa (`kanban-over`); ao soltar, o cartão voa do ponto onde foi solto
+  até o lugar dele e acende o anel `data-kanban-landed`. O cartão tem um
+  brilho que segue o mouse (`--spot-x`/`--spot-y`) e os números usam
+  `CountUp` (`components/count-up.tsx`). Com "reduzir movimento", nada se
+  move.
 - **Movimento:** `--ease-glide` e `--ease-swift`, tempos de 150, 240 e 480 ms;
   tudo com `motion-safe:` ou `prefers-reduced-motion`.
 - **Reduzir transparência:** com `prefers-reduced-transparency`, os tokens de

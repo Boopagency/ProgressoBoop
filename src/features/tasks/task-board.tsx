@@ -1,6 +1,6 @@
 "use client"
 
-import { dragSource, KANBAN_CARD, KanbanBoard, KanbanColumn, KanbanColumnHeader, KanbanEmpty, useKanbanDrop } from "@/components/kanban"
+import { KanbanBoard, KanbanCard, KanbanColumn, KanbanColumnHeader, KanbanEmpty, useKanbanDrop } from "@/components/kanban"
 import { BOARD_DONE_DAYS, boardColumns, firstName } from "@/features/tasks/logic"
 import { HighPriorityIcon, StatusDot, TaskDateLabel } from "@/features/tasks/task-meta"
 import { useTasks } from "@/features/tasks/tasks-provider"
@@ -33,13 +33,14 @@ export function TaskBoard({ tasks, className }: { tasks: Task[]; className?: str
   // As três colunas dividem a largura toda (sem o limite das colunas do Comercial).
   return (
     <KanbanBoard className={cn("relative", className)}>
-      {TASK_STATUSES.map((status) => (
+      {TASK_STATUSES.map((status, index) => (
         <KanbanColumn
           key={status}
+          index={index}
           label={TASK_STATUS_LABEL[status]}
           active={over === status}
           {...dropTarget(status)}
-          className="sm:w-auto sm:min-w-[16rem] sm:flex-1 sm:basis-0 lg:max-w-none lg:min-w-[16rem]"
+          className="sm:w-auto sm:min-w-[16rem] sm:flex-1 sm:basis-0"
           header={
             <KanbanColumnHeader
               dot={
@@ -54,14 +55,14 @@ export function TaskBoard({ tasks, className }: { tasks: Task[]; className?: str
               }
               title={TASK_STATUS_LABEL[status]}
               count={columns[status].length}
-              hint={status === "done" ? `últimos ${BOARD_DONE_DAYS} dias` : " "}
+              hint={status === "done" ? `últimos ${BOARD_DONE_DAYS} dias` : null}
             />
           }
         >
           {columns[status].length === 0 ? (
             <KanbanEmpty>{status === "done" ? "Nada concluído nesses dias." : "Arraste uma tarefa para cá."}</KanbanEmpty>
           ) : (
-            columns[status].map((task) => <BoardCard key={task.id} task={task} />)
+            columns[status].map((task, position) => <BoardCard key={task.id} task={task} index={position} />)
           )}
         </KanbanColumn>
       ))}
@@ -69,7 +70,7 @@ export function TaskBoard({ tasks, className }: { tasks: Task[]; className?: str
   )
 }
 
-function BoardCard({ task }: { task: Task }) {
+function BoardCard({ task, index }: { task: Task; index: number }) {
   const { today, openTask } = useTasks()
   const { profiles, clientById, projectById } = useWorkspace()
   const project = task.project_id ? projectById.get(task.project_id) : undefined
@@ -79,16 +80,16 @@ function BoardCard({ task }: { task: Task }) {
   const owners = profiles.filter((profile) => task.assignee_ids.includes(profile.id))
 
   return (
-    <div role="listitem" {...dragSource(DRAG_TYPE, task.id)} className={cn("group", KANBAN_CARD)}>
+    <KanbanCard id={task.id} dragType={DRAG_TYPE} index={index} className="group">
       <button
         type="button"
         onClick={() => openTask(task.id)}
-        className="block w-full rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <span className="flex items-start gap-1.5">
           <span
             className={cn(
-              "line-clamp-3 flex-1 text-[15px] leading-5 font-semibold text-foreground",
+              "line-clamp-3 flex-1 text-sm leading-5 font-semibold text-foreground",
               done && "text-muted-foreground line-through decoration-muted-foreground/50"
             )}
           >
@@ -97,11 +98,11 @@ function BoardCard({ task }: { task: Task }) {
           {task.priority === "high" && !done ? <HighPriorityIcon className="mt-0.5" /> : null}
         </span>
         {context ? (
-          <span className="mt-2 inline-flex max-w-full items-center rounded-full border border-border px-2.5 py-0.5 text-xs leading-5 text-muted-foreground">
+          <span className="mt-1.5 inline-flex max-w-full items-center rounded-full border border-border px-2 py-0.5 text-[11.5px] leading-4 text-muted-foreground">
             <span className="truncate">{context}</span>
           </span>
         ) : null}
-        <span className="mt-3.5 flex items-center gap-2 border-t border-border pt-3">
+        <span className="mt-2.5 flex items-center gap-2">
           <TaskDateLabel task={task} today={today} className="text-[13px]" />
           <span className="ml-auto flex items-center gap-1.5">
             {owners.length === 1 ? (
@@ -111,6 +112,6 @@ function BoardCard({ task }: { task: Task }) {
           </span>
         </span>
       </button>
-    </div>
+    </KanbanCard>
   )
 }

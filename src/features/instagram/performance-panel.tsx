@@ -15,6 +15,7 @@ import {
 } from "@/features/instagram/metrics-actions"
 import { captionStart } from "@/features/instagram/metrics-logic"
 import { MetricsEvolution, MetricsGrid, ReadingNote, readingTime } from "@/features/instagram/metrics-view"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import { cn } from "@/lib/utils"
 
 /**
@@ -26,20 +27,22 @@ import { cn } from "@/lib/utils"
 export function PerformancePanel({ post, className }: { post: PostSummary; className?: string }) {
   const [data, setData] = useState<PostPerformance | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const demo = useDemoLoaders()
+  const loadPerformance = demo.loadPostPerformance ?? loadPostPerformance
   const relevant = post.stage === "published" && post.networks.includes("instagram") && post.format !== "text"
 
   const reload = useCallback(async () => {
-    const result = await loadPostPerformance(post.id)
+    const result = await loadPerformance(post.id)
     if (result.ok) {
       setData(result.data)
       setError(null)
     } else setError(result.error)
-  }, [post.id])
+  }, [post.id, loadPerformance])
 
   useEffect(() => {
     if (!relevant) return
     let current = true
-    void loadPostPerformance(post.id).then((result) => {
+    void loadPerformance(post.id).then((result) => {
       if (!current) return
       if (result.ok) setData(result.data)
       else setError(result.error)
@@ -47,14 +50,14 @@ export function PerformancePanel({ post, className }: { post: PostSummary; class
     return () => {
       current = false
     }
-  }, [post.id, relevant])
+  }, [post.id, relevant, loadPerformance])
 
   if (!relevant) return null
 
   const latest = data?.readings.at(-1) ?? null
 
   return (
-    <section aria-label="Desempenho no Instagram" className={cn("space-y-2.5 rounded-lg border p-3", className)}>
+    <section aria-label="Desempenho no Instagram" className={cn("space-y-2.5 rounded-2xl border bg-card p-3.5", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <BarChart3 className={cn("size-3.5", latest ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
@@ -165,7 +168,7 @@ function LinkMedia({ postId, canLink, onLinked }: { postId: string; canLink: boo
               type="button"
               disabled={item.taken || isPending}
               onClick={() => link(item)}
-              className="flex w-full items-center gap-2.5 rounded-md p-1.5 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+              className="flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
             >
               <span className="relative block size-11 shrink-0 overflow-hidden rounded bg-muted">
                 {item.thumbnailUrl ? (

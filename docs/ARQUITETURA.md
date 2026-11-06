@@ -1958,6 +1958,12 @@ protagonista). Nada de cor fixa nas telas.
   página só busca os dados. A casca da vitrine
   usa as mesmas classes do admin e do portal
   (`components/layout/shell-classes.ts`).
+  As telas de relacionamento (Conteúdo, post, Clientes, cliente,
+  Comunicações e Comercial) ficam em `/vitrine/admin-b`, com os exemplos em
+  `admin-b/fixtures.ts`; as leituras que buscam pelo servidor ao abrir
+  (conversa, textos do post, publicação e desempenho) vêm de
+  `DemoLoadersProvider` (`lib/demo-loaders.tsx`), que fora da vitrine não
+  existe.
 
 ## 11. Plano de implementação
 

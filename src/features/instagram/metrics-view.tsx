@@ -45,9 +45,9 @@ export function MetricsGrid({ reading, className }: { reading: MetricReading; cl
   return (
     <dl className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3", className)}>
       {tiles.map((tile, index) => (
-        <div key={tile.label} className="rounded-md bg-muted/50 px-2.5 py-2">
+        <div key={tile.label} className="rounded-xl bg-muted/50 px-3 py-2.5">
           <dt className="text-[11px] text-muted-foreground">{tile.label}</dt>
-          <dd className={cn("text-sm font-semibold text-foreground tabular-nums", index === 0 && "text-brand-ink")}>{tile.value}</dd>
+          <dd className={cn("display-number mt-0.5 text-2xl leading-none text-foreground", index === 0 && "text-brand-ink")}>{tile.value}</dd>
         </div>
       ))}
     </dl>

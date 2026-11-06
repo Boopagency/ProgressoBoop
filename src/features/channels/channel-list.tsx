@@ -69,7 +69,7 @@ function Badges({ pending, unread }: { pending: number; unread: number }) {
         </span>
       ) : null}
       {unread > 0 ? (
-        <span className="min-w-5 rounded-full bg-brand px-1.5 text-center text-[11px] leading-5 font-semibold text-brand-navy tabular-nums">
+        <span className="min-w-5 rounded-full bg-primary px-1.5 text-center text-[11px] leading-5 font-semibold text-primary-foreground shadow-glow tabular-nums">
           {unread > 99 ? "99+" : unread}
           <span className="sr-only"> não {unread === 1 ? "lida" : "lidas"}</span>
         </span>
@@ -132,7 +132,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       className={cn(
         "relative flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-[13px] whitespace-nowrap transition-colors outline-none touch-target focus-visible:ring-2 focus-visible:ring-ring/40",
-        active ? "bg-brand-soft font-medium text-brand-ink" : "bg-muted text-muted-foreground"
+        active ? "bg-primary font-medium text-primary-foreground shadow-glow" : "border border-glass-edge bg-card text-muted-foreground"
       )}
     >
       {children}
@@ -189,7 +189,7 @@ export function MobileChannelList({
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col md:hidden">
       <div className="shrink-0 space-y-2.5 px-4 pt-3 pb-2">
-        <label className="flex h-10 items-center gap-2 rounded-full bg-muted px-3.5 text-muted-foreground">
+        <label className="flex h-10 items-center gap-2 rounded-full border border-glass-edge bg-card px-3.5 text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]">
           <Search className="size-4 shrink-0" aria-hidden="true" />
           <input
             type="search"
@@ -250,7 +250,7 @@ export function MobileChannelList({
         onClick={() => setNewOpen(true)}
         aria-haspopup="dialog"
         aria-label="Nova conversa"
-        className="fixed right-4 bottom-[calc(var(--app-bottom-bar,0px)+1rem)] z-30 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_4px_12px_rgb(0_0_0/0.18)] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95"
+        className="fixed right-4 bottom-[calc(var(--app-bottom-bar,0px)+1rem)] z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-glow outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95"
       >
         <MessageSquarePlus className="size-6" aria-hidden="true" />
       </button>

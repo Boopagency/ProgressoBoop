@@ -1,14 +1,16 @@
 "use client"
 
-import { CalendarClock, ChevronDown, ListTodo, Plus } from "lucide-react"
+import { ArrowUpRight, Building2, CalendarClock, ChevronDown, ListTodo, Plus } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
 import { PageBody, PageContainer, PageHeader, SectionTitle } from "@/components/layout/page"
+import { EmptyPanel } from "@/components/empty-panel"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ClientDialog, type ClientDialogState } from "@/features/clients/client-dialog"
 import { HealthBadge, HealthDot, ReviewStateText } from "@/features/clients/client-meta"
+import { ClientMark } from "@/features/content/post-meta"
 import {
   clientTaskStats,
   currentHealth,
@@ -53,7 +55,11 @@ export function ClientsView({
   return (
     <PageContainer>
       <PageHeader
-        title="Clientes"
+        title={
+          <>
+            Carteira de <em>clientes</em>
+          </>
+        }
         description="Quem a Boop atende: saúde, revisão do mês, tarefas e próximos compromissos."
         actions={
           <Button onClick={() => setDialog((current) => ({ open: true, key: current.key + 1 }))} className="gap-1.5">
@@ -67,28 +73,48 @@ export function ClientsView({
         {withReview.length > 0 ? (
           <section
             aria-labelledby="revisoes-do-mes"
-            className="relative overflow-hidden rounded-xl border bg-card px-5 py-4 pl-6"
+            className="relative overflow-hidden rounded-3xl border bg-card px-5 py-5 sm:px-7 sm:py-6"
           >
-            <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-brand" />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-20 -right-16 size-64 rounded-full bg-glow-soft blur-3xl"
+            />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
-                <h2 id="revisoes-do-mes" className="text-sm font-semibold text-foreground">
+                <h2 id="revisoes-do-mes" className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
                   Revisões de {monthName(period)}
                 </h2>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">
-                  {doneCount === withReview.length
-                    ? "Todas feitas. Bom trabalho."
-                    : `${withReview.length - doneCount} por fazer${overdueCount > 0 ? `, ${overdueCount} ${overdueCount === 1 ? "atrasada" : "atrasadas"}` : ""}.`}
+                <p className="mt-3 flex items-baseline gap-2">
+                  <span className="display-number text-[56px] leading-[0.85] text-foreground">{doneCount}</span>
+                  <span className="text-sm text-muted-foreground tabular-nums">
+                    de {withReview.length} {withReview.length === 1 ? "feita" : "feitas"}
+                  </span>
+                </p>
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  {doneCount === withReview.length ? (
+                    "Todas feitas. Bom trabalho."
+                  ) : (
+                    <>
+                      {withReview.length - doneCount} por fazer
+                      {overdueCount > 0 ? (
+                        <span className="font-medium text-overdue">
+                          , {overdueCount} {overdueCount === 1 ? "atrasada" : "atrasadas"}
+                        </span>
+                      ) : null}
+                      .
+                    </>
+                  )}
                 </p>
               </div>
-              <div className="w-full sm:w-64">
+              <div className="w-full sm:w-72">
                 <Progress
                   value={(doneCount / withReview.length) * 100}
                   aria-label="Revisões feitas"
-                  className="h-1.5"
+                  className="h-2"
                 />
-                <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
-                  {doneCount} de {withReview.length} {withReview.length === 1 ? "feita" : "feitas"}
+                <p className="mt-2 text-right text-xs text-muted-foreground tabular-nums">
+                  {Math.round((doneCount / withReview.length) * 100)}% do mês
                 </p>
               </div>
             </div>
@@ -100,12 +126,21 @@ export function ClientsView({
             Ativos
           </SectionTitle>
           {active.length === 0 ? (
-            <div className="mt-3 rounded-xl border border-dashed px-6 py-10 text-center">
-              <p className="text-sm font-medium text-foreground">Nenhum cliente ativo</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">Cadastre o primeiro em “Novo cliente”.</p>
-            </div>
+            <EmptyPanel
+              icon={Building2}
+              title="Nenhum cliente ativo"
+              className="mt-3"
+              action={
+                <Button onClick={() => setDialog((current) => ({ open: true, key: current.key + 1 }))} className="gap-1.5">
+                  <Plus />
+                  Novo cliente
+                </Button>
+              }
+            >
+              Cadastre o primeiro em “Novo cliente”: saúde, revisão do mês e tarefas aparecem aqui.
+            </EmptyPanel>
           ) : (
-            <ul className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ul className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {active.map((client, index) => (
                 <ClientCard key={client.id} client={client} reviews={reviews} events={events} status={statuses[index]!} />
               ))}
@@ -119,19 +154,19 @@ export function ClientsView({
               type="button"
               aria-expanded={showInactive}
               onClick={() => setShowInactive((current) => !current)}
-              className="flex items-center gap-2 rounded-md text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              className="flex min-h-9 items-center gap-2 rounded-full text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <span id="inativos">Inativos</span>
               <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{inactive.length}</span>
               <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showInactive && "rotate-180")} />
             </button>
             {showInactive ? (
-              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+              <ul className="mt-2 rounded-3xl border bg-card p-1.5">
                 {inactive.map((client) => (
                   <li key={client.id}>
                     <Link
                       href={`/clientes/${client.id}`}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                      className="flex min-h-10 items-center gap-3 rounded-2xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                     >
                       <HealthDot health={null} />
                       {client.name}
@@ -172,17 +207,22 @@ function ClientCard({
     <li>
       <Link
         href={`/clientes/${client.id}`}
-        className="group flex h-full flex-col rounded-xl border bg-card px-4 py-4 transition-colors outline-none hover:border-foreground/15 hover:bg-muted/20 focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="group relative flex h-full flex-col rounded-3xl border bg-card px-5 py-5 transition-[border-color,box-shadow] duration-150 outline-none hover:border-glow/40 hover:shadow-float focus-visible:ring-[3px] focus-visible:ring-ring/40"
       >
+        <ArrowUpRight
+          aria-hidden="true"
+          className="absolute top-5 right-5 size-4 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+        />
         <span className="flex items-start gap-3">
+          <ClientMark clientId={client.id} size="lg" className="shadow-[0_0_0_1px_var(--glass-edge)]" />
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-display text-[17px] leading-6 font-semibold tracking-tight text-foreground">
+            <span className="block truncate font-display text-lg leading-6 font-medium tracking-tight text-foreground">
               {client.name}
             </span>
             <HealthBadge health={health?.health ?? null} className="mt-1.5" />
           </span>
           {owner ? (
-            <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="mr-6 flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
               {firstName(owner.full_name)}
               <PersonAvatar
                 name={owner.full_name}
@@ -198,19 +238,20 @@ function ClientCard({
         {client.services.length > 0 ? (
           <span className="mt-3 flex flex-wrap gap-1">
             {client.services.slice(0, 3).map((service) => (
-              <span key={service} className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground">
+              <span key={service} className="rounded-full border border-foreground/15 px-2.5 py-0.5 text-[11.5px] text-muted-foreground">
                 {service}
               </span>
             ))}
             {client.services.length > 3 ? (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground">
+              <span className="rounded-full border border-foreground/15 px-2.5 py-0.5 text-[11.5px] text-muted-foreground">
                 +{client.services.length - 3}
               </span>
             ) : null}
           </span>
         ) : null}
 
-        <span className="mt-4 space-y-1.5 border-t pt-3 text-[13px]">
+        <span className="mt-auto block pt-4">
+          <span className="block space-y-1.5 border-t pt-3 text-[13px]">
           <span className="block">
             <ReviewStateText status={status} today={today} />
           </span>
@@ -235,6 +276,7 @@ function ClientCard({
             ) : (
               "Nada marcado no calendário"
             )}
+          </span>
           </span>
         </span>
       </Link>

@@ -117,13 +117,13 @@ export function ContentFeed({
       </div>
 
       {tiles.length === 0 ? (
-        <p className="mt-3 rounded-lg border border-dashed px-4 py-8 text-center text-[13px] text-muted-foreground">
+        <p className="mt-3 rounded-2xl border border-dashed border-foreground/15 px-4 py-8 text-center text-[13px] text-muted-foreground">
           {filter === "approved"
             ? "Nenhum post aprovado, programado ou publicado ainda."
             : "Nenhum post de Instagram planejado. Stories não entram no feed."}
         </p>
       ) : (
-        <ul ref={gridRef} aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5">
+        <ul ref={gridRef} aria-label="Grid do feed" className="mt-3 grid grid-cols-3 gap-0.5 overflow-hidden rounded-xl">
           {shown.map((post) => (
             <FeedTile key={post.id} post={post} views={views[post.id] ?? null} today={today} onOpen={onOpen} onTogglePin={togglePin} />
           ))}
@@ -220,8 +220,8 @@ function FeedTile({
 /** Post sem capa: o título num fundo neutro. */
 function TileTitle({ title }: { title: string }) {
   return (
-    <span className="absolute inset-0 flex items-center justify-center p-2 text-center sm:p-3">
-      <span className="line-clamp-5 text-[11px] leading-snug font-medium break-words text-muted-foreground sm:text-xs">{title}</span>
+    <span className="absolute inset-0 flex items-end bg-[radial-gradient(120%_90%_at_100%_0%,var(--glow-soft),transparent_70%)] p-2 text-left sm:p-3">
+      <span className="line-clamp-4 font-display text-[11px] leading-snug font-medium tracking-tight break-words text-foreground/80 sm:text-[13px]">{title}</span>
     </span>
   )
 }

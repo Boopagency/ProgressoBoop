@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, MessageSquarePlus, Plus } from "lucide-react"
+import { ChevronRight, MessageSquarePlus, MessagesSquare, Plus } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -65,7 +65,7 @@ function CountBadges({ pending, unread }: { pending: number; unread: number }) {
         </span>
       ) : null}
       {unread > 0 ? (
-        <span className="min-w-5 rounded-full bg-brand px-1.5 text-center text-[11px] font-semibold text-brand-navy tabular-nums">
+        <span className="min-w-5 rounded-full bg-primary px-1.5 text-center text-[11px] font-semibold text-primary-foreground shadow-glow tabular-nums">
           {unread > 99 ? "99+" : unread}
           <span className="sr-only"> não {unread === 1 ? "lida" : "lidas"}</span>
         </span>
@@ -93,8 +93,10 @@ function ChannelRow({
         onClick={onSelect}
         aria-current={selected ? "page" : undefined}
         className={cn(
-          "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          selected ? "bg-accent font-medium text-foreground" : "text-sidebar-foreground hover:bg-muted/70",
+          "flex h-9 w-full items-center gap-2 rounded-full px-2.5 text-left text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+          selected
+            ? "bg-glow-soft font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--glow)_40%,transparent)]"
+            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
           unread > 0 && !selected && "font-semibold text-foreground"
         )}
       >
@@ -120,7 +122,7 @@ function Group({
   return (
     <section className="py-1.5" aria-label={title}>
       <div className="flex h-7 items-center px-2">
-        <h2 className="text-[11px] font-medium tracking-wide text-subtle-foreground uppercase">{title}</h2>
+        <h2 className="eyebrow text-[10.5px] text-subtle-foreground">{title}</h2>
         {action ? <div className="ml-auto">{action}</div> : null}
       </div>
       {children}
@@ -307,22 +309,22 @@ export function ChannelsView({
       className={cn(
         "flex h-[calc(100svh-3rem-env(safe-area-inset-top)-var(--app-bottom-bar,0px))] min-h-0 motion-safe:animate-page-in",
         // No computador, a lista e a conversa ficam num cartão sobre o painel.
-        "md:mx-4 md:mb-4 md:h-[calc(100%-1rem)] md:overflow-hidden md:rounded-xl md:bg-card md:shadow-card lg:mx-6",
+        "md:mx-4 md:mb-4 md:h-[calc(100%-1rem)] md:overflow-hidden md:rounded-3xl md:border md:bg-card lg:mx-6",
         // A conversa do celular é fixa na tela: sem o movimento de entrada, que a deslocaria.
         selected && "max-md:animate-none"
       )}
     >
       {selected ? null : <MobileChannelList channels={entries} previews={previews} onSelect={(id) => select(id)} onNew={setDialog} />}
-      <nav aria-label="Canais" className="flex w-full shrink-0 flex-col border-r bg-muted/40 max-md:hidden md:w-72">
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <h1 className="font-display text-lg font-semibold tracking-tight text-foreground">Comunicações</h1>
+      <nav aria-label="Canais" className="flex w-full shrink-0 flex-col border-r bg-muted/30 max-md:hidden md:w-72">
+        <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <h1 className="font-display text-xl font-medium tracking-tight text-foreground">Comunicações</h1>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                className="ml-auto text-muted-foreground"
+                className="ml-auto rounded-full text-muted-foreground"
                 aria-label="Nova conversa"
                 onClick={() => setDialog({ open: true, mode: "direct" })}
               >
@@ -461,18 +463,27 @@ export function ChannelsView({
             }
           />
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-            <h2 className="text-base font-semibold text-foreground">Escolha um canal</h2>
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 text-center">
+            <span aria-hidden="true" className="pointer-events-none absolute top-1/4 left-1/2 size-80 -translate-x-1/2 rounded-full bg-glow-soft blur-3xl" />
+            <span
+              aria-hidden="true"
+              className="relative flex size-12 items-center justify-center rounded-full border border-glass-edge bg-card text-brand-ink shadow-[inset_0_1px_0_var(--glass-highlight),0_0_24px_-6px_var(--glow)]"
+            >
+              <MessagesSquare className="size-5" />
+            </span>
+            <h2 className="relative mt-4 font-display text-2xl font-medium tracking-tight text-foreground">
+              Escolha um <em className="emphasis pr-[0.04em] text-[1.14em] leading-none text-brand-ink">canal</em>
+            </h2>
+            <p className="relative mt-1.5 max-w-sm text-sm text-muted-foreground">
               Cada cliente tem o canal “Alterações”, com os pedidos de ajuste e o chat dos posts. Você também conversa
               direto com uma pessoa do cliente, e a equipe tem canais por assunto e conversas diretas.
             </p>
             {totals.pending > 0 || totals.unread > 0 ? (
-              <div className="mt-6 w-full max-w-sm space-y-4 text-left">
+              <div className="relative mt-8 w-full max-w-sm space-y-5 text-left">
                 {withPending.length > 0 ? (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Pedidos de ajuste pendentes ({totals.pending})</p>
-                    <ul className="mt-1.5 divide-y rounded-lg border bg-card">
+                    <p className="eyebrow text-[10.5px] text-subtle-foreground">Pedidos de ajuste pendentes ({totals.pending})</p>
+                    <ul className="mt-2 divide-y rounded-2xl border bg-card">
                       {withPending.map((channel) => (
                         <li key={channel.id}>
                           <button
@@ -493,8 +504,8 @@ export function ChannelsView({
                 ) : null}
                 {withUnread.length > 0 ? (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Não lidas ({totals.unread})</p>
-                    <ul className="mt-1.5 divide-y rounded-lg border bg-card">
+                    <p className="eyebrow text-[10.5px] text-subtle-foreground">Não lidas ({totals.unread})</p>
+                    <ul className="mt-2 divide-y rounded-2xl border bg-card">
                       {withUnread.map((channel) => (
                         <li key={channel.id}>
                           <button

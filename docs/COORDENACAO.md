@@ -43,10 +43,36 @@ respeitando as restrições abaixo.
    proteção da Vercel só para o teste e **revogar** no fim; parar o sandbox.
 4. Dados de teste com nome `E2E …`; apagar tudo no fim, inclusive `activity`
    (pelo SQL do Supabase, `with x as (delete … returning 1) select count(*) from x`).
-5. Merge (squash). Se houver migration: aplicar no Supabase depois do merge,
-   renomear o arquivo para a versão registrada e subir os tipos regenerados
-   (`database.types.ts`) num PR curto.
+5. Merge (squash). Se houver migration (aditiva), aplique-a no Supabase
+   **logo antes do merge**: o código novo vai para produção em ~2 min e
+   quebra se as colunas ainda não existirem. Em seguida, renomeie o arquivo
+   para a versão registrada e suba os tipos regenerados (`database.types.ts`)
+   num PR curto.
 6. Comentar no PR o resultado e, na próxima issue, as notas para o agente.
+
+Lições de out–nov/2026:
+- **A ferramenta do Supabase pode pedir a confirmação da pessoa** ao aplicar
+  migration (aconteceu com uma que tinha `delete` dentro de função; outras
+  com `delete` passaram sem pedir). Se ninguém responder em ~4 min, nada é
+  aplicado. Por isso: aplicar antes do merge e, havendo `delete`/`drop`, com
+  a pessoa na tela.
+- **Se a produção ficar sem a migration:** voltar o deploy anterior na
+  Vercel (rollback), aplicar a migration e depois promover o deploy novo. O
+  rollback desliga a promoção automática até esse promote; confira que o
+  domínio voltou a seguir a `main` (aliases do deploy seguinte).
+- **O gerador de tipos marca todo argumento de função como obrigatório e não
+  nulo.** Onde a função aceita `null`, a chamada usa cast explícito com um
+  comentário (#93).
+- **Agentes não fazem merge**: diga isso no prompt, mesmo que alguém peça na
+  conversa deles. Todos (agentes e a pessoa) usam a mesma conta do GitHub,
+  `Boopagency`, então `merged_by` não diz quem foi; veja na sessão.
+- **Agentes em paralelo gastam o limite de uso da conta** (5 h e semanal). Com
+  4 ao mesmo tempo, um parou no limite; retome com `send_message` depois que
+  renovar.
+- **Agentes de front sem login:** a vitrine (`/vitrine/…`, só fora de
+  produção, com dados de exemplo) e os prints com Playwright substituem o
+  teste com login. Peça os prints em escuro e claro, computador e celular, e
+  olhe-os antes do merge.
 
 Detalhes que já enganaram o teste: o histórico junta as mudanças feitas pela
 mesma pessoa até 2 min depois de criar o item (`private.log_activity`); o aviso
@@ -99,14 +125,37 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
   `tasks.plan_id` e `weekly_decisions` (#38, aplicada pela pessoa no SQL
   Editor); sistema zerado e contas de teste apagadas.
 
-## Em andamento (13/10/2026)
+## Concluído de 13/10 a 06/11/2026
 
-- Issue #50 — modo escuro e mensagens de quem envia à direita (admin e
-  portal). Dois PRs: primeiro as mensagens, depois o modo escuro.
-- Issue #51 — conector do Claude completo (tudo o que se faz na tela). Três
-  PRs: base + operação; clientes e conteúdo; comercial, financeiro e metas.
-  Excluir e financeiro pelo MCP pedem migration que troque as políticas
-  `RESTRICTIVE` do conector (ver o comentário da coordenação na issue).
+- Issues #50 e #51 (modo escuro, mensagens à direita, conector do Claude
+  completo) e, depois, de #53 a #88: Minha conta, PWA e push no celular,
+  documentos e entregas para o cliente, conversas diretas, menções, voz,
+  indicações, leads do link da bio e visual premium.
+- **Instagram dos clientes (issue #89):** conectar a conta (#90, tipos #91),
+  publicar no horário (#92, tipos #93) e métricas (#95, renomeação #96).
+  - Jobs do banco para o app: `pg_cron` → `private.run_instagram_job` →
+    `/api/instagram/jobs`, com o segredo em `instagram_jobs_secret` (Vault)
+    = `INSTAGRAM_JOBS_SECRET` (Vercel, Production).
+  - Agendados: renovar tokens (6h17), publicar (a cada 5 min) e coletar
+    métricas (de hora em hora, aos 23 min).
+  - Só funciona de verdade depois do app da Meta (ver Pendências).
+- **Financeiro do cliente no portal** (#94, renomeação #97): aba Financeiro,
+  banner e avisos de atraso.
+  - Avisos para a equipe no dia 1 e no dia 7; para o cliente no dia 3, se o
+    interruptor `clients.payment_reminders` estiver ligado.
+  - Job `finance-overdue-notices` às 8h07.
+- **Repaginada visual:**
+  - fase 1, #98: vidro fosco, brilho azul e tipografia (regra no `AGENTS.md`
+    e na ARQUITETURA §10.1);
+  - lotes 2B (#99), 2C (#100), 2A (#102) e portal (#101);
+  - referências em `docs/design/referencias/` e prints em
+    `docs/design/prints/`.
+
+## Em andamento (06/11/2026)
+
+- Ajuste final da repaginada (branch `claude/repaginada-ajuste-final`):
+  editor BlockNote no visual novo, unificar os componentes duplicados entre
+  os lotes e varrer as cores fixas.
 
 ## Revisão de segurança (13/10/2026)
 
@@ -148,6 +197,20 @@ pedir à pessoa uma sessão com os conectores.
 
 ## Pendências com a pessoa
 
+- **Instagram:**
+  - criar o app na Meta (Instagram → API com login do Instagram) e pôr
+    `INSTAGRAM_APP_ID` e `INSTAGRAM_APP_SECRET` na Vercel (passo a passo na
+    issue #89);
+  - convidar os clientes como testadores;
+  - depois, a verificação da empresa e a análise do app, que pedem a
+    política de privacidade do site cobrindo a integração.
+- **Decidir a arte em 3:4:** hoje a publicação recusa a imagem (a API aceita
+  de 4:5 a 1,91:1); a alternativa é cortar sozinho para 4:5.
+- **Cadastrar as mensalidades** dos clientes como recorrência no Financeiro
+  (em 30/10 só a Hertmann tinha). Sem isso, a aba Financeiro do portal fica
+  vazia e não sai aviso de atraso.
+- **Abrir o portal com uma conta de cliente**, no celular, depois da
+  repaginada: nenhum agente testa com sessão de cliente.
 - Confirmar a taxa de imposto de 6%.
 - Importar a planilha financeira antiga (opcional).
 - Lançar o custo de Claude/IA (R$ 500).

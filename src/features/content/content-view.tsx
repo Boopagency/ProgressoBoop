@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useOptimistic, useTransition, type ReactNode
 import { toast } from "sonner"
 
 import { EmptyPanel } from "@/components/empty-panel"
+import { KANBAN_SCREEN_HEIGHT } from "@/components/kanban"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { StatGrid } from "@/components/stat-grid"
 import { SegmentedControl } from "@/components/segmented-control"
@@ -337,7 +338,7 @@ export function ContentView({ posts, ideas }: { posts: PostSummary[]; ideas: Con
               com prazo antes da publicação.
             </EmptyPanel>
           ) : state.view === "board" ? (
-            <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} />
+            <ContentBoard posts={visible} today={today} onOpen={dialog.openPost} onMove={move} className={KANBAN_SCREEN_HEIGHT} />
           ) : state.view === "list" ? (
             <UpcomingList posts={visible} today={today} onOpen={dialog.openPost} />
           ) : state.view === "feed" ? (

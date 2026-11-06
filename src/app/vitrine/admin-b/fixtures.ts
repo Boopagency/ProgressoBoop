@@ -413,7 +413,7 @@ export function vbDeals(today: DateKey): Deal[] {
     expected_close_on: addDaysToKey(today, 14),
     proposal_sent_on: stage === "proposal" || stage === "negotiation" ? addDaysToKey(today, -6) : null,
     closed_on: stage === "won" || stage === "lost" ? addDaysToKey(today, -4) : null,
-    lost_reason: stage === "lost" ? "price" : null,
+    lost_reason: stage === "lost" ? "Preço" : null,
     project_id: null,
     recurrence_id: null,
     notes: null,
@@ -422,13 +422,19 @@ export function vbDeals(today: DateKey): Deal[] {
     updated_at: STAMP,
     ...extra,
   })
+  // Última mudança n dias atrás (os alertas de parado e sem contato saem daí).
+  const touched = (days: number) => `${addDaysToKey(today, -days)}T15:00:00.000Z`
   return [
-    deal("d1", "Empório Raiz — social media", "lead", 2800, 0, "instagram"),
-    deal("d2", "Ótica Clara — tráfego pago", "lead", 1800, 0, "referral", { owner_id: "u-bia" }),
-    deal("d3", "Hotel Serra Azul — site e social", "contact", 3500, 9000, "website", { service: "Site" }),
-    deal("d4", "Café Aurora — tráfego pago (upsell)", "proposal", 1500, 0, "existing_client", { client_id: "00000000-0000-4000-8000-0000000000a1", company: null }),
-    deal("d5", "Academia Vértice — rebranding", "proposal", 0, 14000, "linkedin", { service: "Identidade visual", term_months: null, expected_close_on: addDaysToKey(today, -2) }),
-    deal("d6", "Vela Arquitetura — renovação", "negotiation", 3200, 0, "existing_client", { client_id: "00000000-0000-4000-8000-0000000000a3", company: null, probability: 80 }),
+    deal("d1", "Empório Raiz — social media", "lead", 2800, 0, "instagram", { contact_name: "Rafaela Moura", opened_on: addDaysToKey(today, -3), updated_at: touched(3) }),
+    deal("d2", "Ótica Clara — tráfego pago", "lead", 1800, 0, "referral", { owner_id: "u-bia", opened_on: today, updated_at: touched(0), service: "Tráfego pago" }),
+    deal("d9", "Studio Ondas — pilates", "lead", 1600, 0, "website", { contact_name: "Camila Reis", opened_on: addDaysToKey(today, -1), updated_at: touched(1), expected_close_on: null }),
+    deal("d3", "Hotel Serra Azul — site e social", "contact", 3500, 9000, "website", { service: "Site", contact_name: "Marcos Tavares", updated_at: touched(9) }),
+    deal("d10", "Barbearia Navalha — social", "contact", 1900, 0, "whatsapp", { owner_id: "u-bia", contact_name: "Diego Alves", updated_at: touched(1) }),
+    deal("d4", "Café Aurora — tráfego pago (upsell)", "proposal", 1500, 0, "existing_client", { client_id: "00000000-0000-4000-8000-0000000000a1", company: null, service: "Tráfego pago", updated_at: touched(2) }),
+    deal("d5", "Academia Vértice — rebranding", "proposal", 0, 14000, "linkedin", { service: "Identidade visual", term_months: null, expected_close_on: addDaysToKey(today, -2), contact_name: "Paula Nery", updated_at: touched(4) }),
+    deal("d11", "Doceria Ka — link na bio", "proposal", 0, 97, "google", { owner_id: "u-leo", service: "Link na Bio", expected_close_on: addDaysToKey(today, 1), updated_at: touched(0) }),
+    deal("d6", "Vela Arquitetura — renovação", "negotiation", 3200, 0, "existing_client", { client_id: "00000000-0000-4000-8000-0000000000a3", company: null, probability: 80, updated_at: touched(1) }),
+    deal("d12", "Sorriso Pleno — social e tráfego", "negotiation", 4200, 2500, "linkedin", { owner_id: "u-bia", contact_name: "Dra. Helena Prado", updated_at: touched(8), expected_close_on: addDaysToKey(today, 6) }),
     deal("d7", "Clínica Lume — social media", "won", 2600, 1500, "referral", { client_id: "00000000-0000-4000-8000-0000000000a4", company: null }),
     deal("d8", "Pizzaria Forno 9 — social", "lost", 2200, 0, "whatsapp"),
   ]

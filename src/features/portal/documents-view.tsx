@@ -2,9 +2,10 @@ import { Download, ExternalLink, FolderOpen } from "lucide-react"
 
 import { PageBody, PageContainer } from "@/components/layout/page"
 import { Button } from "@/components/ui/button"
+import { EmptyPanel } from "@/components/empty-panel"
 import { FileKindTile } from "@/features/client-files/file-icon"
 import { clientFileHref, formatFileSize, opensInBrowser, type PortalClientFile } from "@/features/client-files/logic"
-import { PortalEmpty, PortalHeader, PortalSectionTitle } from "@/features/portal/portal-ui"
+import { PortalHeader, PortalSectionTitle } from "@/features/portal/portal-ui"
 import { formatShortDate, toDateKey } from "@/lib/dates"
 import { CLIENT_FILE_CATEGORIES, CLIENT_FILE_CATEGORY_LABEL } from "@/lib/labels"
 import type { DateKey } from "@/lib/types"
@@ -45,10 +46,10 @@ export function PortalDocumentsView({ clientName, files, highlighted, today }: P
 
       <PageBody width="reading">
         {files.length === 0 ? (
-          <PortalEmpty icon={FolderOpen} title="Nenhum documento por aqui ainda">
+          <EmptyPanel icon={FolderOpen} title="Nenhum documento por aqui ainda">
             Quando a equipe enviar o contrato, o briefing, o manual da marca ou um relatório, ele aparece aqui para você ver
             e baixar.
-          </PortalEmpty>
+          </EmptyPanel>
         ) : (
           <>
             {groups.length > 1 ? (

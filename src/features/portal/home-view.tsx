@@ -2,6 +2,7 @@ import { ArrowUpRight, Asterisk } from "lucide-react"
 import Link from "next/link"
 
 import { PageBody, PageContainer } from "@/components/layout/page"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
 import { StatGrid } from "@/components/stat-grid"
 import { Button } from "@/components/ui/button"
 import type { FinanceItem } from "@/features/finance/logic"
@@ -61,50 +62,42 @@ export function PortalHomeView({
 }: PortalHomeData) {
   return (
     <PageContainer>
-      <section
-        aria-labelledby="portal-titulo"
-        className="relative isolate overflow-hidden rounded-[2rem] glass-panel px-5 pt-5 pb-6 sm:px-9 sm:pt-8 sm:pb-9"
-      >
-        <div aria-hidden="true" className="hero-aurora" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between gap-4">
-            <p className="inline-flex h-7 max-w-full items-center gap-2 rounded-full border border-foreground/20 px-3 eyebrow text-foreground/85">
-              <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-glow shadow-[0_0_10px_var(--glow)]" />
-              <span className="truncate">{clientName}</span>
-            </p>
-            <Asterisk aria-hidden="true" className="size-8 text-foreground/80" strokeWidth={1.5} />
-          </div>
-
-          <h1
-            id="portal-titulo"
-            className="mt-10 max-w-3xl font-display text-[40px] leading-[1.02] font-medium tracking-[-0.045em] text-foreground sm:mt-14 sm:text-[64px] lg:text-[76px]"
-          >
-            {greeting},{" "}
-            <em className="emphasis pr-[0.05em] text-[1.14em] leading-none text-gradient-brand">{userName}</em>
-          </h1>
-
-          <div className="mt-5 flex items-center justify-between gap-6">
-            <p className="max-w-md text-[15px] leading-6 text-muted-foreground first-letter:uppercase sm:text-base">
-              {pendingText(pending.length)}
-            </p>
-            <Button asChild variant="outline" size="circle" className="max-sm:hidden">
-              <Link href={pending.length > 0 ? "#esperando" : href("/portal/projetos")} aria-label={pending.length > 0 ? "Ver o que espera você" : "Ver projetos"}>
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </div>
-
-          <StatGrid
-            variant="line"
-            className="mt-8 sm:mt-12"
-            items={[
-              { label: "Esperando você", value: pending.length, href: "#esperando" },
-              { label: "Projetos", value: openProjects, href: "#projetos" },
-              { label: "Próximos posts", value: upcomingTotal, href: "#proximos" },
-            ]}
-          />
+      <HeroPanel aria-labelledby="portal-titulo" light="aurora" className="sm:px-9 sm:pt-8 sm:pb-9">
+        <div className="flex items-start justify-between gap-4">
+          <HeroEyebrow>{clientName}</HeroEyebrow>
+          <Asterisk aria-hidden="true" className="size-8 text-foreground/80" strokeWidth={1.5} />
         </div>
-      </section>
+
+        <h1
+          id="portal-titulo"
+          className="mt-10 max-w-3xl font-display text-[40px] leading-[1.02] font-medium tracking-[-0.045em] text-foreground sm:mt-14 sm:text-[64px] lg:text-[76px]"
+        >
+          {greeting},{" "}
+          <em className="emphasis pr-[0.05em] text-[1.14em] leading-none text-gradient-brand">{userName}</em>
+        </h1>
+
+        <div className="mt-5 flex items-center justify-between gap-6">
+          <p className="max-w-md text-[15px] leading-6 text-muted-foreground first-letter:uppercase sm:text-base">
+            {pendingText(pending.length)}
+          </p>
+          <Button asChild variant="outline" size="circle" className="max-sm:hidden">
+            <Link href={pending.length > 0 ? "#esperando" : href("/portal/projetos")} aria-label={pending.length > 0 ? "Ver o que espera você" : "Ver projetos"}>
+              <ArrowUpRight />
+            </Link>
+          </Button>
+        </div>
+
+        <StatGrid
+          variant="line"
+          size="lg"
+          className="mt-8 sm:mt-12"
+          items={[
+            { label: "Esperando você", value: pending.length, href: "#esperando" },
+            { label: "Projetos", value: openProjects, href: "#projetos" },
+            { label: "Próximos posts", value: upcomingTotal, href: "#proximos" },
+          ]}
+        />
+      </HeroPanel>
 
       <PageBody className="mt-8">
         {overdue.length > 0 ? <OverdueNotice overdue={overdue} communicationHref={href("/portal/comunicacao")} /> : null}

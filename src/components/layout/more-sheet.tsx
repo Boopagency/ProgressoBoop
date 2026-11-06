@@ -171,7 +171,7 @@ export function MoreSheetTheme() {
               onClick={() => setChoice(option)}
               className={cn(
                 "flex h-11 items-center justify-center gap-1.5 rounded-lg text-sm font-medium text-muted-foreground outline-none select-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring/50",
-                checked && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+                checked && "bg-card-solid text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
               )}
             >
               <Icon className={cn("size-4", checked && "text-brand-ink")} aria-hidden="true" />

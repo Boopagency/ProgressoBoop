@@ -21,6 +21,7 @@ import { useState, useTransition, type ComponentProps, type ReactNode } from "re
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
+import { HeroPanel } from "@/components/hero-panel"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import {
   AlertDialog,
@@ -353,14 +354,7 @@ function ProgressHero({
 }) {
   const complete = stats.total > 0 && stats.percent >= 100
   return (
-    <section
-      aria-label="Progresso"
-      className="relative isolate overflow-hidden rounded-[2rem] glass-panel px-5 pt-5 pb-6 sm:px-8 sm:pt-7 sm:pb-7"
-    >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-28 -right-16 -z-10 h-72 w-[28rem] rounded-full bg-glow-soft blur-3xl"
-      />
+    <HeroPanel aria-label="Progresso" className="sm:pb-7">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
         <div className="shrink-0">
           <p className="flex items-center gap-2 eyebrow text-muted-foreground">
@@ -398,7 +392,7 @@ function ProgressHero({
         </dl>
       </div>
       <Progress value={stats.percent} aria-label={`Progresso de ${project.name}`} className="mt-7 h-2" />
-    </section>
+    </HeroPanel>
   )
 }
 

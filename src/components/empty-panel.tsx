@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils"
 
 /**
  * Vazio bonito e útil: o ícone num círculo de vidro com o brilho azul, o
- * título, o que vai aparecer ali e a ação que enche a tela.
+ * título, o que vai aparecer ali e a ação que enche a tela. O mesmo no
+ * admin e no portal.
  */
 export function EmptyPanel({
   icon: Icon,
@@ -13,19 +14,24 @@ export function EmptyPanel({
   children,
   action,
   compact = false,
+  framed = true,
   className,
 }: {
   icon: LucideIcon
   title: ReactNode
   children?: ReactNode
   action?: ReactNode
+  /** Menos respiro (dentro de um quadro ou de uma coluna). */
   compact?: boolean
+  /** Contorno tracejado; sem ele quando o vazio já está dentro de um cartão. */
+  framed?: boolean
   className?: string
 }) {
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center overflow-hidden rounded-3xl border border-dashed border-foreground/15 text-center",
+        "relative flex flex-col items-center overflow-hidden rounded-3xl text-center",
+        framed && "border border-dashed border-foreground/15",
         compact ? "px-5 py-8" : "px-6 py-14 sm:py-16",
         className
       )}

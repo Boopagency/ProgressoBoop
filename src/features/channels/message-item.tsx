@@ -304,7 +304,7 @@ export function ProjectChip({ project }: { project: MessageProject }) {
   return (
     <Link
       href={`/projetos/${project.id}`}
-      className="mt-1.5 inline-flex max-w-xs items-center gap-1.5 rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted/50"
+      className="mt-1.5 inline-flex max-w-xs items-center gap-1.5 rounded-full border bg-card px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted/50"
     >
       <FolderKanban className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
       <span className="truncate">{project.name}</span>
@@ -347,7 +347,7 @@ function TaskLink({ taskId }: { taskId: string }) {
     <button
       type="button"
       onClick={() => openTask(task.id)}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-md border bg-background px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-muted"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-muted"
     >
       <StatusDot status={task.status} />
       <span className={cn("truncate", task.status === "done" && "text-muted-foreground line-through")}>{task.title}</span>
@@ -575,7 +575,7 @@ export function MessageItem({
   const actions = editing ? null : (
     <div
       className={cn(
-        "absolute top-0 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100 max-md:hidden",
+        "absolute top-0 flex -translate-y-1/2 items-center gap-0.5 rounded-md border bg-card-solid p-0.5 opacity-0 shadow-sm transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100 max-md:hidden",
         own ? "left-3" : "right-3"
       )}
     >
@@ -640,7 +640,7 @@ export function MessageItem({
           }
         }}
         aria-label="Editar mensagem"
-        className="field-sizing-content max-h-60 min-h-16 w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-[14px] leading-6 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+        className="field-sizing-content max-h-60 min-h-16 w-full resize-none rounded-md border border-input bg-card dark:bg-input/30 px-2.5 py-1.5 text-[14px] leading-6 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
       />
       <div className={cn("flex gap-1.5 text-xs text-muted-foreground", own && "flex-row-reverse")}>
         <Button type="button" size="sm" className="h-7" disabled={saving} onClick={saveEdit}>
@@ -898,11 +898,11 @@ function MessageTaskForm({ message, onDone }: { message: ThreadMessage; onDone: 
         }}
         maxLength={200}
         aria-label="Título da tarefa"
-        className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+        className="h-8 w-full rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <AssigneePicker value={assignees} onChange={setAssignees} className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]" />
-        <DueDatePicker value={due} onChange={setDue} today={today} className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]" />
+        <AssigneePicker value={assignees} onChange={setAssignees} className="h-8 rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px]" />
+        <DueDatePicker value={due} onChange={setDue} today={today} className="h-8 rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px]" />
         <div className="ml-auto flex gap-1.5">
           <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => onDone(false)}>
             Cancelar

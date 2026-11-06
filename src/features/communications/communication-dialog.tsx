@@ -344,11 +344,11 @@ function CommunicationForm({
                   onChange={(event) => setTaskTitle(event.target.value)}
                   maxLength={200}
                   aria-label="Título da tarefa"
-                  className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                  className="h-8 w-full rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                 />
                 <div className="flex flex-wrap items-center gap-2">
-                  <AssigneePicker value={taskAssignees} onChange={setTaskAssignees} className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]" />
-                  <DueDatePicker value={taskDue} onChange={setTaskDue} today={today} className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]" />
+                  <AssigneePicker value={taskAssignees} onChange={setTaskAssignees} className="h-8 rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px]" />
+                  <DueDatePicker value={taskDue} onChange={setTaskDue} today={today} className="h-8 rounded-md border border-input bg-card dark:bg-input/30 px-2.5 text-[13px]" />
                   <div className="ml-auto flex gap-1.5">
                     <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => setTaskOpen(false)}>
                       Cancelar

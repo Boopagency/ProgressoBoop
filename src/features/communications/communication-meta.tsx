@@ -8,8 +8,8 @@ const KIND_STYLE: Record<CommunicationKind, string> = {
   request: "border-attention-line/15 bg-attention-soft text-attention-ink",
   approval: "border-success/20 bg-success/10 text-success",
   feedback: "border-brand/25 bg-brand-soft/60 text-brand-ink",
-  update: "border-border bg-background text-muted-foreground",
-  other: "border-border bg-background text-muted-foreground",
+  update: "border-border bg-transparent text-muted-foreground",
+  other: "border-border bg-transparent text-muted-foreground",
 }
 
 /** Pedido (laranja), Aprovação (verde), Feedback (marca), Atualização e Outro (neutros). */

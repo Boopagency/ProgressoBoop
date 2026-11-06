@@ -18,11 +18,11 @@ import type { DateKey, Project, ProjectStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const STATUS_STYLE: Record<ProjectStatus, string> = {
-  planned: "border-border bg-background text-muted-foreground",
+  planned: "border-border bg-transparent text-muted-foreground",
   active: "border-brand/25 bg-brand-soft/60 text-brand-ink",
   paused: "border-attention-line/15 bg-attention-soft text-attention-ink",
   done: "border-success/20 bg-success/10 text-success",
-  canceled: "border-dashed border-border bg-background text-subtle-foreground",
+  canceled: "border-dashed border-border bg-transparent text-subtle-foreground",
 }
 
 export function ProjectStatusBadge({ status, className }: { status: ProjectStatus; className?: string }) {

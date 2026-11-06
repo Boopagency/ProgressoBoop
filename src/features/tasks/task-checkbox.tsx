@@ -16,7 +16,7 @@ export function TaskCheckbox({
     <CheckboxPrimitive.Root
       data-slot="task-checkbox"
       className={cn(
-        "peer grid shrink-0 cursor-pointer place-content-center rounded-full border-[1.5px] border-muted-foreground/35 bg-background text-white transition-[background-color,border-color,box-shadow] duration-150 outline-none",
+        "peer grid shrink-0 cursor-pointer place-content-center rounded-full border-[1.5px] border-muted-foreground/35 bg-transparent text-primary-foreground transition-[background-color,border-color,box-shadow] duration-150 outline-none",
         "hover:border-muted-foreground/70 focus-visible:ring-[3px] focus-visible:ring-ring/40",
         "data-[state=checked]:border-success data-[state=checked]:bg-success",
         "disabled:cursor-not-allowed disabled:opacity-50",

@@ -25,7 +25,7 @@ import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
-import { NumberTiles } from "@/components/number-tiles"
+import { StatGrid } from "@/components/stat-grid"
 import { PillTabs, type PillTab } from "@/components/pill-tabs"
 import {
   AlertDialog,
@@ -312,7 +312,7 @@ export function ClientView({
 
       <PageBody className="gap-6">
         <section aria-label="Números do cliente">
-          <NumberTiles
+          <StatGrid
             items={[
               {
                 label: "Tarefas abertas",

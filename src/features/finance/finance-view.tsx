@@ -4,14 +4,15 @@ import { Plus, Wallet } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
 
-import { KpiTile } from "@/components/kpi-tile"
+import { DisplayValue } from "@/components/display-value"
+import { HeroEyebrow, HeroFigures, HeroPanel } from "@/components/hero-panel"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { periodOf } from "@/features/clients/logic"
 import { FinanceRows } from "@/features/finance/finance-rows"
 import { useFinanceDialog } from "@/features/finance/finance-shell"
-import { AlertList, ledgerHref, MoneyLine, MonthNav, StatusChip } from "@/features/finance/finance-ui"
+import { AlertList, DRE_STATUS_HINT, FinanceEmpty, HeroChip, ledgerHref, MoneyLine, MonthNav, StatusChip } from "@/features/finance/finance-ui"
 import { monthItems, overdueItems } from "@/features/finance/logic"
 import {
   allocation,
@@ -29,6 +30,7 @@ import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { monthRangeOf } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import type { DateKey } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const RULE_LABEL = {
   negative: "Resultado negativo: nada é dividido e o caixa cobre a diferença.",
@@ -63,73 +65,102 @@ export function FinanceView({ data, period, today }: { data: FinanceData; period
   const empty = data.entries.length === 0 && data.recurrences.length === 0
   const sum = (list: typeof overdue) => list.reduce((total, item) => total + item.amount_cents, 0)
 
+  const bank = closing ? closing.bank_balance_cents : balance
+  const STATUS_TEXT = { closed: "Mês fechado", realized: "Realizado", current: "Mês em andamento", forecast: "Previsão" } as const
+
   return (
     <div>
-      <MonthNav period={period} current={current} basePath="/financeiro" />
-
       {empty ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-            <Wallet className="size-5 text-muted-foreground" />
-          </div>
-          <h2 className="mt-4 text-sm font-semibold">Comece pelos contratos e pelos custos fixos</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+        <>
+          <MonthNav period={period} current={current} basePath="/financeiro" />
+          <FinanceEmpty
+            className="mt-8"
+            icon={<Wallet />}
+            title="Comece pelos contratos e pelos custos fixos"
+            action={
+              <Button size="sm" onClick={() => openNew()}>
+                Primeiro lançamento
+              </Button>
+            }
+          >
             Lance cada mensalidade de cliente como receita que se repete todo mês e cada custo fixo como despesa. Depois é
             só marcar o que entrou e saiu: resultado, margem, caixa e projeção se calculam sozinhos.
-          </p>
-          <Button size="sm" className="mt-5" onClick={() => openNew()}>
-            Primeiro lançamento
-          </Button>
-        </div>
+          </FinanceEmpty>
+        </>
       ) : (
         <>
-          <section aria-label="Resumo do mês" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <KpiTile
-              label="Receita bruta"
-              value={formatMoney(dre.revenue)}
-              href={ledgerHref({ mes: period, contas: DRE_LINE_ACCOUNTS.revenue })}
-              hint={
-                dre.status === "current"
-                  ? `${formatMoneyShort(dre.realizedRevenue)} recebidos · ${formatMoneyShort(pendingRevenue)} a receber`
-                  : dre.status === "forecast"
-                    ? `prevista · ${formatMoneyShort(monthlyRecurring)} de contratos`
-                    : `recebida no mês · ${formatMoneyShort(monthlyRecurring)} de contratos`
-              }
-              footer={
-                dre.status === "current" && dre.revenue > 0 ? (
-                  <Progress value={(dre.realizedRevenue / dre.revenue) * 100} aria-label="Recebido do mês" className="mt-2 h-1" />
-                ) : null
-              }
+          {/* O mês em destaque: o resultado grande e os três números que o formam. */}
+          <HeroPanel aria-labelledby="financeiro-resultado">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+              <HeroEyebrow>
+                <span title={DRE_STATUS_HINT[dre.status]}>{STATUS_TEXT[dre.status]}</span>
+              </HeroEyebrow>
+              <MonthNav period={period} current={current} basePath="/financeiro" hero />
+            </div>
+
+            <div className="mt-7 flex flex-col gap-4 sm:mt-9 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
+                <p id="financeiro-resultado" className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+                  {dre.result < 0 ? <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" /> : null}
+                  {dre.status === "forecast" ? "Resultado previsto" : "Resultado do mês"}
+                </p>
+                <Link href="/financeiro/dre" className="mt-2 block w-fit rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">
+                  <DisplayValue
+                    value={formatMoney(dre.result)}
+                    className={cn(
+                      "block text-[56px] leading-[0.95] sm:text-[84px] lg:text-[96px]",
+                      dre.result < 0 ? "text-overdue" : "text-foreground [text-shadow:0_0_42px_var(--glow-soft)]"
+                    )}
+                  />
+                </Link>
+              </div>
+              <dl className="flex shrink-0 flex-wrap gap-2 lg:mb-3 lg:justify-end">
+                <HeroChip label="Margem" value={formatPercent(dre.margin)} />
+                <HeroChip label="Contribuição" value={formatPercent(dre.contributionMargin)} />
+                <HeroChip label="MRR" value={formatMoneyShort(monthlyRecurring)} />
+              </dl>
+            </div>
+
+            <HeroFigures
+              className="mt-8 sm:mt-10"
+              items={[
+                {
+                  key: "receita",
+                  label: "Receita bruta",
+                  value: formatMoney(dre.revenue),
+                  href: ledgerHref({ mes: period, contas: DRE_LINE_ACCOUNTS.revenue }),
+                  progress: dre.status === "current" && dre.revenue > 0 ? (dre.realizedRevenue / dre.revenue) * 100 : undefined,
+                  hint:
+                    dre.status === "current"
+                      ? `${formatMoneyShort(dre.realizedRevenue)} recebidos · ${formatMoneyShort(pendingRevenue)} a receber`
+                      : dre.status === "forecast"
+                        ? `prevista · ${formatMoneyShort(monthlyRecurring)} de contratos`
+                        : `recebida no mês · ${formatMoneyShort(monthlyRecurring)} de contratos`,
+                },
+                {
+                  key: "custos",
+                  label: "Custos e despesas",
+                  value: formatMoney(costs),
+                  href: ledgerHref({ mes: period, contas: ["direct_cost", "fixed_cost", "other_expense"] }),
+                  hint: `inclui ${formatMoneyShort(dre.tax)} de imposto e ${formatMoneyShort(dre.fees)} de taxas`,
+                },
+                {
+                  key: "saldo",
+                  label: "Saldo em conta",
+                  value: formatMoney(bank),
+                  alert: bank < 0,
+                  href: "/financeiro/fechamento",
+                  hint: closing
+                    ? "conferido com o extrato"
+                    : period < current
+                      ? "no fim do mês, pelos lançamentos"
+                      : period === current
+                        ? "hoje, pelos lançamentos"
+                        : "hoje (o futuro está na projeção)",
+                },
+              ]}
             />
-            <KpiTile
-              label="Custos e despesas"
-              value={formatMoney(costs)}
-              href={ledgerHref({ mes: period, contas: ["direct_cost", "fixed_cost", "other_expense"] })}
-              hint={`inclui ${formatMoneyShort(dre.tax)} de imposto e ${formatMoneyShort(dre.fees)} de taxas`}
-            />
-            <KpiTile
-              label={dre.status === "forecast" ? "Resultado previsto" : "Resultado do mês"}
-              value={formatMoney(dre.result)}
-              alert={dre.result < 0}
-              href="/financeiro/dre"
-              hint={`margem ${formatPercent(dre.margin)} · contribuição ${formatPercent(dre.contributionMargin)}`}
-            />
-            <KpiTile
-              label="Saldo em conta"
-              value={formatMoney(closing ? closing.bank_balance_cents : balance)}
-              alert={(closing ? closing.bank_balance_cents : balance) < 0}
-              href="/financeiro/fechamento"
-              hint={
-                closing
-                  ? "conferido com o extrato"
-                  : period < current
-                    ? "no fim do mês, pelos lançamentos"
-                    : period === current
-                      ? "hoje, pelos lançamentos"
-                      : "hoje (o futuro está na projeção)"
-              }
-            />
-          </section>
+          </HeroPanel>
 
           {overdue.length > 0 ? (
             <PanelCard
@@ -148,13 +179,13 @@ export function FinanceView({ data, period, today }: { data: FinanceData; period
                   {overdueExpense.length > 0 ? <span className="whitespace-nowrap">a pagar {formatMoney(sum(overdueExpense))}</span> : null}
                 </span>
               }
-              className="mt-6 border-overdue/25"
+              className="mt-8 border-overdue/30"
             >
               <FinanceRows items={overdue} today={today} onOpen={openItem} showMonth />
             </PanelCard>
           ) : null}
 
-          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+          <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
             <div className="min-w-0 space-y-6">
               <PanelCard
                 id="receitas"

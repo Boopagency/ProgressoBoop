@@ -61,24 +61,24 @@ export function ProjectionView({ data, today }: { data: FinanceData; today: Date
   return (
     <div>
       <section aria-label="Resumo da projeção" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiTile
+        <KpiTile display
           label="MRR hoje"
           value={formatMoney(months[0]!.mrr)}
           hint={`${months[0]!.contracts} ${months[0]!.contracts === 1 ? "contrato ativo" : "contratos ativos"}`}
         />
-        <KpiTile
+        <KpiTile display
           label={`MRR em ${monthName(last.period)}/${last.period.slice(2, 4)}`}
           value={formatMoney(last.mrr)}
           alert={last.mrr < months[0]!.mrr}
           hint={drop ? `primeira queda em ${monthName(drop.period)} (${formatMoneyDelta(drop.change)})` : "sem quedas previstas"}
         />
-        <KpiTile
+        <KpiTile display
           label="Resultado previsto (12 meses)"
           value={formatMoney(resultSum)}
           alert={resultSum < 0}
           hint={`${months.filter((month) => month.dre.result < 0).length} meses no vermelho`}
         />
-        <KpiTile
+        <KpiTile display
           label={`Caixa em ${monthName(last.period)}/${last.period.slice(2, 4)}`}
           value={formatMoney(lastReserve)}
           alert={lastReserve < 0}
@@ -175,7 +175,7 @@ export function ProjectionView({ data, today }: { data: FinanceData; today: Date
       </div>
 
       <div className="mt-6">
-        <PanelCard id="projecao-tabela" title="Mês a mês">
+        <PanelCard id="projecao-tabela" title="Mês a mês" className="bg-card-solid">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-[13px] whitespace-nowrap tabular-nums">
               <thead>
@@ -195,7 +195,7 @@ export function ProjectionView({ data, today }: { data: FinanceData; today: Date
                 {months.map((month, position) => {
                   const share = split[position]
                   return (
-                    <tr key={month.period} className={cn("border-t", month.period === index.current && "bg-accent/40")}>
+                    <tr key={month.period} className={cn("border-t", month.period === index.current && "bg-glow-soft/60")}>
                       <th scope="row" className="px-4 py-2 text-left font-normal whitespace-nowrap">
                         <span className="text-foreground capitalize">{monthName(month.period)}</span>
                         <span className="text-muted-foreground">/{month.period.slice(2, 4)}</span>

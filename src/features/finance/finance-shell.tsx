@@ -40,8 +40,12 @@ export function useFinanceDialog(): FinanceDialogApi {
   return context
 }
 
-/** Moldura do financeiro: título, botão de lançar, abas e o formulário. */
-export function FinanceShell({ children }: { children: ReactNode }) {
+/**
+ * Moldura do financeiro: título, botão de lançar, abas e o formulário.
+ * `basePath` troca o começo dos links das abas (a vitrine monta o financeiro
+ * em outro endereço).
+ */
+export function FinanceShell({ children, basePath = "/financeiro" }: { children: ReactNode; basePath?: string }) {
   const pathname = usePathname()
   const [dialog, setDialog] = useState<FinanceDialogState>({ open: false, key: 0 })
   useUrlTrigger(() => setDialog((current) => ({ open: true, key: current.key + 1 })))
@@ -73,11 +77,12 @@ export function FinanceShell({ children }: { children: ReactNode }) {
           <PillIndicator selector="[aria-current=page]" active={pathname} />
           <ul className="flex w-max gap-1 rounded-full bg-card p-1 shadow-card">
             {FINANCE_TABS.map((tab) => {
-              const active = tab.href === "/financeiro" ? pathname === tab.href : pathname.startsWith(tab.href)
+              const href = basePath + tab.href.slice("/financeiro".length)
+              const active = href === basePath ? pathname === href : pathname.startsWith(href)
               return (
                 <li key={tab.href}>
                   <Link
-                    href={tab.href}
+                    href={href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "relative inline-flex h-8 items-center rounded-full px-4 text-[13px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",

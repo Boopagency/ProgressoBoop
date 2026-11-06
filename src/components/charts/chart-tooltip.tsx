@@ -10,7 +10,7 @@ export interface TooltipLine {
 const KEY: Record<NonNullable<TooltipLine["tone"]>, string> = {
   primary: "bg-chart-1",
   light: "bg-chart-1-light",
-  secondary: "bg-chart-2",
+  secondary: "bg-foreground/55",
   negative: "bg-overdue",
   muted: "bg-chart-muted",
 }
@@ -38,7 +38,7 @@ export function ChartTooltip({
     <div
       role="presentation"
       className={cn(
-        "pointer-events-none absolute top-0 z-20 w-max max-w-60 rounded-lg border bg-popover px-3 py-2 text-popover-foreground shadow-md",
+        "pointer-events-none absolute top-0 z-20 w-max max-w-60 rounded-xl border border-glass-edge bg-popover px-3 py-2 text-popover-foreground shadow-float",
         edge === "center" && "-translate-x-1/2",
         edge === "right" && "-translate-x-full"
       )}

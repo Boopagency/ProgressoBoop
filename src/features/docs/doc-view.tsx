@@ -346,13 +346,13 @@ function DocHeader({ doc, onUpdate }: { doc: Doc; onUpdate: (patch: DocPatch) =>
   return (
     <header>
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <KindIcon className="size-3.5" aria-hidden="true" />
+        <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-foreground/20 px-2.5 eyebrow text-foreground/85">
+          <KindIcon className="size-3.5 text-brand-ink" aria-hidden="true" />
           {DOC_KIND_LABEL[doc.kind]}
         </span>
         <DocStatusBadge doc={doc} today={today} />
         {doc.pinned ? (
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full border border-glass-edge bg-glow-soft px-2.5 text-brand-ink">
             <Pin className="size-3" aria-hidden="true" />
             Em “Comece por aqui”
           </span>
@@ -376,7 +376,7 @@ function DocHeader({ doc, onUpdate }: { doc: Doc; onUpdate: (patch: DocPatch) =>
         maxLength={TITLE_MAX}
         aria-label="Título do documento"
         placeholder="Sem título"
-        className="mt-2 field-sizing-content w-full resize-none bg-transparent font-display text-[26px] leading-9 font-semibold tracking-tight text-foreground outline-none placeholder:text-subtle-foreground sm:text-[30px] sm:leading-10"
+        className="mt-2 field-sizing-content w-full resize-none bg-transparent font-display text-[28px] leading-9 font-medium tracking-[-0.035em] text-foreground outline-none placeholder:text-subtle-foreground sm:text-[38px] sm:leading-[2.9rem]"
       />
       <textarea
         value={summary}

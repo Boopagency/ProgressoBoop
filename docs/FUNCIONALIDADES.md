@@ -663,9 +663,11 @@ A planilha "Financeiro - Boop" dentro do portal: as mesmas categorias,
 contas e premissas, sem ninguém preencher totais à mão. Sete abas, todas com
 o botão **Novo lançamento**.
 
-- **Mês** (setas e "Este mês"):
-  - indicadores: **Receita bruta** (recebido e a receber), **Custos e
-    despesas**, **Resultado** (com a margem) e **Saldo em conta** hoje;
+- **Mês** (setas e "Este mês", no painel de destaque do topo):
+  - o **Resultado** do mês em número grande (leva ao DRE), com a margem, a
+    margem de contribuição e o MRR em pílulas; embaixo, **Receita bruta**
+    (recebido e a receber), **Custos e despesas** e **Saldo em conta**
+    hoje, cada um levando aos lançamentos;
   - **Em atraso** (no mês atual): o que venceu e não foi recebido ou pago,
     de qualquer mês;
   - **Receitas** e **Despesas** do mês. O checkbox marca recebido/pago com a
@@ -790,7 +792,8 @@ Todos os números da Boop num lugar, calculados dos dados do portal.
 
 - **Período:** mês, trimestre ou ano, com setas; **comparar com** o período
   anterior ou o mesmo período do ano passado. Fica no endereço, então dá
-  para salvar ou mandar o link.
+  para salvar ou mandar o link. Período, comparação e áreas ficam juntos no
+  painel de destaque do topo.
 - **Áreas:** Visão geral, Financeiro (faturamento, MRR, clientes, ticket,
   MRR novo e perdido, custos, resultado, margens, a receber em atraso,
   inadimplência, saldo, caixa em meses, falta para a receita necessária),
@@ -817,6 +820,8 @@ Todos os números da Boop num lugar, calculados dos dados do portal.
   atualiza sozinho; alguns aceitam recorte por cliente) ou um valor manual
   (ex.: NPS, atualizado à mão). Meta, base opcional e **sugestões**: manter
   o ritmo dos últimos 3 meses, +20%, e para o MRR a receita necessária.
+- No topo, um resumo das metas em andamento: quantos resultados-chave,
+  quantos no ritmo, quantos pedem atenção e quantos já foram atingidos.
 - Cada resultado mostra o atual e a meta, a barra com a marca do
   **esperado para hoje**, a situação (No ritmo, Atenção, Atrasada,
   Atingida, Não atingida) e, nos financeiros, a previsão para o fim.
@@ -832,7 +837,8 @@ Todos os números da Boop num lugar, calculados dos dados do portal.
   publicados no período, visualizações, alcance médio, interações e o
   melhor post, pela última leitura de cada post).
 - **Ver relatório:** uma página limpa para apresentar ou salvar em PDF
-  (**Imprimir ou salvar em PDF** já ajusta para A4 deitado).
+  (**Imprimir ou salvar em PDF** já ajusta para A4 deitado e sai sempre no
+  tema claro, em papel branco, mesmo com o escuro ligado).
 - **Baixar Excel:** uma aba por seção, com as fórmulas da planilha
   (margens, resultado, totais), as premissas editáveis (mudar a alíquota
   recalcula o DRE) e uma aba "Sobre" com o que cada número significa.

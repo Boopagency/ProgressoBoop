@@ -98,23 +98,23 @@ export function DreView({
 
       <ViewFade view={rangeKey}>
         <section aria-label="Resumo do período" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <KpiTile
+          <KpiTile display
             label="Receita bruta no período"
             value={formatMoney(total.revenue)}
             hint={`${formatMoneyShort(realizedTotal.revenue)} realizados · ${formatMoneyShort(total.revenue - realizedTotal.revenue)} previstos`}
           />
-          <KpiTile
+          <KpiTile display
             label="Resultado no período"
             value={formatMoney(total.result)}
             alert={total.result < 0}
             hint={`margem líquida ${formatPercent(total.margin)}`}
           />
-          <KpiTile
+          <KpiTile display
             label="Margem de contribuição"
             value={formatPercent(total.contributionMargin)}
             hint={`${formatMoneyShort(total.contribution)} depois de imposto, taxas e custos diretos`}
           />
-          <KpiTile
+          <KpiTile display
             label="Resultado médio por mês"
             value={formatMoney(Math.round(total.result / Math.max(1, months.length)))}
             alert={total.result < 0}
@@ -172,7 +172,7 @@ export function DreView({
                     Linha
                   </th>
                   {months.map((month) => (
-                    <th key={month.period} scope="col" className="px-3 py-2 text-right font-medium">
+                    <th key={month.period} scope="col" className={cn("px-3 py-2 text-right font-medium", month.status === "current" && "rounded-t-xl bg-glow-soft/60")}>
                       <span className="block text-foreground capitalize">{monthName(month.period).slice(0, 3)}/{month.period.slice(2, 4)}</span>
                       <StatusChip status={month.status} className="mt-1" />
                     </th>
@@ -204,6 +204,7 @@ export function DreView({
                           value={line.sign * (month[line.key] as number)}
                           href={accounts.length > 0 ? ledgerHref({ mes: month.period, contas: accounts }) : undefined}
                           strong={Boolean(strong)}
+                          current={month.status === "current"}
                         />
                       ))}
                       <DreCell value={line.sign * (total[line.key] as number)} strong={Boolean(strong)} total />
@@ -227,6 +228,7 @@ export function DreView({
                         key={month.period}
                         value={line.sign * month[line.key]}
                         href={ledgerHref({ mes: month.period, contas: [line.account] })}
+                        current={month.status === "current"}
                       />
                     ))}
                     <DreCell value={line.sign * total[line.key]} total />
@@ -246,11 +248,25 @@ export function DreView({
   )
 }
 
-function DreCell({ value, href, strong = false, total = false }: { value: number; href?: string; strong?: boolean; total?: boolean }) {
+function DreCell({
+  value,
+  href,
+  strong = false,
+  total = false,
+  current = false,
+}: {
+  value: number
+  href?: string
+  strong?: boolean
+  total?: boolean
+  /** Coluna do mês atual (fundo azul bem leve). */
+  current?: boolean
+}) {
   const text = value === 0 ? "—" : formatMoney(value)
   const className = cn(
     "border-t px-3 py-2 text-right whitespace-nowrap",
     total && "bg-muted/40 px-4",
+    current && "bg-glow-soft/60",
     value < 0 && strong ? "text-overdue" : value === 0 ? "text-subtle-foreground" : strong ? "text-foreground" : "text-foreground/90"
   )
   return (
@@ -285,7 +301,7 @@ function PercentRow({
       {months.map((month) => {
         const value = pick(month)
         return (
-          <td key={month.period} className={cn("border-t px-3 py-2 text-right", value !== null && value < 0 ? "text-overdue" : "text-muted-foreground")}>
+          <td key={month.period} className={cn("border-t px-3 py-2 text-right", month.status === "current" && "bg-glow-soft/60", value !== null && value < 0 ? "text-overdue" : "text-muted-foreground")}>
             {formatPercent(value)}
           </td>
         )

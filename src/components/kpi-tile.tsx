@@ -3,6 +3,7 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 
 import { Sparkline } from "@/components/charts/sparkline"
+import { DisplayValue } from "@/components/display-value"
 import { cn } from "@/lib/utils"
 
 export interface KpiDelta {
@@ -30,6 +31,7 @@ export function KpiTile({
   onSelect,
   alert = false,
   footer,
+  display = false,
   className,
 }: {
   label: string
@@ -43,6 +45,8 @@ export function KpiTile({
   /** Número que pede atenção (vermelho). */
   alert?: boolean
   footer?: ReactNode
+  /** Número grande na serifada itálica (telas de gestão), com rótulo em caixa alta. */
+  display?: boolean
   className?: string
 }) {
   const good =
@@ -51,20 +55,28 @@ export function KpiTile({
   // Só elementos de frase (span): o cartão pode ser um botão ou um link.
   const body = (
     <>
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        {alert ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-overdue" /> : null}
+      <span className={cn("flex items-center gap-1.5 text-muted-foreground", display ? "eyebrow" : "text-xs")}>
+        {alert ? (
+          <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full bg-overdue", display && "shadow-[0_0_8px_var(--overdue)]")} />
+        ) : null}
         {label}
       </span>
-      <span
-        className={cn(
-          "mt-1 block font-display text-xl leading-7 font-semibold tracking-tight sm:text-[22px]",
-          alert ? "text-overdue" : "text-foreground"
-        )}
-      >
-        {value}
-      </span>
+      {display ? (
+        <span className={cn("mt-3 block text-[34px] leading-[0.95] sm:text-[38px]", alert ? "text-overdue" : "text-foreground")}>
+          {typeof value === "string" ? <DisplayValue value={value} /> : <span className="display-number">{value}</span>}
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "mt-1 block font-display text-xl leading-7 font-semibold tracking-tight sm:text-[22px]",
+            alert ? "text-overdue" : "text-foreground"
+          )}
+        >
+          {value}
+        </span>
+      )}
       {delta ? (
-        <span className="mt-1 flex flex-wrap items-center gap-x-1 text-xs">
+        <span className={cn("flex flex-wrap items-center gap-x-1 text-xs", display ? "mt-2" : "mt-1")}>
           <span
             className={cn(
               "inline-flex items-center gap-0.5 font-medium tabular-nums",
@@ -82,8 +94,11 @@ export function KpiTile({
       {footer}
     </>
   )
-  const base = cn("block rounded-2xl border bg-card px-5 py-4", className)
-  const interactive = "w-full text-left transition-shadow hover:shadow-float focus-visible:outline-2 focus-visible:outline-ring"
+  const base = cn("block rounded-2xl border bg-card px-5", display ? "py-5" : "py-4", className)
+  const interactive = cn(
+    "w-full text-left transition-shadow hover:shadow-float focus-visible:outline-2 focus-visible:outline-ring",
+    display && "transition-[box-shadow,border-color] hover:border-glow/40"
+  )
   if (onSelect) {
     return (
       <button type="button" onClick={onSelect} className={cn(base, interactive)}>

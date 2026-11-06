@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { BarList } from "@/components/charts/bar-list"
+import { PeriodTitle } from "@/components/month-title"
 import { CountColumnChart, MoneyColumnChart, MoneyLineChart } from "@/components/charts/presets"
 import { KpiTile } from "@/components/kpi-tile"
 import { BoopMark } from "@/components/layout/boop-mark"
@@ -28,7 +29,7 @@ import { cn } from "@/lib/utils"
 function Section({ id, title, children, className }: { id: ReportSection; title: string; children: ReactNode; className?: string }) {
   return (
     <section aria-labelledby={`secao-${id}`} className={cn("report-section mt-10 first:mt-0", className)}>
-      <h2 id={`secao-${id}`} className="border-b pb-2 font-display text-lg font-semibold text-foreground">
+      <h2 id={`secao-${id}`} className="border-b pb-2.5 font-display text-[22px] font-medium tracking-[-0.02em] text-foreground">
         {title}
       </h2>
       <div className="mt-4">{children}</div>
@@ -50,8 +51,10 @@ export function ReportView({ input, clientName, actions }: { input: ReportInput;
         <div className="flex items-center gap-3">
           <BoopMark className="w-10" />
           <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Relatório de gestão{clientName ? ` · ${clientName}` : ""}</p>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">{period.label}</h1>
+            <p className="eyebrow text-muted-foreground">Relatório de gestão{clientName ? ` · ${clientName}` : ""}</p>
+            <h1 className="mt-1 font-display text-[30px] leading-tight font-medium tracking-[-0.03em] text-foreground sm:text-[36px]">
+              <PeriodTitle label={period.label} />
+            </h1>
             <p className="text-xs text-muted-foreground">
               Comparado com {comparison.label.toLocaleLowerCase("pt-BR")} · gerado em {input.generatedAt} por {input.generatedBy}
             </p>
@@ -74,12 +77,13 @@ export function ReportView({ input, clientName, actions }: { input: ReportInput;
                       const snapshot = snapshotOf(ctx, metric, period, input.compare)
                       return (
                         <KpiTile
+                          display
                           key={metric.key}
                           label={metric.label}
                           value={formatMetric(snapshot.value, metric.unit)}
                           delta={metricDelta(snapshot.value, snapshot.previous, metric.unit, metric.better, `vs ${comparison.short}`)}
                           trend={snapshot.trend}
-                          className="px-3 py-2.5"
+                          className="px-4 py-3.5 print:break-inside-avoid"
                         />
                       )
                     })}

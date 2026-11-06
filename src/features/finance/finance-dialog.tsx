@@ -479,7 +479,7 @@ function EntryForm({
                 if (cents) setAmount(moneyInputValue(cents))
               }}
               placeholder="0,00"
-              className="h-9 text-right tabular-nums"
+              className="h-9 text-right display-number text-[22px] md:text-[22px]"
             />
           </Field>
           <Field label="Vencimento">

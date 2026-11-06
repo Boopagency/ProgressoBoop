@@ -10,6 +10,7 @@ import { publishLabel, type PostSummary } from "@/features/content/logic"
 import { loadAutoPublishContext, setAutoPublish, type AutoPublishContext } from "@/features/instagram/publish-actions"
 import { MAX_PUBLISH_ATTEMPTS, publishBlockers, publishKind, type PublishCandidate } from "@/features/instagram/publish-logic"
 import { todayKey, zonedTimeToInstant } from "@/lib/dates"
+import { useDemoLoaders } from "@/lib/demo-loaders"
 import { PUBLISH_STATUS_LABEL } from "@/lib/labels"
 import type { ContentPost, DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -52,17 +53,19 @@ export function AutoPublishPanel({
     instagram_permalink: post.instagram_permalink,
   }))
   const [context, setContext] = useState<AutoPublishContext | null>(null)
+  const demo = useDemoLoaders()
+  const loadContext = demo.loadAutoPublishContext ?? loadAutoPublishContext
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     let current = true
-    void loadAutoPublishContext(post.client_id).then((result) => {
+    void loadContext(post.client_id).then((result) => {
       if (current) setContext(result.ok ? result.data : { configured: false, account: null })
     })
     return () => {
       current = false
     }
-  }, [post.client_id])
+  }, [post.client_id, loadContext])
 
   if (!post.networks.includes("instagram") || post.format === "text") return null
 
@@ -193,7 +196,7 @@ export function AutoPublishPanel({
   }
 
   return (
-    <section aria-label="Publicação no Instagram" className={cn("space-y-2 rounded-lg border p-3", className)}>
+    <section aria-label="Publicação no Instagram" className={cn("space-y-2 rounded-2xl border bg-card p-3.5", className)}>
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Send className={cn("size-3.5", state.auto_publish && status !== "failed" ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
         Publicação no Instagram

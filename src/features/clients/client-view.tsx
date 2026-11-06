@@ -1,8 +1,14 @@
 "use client"
 
 import {
+  BriefcaseBusiness,
   CalendarPlus,
   ChevronDown,
+  FileText,
+  LayoutGrid,
+  Megaphone,
+  MessagesSquare,
+  Wallet,
   FilePlus2,
   Mail,
   MoreHorizontal,
@@ -14,11 +20,13 @@ import {
   UserRound,
 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
+import { NumberTiles } from "@/components/number-tiles"
+import { PillTabs, type PillTab } from "@/components/pill-tabs"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +57,7 @@ import { ReviewCard } from "@/features/clients/review-card"
 import { CommunicationsCard } from "@/features/communications/communications-card"
 import { ClientContentCard } from "@/features/content/client-content-card"
 import { ClientIdeasCard } from "@/features/content/client-ideas-card"
-import type { PostSummary } from "@/features/content/logic"
+import { isLate, upcomingPosts, type PostSummary } from "@/features/content/logic"
 import { DecisionsCard } from "@/features/decisions/decisions-card"
 import { ClientDocsCard } from "@/features/docs/client-docs-card"
 import { NewDocDialog, type NewDocDialogState } from "@/features/docs/new-doc-dialog"
@@ -84,6 +92,14 @@ import type {
   MeetingRecord,
 } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+/** Seções da página do cliente (`?aba=`); sem aba, a visão geral. */
+type ClientSection = "geral" | "trabalho" | "conteudo" | "conversas" | "documentos" | "financeiro"
+const SECTIONS: ClientSection[] = ["geral", "trabalho", "conteudo", "conversas", "documentos", "financeiro"]
+
+function isSection(value: string | null): value is ClientSection {
+  return value !== null && (SECTIONS as string[]).includes(value)
+}
 
 export function ClientView({
   client,
@@ -132,7 +148,9 @@ export function ClientView({
   instagramCard: ReactNode
 }) {
   const router = useRouter()
-  const { today } = useTasks()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { today, tasks, keepInPlace } = useTasks()
   const { openNewTask } = useNewTask()
   const { profiles } = useWorkspace()
   const [clientDialog, setClientDialog] = useState<ClientDialogState>({ open: false, key: 0 })
@@ -143,6 +161,51 @@ export function ClientView({
   const health = currentHealth(client.id, reviews)
   const ownerIndex = profiles.findIndex((profile) => profile.id === client.owner_id)
   const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
+
+  // A seção aberta fica na URL (?aba=); a volta do Instagram (?instagram=) abre a de Conteúdo, onde está o cartão.
+  const requestedSection = searchParams.get("aba")
+  const [section, setSection] = useState<ClientSection>(() =>
+    isSection(requestedSection) ? requestedSection : searchParams.has("instagram") ? "conteudo" : "geral"
+  )
+  function changeSection(next: ClientSection) {
+    setSection(next)
+    const params = new URLSearchParams(window.location.search)
+    if (next === "geral") params.delete("aba")
+    else params.set("aba", next)
+    const query = params.toString()
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname)
+  }
+
+  // Números do topo: levam à seção que os forma.
+  const taskGroups = groupTasks(
+    tasks.filter((task) => task.client_id === client.id),
+    dayContext(today),
+    keepInPlace
+  )
+  const openTasks = OPEN_GROUPS.reduce((total, key) => total + taskGroups[key].length, 0)
+  const overdueTasks = taskGroups.overdue.length
+  const awaitingPosts = posts.filter((post) => post.stage === "client_review").length
+  const nextPosts = upcomingPosts(posts, today)
+  const weekPosts = nextPosts.days.reduce((total, day) => total + day.posts.length, 0)
+  const latePosts = posts.filter((post) => isLate(post, today)).length
+
+  const tabs: PillTab<ClientSection>[] = [
+    { value: "geral", label: "Visão geral", icon: <LayoutGrid /> },
+    { value: "trabalho", label: "Trabalho", icon: <BriefcaseBusiness />, count: overdueTasks, alert: true },
+    { value: "conteudo", label: "Conteúdo", icon: <Megaphone />, count: awaitingPosts },
+    { value: "conversas", label: "Conversas", icon: <MessagesSquare /> },
+    { value: "documentos", label: "Documentos", icon: <FileText /> },
+    { value: "financeiro", label: "Financeiro", icon: <Wallet /> },
+  ]
+
+  function panel(value: ClientSection) {
+    return {
+      id: `cliente-painel-${value}`,
+      role: "tabpanel",
+      "aria-labelledby": `cliente-tab-${value}`,
+      hidden: section !== value,
+    } as const
+  }
 
   function openNewDoc(template?: TemplateId) {
     setDocDialog((current) => ({
@@ -247,34 +310,114 @@ export function ClientView({
         }
       />
 
-      <PageBody className="gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-x-10">
-        <div className="min-w-0 space-y-6">
-          <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
-          <ClientProjectsCard clientId={client.id} docs={templateDocs} />
-          <ClientContentCard clientId={client.id} posts={posts} today={today} />
-          <ClientIdeasCard clientId={client.id} ideas={ideas} posts={posts} />
+      <PageBody className="gap-6">
+        <section aria-label="Números do cliente">
+          <NumberTiles
+            items={[
+              {
+                label: "Tarefas abertas",
+                value: openTasks,
+                hint: overdueTasks > 0 ? `${overdueTasks} ${overdueTasks === 1 ? "atrasada" : "atrasadas"}` : "nenhuma atrasada",
+                alert: overdueTasks > 0,
+                onSelect: () => changeSection("trabalho"),
+              },
+              {
+                label: "Aguardando o cliente",
+                value: awaitingPosts,
+                unit: awaitingPosts === 1 ? "post" : "posts",
+                hint: "para aprovar",
+                accent: awaitingPosts > 0,
+                onSelect: () => changeSection("conteudo"),
+              },
+              {
+                label: "Próximos 7 dias",
+                value: weekPosts,
+                unit: weekPosts === 1 ? "post" : "posts",
+                hint: latePosts > 0 ? `${latePosts} ${latePosts === 1 ? "atrasado" : "atrasados"}` : "nenhum atrasado",
+                alert: latePosts > 0,
+                onSelect: () => changeSection("conteudo"),
+              },
+              {
+                label: "Saúde",
+                value: health?.health ? CLIENT_HEALTH_LABEL[health.health] : "—",
+                hint: client.review_day ? `revisão todo dia ${client.review_day}` : "sem revisão mensal",
+                onSelect: () => changeSection("geral"),
+              },
+            ]}
+          />
+        </section>
+
+        <PillTabs
+          aria-label="Seções do cliente"
+          idPrefix="cliente"
+          tabs={tabs}
+          value={section}
+          onValueChange={changeSection}
+          className="sticky top-0 z-20 py-1 md:top-2"
+        />
+
+        {/* As seções ficam montadas (só escondidas): notas e rascunhos não se perdem ao trocar de aba. */}
+        <div {...panel("geral")} className={SPLIT}>
+          <div className="min-w-0 space-y-6">
+            <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
+          </div>
+          <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
+            <AboutCard client={client} />
+            <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
+          </aside>
+        </div>
+
+        <div {...panel("trabalho")} className={SPLIT}>
+          <div className="min-w-0 space-y-6">
+            <ClientProjectsCard clientId={client.id} docs={templateDocs} />
+            <ClientTasksCard clientId={client.id} />
+          </div>
+          <aside aria-label="Reuniões e decisões" className="min-w-0 space-y-6">
+            <ClientMeetingsCard
+              client={client}
+              events={events}
+              records={records}
+              onNew={() =>
+                setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))
+              }
+            />
+            <DecisionsCard
+              decisions={decisions}
+              defaults={{ client_id: client.id, area: "clients" }}
+              emptyText="Combinados de preço, escopo ou prazo com este cliente ficam aqui."
+            />
+          </aside>
+        </div>
+
+        <div {...panel("conteudo")} className={SPLIT}>
+          <div className="min-w-0 space-y-6">
+            <ClientContentCard clientId={client.id} posts={posts} today={today} />
+            <ClientIdeasCard clientId={client.id} ideas={ideas} posts={posts} />
+          </div>
+          <aside aria-label="Instagram" className="min-w-0 space-y-6">
+            {instagramCard}
+          </aside>
+        </div>
+
+        <div {...panel("conversas")} className={SPLIT}>
+          <div className="min-w-0 space-y-6">
+            <ClientChannelCard clientId={client.id} />
+            <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
+          </div>
+          <aside aria-label="Acesso ao portal" className="min-w-0 space-y-6">
+            <ClientAccessCard clientId={client.id} clientName={client.name} members={members} />
+          </aside>
+        </div>
+
+        <div {...panel("documentos")} className="grid gap-6 lg:grid-cols-2 lg:items-start">
           <ClientDocsCard docs={docs} today={today} onNew={openNewDoc} />
           <ClientFilesCard clientId={client.id} files={files} today={today} />
-          <ClientTasksCard clientId={client.id} />
-          <ClientChannelCard clientId={client.id} />
-          <CommunicationsCard communications={communications} defaults={{ client_id: client.id }} showProject />
-          <ClientMeetingsCard client={client} events={events} records={records} onNew={() =>
-            setEventDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting", clientId: client.id }))
-          } />
         </div>
-        <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
-          <AboutCard client={client} />
-          <ClientAccessCard clientId={client.id} clientName={client.name} members={members} />
-          {instagramCard}
+
+        <div {...panel("financeiro")} className="grid gap-6 lg:grid-cols-2 lg:items-start">
           <ClientFinanceCard clientId={client.id} finance={finance} today={today} reminders={paymentReminders} />
           <ClientDealsCard clientId={client.id} deals={deals} today={today} />
-          <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
-          <DecisionsCard
-            decisions={decisions}
-            defaults={{ client_id: client.id, area: "clients" }}
-            emptyText="Combinados de preço, escopo ou prazo com este cliente ficam aqui."
-          />
-        </aside>
+        </div>
       </PageBody>
 
       <ClientDialog state={clientDialog} onOpenChange={(open) => setClientDialog((current) => ({ ...current, open }))} />
@@ -332,8 +475,8 @@ function Card({
   className?: string
 }) {
   return (
-    <section aria-labelledby={id} className={cn("overflow-hidden rounded-xl border bg-card", className)}>
-      <header className="flex items-center gap-2 border-b px-4 py-3">
+    <section aria-labelledby={id} className={cn("overflow-hidden rounded-3xl border bg-card", className)}>
+      <header className="flex min-h-12 items-center gap-2 border-b px-5 py-3">
         <h2 id={id} className="flex items-center gap-2 text-sm font-semibold text-foreground">
           {title}
         </h2>
@@ -343,6 +486,9 @@ function Card({
     </section>
   )
 }
+
+/** Duas colunas no computador largo: o principal e a lateral de 340px. */
+const SPLIT = "grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-x-8"
 
 const OPEN_GROUPS: TaskGroupKey[] = ["overdue", "today", "week", "later", "undated"]
 

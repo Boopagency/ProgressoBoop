@@ -1,5 +1,5 @@
 import { addPeriods, periodOf } from "@/features/clients/logic"
-import { daysBetween, monthRangeOf, type DateRange } from "@/lib/dates"
+import { daysBetween, monthRangeOf, toDateKey, type DateRange } from "@/lib/dates"
 import { DEAL_STAGE_PROBABILITY, LEAD_SOURCES, OPEN_DEAL_STAGES } from "@/lib/labels"
 import type { DateKey, Deal, DealStage, LeadSource } from "@/lib/types"
 
@@ -248,6 +248,71 @@ export function boardColumns(deals: Deal[], today: DateKey): Record<DealStage, D
     })
   }
   return columns
+}
+
+/**
+ * Pré-venda (antes da proposta) e saída (perdidos): no quadro, essas etapas
+ * podem ficar recolhidas numa faixa estreita, com a contagem, para o foco
+ * ficar nas propostas, negociações e ganhos.
+ */
+export const PRESALE_STAGES = ["lead", "contact"] as const satisfies readonly DealStage[]
+export const EXIT_STAGES = ["lost"] as const satisfies readonly DealStage[]
+export const COLLAPSIBLE_STAGES: readonly DealStage[] = [...PRESALE_STAGES, ...EXIT_STAGES]
+
+export function isCollapsibleStage(stage: DealStage): boolean {
+  return COLLAPSIBLE_STAGES.includes(stage)
+}
+
+/** Lead sem contato: ainda na etapa Lead depois desses dias. */
+export const NO_CONTACT_DAYS = 2
+/** Parado: aberto e sem nenhuma mudança há esses dias (fora da etapa Lead). */
+export const STALE_DAYS = 7
+
+/** Atrasado (previsão de fechamento passou), sem contato ou parado. */
+export type DealAlertKind = "late" | "no_contact" | "stale"
+
+export interface DealAlert {
+  kind: DealAlertKind
+  /** Dias de atraso, de espera pelo contato ou sem mudança. */
+  days: number
+}
+
+/** Dias desde a última mudança no negócio (pela data de São Paulo). */
+export function idleDays(deal: Pick<Deal, "updated_at">, today: DateKey): number {
+  return Math.max(0, daysBetween(toDateKey(deal.updated_at), today))
+}
+
+/** Os alertas de um negócio aberto (fechados não têm). */
+export function dealAlerts(
+  deal: Pick<Deal, "stage" | "expected_close_on" | "opened_on" | "updated_at">,
+  today: DateKey
+): DealAlert[] {
+  if (!isOpenDeal(deal)) return []
+  const alerts: DealAlert[] = []
+  if (deal.expected_close_on !== null && deal.expected_close_on < today) {
+    alerts.push({ kind: "late", days: daysBetween(deal.expected_close_on, today) })
+  }
+  if (deal.stage === "lead") {
+    const waiting = daysBetween(deal.opened_on, today)
+    if (waiting >= NO_CONTACT_DAYS) alerts.push({ kind: "no_contact", days: waiting })
+  } else {
+    const idle = idleDays(deal, today)
+    if (idle >= STALE_DAYS) alerts.push({ kind: "stale", days: idle })
+  }
+  return alerts
+}
+
+/** Negócios abertos que pedem atenção e quantos de cada alerta. */
+export function attentionSummary(deals: Deal[], today: DateKey): { deals: Deal[]; counts: Record<DealAlertKind, number> } {
+  const counts: Record<DealAlertKind, number> = { late: 0, no_contact: 0, stale: 0 }
+  const flagged: Deal[] = []
+  for (const deal of deals) {
+    const alerts = dealAlerts(deal, today)
+    if (alerts.length === 0) continue
+    flagged.push(deal)
+    for (const alert of alerts) counts[alert.kind] += 1
+  }
+  return { deals: flagged, counts }
 }
 
 /** Motivos de perda mais comuns (dá para escrever outro). */

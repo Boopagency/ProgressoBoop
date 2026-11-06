@@ -1494,7 +1494,7 @@ rodapé tem quem está logado e "Sair".
 | `ClientFinanceCard` / `ProjectFinanceCard` / `FinanceAlertCard` | financeiro na página do cliente, do projeto e na tela Hoje |
 | `FinanceShell`       | cabeçalho e abas do Financeiro; o diálogo de lançamento compartilhado (`useFinanceDialog`) |
 | `DreView` / `ProjectionView` / `ContractsView` / `LedgerView` / `ClosingView` / `SettingsView` | as abas do Financeiro |
-| `DealsView` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: quadro e lista, negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
+| `DealsView` / `DealBoard` / `DealDialog` / `WinDialog` / `ClientDealsCard` | comercial: frase do funil, filtros e lista; quadro com pré-venda e saída recolhíveis; negócio, ganhar (cliente, contrato e projeto) e o cartão no cliente |
 | `ContentView` / `ContentCalendar` / `ContentBoard` / `UpcomingList` | Central de Conteúdo: calendário, quadro por etapa e próximos 7 dias, com filtros na URL |
 | `ContentFeed` | preview do feed do Instagram de um cliente: perfil editável, grid 3:4, filtro e fixados |
 | `PostDialog` / `ClientContentCard` / `TodayContentCard` | post (campos, textos por formato, tarefas das frentes, histórico) e os cartões no cliente e no Hoje |
@@ -1552,7 +1552,11 @@ Regras:
   telas) e Comunicações (tela cheia, com a lista de canais; só a entrada
   suave). Indicadores tem o período, a comparação e as áreas num painel de
   destaque logo abaixo do cabeçalho; Financeiro tem, abaixo do cabeçalho, as
-  abas das seções.
+  abas das seções. Comercial tem, no lugar do `PageHeader`, a frase do funil
+  (etiqueta, duas linhas em Poppins grande e, à direita, as ações e os
+  valores); no Quadro, a moldura ocupa a altura da janela e o quadro
+  preenche o resto, sem rolar a página (`comercial/loading.tsx` tem a mesma
+  geometria).
 - **Seções:** `SectionTitle` (altura fixa de 24px) e 12px até o conteúdo.
 - **Carregamento:** cada `loading.tsx` usa `PageSkeleton`
   (`components/layout/page-skeleton.tsx`: moldura, cabeçalho, linha de
@@ -1850,6 +1854,10 @@ Gestão (dinheiro em centavos; o sinal vem da linha):
 16. **Quadro com arrastar e soltar nativo** (HTML, sem biblioteca). Soltar em
     Feito conclui a tarefa pelo mesmo caminho do checkbox (com "Desfazer").
     Onde arrastar não funciona (alguns celulares), o status muda pelo Sheet.
+    As peças dos quadros (Comercial, Conteúdo e Tarefas) ficam em
+    `components/kanban.tsx`: `KanbanBoard`, `KanbanColumn` (cabeçalho fixo e
+    a lista rolando por dentro), `KanbanRail` (coluna recolhida),
+    `useKanbanDrop`/`dragSource` e o contorno `KANBAN_CARD`.
 17. **Todo número leva à origem.** Cada indicador tem as linhas que o formam
     e um link para a tela de dados com os filtros certos (`/financeiro/
     lancamentos?mes=…&conta=…`, `/comercial?negocio=…`, `/tarefas?…`). Nas
@@ -1957,6 +1965,11 @@ protagonista). Nada de cor fixa nas telas.
   ao elétrico e a segunda série neutra (o laranja fica para status).
   `MonthTitle`/`PeriodTitle` põem o mês na serifada itálica. O relatório
   (`/relatorio`) tira o tema escuro na hora de imprimir.
+- **Quadros:** a coluna é um fundo rebaixado (`--board`: lavanda um tom
+  abaixo no claro, quase preto translúcido no escuro) e o cartão é sólido e
+  mais claro (`--board-card`), para o cartão se separar bem do fundo. As
+  colunas e as listas longas usam `scrollbar-soft`: sem a barra grossa do
+  sistema, só um fio que aparece ao passar o mouse.
 - **Movimento:** `--ease-glide` e `--ease-swift`, tempos de 150, 240 e 480 ms;
   tudo com `motion-safe:` ou `prefers-reduced-motion`.
 - **Reduzir transparência:** com `prefers-reduced-transparency`, os tokens de

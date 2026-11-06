@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 
+import { dragSource, KANBAN_CARD, KanbanBoard, KanbanColumn, KanbanColumnHeader, KanbanEmpty, useKanbanDrop } from "@/components/kanban"
 import { BOARD_PUBLISHED_DAYS, boardColumns, publishLabel, type PostSummary } from "@/features/content/logic"
 import { AutoPublishMark, ClientMark, FormatIcon, FrontDots, PostFlags, StageDot } from "@/features/content/post-meta"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
@@ -28,62 +29,45 @@ export function ContentBoard({
   today,
   onOpen,
   onMove,
+  className,
 }: {
   posts: PostSummary[]
   today: DateKey
   onOpen: (post: PostSummary) => void
   onMove: (id: string, stage: ContentStage) => void
+  className?: string
 }) {
-  const [over, setOver] = useState<ContentStage | null>(null)
+  const { over, dropTarget } = useKanbanDrop<ContentStage>(DRAG_TYPE, onMove)
   const columns = boardColumns(posts, today)
 
   // relative: os textos só para leitores de tela (sr-only) ficam presos à rolagem do quadro.
   return (
     <>
       <BoardList columns={columns} today={today} onOpen={onOpen} />
-      <div className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 max-md:hidden sm:mx-0 sm:px-0 xl:snap-none">
+      <KanbanBoard className={cn("relative max-md:hidden", className)}>
         {CONTENT_STAGES.map((stage) => (
-          <section
+          <KanbanColumn
             key={stage}
-            aria-label={CONTENT_STAGE_LABEL[stage]}
-            onDragOver={(event) => {
-              if (!event.dataTransfer.types.includes(DRAG_TYPE)) return
-              event.preventDefault()
-              event.dataTransfer.dropEffect = "move"
-              if (over !== stage) setOver(stage)
-            }}
-            onDragLeave={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(null)
-            }}
-            onDrop={(event) => {
-              event.preventDefault()
-              setOver(null)
-              const id = event.dataTransfer.getData(DRAG_TYPE)
-              if (id) onMove(id, stage)
-            }}
-            className={cn(
-              "flex w-[80%] shrink-0 snap-start flex-col rounded-3xl border bg-card transition-[border-color,background-color,box-shadow] sm:w-64 xl:w-auto xl:min-w-0 xl:flex-1",
-              over === stage && "border-glow/60 bg-glow-soft shadow-glow"
-            )}
+            label={CONTENT_STAGE_LABEL[stage]}
+            active={over === stage}
+            {...dropTarget(stage)}
+            header={
+              <KanbanColumnHeader
+                dot={<StageDot stage={stage} className="size-2.5" />}
+                title={CONTENT_STAGE_LABEL[stage]}
+                count={columns[stage].length}
+                hint={stage === "published" ? `últimos ${BOARD_PUBLISHED_DAYS} dias` : " "}
+              />
+            }
           >
-            <header className="flex items-center gap-2 px-3.5 pt-3.5 pb-2.5">
-              <StageDot stage={stage} />
-              <h2 className="truncate text-[13px] font-semibold text-foreground">{CONTENT_STAGE_LABEL[stage]}</h2>
-              <span className="display-number text-xl leading-none text-muted-foreground">{columns[stage].length}</span>
-              {stage === "published" ? (
-                <span className="ml-auto shrink-0 text-[11px] text-subtle-foreground">{BOARD_PUBLISHED_DAYS} dias</span>
-              ) : null}
-            </header>
-            <div role="list" className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
-              {columns[stage].length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-foreground/12 px-2 py-6 text-center text-xs text-subtle-foreground">{EMPTY_TEXT[stage] ?? "Arraste um post para cá."}</p>
-              ) : (
-                columns[stage].map((post) => <BoardCard key={post.id} post={post} today={today} onOpen={onOpen} />)
-              )}
-            </div>
-          </section>
+            {columns[stage].length === 0 ? (
+              <KanbanEmpty>{EMPTY_TEXT[stage] ?? "Arraste um post para cá."}</KanbanEmpty>
+            ) : (
+              columns[stage].map((post) => <BoardCard key={post.id} post={post} today={today} onOpen={onOpen} />)
+            )}
+          </KanbanColumn>
         ))}
-      </div>
+      </KanbanBoard>
     </>
   )
 }
@@ -105,7 +89,7 @@ function BoardList({
         const open = !closed.includes(stage)
         const list = columns[stage]
         return (
-          <section key={stage} aria-label={CONTENT_STAGE_LABEL[stage]} className="rounded-2xl border bg-card">
+          <section key={stage} aria-label={CONTENT_STAGE_LABEL[stage]} className="rounded-2xl border border-glass-edge bg-board">
             <button
               type="button"
               aria-expanded={open}
@@ -149,23 +133,15 @@ function BoardCard({
   const ownerIndex = profiles.findIndex((profile) => profile.id === post.owner_id)
   const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
   return (
-    <div
-      role="listitem"
-      draggable={draggable}
-      onDragStart={(event) => {
-        event.dataTransfer.setData(DRAG_TYPE, post.id)
-        event.dataTransfer.effectAllowed = "move"
-      }}
-      className="cursor-grab rounded-2xl border bg-card-solid/80 transition-[border-color,box-shadow,translate] duration-150 hover:border-glow/40 hover:shadow-float active:cursor-grabbing motion-safe:hover:-translate-y-px"
-    >
+    <div role="listitem" {...(draggable ? dragSource(DRAG_TYPE, post.id) : {})} className={cn(KANBAN_CARD, !draggable && "cursor-pointer")}>
       <button
         type="button"
         onClick={() => onOpen(post)}
-        className="block w-full rounded-2xl px-3 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
-        <span className="flex min-w-0 items-center gap-1.5">
-          <ClientMark clientId={post.client_id} size="xs" />
-          <span className="truncate text-xs text-muted-foreground">{clientById.get(post.client_id)?.name}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <ClientMark clientId={post.client_id} size="sm" />
+          <span className="truncate text-[13px] text-muted-foreground">{clientById.get(post.client_id)?.name}</span>
           {owner ? (
             <PersonAvatar
               name={owner.full_name}
@@ -176,13 +152,13 @@ function BoardCard({
             />
           ) : null}
         </span>
-        <span className="mt-1 line-clamp-2 text-[13.5px] leading-5 font-medium text-foreground">{post.title}</span>
-        <span className="mt-1.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground" title={CONTENT_FORMAT_LABEL[post.format]}>
-          <FormatIcon format={post.format} className="size-3" />
+        <span className="mt-2 line-clamp-3 text-[15px] leading-5 font-semibold text-foreground">{post.title}</span>
+        <span className="mt-2 flex min-w-0 items-center gap-1.5 text-[13px] text-muted-foreground" title={CONTENT_FORMAT_LABEL[post.format]}>
+          <FormatIcon format={post.format} className="size-3.5" />
           <span className="truncate tabular-nums">{publishLabel(post, today)}</span>
           <AutoPublishMark post={post} />
         </span>
-        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
           <PostFlags post={post} today={today} />
           <FrontDots post={post} />
         </span>

@@ -764,13 +764,28 @@ o botão **Novo lançamento**.
 
 O funil de vendas, do lead ao cliente.
 
-- Indicadores: **em aberto** (negócios, valor mensal e total), **valor
-  ponderado** (pela chance de fechar), **ganhos no mês** e **taxa de
-  ganho** dos últimos 90 dias (com o ciclo de venda).
-- **Quadro:** Lead, Contato, Proposta, Negociação e a coluna dos fechados
-  nos últimos 30 dias (Ganho e Perdido). Arrastar muda a etapa; soltar em
-  Perdido pede o motivo; soltar em Ganho abre o **Ganhar**. **Lista:**
-  todos, com filtro de situação. Busca e filtro por responsável.
+- **Frase do funil** no lugar do título: "10 negócios em aberto no funil.
+  ④ pedem atenção." Ao lado, o valor mensal em potencial (e o pontual), o
+  **valor ponderado** (pela chance de fechar), os **ganhos no mês**, a
+  **taxa de ganho** dos últimos 90 dias e a legenda das etiquetas.
+- **Alertas** (etiquetas no cartão e na lista): **Atrasado** (a previsão de
+  fechamento passou), **Sem contato** (na etapa Lead há 2 dias ou mais) e
+  **Parado** (sem nenhuma mudança há 7 dias ou mais), com os dias.
+- **Filtros:** busca (negócio, empresa, contato, cliente, frente),
+  responsável, origem, **Só com alerta** e **Pré-venda e saída**.
+- **Quadro:** uma coluna por etapa (Lead, Em contato, Proposta enviada,
+  Negociação, Ganho e Perdido; fechados dos últimos 30 dias), colunas
+  largas que ocupam a altura da janela e rolam por dentro, sem a barra
+  grossa. A pré-venda (Lead e Em contato) e a saída (Perdido) ficam
+  recolhidas numa faixa estreita com a contagem e quantos pedem atenção:
+  clicar abre a coluna, "Pré-venda e saída" abre ou recolhe todas, e a
+  escolha fica guardada (cookie `boop_comercial_recolhidas`). Cartão:
+  título, empresa e contato, a marca (foto do cliente ou iniciais), a
+  origem, o valor mensal grande e o pontual, a frente, a chance, os
+  alertas, o responsável, há quantos dias mudou e a previsão de
+  fechamento. Arrastar muda a etapa (também para uma faixa recolhida);
+  soltar em Perdido pede o motivo; soltar em Ganho abre o **Ganhar**.
+  **Lista:** todos, com filtro de situação, a etapa, a origem e os alertas.
 - **Negócio:** título, empresa (lead novo) ou cliente da casa, contato
   (nome, e-mail, telefone), origem (indicação, Instagram, site, Google,
   LinkedIn, WhatsApp, prospecção ativa, evento, cliente da casa, outra), frente,

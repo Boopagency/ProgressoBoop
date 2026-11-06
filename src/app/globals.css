@@ -137,6 +137,13 @@
   --chart-muted: #ccd4e3;
   --chart-grid: rgb(15 29 43 / 0.07);
 
+  /*
+   * Quadros (Comercial, Conteúdo, Tarefas): a coluna é um fundo rebaixado e o
+   * cartão, sólido e mais claro, para ele se separar bem da coluna.
+   */
+  --board: rgb(15 29 43 / 0.05);
+  --board-card: #ffffff;
+
   /* Brilhos do fundo (camada fixa `.app-backdrop`). */
   --backdrop-1: rgb(70 110 255 / 0.72);
   --backdrop-2: rgb(160 140 255 / 0.5);
@@ -246,6 +253,9 @@
     --chart-muted: rgb(255 255 255 / 0.14);
     --chart-grid: rgb(255 255 255 / 0.06);
 
+    --board: rgb(3 5 10 / 0.42);
+    --board-card: #1d2230;
+
     --backdrop-1: rgb(47 98 255 / 0.62);
     --backdrop-2: rgb(43 143 217 / 0.3);
     --backdrop-3: rgb(38 70 255 / 0.55);
@@ -277,6 +287,7 @@
     --glass: #ffffff;
     --glass-strong: #ffffff;
     --sidebar-accent: #ffffff;
+    --board: #e8ebf3;
   }
 
   .dark {
@@ -286,6 +297,7 @@
     --glass: #171b25;
     --glass-strong: #12151d;
     --sidebar-accent: #1c212c;
+    --board: #0e1117;
   }
 }
 
@@ -367,6 +379,8 @@
   --color-chart-2: var(--chart-2);
   --color-chart-muted: var(--chart-muted);
   --color-chart-grid: var(--chart-grid);
+  --color-board: var(--board);
+  --color-board-card: var(--board-card);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -571,6 +585,33 @@
   font-weight: 400;
   letter-spacing: -0.02em;
   font-variant-numeric: lining-nums tabular-nums;
+}
+
+/*
+ * Rolagem discreta (colunas dos quadros): sem a barra grossa do sistema. Fica
+ * um fio arredondado, que só aparece ao passar o mouse ou com o foco dentro.
+ */
+@utility scrollbar-soft {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in oklab, var(--foreground) 22%, transparent) transparent;
+  }
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: transparent;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
 }
 
 /* Texto no gradiente da marca (palavra de destaque em títulos grandes). */

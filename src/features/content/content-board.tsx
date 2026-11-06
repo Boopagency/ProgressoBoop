@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 
-import { dragSource, KANBAN_CARD, KanbanBoard, KanbanColumn, KanbanColumnHeader, KanbanEmpty, useKanbanDrop } from "@/components/kanban"
+import { KanbanBoard, KanbanCard, KanbanColumn, KanbanColumnHeader, KanbanEmpty, useKanbanDrop } from "@/components/kanban"
 import { BOARD_PUBLISHED_DAYS, boardColumns, publishLabel, type PostSummary } from "@/features/content/logic"
 import { AutoPublishMark, ClientMark, FormatIcon, FrontDots, PostFlags, StageDot } from "@/features/content/post-meta"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
@@ -45,9 +45,10 @@ export function ContentBoard({
     <>
       <BoardList columns={columns} today={today} onOpen={onOpen} />
       <KanbanBoard className={cn("relative max-md:hidden", className)}>
-        {CONTENT_STAGES.map((stage) => (
+        {CONTENT_STAGES.map((stage, index) => (
           <KanbanColumn
             key={stage}
+            index={index}
             label={CONTENT_STAGE_LABEL[stage]}
             active={over === stage}
             {...dropTarget(stage)}
@@ -56,14 +57,14 @@ export function ContentBoard({
                 dot={<StageDot stage={stage} className="size-2.5" />}
                 title={CONTENT_STAGE_LABEL[stage]}
                 count={columns[stage].length}
-                hint={stage === "published" ? `últimos ${BOARD_PUBLISHED_DAYS} dias` : " "}
+                hint={stage === "published" ? `últimos ${BOARD_PUBLISHED_DAYS} dias` : null}
               />
             }
           >
             {columns[stage].length === 0 ? (
               <KanbanEmpty>{EMPTY_TEXT[stage] ?? "Arraste um post para cá."}</KanbanEmpty>
             ) : (
-              columns[stage].map((post) => <BoardCard key={post.id} post={post} today={today} onOpen={onOpen} />)
+              columns[stage].map((post, position) => <BoardCard key={post.id} post={post} index={position} today={today} onOpen={onOpen} />)
             )}
           </KanbanColumn>
         ))}
@@ -120,11 +121,13 @@ function BoardList({
 
 function BoardCard({
   post,
+  index = 0,
   today,
   onOpen,
   draggable = true,
 }: {
   post: PostSummary
+  index?: number
   today: DateKey
   onOpen: (post: PostSummary) => void
   draggable?: boolean
@@ -133,11 +136,11 @@ function BoardCard({
   const ownerIndex = profiles.findIndex((profile) => profile.id === post.owner_id)
   const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
   return (
-    <div role="listitem" {...(draggable ? dragSource(DRAG_TYPE, post.id) : {})} className={cn(KANBAN_CARD, !draggable && "cursor-pointer")}>
+    <KanbanCard id={post.id} dragType={DRAG_TYPE} index={index} draggable={draggable}>
       <button
         type="button"
         onClick={() => onOpen(post)}
-        className="block w-full rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="block w-full rounded-2xl px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <span className="flex min-w-0 items-center gap-2">
           <ClientMark clientId={post.client_id} size="sm" />
@@ -152,17 +155,17 @@ function BoardCard({
             />
           ) : null}
         </span>
-        <span className="mt-2 line-clamp-3 text-[15px] leading-5 font-semibold text-foreground">{post.title}</span>
-        <span className="mt-2 flex min-w-0 items-center gap-1.5 text-[13px] text-muted-foreground" title={CONTENT_FORMAT_LABEL[post.format]}>
+        <span className="mt-1.5 line-clamp-2 text-sm leading-5 font-semibold text-foreground">{post.title}</span>
+        <span className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[13px] text-muted-foreground" title={CONTENT_FORMAT_LABEL[post.format]}>
           <FormatIcon format={post.format} className="size-3.5" />
           <span className="truncate tabular-nums">{publishLabel(post, today)}</span>
           <AutoPublishMark post={post} />
         </span>
-        <span className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           <PostFlags post={post} today={today} />
           <FrontDots post={post} />
         </span>
       </button>
-    </div>
+    </KanbanCard>
   )
 }

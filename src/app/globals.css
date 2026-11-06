@@ -614,6 +614,92 @@
   }
 }
 
+/*
+ * Movimento dos quadros (components/kanban.tsx): a entrada em cascata, o
+ * lugar do cartão que está sendo arrastado, a coluna que "respira" sob o
+ * cartão, o brilho que segue o mouse e o anel de "chegou aqui". Com "reduzir
+ * movimento", fica só o estado parado (o lugar marcado, o destaque fixo).
+ */
+@keyframes kanban-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes kanban-breathe {
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--glow) 60%, transparent),
+      0 0 40px -6px var(--glow);
+  }
+}
+@keyframes kanban-landed {
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+.kanban-card {
+  position: relative;
+}
+.kanban-card > * {
+  position: relative;
+}
+.kanban-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(220px circle at var(--spot-x, 50%) var(--spot-y, -20%), var(--glow-soft), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-glide);
+}
+@media (hover: hover) {
+  .kanban-card:hover::before {
+    opacity: 1;
+  }
+}
+.kanban-card[data-dragging] {
+  opacity: 0.4;
+  scale: 0.97;
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--glow) 55%, transparent);
+  box-shadow: none;
+}
+.kanban-card[data-dragging]::before {
+  opacity: 0;
+}
+[data-kanban-landed]::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px var(--glow),
+    0 0 28px -4px var(--glow);
+  animation: kanban-landed 900ms var(--ease-glide) forwards;
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-kanban-intro="true"] > .kanban-column {
+    animation: kanban-rise 520ms var(--ease-glide) backwards;
+    animation-delay: calc(var(--col, 0) * 60ms);
+  }
+  [data-kanban-intro="true"] .kanban-card {
+    animation: kanban-rise 460ms var(--ease-glide) backwards;
+    animation-delay: calc(140ms + var(--col, 0) * 60ms + var(--i, 0) * 45ms);
+  }
+  .kanban-over {
+    animation: kanban-breathe 1.4s ease-in-out infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-kanban-landed]::after {
+    display: none;
+  }
+}
+
 /* Texto no gradiente da marca (palavra de destaque em títulos grandes). */
 @utility text-gradient-brand {
   background-image: linear-gradient(100deg, var(--brand-ink), var(--glow) 70%);

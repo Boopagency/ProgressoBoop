@@ -7,7 +7,8 @@ import { useOptimistic, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { EmptyPanel } from "@/components/empty-panel"
-import { PageBody, PageContainer, PageToolbar } from "@/components/layout/page"
+import { CountUp } from "@/components/count-up"
+import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,16 +34,13 @@ import {
   pipeline,
   probabilityOf,
   salesStats,
-  STALE_DAYS,
-  type DealAlertKind,
 } from "@/features/deals/logic"
 import { WinDialog } from "@/features/deals/win-dialog"
 import { formatMoneyShort } from "@/features/finance/money"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
 import { useUrlTrigger } from "@/hooks/use-url-trigger"
-import { addDaysToKey, formatShortDate, monthRangeOf } from "@/lib/dates"
-import { formatPercent } from "@/lib/format"
+import { formatShortDate, monthRangeOf } from "@/lib/dates"
 import { includesText } from "@/lib/text"
 import { DEAL_STAGE_LABEL, DEAL_STAGES, LEAD_SOURCE_LABEL, LEAD_SOURCES } from "@/lib/labels"
 import type { DateKey, Deal, DealStage, LeadSource } from "@/lib/types"
@@ -112,7 +110,6 @@ export function DealsView({
   const funnel = pipeline(filtered, today)
   const attention = attentionSummary(funnel.deals, today)
   const month = salesStats(filtered, monthRangeOf(today))
-  const quarter = salesStats(filtered, { start: addDaysToKey(today, -89), end: today })
   const sources = LEAD_SOURCES.filter((option) => option === source || deals.some((deal) => deal.source === option))
   const allShown = collapsed.length === 0
   const board = view === "board" && deals.length > 0
@@ -159,15 +156,21 @@ export function DealsView({
   return (
     // No quadro, a tela ocupa a altura da janela e as colunas rolam por dentro.
     <PageContainer className={cn(board && "md:flex md:h-full md:flex-col md:pb-6")}>
-      <Headline
-        open={funnel.count}
-        attention={attention.deals.length}
-        counts={attention.counts}
-        recurring={funnel.recurring}
-        oneTime={funnel.oneTime}
-        weighted={funnel.weighted}
-        wonInMonth={month.won.length}
-        winRate={quarter.winRate}
+      <PageHeader
+        title={
+          <>
+            Funil <em>comercial</em>
+          </>
+        }
+        description={
+          <FunnelSummary
+            open={funnel.count}
+            recurring={funnel.recurring}
+            weighted={funnel.weighted}
+            wonInMonth={month.won.length}
+            attention={attention.deals.length}
+          />
+        }
         actions={
           <>
             <Button variant="ghost" asChild className="gap-1 text-muted-foreground">
@@ -184,8 +187,8 @@ export function DealsView({
         }
       />
 
-      <PageToolbar className="mt-8">
-        <div className="relative w-full sm:w-72">
+      <PageToolbar>
+        <div className="relative w-full sm:w-56 xl:w-72">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
             value={query}
@@ -328,104 +331,50 @@ function ToggleChip({ active, onClick, children }: { active: boolean; onClick: (
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
 
 /**
- * A frase do funil, no lugar do título: quantos negócios estão em aberto e
- * quantos pedem atenção (atrasados, sem contato ou parados). Ao lado, os
- * valores do funil e a legenda das etiquetas.
+ * O resumo do funil na linha da descrição: em aberto, o mensal em potencial,
+ * o ponderado pela chance, os ganhos do mês e quantos pedem atenção
+ * (atrasados, sem contato ou parados). Os números completos ficam em
+ * Indicadores.
  */
-function Headline({
+function FunnelSummary({
   open,
-  attention,
-  counts,
   recurring,
-  oneTime,
   weighted,
   wonInMonth,
-  winRate,
-  actions,
+  attention,
 }: {
   open: number
-  attention: number
-  counts: Record<DealAlertKind, number>
   recurring: number
-  oneTime: number
   weighted: number
   wonInMonth: number
-  winRate: number | null
-  actions: ReactNode
+  attention: number
 }) {
-  const alertParts = [
-    counts.late > 0 ? plural(counts.late, "atrasado", "atrasados") : null,
-    counts.no_contact > 0 ? `${counts.no_contact} sem contato` : null,
-    counts.stale > 0 ? plural(counts.stale, "parado", "parados") : null,
-  ].filter((part): part is string => part !== null)
   const strong = "font-medium whitespace-nowrap text-foreground"
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
-      <div className="min-w-0">
-        <span className="inline-flex h-7 items-center gap-2 rounded-full border border-glass-edge bg-card px-3 text-xs font-medium text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]">
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_6px_var(--glow)]" />
-          Quadro · as etapas do funil
-        </span>
-        <h1 className="mt-4 font-display text-[34px] leading-[1.1] font-medium tracking-[-0.04em] text-balance text-foreground sm:text-[46px] xl:text-[56px] [&_em]:emphasis [&_em]:pr-[0.04em] [&_em]:text-[1.1em] [&_em]:leading-none [&_em]:text-brand-ink">
-          {open > 0 ? (
-            <>
-              <span className="text-gradient-brand">{plural(open, "negócio", "negócios")}</span> em aberto no funil.
-            </>
-          ) : (
-            <>Nenhum negócio em aberto no funil.</>
-          )}
-          <br />
-          {attention > 0 ? (
-            <>
-              <span className="mr-[0.18em] inline-flex h-[1.12em] min-w-[1.5em] items-center justify-center rounded-full border-[3px] border-foreground/85 px-[0.28em] align-[-0.16em] leading-none tabular-nums">
-                {attention}
-              </span>
-              {attention === 1 ? "pede" : "pedem"} <em>atenção</em>.
-            </>
-          ) : open > 0 ? (
-            <>
-              Nenhum pede <em>atenção</em>.
-            </>
-          ) : (
-            <>
-              Hora de cadastrar o próximo <em>lead</em>.
-            </>
-          )}
-        </h1>
-      </div>
-      <div className="flex shrink-0 flex-col gap-4 lg:max-w-[23rem] lg:items-end lg:text-right">
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">{actions}</div>
-        <div className="space-y-2 text-[13px] leading-5 text-muted-foreground">
-          <p>
-            <span className={strong}>{formatMoneyShort(recurring)}/mês</span> em potencial
-            {oneTime > 0 ? (
-              <>
-                {" "}
-                + <span className={strong}>{formatMoneyShort(oneTime)}</span> pontual
-              </>
-            ) : null}{" "}
-            e <span className={strong}>{formatMoneyShort(weighted)}</span> ponderado pela chance. No mês,{" "}
-            <span className={strong}>{plural(wonInMonth, "ganho", "ganhos")}</span>
-            {winRate !== null ? (
-              <>
-                ; taxa de ganho de <span className={strong}>{formatPercent(winRate, true)}</span> em 90 dias
-              </>
-            ) : null}
-            .
-          </p>
-          <p className="max-sm:hidden">
-            {alertParts.length > 0 ? <>Hoje: {joinParts(alertParts)}. </> : null}
-            Vermelho é atrasado ou sem contato; âmbar, parado há {STALE_DAYS} dias ou mais. Clique no cartão para abrir.
-          </p>
-        </div>
-      </div>
-    </div>
+    <span className="flex flex-wrap items-center gap-x-1.5">
+      <span>
+        <CountUp value={open} className={strong} /> em aberto
+      </span>
+      <span aria-hidden="true" className="text-subtle-foreground">·</span>
+      <span>
+        <span className={strong}>{formatMoneyShort(recurring)}/mês</span> em potencial
+      </span>
+      <span aria-hidden="true" className="text-subtle-foreground">·</span>
+      <span>
+        <span className={strong}>{formatMoneyShort(weighted)}</span> ponderado
+      </span>
+      <span aria-hidden="true" className="text-subtle-foreground">·</span>
+      <span>{plural(wonInMonth, "ganho", "ganhos")} no mês</span>
+      {attention > 0 ? (
+        <>
+          <span aria-hidden="true" className="text-subtle-foreground">·</span>
+          <span className="font-medium text-overdue">
+            <CountUp value={attention} /> {attention === 1 ? "pede" : "pedem"} atenção
+          </span>
+        </>
+      ) : null}
+    </span>
   )
-}
-
-/** "a, b e c" */
-function joinParts(parts: string[]): string {
-  return parts.length <= 1 ? (parts[0] ?? "") : `${parts.slice(0, -1).join(", ")} e ${parts.at(-1)}`
 }
 
 function DealList({ deals, today, onOpen }: { deals: Deal[]; today: DateKey; onOpen: (deal: Deal) => void }) {

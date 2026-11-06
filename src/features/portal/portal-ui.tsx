@@ -1,79 +1,19 @@
-import type { LucideIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { HeroEyebrow } from "@/components/hero-panel"
+import { StatGrid, type StatItem } from "@/components/stat-grid"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 /*
  * Peças comuns das telas do portal (repaginada de nov/2026): o cabeçalho com
  * o cliente em pílula, o título com uma palavra em serifada itálica e os
- * números grandes ao lado; os vazios; os títulos de seção. Server Components.
+ * números grandes ao lado; os títulos de seção. Os vazios são o `EmptyPanel`
+ * e os números, o `StatGrid` (os mesmos do admin).
  */
 
-/** O cliente em pílula de contorno fino, com o ponto azul (o mesmo do Início). */
-export function ClientPill({ name, className }: { name: ReactNode; className?: string }) {
-  return (
-    <p
-      className={cn(
-        "inline-flex h-7 max-w-full items-center gap-2 rounded-full border border-foreground/20 px-3 eyebrow text-foreground/85",
-        className
-      )}
-    >
-      <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-glow shadow-[0_0_10px_var(--glow)]" />
-      <span className="truncate">{name}</span>
-    </p>
-  )
-}
-
-export interface HeaderStat {
-  label: string
-  value: ReactNode
-  /** Âncora opcional (ex.: "#em-aberto"). */
-  href?: string
-  /** Em vermelho (ex.: cobrança vencida). */
-  alert?: boolean
-}
-
-/** Os números do cabeçalho: rótulo pequeno em caixa alta e o número grande na serifada. */
-function HeaderStats({ items }: { items: HeaderStat[] }) {
-  return (
-    <div className="flex shrink-0 gap-6 sm:gap-8">
-      {items.map((item) => {
-        const content = (
-          <>
-            <p className="flex items-center gap-1.5 eyebrow whitespace-nowrap text-muted-foreground">
-              {item.alert ? (
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
-              ) : null}
-              {item.label}
-            </p>
-            <p
-              className={cn(
-                "mt-2 display-number text-[40px] leading-[0.85] sm:text-[52px]",
-                item.alert ? "text-overdue" : "text-foreground"
-              )}
-            >
-              {item.value}
-            </p>
-          </>
-        )
-        return item.href ? (
-          <a
-            key={item.label}
-            href={item.href}
-            className="min-w-0 border-t border-foreground/15 pt-2.5 outline-none transition-colors hover:border-glow focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          >
-            {content}
-          </a>
-        ) : (
-          <div key={item.label} className="min-w-0 border-t border-foreground/15 pt-2.5">
-            {content}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
+/** Os números do cabeçalho (os mesmos do `StatGrid`; aqui, em linha). */
+export type HeaderStat = Pick<StatItem, "label" | "value" | "href" | "alert">
 
 /**
  * Cabeçalho das telas do portal: o cliente em pílula, o título grande (um
@@ -103,7 +43,7 @@ export function PortalHeader({
   return (
     <header className={cn("flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10", className)}>
       <div className="min-w-0 flex-1">
-        {eyebrow ?? (client ? <ClientPill name={client} /> : null)}
+        {eyebrow ?? (client ? <HeroEyebrow>{client}</HeroEyebrow> : null)}
         <h1
           className={cn(
             "font-display text-[34px] leading-[1.06] font-medium tracking-[-0.04em] break-words text-foreground sm:text-[44px]",
@@ -115,50 +55,11 @@ export function PortalHeader({
         </h1>
         {description ? <div className="mt-2.5 max-w-2xl text-[15px] leading-6 text-muted-foreground">{description}</div> : null}
       </div>
-      {stats && stats.length > 0 ? <HeaderStats items={stats} /> : null}
+      {stats && stats.length > 0 ? (
+        <StatGrid variant="line" items={stats} className="flex shrink-0 gap-x-6 sm:gap-x-8 [&>*]:min-w-16" />
+      ) : null}
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
-  )
-}
-
-/**
- * Vazio de uma tela ou de um quadro: o ícone num círculo que brilha, uma
- * frase curta e o que acontece quando chegar algo (e, se houver, uma ação).
- */
-export function PortalEmpty({
-  icon: Icon,
-  title,
-  children,
-  action,
-  compact = false,
-  className,
-}: {
-  icon: LucideIcon
-  title: string
-  children?: ReactNode
-  action?: ReactNode
-  /** Dentro de um quadro: menos respiro e sem a borda. */
-  compact?: boolean
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-center text-center",
-        compact ? "px-6 py-8" : "rounded-[1.75rem] border border-dashed border-foreground/15 px-6 py-14",
-        className
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="flex size-12 items-center justify-center rounded-full border border-glow/30 bg-glow-soft text-brand-ink shadow-[0_0_32px_-4px_var(--glow-soft)]"
-      >
-        <Icon className="size-5" />
-      </span>
-      <p className="mt-4 font-display text-[17px] font-medium tracking-tight text-foreground">{title}</p>
-      {children ? <p className="mt-1.5 max-w-sm text-[13.5px] leading-5 text-muted-foreground">{children}</p> : null}
-      {action ? <div className="mt-5">{action}</div> : null}
-    </div>
   )
 }
 

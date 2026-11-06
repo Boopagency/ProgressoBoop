@@ -74,7 +74,7 @@ export default function VitrinePage() {
             <Button variant="outline" onClick={() => setChoice(resolved === "dark" ? "light" : "dark")}>
               Tema {resolved === "dark" ? "claro" : "escuro"}
             </Button>
-            {["hoje", "portal", "portal-telas", "tarefas"].map((screen) => (
+            {["hoje", "portal", "tarefas", "admin-a", "admin-b", "admin-c", "portal-telas"].map((screen) => (
               <Button key={screen} variant="glass" asChild>
                 <Link href={`/vitrine/${screen}`}>/{screen}</Link>
               </Button>
@@ -135,7 +135,7 @@ export default function VitrinePage() {
           items={[
             { label: "Atrasadas", value: 2, alert: true, href: "#" },
             { label: "Para hoje", value: 3, href: "#" },
-            { label: "Esta semana", value: 8, detail: "de 12" },
+            { label: "Esta semana", value: 8, unit: "de 12" },
             { label: "Concluídas", value: 14, progress: 64 },
           ]}
         />

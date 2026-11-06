@@ -126,7 +126,7 @@ export function ThreadView<Item extends { key: string } = ThreadItem>({
           {days.map((day) => (
             <section key={day.day} aria-label={day.label}>
               <div role="separator" className="sticky top-0 z-10 flex justify-center py-2">
-                <span className="rounded-full border bg-background px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
+                <span className="rounded-full border bg-card px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">
                   {day.label}
                 </span>
               </div>

@@ -415,7 +415,7 @@ function DealForm({
                 if (cents) setRecurring(moneyInputValue(cents))
               }}
               placeholder="0,00"
-              className="h-9 bg-background text-right tabular-nums"
+              className="h-9 text-right tabular-nums"
             />
           </Field>
           <Field label="Pontual (R$)" htmlFor={`${ids}-onetime`}>
@@ -429,12 +429,12 @@ function DealForm({
                 if (cents) setOneTime(moneyInputValue(cents))
               }}
               placeholder="Setup, site…"
-              className="h-9 bg-background text-right tabular-nums"
+              className="h-9 text-right tabular-nums"
             />
           </Field>
           <Field label="Contrato">
             <Select value={term === null ? NONE : String(term)} onValueChange={(value) => setTerm(value === NONE ? null : Number(value))}>
-              <SelectTrigger aria-label="Duração do contrato" className={cn(TRIGGER, "bg-background")}>
+              <SelectTrigger aria-label="Duração do contrato" className={TRIGGER}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">

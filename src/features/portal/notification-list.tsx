@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { EmptyPanel } from "@/components/empty-panel"
 import { relativeTime } from "@/features/activity/logic"
 import {
   loadPortalNotifications,
@@ -18,7 +19,6 @@ import {
   type PortalNotificationKind,
 } from "@/features/portal/notification-logic"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
-import { PortalEmpty } from "@/features/portal/portal-ui"
 import type { PortalClient } from "@/features/portal/session"
 import { addDaysToKey, todayKey, toDateKey } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
@@ -95,10 +95,10 @@ export function PortalNotificationList({
 
   if (items.length === 0) {
     return (
-      <PortalEmpty icon={BellRing} title="Nenhum aviso por aqui">
+      <EmptyPanel icon={BellRing} title="Nenhum aviso por aqui">
         Quando a equipe responder, enviar um post ou uma etapa para você aprovar, ou concluir uma etapa, o aviso aparece
         aqui.
-      </PortalEmpty>
+      </EmptyPanel>
     )
   }
 

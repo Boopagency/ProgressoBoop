@@ -1,6 +1,8 @@
 import { Check, ListChecks } from "lucide-react"
 
 import { PageBody, PageContainer } from "@/components/layout/page"
+import { EmptyPanel } from "@/components/empty-panel"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
 import { DeliverableList } from "@/features/deliverables/deliverable-list"
 import type { Deliverable } from "@/features/deliverables/logic"
 import type { PortalMessage } from "@/features/portal/content-queries"
@@ -13,7 +15,6 @@ import {
   type PortalStep,
   type PortalStepApproval,
 } from "@/features/portal/project-logic"
-import { ClientPill, PortalEmpty } from "@/features/portal/portal-ui"
 import { ProgressTrack } from "@/features/portal/projects-view"
 import { StepReviewButtons } from "@/features/portal/review-panel"
 import { ProjectStatusBadge, ProjectTiming } from "@/features/projects/project-meta"
@@ -62,14 +63,10 @@ export function PortalProjectView({
 
   return (
     <PageContainer>
-      <section
-        aria-labelledby="projeto-titulo"
-        className="relative isolate overflow-hidden rounded-[2rem] glass-panel px-5 pt-5 pb-6 sm:px-9 sm:pt-7 sm:pb-8"
-      >
-        <span aria-hidden="true" className="pointer-events-none absolute -right-24 -bottom-32 -z-10 size-96 rounded-full bg-glow/20 blur-3xl" />
+      <HeroPanel aria-labelledby="projeto-titulo" className="sm:px-9">
         <div className="flex flex-wrap items-center gap-2">
-          {showClient ? <ClientPill name={clientName} /> : null}
-          {kind ? <ClientPill name={kind} /> : null}
+          {showClient ? <HeroEyebrow>{clientName}</HeroEyebrow> : null}
+          {kind ? <HeroEyebrow>{kind}</HeroEyebrow> : null}
           <ProjectStatusBadge status={project.status} className="h-7 px-3 text-xs" />
         </div>
 
@@ -120,7 +117,7 @@ export function PortalProjectView({
             </a>
           </div>
         ) : null}
-      </section>
+      </HeroPanel>
 
       <PageBody className="mt-8">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
@@ -134,10 +131,10 @@ export function PortalProjectView({
               ) : null}
             </h2>
             {steps.length === 0 ? (
-              <PortalEmpty icon={ListChecks} title="As etapas aparecem aqui">
+              <EmptyPanel icon={ListChecks} title="As etapas aparecem aqui">
                 A equipe ainda não marcou as etapas que você acompanha. Enquanto isso, o andamento acima mostra quanto do
                 projeto já foi feito.
-              </PortalEmpty>
+              </EmptyPanel>
             ) : (
               <ol className="rounded-[1.75rem] border bg-card px-5 py-3 sm:px-6">
                 {steps.map((step, index) => {
@@ -158,7 +155,7 @@ export function PortalProjectView({
                         aria-hidden="true"
                         className={cn(
                           "relative mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2",
-                          done && "border-success bg-success text-white",
+                          done && "border-success bg-success text-primary-foreground",
                           current && "border-glow bg-glow-soft shadow-[0_0_16px_var(--glow-soft)]",
                           !done && !current && "border-border bg-background"
                         )}

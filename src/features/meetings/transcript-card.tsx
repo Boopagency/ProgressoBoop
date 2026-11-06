@@ -115,7 +115,7 @@ export function TranscriptCard({ meetingId, initial }: { meetingId: string; init
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Cole aqui a transcrição da reunião (Ctrl+V). O texto fica guardado e dá para buscar nele depois."
             aria-label="Transcrição da reunião"
-            className="block min-h-48 w-full resize-y rounded-lg border border-dashed border-input bg-muted/30 px-3 py-2.5 text-sm leading-6 text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-solid focus-visible:border-ring focus-visible:bg-background focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:min-h-64"
+            className="block min-h-48 w-full resize-y rounded-lg border border-dashed border-input bg-muted/30 px-3 py-2.5 text-sm leading-6 text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-solid focus-visible:border-ring focus-visible:bg-card focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:min-h-64"
             style={{ maxHeight: "60vh" }}
           />
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">

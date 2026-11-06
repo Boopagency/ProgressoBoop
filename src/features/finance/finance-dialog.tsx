@@ -127,7 +127,7 @@ function KindToggle({ value, onChange }: { value: FinanceKind; onChange: (kind: 
           onClick={() => onChange(kind)}
           className={cn(
             "h-7 rounded-md px-3 text-[13px] font-medium text-muted-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40",
-            value === kind && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+            value === kind && "bg-card-solid text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
           )}
         >
           {FINANCE_KIND_LABEL[kind]}

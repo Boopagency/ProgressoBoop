@@ -1943,27 +1943,48 @@ protagonista). Nada de cor fixa nas telas.
   espaçados.
 - **Peças:** botão `primary` com brilho, `outline` e `glass` de contorno
   fino, `size="circle"` (o redondo da seta); `Badge` `pill`, `seal` (selo
-  branco) e `glass`; `StatGrid` em cartões ou `variant="line"` (linha-guia
-  fina e número grande) nos painéis de destaque; `hero-aurora` (luz em
-  faixas verticais atrás do vidro) só nos destaques do Hoje, do Início do
-  portal e do login.
-- **Telas de gestão (lote 2C):** `HeroPanel` (`components/hero-panel.tsx`,
-  o `glass-panel` com a luz azul no canto, um por tela: o mês do
-  Financeiro, o período dos Indicadores, o resumo das Metas), `HeroFigures`
-  (linha-guia, rótulo `eyebrow` e o número grande) e `DisplayValue`
-  (`components/display-value.tsx`: o número em `display-number` com o "R$",
-  os centavos ou a unidade menores, sem mudar o valor). `KpiTile` ganhou
-  `display` (número grande); os gráficos usam o gradiente do azul da marca
-  ao elétrico e a segunda série neutra (o laranja fica para status).
-  `MonthTitle`/`PeriodTitle` põem o mês na serifada itálica. O relatório
-  (`/relatorio`) tira o tema escuro na hora de imprimir.
+  branco) e `glass`. Uma peça para cada papel, a mesma no admin e no portal:
+  - **Destaque de topo:** `HeroPanel` (`components/hero-panel.tsx`), o
+    `glass-panel` de uma tela, com `light="corner"` (luz azul do canto:
+    Financeiro, Indicadores, Metas, projeto), `"aurora"` (faixas verticais:
+    Hoje e Início do portal; o login tem a sua) ou `"none"` (a tela põe a
+    própria luz, como o âmbar do financeiro do portal com atraso).
+    `HeroEyebrow` é a pílula de contorno com o ponto azul (a data, o
+    cliente, o período).
+  - **Números grandes:** `StatGrid` (`components/stat-grid.tsx`), em
+    cartões (`variant="cards"`, topo de Conteúdo, Comercial e cliente) ou em
+    linha (`variant="line"`, linha-guia fina: dentro do `HeroPanel` e no
+    cabeçalho do portal; `size="lg"` nas aberturas). Texto passa pelo
+    `DisplayValue` (`components/display-value.tsx`: "R$", centavos e unidade
+    menores, sem mudar o valor). `KpiTile` continua à parte, porque traz
+    variação e tendência (`display` é o número grande das telas de gestão).
+  - **Vazio:** `EmptyPanel` (`components/empty-panel.tsx`), com `compact` e
+    `framed={false}` dentro de um cartão.
+  - **Abas em pílula:** `PillTabs` (seções do cliente); filtros e modos de
+    ver usam `SegmentedControl`.
+  - **Cabeçalho:** `PageHeader` no admin (altura fixa, título numa linha);
+    `PortalHeader` no portal (título grande que quebra linha, pílula do
+    cliente e números ao lado), que são papéis diferentes.
+- **Telas de gestão (lote 2C):** `KpiTile` ganhou `display` (número grande);
+  os gráficos usam o gradiente do azul da marca ao elétrico e a segunda
+  série neutra (o laranja fica para status). `MonthTitle`/`PeriodTitle` põem
+  o mês na serifada itálica. O relatório (`/relatorio`) tira o tema escuro
+  na hora de imprimir.
+- **Editor dos Processos (BlockNote):** o CSS mora em `globals.css`
+  (`.boop-editor`): texto em Inter 15 px, títulos em Poppins, cursor, foco,
+  seleção e links no azul; os menus do editor (o "/", a barra de formatação,
+  o menu do bloco) usam o mesmo vidro dos menus do app, com o item ativo em
+  `brand-soft`.
 - **Movimento:** `--ease-glide` e `--ease-swift`, tempos de 150, 240 e 480 ms;
   tudo com `motion-safe:` ou `prefers-reduced-motion`.
 - **Reduzir transparência:** com `prefers-reduced-transparency`, os tokens de
   vidro viram sólidos, os brilhos e a aurora somem e não há desfoque.
 - **Vitrine** (`/vitrine`, só em desenvolvimento; em produção, `notFound()`):
   as peças e as telas Hoje, Início do portal e Tarefas com dados de exemplo
-  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. As telas de gestão
+  (`src/app/vitrine/fixtures.ts`), sem consultar o banco. A página
+  `/vitrine` leva aos índices de cada lote: `/vitrine/admin-a` (Tarefas,
+  Projetos, Calendário e Reuniões, exemplos em `admin-a/fixtures.ts`),
+  `/vitrine/admin-b`, `/vitrine/admin-c` e `/vitrine/portal-telas`. As telas de gestão
   (lote 2C: Indicadores, Metas, Financeiro, Relatórios, Decisões e Processos)
   ficam em `/vitrine/admin-c`, com os exemplos em
   `src/app/vitrine/admin-c/fixtures.ts`. As outras telas do portal ficam em

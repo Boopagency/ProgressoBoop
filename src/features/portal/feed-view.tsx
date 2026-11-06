@@ -3,6 +3,7 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 
 import { PageBody, PageContainer } from "@/components/layout/page"
+import { EmptyPanel } from "@/components/empty-panel"
 import { publishLabel } from "@/features/content/logic"
 import { FormatIcon } from "@/features/content/post-meta"
 import { formatCompact } from "@/features/instagram/metrics-logic"
@@ -10,7 +11,7 @@ import { TileViews } from "@/features/instagram/metrics-view"
 import { PORTAL_STATUS_LABEL, portalFeed, portalStatus, postThumbnail, type PortalPost } from "@/features/portal/content-logic"
 import { StatusDot } from "@/features/portal/post-meta"
 import { PortalImage } from "@/features/portal/portal-image"
-import { PortalEmpty, PortalHeader } from "@/features/portal/portal-ui"
+import { PortalHeader } from "@/features/portal/portal-ui"
 import type { DateKey } from "@/lib/types"
 import { CONTENT_FORMAT_LABEL, INSTAGRAM_METRIC_LABEL } from "@/lib/labels"
 import { cn } from "@/lib/utils"
@@ -135,9 +136,9 @@ export function PortalFeedView({ clientName, handle, bio, photo, instagram, post
             </div>
 
             {tiles.length === 0 ? (
-              <PortalEmpty icon={ImagePlus} title="Nenhum post do Instagram ainda" compact className="pb-12">
+              <EmptyPanel icon={ImagePlus} title="Nenhum post do Instagram ainda" compact framed={false} className="pb-12">
                 Quando a equipe enviar o primeiro post para você, ele aparece aqui, no lugar em que vai ficar no perfil.
-              </PortalEmpty>
+              </EmptyPanel>
             ) : (
               <ul aria-label="Grid do feed" className="grid grid-cols-3 gap-0.5">
                 {tiles.map((post) => {

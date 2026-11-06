@@ -8,7 +8,7 @@ import { toast } from "sonner"
 
 import { EmptyPanel } from "@/components/empty-panel"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
-import { NumberTiles } from "@/components/number-tiles"
+import { StatGrid } from "@/components/stat-grid"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
@@ -188,7 +188,7 @@ export function DealsView({ deals, today }: { deals: Deal[]; today: DateKey }) {
 
       <PageBody>
         <section aria-label="Números do funil">
-          <NumberTiles
+          <StatGrid
             items={[
               {
                 label: "Em aberto",

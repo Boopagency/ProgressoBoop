@@ -4,10 +4,11 @@ import Link from "next/link"
 import { PageBody, PageContainer } from "@/components/layout/page"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
+import { EmptyPanel } from "@/components/empty-panel"
 import { groupByDay } from "@/features/content/logic"
 import { PORTAL_STATUS_LABEL, portalStatus, type PortalPost, type PortalStatus } from "@/features/portal/content-logic"
 import { PostListItem, StatusDot } from "@/features/portal/post-meta"
-import { PortalEmpty, PortalHeader } from "@/features/portal/portal-ui"
+import { PortalHeader } from "@/features/portal/portal-ui"
 import {
   addMonthsToKey,
   eachDayKey,
@@ -168,9 +169,9 @@ export function PortalCalendarView({ clientName, anchor, today, posts, postHref,
         {/* Celular: só os dias do mês que têm post, em lista, com o dia grande ao lado. */}
         <div className="space-y-5 md:hidden">
           {monthDays.length === 0 ? (
-            <PortalEmpty icon={CalendarDays} title="Nenhum post neste mês">
+            <EmptyPanel icon={CalendarDays} title="Nenhum post neste mês">
               Quando a equipe programar posts para {monthName}, eles aparecem aqui, dia a dia.
-            </PortalEmpty>
+            </EmptyPanel>
           ) : (
             monthDays.map((day) => (
               <section key={day} aria-label={`${formatWeekdayShort(day)}, ${day.slice(8)}`} className="flex gap-3">
@@ -201,9 +202,9 @@ export function PortalCalendarView({ clientName, anchor, today, posts, postHref,
         ) : null}
 
         {posts.length === 0 ? (
-          <PortalEmpty icon={CalendarX2} title="O calendário ainda está vazio" className="max-md:hidden">
+          <EmptyPanel icon={CalendarX2} title="O calendário ainda está vazio" className="max-md:hidden">
             Quando a equipe enviar os primeiros posts, eles aparecem nos dias em que vão ao ar.
-          </PortalEmpty>
+          </EmptyPanel>
         ) : null}
       </PageBody>
     </PageContainer>

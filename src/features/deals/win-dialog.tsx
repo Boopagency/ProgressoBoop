@@ -145,7 +145,7 @@ function WinForm({ deal, onDone }: { deal: Deal; onDone: () => void }) {
                   onClick={() => setMode(option)}
                   className={cn(
                     "h-7 rounded-md px-3 text-[13px] font-medium text-muted-foreground",
-                    mode === option && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
+                    mode === option && "bg-card-solid text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06),0_0_0_1px_rgb(0_0_0/0.04)]"
                   )}
                 >
                   {option === "new" ? "Cliente novo" : "Cliente da casa"}

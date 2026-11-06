@@ -5,7 +5,8 @@ import Link from "next/link"
 import { useMemo } from "react"
 
 import { DisplayValue } from "@/components/display-value"
-import { HeroEyebrow, HeroFigures, HeroPanel } from "@/components/hero-panel"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
+import { StatGrid } from "@/components/stat-grid"
 import { PanelCard, PanelCount } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -121,7 +122,8 @@ export function FinanceView({ data, period, today }: { data: FinanceData; period
               </dl>
             </div>
 
-            <HeroFigures
+            <StatGrid
+              variant="line"
               className="mt-8 sm:mt-10"
               items={[
                 {

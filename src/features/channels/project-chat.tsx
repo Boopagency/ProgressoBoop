@@ -96,9 +96,9 @@ export function ProjectClientChat({
       aria-labelledby="conversa-projeto"
       className={cn("flex h-[540px] min-h-0 flex-col overflow-hidden rounded-2xl border bg-card", className)}
     >
-      <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-5 py-3">
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-2 gap-y-1.5 border-b px-5 py-3">
         <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
-        <h2 id="conversa-projeto" className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-foreground">
+        <h2 id="conversa-projeto" className="text-[15px] font-semibold tracking-tight text-foreground">
           Conversa com o cliente
         </h2>
         {thread.pending.length > 0 ? (

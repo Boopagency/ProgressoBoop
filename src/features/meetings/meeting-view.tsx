@@ -215,7 +215,7 @@ function MeetingPulse({
           <p className="mt-1 font-display text-xl leading-7 font-medium tracking-tight text-foreground tabular-nums">{time}</p>
         </div>
       </div>
-      <dl className="grid flex-1 grid-cols-3 gap-x-5 sm:gap-x-8">
+      <dl className="grid w-full grid-cols-3 gap-x-4 sm:w-auto sm:flex-1 sm:gap-x-8">
         <PulseStat label="Assuntos" value={api.topics.length} detail={api.topics.length > 0 ? `${discussed} discutidos` : null} />
         <PulseStat label="Combinados" value={api.agreements.length} />
         <PulseStat label="Em aberto" value={open} alert={open > 0 && closed} />

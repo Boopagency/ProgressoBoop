@@ -225,7 +225,7 @@ export function TasksView() {
         onSelect={(due) => update({ due: filters.due === due ? DEFAULT_FILTERS.due : due, ...(filters.status === "done" ? { status: DEFAULT_FILTERS.status } : {}) })}
       />
 
-      <PageToolbar className="flex-col items-stretch gap-y-3">
+      <PageToolbar className="flex-col flex-nowrap items-stretch gap-y-3">
         <div className="flex items-center gap-2">
           <div className="-ml-4 flex min-w-0 flex-1 items-center overflow-x-auto pl-4 pb-0.5 sm:ml-0 sm:pl-0">
             <SegmentedControl
@@ -455,8 +455,8 @@ function TaskPulse({
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 right-[12%] -z-10 h-48 w-96 rounded-full bg-glow-soft blur-3xl"
       />
-      <div className="grid grid-cols-2 gap-1 sm:grid-cols-5">
-        {items.map((item, index) => {
+      <div className="relative -m-1.5 flex snap-x gap-1 overflow-x-auto p-1.5 [scrollbar-width:none] sm:m-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:p-0">
+        {items.map((item) => {
           const selected = active === item.due
           return (
             <button
@@ -465,12 +465,11 @@ function TaskPulse({
               aria-pressed={selected}
               onClick={() => onSelect(item.due)}
               className={cn(
-                "group/pulse relative flex flex-col items-start rounded-[1.35rem] px-4 pt-2.5 pb-3 text-left outline-none transition-[background-color,box-shadow] duration-150 hover:bg-foreground/[0.04] focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                index === items.length - 1 && "max-sm:col-span-2",
+                "group/pulse relative flex min-w-[112px] shrink-0 snap-start flex-col items-start rounded-[1.35rem] px-4 pt-2.5 pb-3 text-left outline-none transition-[background-color,box-shadow] duration-150 hover:bg-foreground/[0.04] focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:min-w-0",
                 selected && "bg-glow-soft shadow-[inset_0_0_0_1px_rgb(61_126_255/0.45)] hover:bg-glow-soft"
               )}
             >
-              <span className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+              <span className="flex items-center gap-1.5 eyebrow whitespace-nowrap text-muted-foreground">
                 {item.alert ? (
                   <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
                 ) : selected ? (

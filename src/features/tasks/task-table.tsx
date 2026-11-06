@@ -47,7 +47,7 @@ export function TaskTable({ tasks, className }: { tasks: Task[]; className?: str
   return (
     <div
       className={cn(
-        "overflow-x-auto rounded-2xl border border-glass-edge bg-card-solid shadow-card",
+        "relative overflow-x-auto rounded-2xl border border-glass-edge bg-card-solid shadow-card",
         className
       )}
     >

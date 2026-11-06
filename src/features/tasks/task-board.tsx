@@ -34,7 +34,7 @@ export function TaskBoard({ tasks, className }: { tasks: Task[]; className?: str
   return (
     <div
       className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-3 sm:overflow-visible sm:px-0",
+        "relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-3 sm:overflow-visible sm:px-0",
         className
       )}
     >

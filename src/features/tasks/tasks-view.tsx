@@ -17,7 +17,7 @@ import {
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, type ReactNode } from "react"
 
-import { EmptyGlow } from "@/components/empty-glow"
+import { EmptyPanel } from "@/components/empty-panel"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { SegmentedControl } from "@/components/segmented-control"
@@ -402,20 +402,20 @@ function EmptyState({
   onCreate: () => void
 }) {
   return (
-    <EmptyGlow
-      icon={filtered ? <SearchX /> : <ListChecks />}
+    <EmptyPanel
+      icon={filtered ? SearchX : ListChecks}
       title={
         filtered ? (
           <>
-            Nenhuma tarefa com <em>esses</em> filtros
+            Nenhuma tarefa com <em className="emphasis pr-[0.04em] text-[1.12em] text-brand-ink">esses</em> filtros
           </>
         ) : (
           <>
-            Tudo em <em>dia</em>
+            Tudo em <em className="emphasis pr-[0.04em] text-[1.12em] text-brand-ink">dia</em>
           </>
         )
       }
-      actions={
+      action={
         <>
           {filtered ? (
             <Button variant="outline" onClick={onClear}>
@@ -432,7 +432,7 @@ function EmptyState({
       {filtered
         ? "Ajuste ou limpe os filtros para ver mais tarefas."
         : "Nenhuma tarefa aberta. Crie uma quando surgir algo novo (atalho N)."}
-    </EmptyGlow>
+    </EmptyPanel>
   )
 }
 

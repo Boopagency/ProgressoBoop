@@ -35,10 +35,10 @@ export function MonthView({
   onOpenPost: (post: PostSummary) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
-      <div className="grid grid-cols-7 border-b bg-muted/40">
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="grid grid-cols-7 border-b">
         {days.slice(0, 7).map((day) => (
-          <div key={day} className="px-2 py-2 text-center text-xs text-muted-foreground @3xl:text-left">
+          <div key={day} className="px-2 py-2.5 text-center eyebrow text-[10.5px] text-muted-foreground @3xl:px-3 @3xl:text-left">
             {formatWeekdayShort(day)}
           </div>
         ))}
@@ -102,7 +102,7 @@ function DayCell({
     <span
       className={cn(
         "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-medium tabular-nums",
-        isToday && "bg-brand font-semibold text-brand-navy",
+        isToday && "bg-primary font-semibold text-primary-foreground shadow-glow",
         !isToday && outside && "text-subtle-foreground"
       )}
     >
@@ -115,11 +115,12 @@ function DayCell({
       <PopoverAnchor asChild>
         <div
           className={cn(
-            "min-h-16 min-w-0 border-t border-l p-1 @3xl:min-h-[118px]",
+            "relative min-h-16 min-w-0 border-t border-l p-1 @3xl:min-h-[118px]",
             firstColumn && "border-l-0",
             firstRow && "border-t-0",
-            isWeekend(day) && "bg-muted/25",
-            outside && "bg-muted/40"
+            isWeekend(day) && "bg-foreground/[0.015]",
+            outside && "bg-foreground/[0.03]",
+            isToday && "bg-glow-soft/50 shadow-[inset_0_0_0_1px_rgb(61_126_255/0.45),inset_0_0_32px_-12px_var(--glow)]"
           )}
         >
           {/* Estreito: o dia inteiro é um botão com pontos por item. */}
@@ -178,8 +179,8 @@ function DayCell({
         </div>
       </PopoverAnchor>
 
-      <PopoverContent align="start" className="w-72 p-2">
-        <p className="px-1.5 pt-1 pb-2 text-xs font-medium text-muted-foreground">
+      <PopoverContent align="start" className="w-72 rounded-2xl p-2">
+        <p className="px-1.5 pt-1 pb-2 eyebrow text-[10.5px] text-muted-foreground">
           {capitalize(formatWeekdayLong(day))}, {formatDayMonth(day)}
         </p>
         <div className="space-y-px" onClickCapture={() => setOpen(false)}>

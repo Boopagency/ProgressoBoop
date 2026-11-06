@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { EmptyGlow } from "@/components/empty-glow"
+import { EmptyPanel } from "@/components/empty-panel"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
@@ -292,14 +292,14 @@ function ProjectCard({
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <EmptyGlow
-      icon={<FolderKanban />}
+    <EmptyPanel
+      icon={FolderKanban}
       title={
         <>
-          Nenhum projeto por <em>aqui</em>
+          Nenhum projeto por <em className="emphasis pr-[0.04em] text-[1.12em] text-brand-ink">aqui</em>
         </>
       }
-      actions={
+      action={
         <Button onClick={onCreate} className="gap-1.5">
           <Plus />
           Novo projeto
@@ -308,6 +308,6 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     >
       Um projeto junta as tarefas de uma entrega (um site, uma identidade, a implantação de um cliente) ou de um ciclo
       interno, com prazo e progresso.
-    </EmptyGlow>
+    </EmptyPanel>
   )
 }

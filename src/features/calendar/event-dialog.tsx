@@ -69,7 +69,7 @@ export function EventDialog({
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-[8%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[12%] sm:max-w-[540px]"
+        className="top-[8%] translate-y-0 gap-0 overflow-hidden rounded-[1.75rem] p-0 sm:top-[12%] sm:max-w-[560px]"
       >
         <DialogTitle className="sr-only">
           {state.event ? "Editar evento" : state.mode === "meeting" ? "Nova reunião" : "Novo evento"}
@@ -185,9 +185,14 @@ function EventForm({
         }
       }}
     >
-      <div className="space-y-5 px-5 pt-5 pb-5">
+      <div className="relative isolate space-y-5 px-6 pt-6 pb-5">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-10 -z-10 h-40 w-72 rounded-full bg-glow-soft blur-3xl"
+        />
         <div>
-          <p className="mb-3 text-xs font-medium text-muted-foreground">
+          <p className="mb-4 inline-flex h-6 items-center gap-2 rounded-full border border-foreground/15 px-2.5 eyebrow text-[10.5px] text-muted-foreground">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
             {event ? "Editar evento" : meeting ? "Nova reunião" : "Novo evento"}
           </p>
           <input
@@ -200,7 +205,7 @@ function EventForm({
             placeholder={meeting ? "Nome da reunião (ex.: Reunião Velmont)" : "Nome do evento"}
             aria-label="Título"
             maxLength={200}
-            className="w-full bg-transparent text-lg leading-7 font-semibold tracking-tight text-foreground outline-none placeholder:font-normal placeholder:text-subtle-foreground"
+            className="w-full bg-transparent font-display text-[22px] leading-8 font-medium tracking-[-0.025em] text-foreground outline-none placeholder:text-subtle-foreground"
           />
         </div>
 
@@ -213,7 +218,7 @@ function EventForm({
           />
         )}
 
-        <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 text-sm">
+        <div className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 rounded-2xl border bg-card px-4 py-3.5 text-sm">
           <span className="text-[13px] text-muted-foreground">{weekly ? "A partir de" : "Data"}</span>
           <DatePicker
             value={date}
@@ -229,7 +234,7 @@ function EventForm({
                 {capitalize(formatWeekdayShort(value))}, {formatShortDate(value, today)}
               </span>
             )}
-            className="h-8 w-fit border px-2.5 text-[13px]"
+            className="h-8 w-fit rounded-full border px-3 text-[13px]"
           />
 
           <span className="text-[13px] text-muted-foreground">Horário</span>
@@ -240,7 +245,7 @@ function EventForm({
               value={startTime}
               disabled={allDay}
               onChange={(changeEvent) => setStartTime(changeEvent.target.value)}
-              className={cn("h-8 w-[128px] shadow-none", allDay && "opacity-40")}
+              className={cn("h-8 w-[128px] rounded-full shadow-none", allDay && "opacity-40")}
             />
             <span className="text-muted-foreground">–</span>
             <Input
@@ -249,7 +254,7 @@ function EventForm({
               value={endTime}
               disabled={allDay}
               onChange={(changeEvent) => setEndTime(changeEvent.target.value)}
-              className={cn("h-8 w-[128px] shadow-none", allDay && "opacity-40")}
+              className={cn("h-8 w-[128px] rounded-full shadow-none", allDay && "opacity-40")}
             />
             <div className="ml-1 flex items-center gap-2">
               <Checkbox
@@ -281,7 +286,7 @@ function EventForm({
             value={clientId ?? NONE}
             onValueChange={(value) => setClientId(value === NONE ? null : value)}
           >
-            <SelectTrigger size="sm" aria-label="Cliente" className="h-8 w-fit gap-1.5 text-[13px] shadow-none">
+            <SelectTrigger size="sm" aria-label="Cliente" className="h-8 w-fit gap-1.5 rounded-full text-[13px] shadow-none">
               <Building2 className="size-3.5" />
               <SelectValue />
             </SelectTrigger>
@@ -306,11 +311,11 @@ function EventForm({
           placeholder="Descrição (opcional)"
           aria-label="Descrição"
           rows={2}
-          className="field-sizing-content max-h-40 min-h-16 w-full resize-none rounded-md bg-muted/50 px-3 py-2 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="field-sizing-content max-h-40 min-h-16 w-full resize-none rounded-2xl border bg-card px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t bg-muted/40 px-5 py-3">
+      <div className="flex items-center justify-between gap-3 border-t bg-foreground/[0.025] px-6 py-3.5">
         <p
           className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")}
           role={error ? "alert" : undefined}

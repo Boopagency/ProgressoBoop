@@ -38,7 +38,7 @@ import { EntryStateBadge, entryState } from "@/features/meetings/meeting-meta"
 import { MeetingLink } from "@/features/meetings/open-meeting"
 import { firstName } from "@/features/tasks/logic"
 import { useWorkspace } from "@/features/workspace/workspace-provider"
-import { capitalize, formatLongDate } from "@/lib/dates"
+import { capitalize, formatLongDate, formatWeekdayShort } from "@/lib/dates"
 import { EVENT_TYPE_LABEL } from "@/lib/labels"
 import type { DateKey, MeetingRecord } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -111,9 +111,11 @@ function EventDetails({
       <SheetTitle className="sr-only">{event.title}</SheetTitle>
       <SheetDescription className="sr-only">Detalhes do evento.</SheetDescription>
 
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b pr-12 pl-5">
-        <EventTypeDot type={event.event_type} />
-        <span className="text-xs text-muted-foreground">{EVENT_TYPE_LABEL[event.event_type]}</span>
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b pr-14 pl-5">
+        <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-glass-edge bg-card px-2.5 text-xs text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]">
+          <EventTypeDot type={event.event_type} />
+          {EVENT_TYPE_LABEL[event.event_type]}
+        </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -138,11 +140,27 @@ function EventDetails({
         </DropdownMenu>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <h2 className="text-lg leading-7 font-semibold tracking-tight text-foreground">
-          {event.title}
-        </h2>
-        <dl className="mt-5 space-y-3 text-sm">
+      <div className="flex-1 overflow-y-auto px-5 py-6">
+        <div className="flex items-start gap-4">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2 leading-none",
+              occurrence.date === today
+                ? "border-glow/50 bg-glow-soft shadow-[0_0_24px_-8px_var(--glow)]"
+                : "border-glass-edge bg-card"
+            )}
+          >
+            <span className="eyebrow text-[10px] text-muted-foreground">{formatWeekdayShort(occurrence.date)}</span>
+            <span className="mt-1 display-number text-[38px] leading-[0.85] text-foreground">
+              {Number(occurrence.date.slice(8))}
+            </span>
+          </span>
+          <h2 className="pt-1 font-display text-[22px] leading-8 font-medium tracking-[-0.025em] text-foreground">
+            {event.title}
+          </h2>
+        </div>
+        <dl className="mt-6 space-y-3 rounded-2xl border bg-card px-4 py-3.5 text-sm">
           <DetailRow icon={<CalendarDays />} label="Data">
             {formatLongDate(occurrence.date)}
           </DetailRow>
@@ -166,7 +184,7 @@ function EventDetails({
           ) : null}
         </dl>
         {isMeeting ? (
-          <div className="mt-6 rounded-lg border bg-muted/30 px-4 py-3.5">
+          <div className="mt-4 rounded-2xl border border-glow/25 bg-glow-soft/40 px-4 py-3.5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-[13px] font-medium text-foreground">Pauta e combinados</h3>
               <EntryStateBadge
@@ -182,8 +200,8 @@ function EventDetails({
           </div>
         ) : null}
         {event.description ? (
-          <div className="mt-6 border-t pt-5">
-            <h3 className="text-[13px] font-medium text-foreground">Descrição</h3>
+          <div className="mt-6">
+            <h3 className="eyebrow text-muted-foreground">Descrição</h3>
             <p className="mt-1.5 text-sm whitespace-pre-wrap text-muted-foreground">
               {event.description}
             </p>

@@ -52,7 +52,7 @@ export function EventItem({
       type="button"
       onClick={() => onOpen(occurrence)}
       className={cn(
-        "block w-full rounded-md border-l-2 px-2 py-1.5 text-left text-xs transition-colors",
+        "block w-full rounded-lg border-l-2 px-2 py-1.5 text-left text-xs transition-colors",
         EVENT_TYPE_STYLE[event.event_type].block
       )}
     >
@@ -163,7 +163,7 @@ export function PostItem({
       type="button"
       onClick={() => onOpen(post)}
       aria-label={label}
-      className="block w-full rounded-md border border-dashed px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+      className="block w-full rounded-lg border border-dashed border-foreground/15 px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
     >
       <span className="flex items-center gap-1 text-muted-foreground tabular-nums">
         <ClientMark clientId={post.client_id} size="xs" />

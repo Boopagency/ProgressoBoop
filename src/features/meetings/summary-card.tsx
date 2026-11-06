@@ -62,9 +62,9 @@ export function SummaryCard({ meetingId, initial }: { meetingId: string; initial
   )
 
   return (
-    <section aria-labelledby="resumo-titulo" className="overflow-hidden rounded-xl border bg-card">
-      <header className="flex items-center gap-2 border-b px-4 py-3.5">
-        <h2 id="resumo-titulo" className="text-sm font-semibold text-foreground">
+    <section aria-labelledby="resumo-titulo" className="overflow-hidden rounded-2xl border bg-card">
+      <header className="flex items-center gap-2 min-h-14 border-b px-5 py-3.5">
+        <h2 id="resumo-titulo" className="text-[15px] font-semibold tracking-tight text-foreground">
           Resumo
         </h2>
         <span

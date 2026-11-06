@@ -97,8 +97,8 @@ export function ProjectClientChat({
       className={cn("flex h-[540px] min-h-0 flex-col overflow-hidden rounded-2xl border bg-card", className)}
     >
       <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-5 py-3">
-        <span aria-hidden="true" className="size-2 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
-        <h2 id="conversa-projeto" className="text-[15px] font-semibold tracking-tight text-foreground">
+        <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-glow shadow-[0_0_8px_var(--glow)]" />
+        <h2 id="conversa-projeto" className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-foreground">
           Conversa com o cliente
         </h2>
         {thread.pending.length > 0 ? (
@@ -112,7 +112,7 @@ export function ProjectClientChat({
         {channelId ? (
           <Link
             href={channelHref(channelId)}
-            className="ml-auto inline-flex h-7 items-center gap-1 rounded-full border border-glass-edge px-2.5 text-xs text-muted-foreground transition-colors hover:border-glow/40 hover:text-foreground"
+            className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-glass-edge px-2.5 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:border-glow/40 hover:text-foreground"
           >
             Abrir o canal
             <ArrowUpRight className="size-3" aria-hidden="true" />

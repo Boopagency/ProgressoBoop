@@ -54,9 +54,9 @@ export function TranscriptCard({ meetingId, initial }: { meetingId: string; init
   }
 
   return (
-    <section aria-labelledby="transcricao-titulo" className="overflow-hidden rounded-xl border bg-card">
-      <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b px-4 py-3.5">
-        <h2 id="transcricao-titulo" className="text-sm font-semibold text-foreground">
+    <section aria-labelledby="transcricao-titulo" className="overflow-hidden rounded-2xl border bg-card">
+      <header className="flex flex-wrap items-center gap-x-2 gap-y-1 min-h-14 border-b px-5 py-3.5">
+        <h2 id="transcricao-titulo" className="text-[15px] font-semibold tracking-tight text-foreground">
           Transcrição
         </h2>
         {text ? (

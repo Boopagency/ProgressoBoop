@@ -7,7 +7,8 @@ import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageToolbar, SectionTitle } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
-import { Button } from "@/components/ui/button"
+import { EmptyPanel } from "@/components/empty-panel"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { EventDialog, type EventDialogState } from "@/features/calendar/event-dialog"
 import { WEEKLY } from "@/features/calendar/recurrence"
 import { addItemToOccurrence } from "@/features/meetings/actions"
@@ -193,7 +194,7 @@ export function MeetingsView({
             }}
             placeholder="Buscar em reuniões e transcrições"
             aria-label="Buscar reuniões"
-            className="h-9 w-full rounded-lg border border-input bg-background pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+            className="h-9 w-full rounded-full border border-glass-edge bg-card pr-9 pl-9 text-sm text-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
           />
           {draft ? (
             <button
@@ -203,7 +204,7 @@ export function MeetingsView({
                 setDraft("")
                 search("")
               }}
-              className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 place-content-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 place-content-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <X className="size-3.5" />
             </button>
@@ -236,21 +237,34 @@ export function MeetingsView({
         ) : null}
 
         {nothingAtAll ? (
-          <div className="rounded-xl border border-dashed px-6 py-10 text-center">
-            <p className="text-sm font-medium text-foreground">Nenhuma reunião por enquanto</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">
-              Crie uma reunião aqui ou marque um evento do tipo “Reunião” no Calendário.
-            </p>
-          </div>
+          <EmptyPanel
+            icon={CalendarPlus}
+            title={
+              <>
+                Nenhuma reunião por <em className="emphasis pr-[0.04em] text-[1.12em] text-brand-ink">enquanto</em>
+              </>
+            }
+            action={
+              <Button
+                onClick={() => setDialog((current) => ({ open: true, key: current.key + 1, mode: "meeting" }))}
+                className="gap-1.5"
+              >
+                <CalendarPlus />
+                Nova reunião
+              </Button>
+            }
+          >
+            Crie uma reunião aqui ou marque um evento do tipo “Reunião” no Calendário.
+          </EmptyPanel>
         ) : null}
 
         <div className={cn("space-y-8", isSearching && "opacity-60 transition-opacity")}>
           {visibleUpcoming.length > 0 ? (
             <section aria-labelledby="proximas">
-              <SectionTitle id="proximas" count={visibleUpcoming.length}>
+              <SectionTitle id="proximas" count={visibleUpcoming.length} className="font-display font-medium tracking-[-0.01em]">
                 {next ? "Depois dessa" : "Próximas"}
               </SectionTitle>
-              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+              <ul className="mt-2.5 rounded-2xl border bg-card p-1.5">
                 {visibleUpcoming.map((entry) => (
                   <MeetingRow
                     key={entry.key}
@@ -265,8 +279,10 @@ export function MeetingsView({
 
           {months.map(([month, entries]) => (
             <section key={month} aria-label={formatMonthYear(`${month}-01`)}>
-              <SectionTitle count={entries.length}>{formatMonthYear(`${month}-01`)}</SectionTitle>
-              <ul className="mt-2 rounded-xl bg-card p-1.5 shadow-card">
+              <SectionTitle count={entries.length} className="font-display font-medium tracking-[-0.01em]">
+                {formatMonthYear(`${month}-01`)}
+              </SectionTitle>
+              <ul className="mt-2.5 rounded-2xl border bg-card p-1.5">
                 {entries.map((entry) => (
                   <MeetingRow
                     key={entry.key}
@@ -303,21 +319,20 @@ function groupByMonth(entries: MeetingEntry[]): [string, MeetingEntry[]][] {
 
 const MONTH_SHORT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-function DateTile({ date, today }: { date: DateKey; today: DateKey }) {
+function DateTile({ date, today, large = false }: { date: DateKey; today: DateKey; large?: boolean }) {
   const day = parseDateKey(date)
   const isToday = date === today
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "flex w-11 shrink-0 flex-col items-center rounded-lg border py-1 leading-none",
-        isToday ? "border-brand bg-brand-soft" : "bg-background"
+        "flex shrink-0 flex-col items-center rounded-xl border py-1.5 leading-none",
+        large ? "w-[68px] rounded-2xl py-2.5" : "w-12",
+        isToday ? "border-glow/50 bg-glow-soft shadow-[0_0_20px_-6px_var(--glow)]" : "border-glass-edge bg-card"
       )}
     >
-      <span className="text-[10.5px] font-medium text-muted-foreground uppercase">
-        {MONTH_SHORT[day.getMonth()]}
-      </span>
-      <span className="mt-0.5 font-display text-[17px] font-semibold text-foreground tabular-nums">
+      <span className="eyebrow text-[9.5px] text-muted-foreground">{MONTH_SHORT[day.getMonth()]}</span>
+      <span className={cn("mt-0.5 display-number leading-[0.95] text-foreground", large ? "text-[40px]" : "text-[24px]")}>
         {day.getDate()}
       </span>
       <span className="mt-0.5 text-[10.5px] text-muted-foreground">{formatWeekdayShort(date)}</span>
@@ -359,7 +374,7 @@ function MeetingRow({
         eventId={entry.event.id}
         date={entry.date}
         className={cn(
-          "flex w-full items-center gap-4 rounded-lg px-3 py-2.5 transition-colors outline-none hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/40",
+          "flex w-full items-center gap-4 rounded-xl px-3 py-2.5 transition-colors outline-none hover:bg-foreground/[0.04] focus-visible:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring/40",
           state === "canceled" && "opacity-70"
         )}
       >
@@ -468,23 +483,28 @@ function NextMeetingCard({
   return (
     <section
       aria-labelledby="proxima-reuniao"
-      className={cn("relative overflow-hidden rounded-xl border bg-card", className)}
+      className={cn("relative isolate overflow-hidden rounded-[2rem] glass-panel", className)}
     >
-      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-brand" />
-      <div className="grid gap-5 px-5 py-5 pl-6 md:grid-cols-[minmax(0,1fr)_minmax(0,320px)] md:items-end">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 right-0 -z-10 h-64 w-[26rem] rounded-full bg-glow-soft blur-3xl"
+      />
+      <div className="grid gap-6 px-5 py-6 sm:px-7 md:grid-cols-[minmax(0,1fr)_minmax(0,320px)] md:items-end">
         <div className="min-w-0">
-          <p className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
-            <span className="text-brand-ink">Próxima reunião</span>
-            <span aria-hidden="true">·</span>
-            <span>{relativeDays(entry.date, today)}</span>
+          <p className="inline-flex h-7 items-center gap-2 rounded-full border border-foreground/20 px-3 eyebrow text-foreground/85">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-glow shadow-[0_0_10px_var(--glow)]" />
+            Próxima reunião · {relativeDays(entry.date, today)}
           </p>
-          <h2
-            id="proxima-reuniao"
-            className="mt-1.5 font-display text-xl leading-7 font-semibold tracking-tight text-foreground"
-          >
-            {entry.event.title}
-          </h2>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <div className="mt-5 flex items-center gap-4">
+            <DateTile date={entry.date} today={today} large />
+            <h2
+              id="proxima-reuniao"
+              className="min-w-0 font-display text-[26px] leading-8 font-medium tracking-[-0.03em] text-foreground sm:text-[30px] sm:leading-9"
+            >
+              {entry.event.title}
+            </h2>
+          </div>
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
               {dayLabel(entry.date, today)} · <span className="tabular-nums">{timeLabel(entry)}</span>
             </span>
@@ -495,7 +515,7 @@ function NextMeetingCard({
             meetingId={entry.record?.id ?? null}
             eventId={entry.event.id}
             date={entry.date}
-            className="mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            className={cn(buttonVariants(), "mt-5 gap-2")}
           >
             Abrir pauta
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -509,7 +529,7 @@ function NextMeetingCard({
           }}
           className="min-w-0"
         >
-          <label htmlFor="novo-assunto-proxima" className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="novo-assunto-proxima" className="eyebrow text-muted-foreground">
             Algo para discutir?
           </label>
           <div className="mt-1.5 flex gap-2">
@@ -519,7 +539,7 @@ function NextMeetingCard({
               onChange={(event) => setDraft(event.target.value)}
               maxLength={ITEM_MAX}
               placeholder="Adicionar assunto à pauta"
-              className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+              className="h-9 min-w-0 flex-1 rounded-full border border-glass-edge bg-card px-4 text-sm text-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
             />
             <Button
               type="submit"

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
+import { EmptyGlow } from "@/components/empty-glow"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { SegmentedControl } from "@/components/segmented-control"
 import { Button } from "@/components/ui/button"
@@ -60,6 +61,7 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
     })
     .sort(compareProjects)
   const open = visible.filter(isOpenProject)
+  const focus = open.filter((project) => project.pinned)
   const closed = visible.filter((project) => !isOpenProject(project))
   const active = projects.filter((project) => project.status === "active")
   const late = active.filter((project) => project.due_on !== null && project.due_on < today).length
@@ -92,16 +94,43 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
         </PageBody>
       ) : (
         <PageBody ref={bodyRef}>
+          {focus.length > 0 ? (
+            <section
+              aria-labelledby="projetos-foco"
+              className="relative isolate overflow-hidden rounded-[2rem] glass-panel p-2 sm:p-2.5"
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-24 left-1/3 -z-10 h-56 w-[30rem] rounded-full bg-glow-soft blur-3xl"
+              />
+              <div className="flex items-center gap-2 px-3 pt-2.5 pb-3 sm:px-4">
+                <Pin aria-hidden="true" className="size-3.5 fill-current text-brand-ink" />
+                <h2 id="projetos-foco" className="eyebrow text-muted-foreground">
+                  Em foco
+                </h2>
+                <span className="text-[13px] text-subtle-foreground tabular-nums">{focus.length}</span>
+                <span className="ml-auto hidden text-xs text-subtle-foreground sm:inline">Aparecem na tela Hoje e na weekly</span>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {focus.map((project) => (
+                  <ProjectCard key={project.id} project={project} stats={projectStats(project.id, tasks, today)} featured />
+                ))}
+              </div>
+            </section>
+          ) : null}
           {OPEN_GROUPS.map((group) => {
-            const list = open.filter((project) => project.status === group.status)
+            const list = open.filter((project) => project.status === group.status && !project.pinned)
             if (list.length === 0) return null
             return (
               <section key={group.status} aria-labelledby={`projetos-${group.status}`}>
-                <h2 id={`projetos-${group.status}`} className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <h2
+                  id={`projetos-${group.status}`}
+                  className="flex items-center gap-2 font-display text-sm font-medium tracking-[-0.01em] text-foreground"
+                >
                   {group.label}
                   <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{list.length}</span>
                 </h2>
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {list.map((project) => (
                     <ProjectCard key={project.id} project={project} stats={projectStats(project.id, tasks, today)} />
                   ))}
@@ -119,14 +148,14 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
                 type="button"
                 aria-expanded={showClosed}
                 onClick={() => setShowClosed((current) => !current)}
-                className="flex items-center gap-2 text-sm font-semibold text-foreground"
+                className="flex items-center gap-2 font-display text-sm font-medium tracking-[-0.01em] text-foreground"
               >
                 <span id="projetos-encerrados">Concluídos e cancelados</span>
                 <span className="text-[13px] font-normal text-muted-foreground tabular-nums">{closed.length}</span>
                 <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showClosed && "rotate-180")} />
               </button>
               {showClosed ? (
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {closed.map((project) => (
                     <ProjectCard key={project.id} project={project} stats={projectStats(project.id, tasks, today)} />
                   ))}
@@ -146,13 +175,23 @@ export function ProjectsView({ docs }: { docs: DocSummary[] }) {
   )
 }
 
-function ProjectCard({ project, stats }: { project: Project; stats: ReturnType<typeof projectStats> }) {
+function ProjectCard({
+  project,
+  stats,
+  featured = false,
+}: {
+  project: Project
+  stats: ReturnType<typeof projectStats>
+  /** No painel "Em foco": percentual maior e vidro mais claro. */
+  featured?: boolean
+}) {
   const { today } = useTasks()
   const { profiles } = useWorkspace()
   const clientName = useProjectClientName()
   const [isPending, startTransition] = useTransition()
   const ownerIndex = profiles.findIndex((profile) => profile.id === project.owner_id)
   const owner = ownerIndex >= 0 ? profiles[ownerIndex] : undefined
+  const closed = !isOpenProject(project)
 
   function togglePin() {
     startTransition(async () => {
@@ -163,12 +202,20 @@ function ProjectCard({ project, stats }: { project: Project; stats: ReturnType<t
   }
 
   return (
-    <article className="group relative flex flex-col rounded-xl border bg-card p-4 transition-colors hover:border-foreground/15">
+    <article
+      className={cn(
+        "group relative flex flex-col rounded-[1.5rem] border bg-card p-5 transition-[border-color,box-shadow] duration-150 hover:border-glow/35 hover:shadow-[var(--shadow-card),0_14px_40px_-18px_var(--glow)]",
+        closed && "opacity-80"
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground">{clientName(project)}</p>
-          <h3 className="mt-0.5 font-display text-[15px] leading-6 font-semibold tracking-tight text-foreground">
-            <Link href={`/projetos/${project.id}`} className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:underline">
+          <p className="truncate eyebrow text-[10.5px] text-muted-foreground">{clientName(project)}</p>
+          <h3 className="mt-1.5 font-display text-[17px] leading-6 font-medium tracking-[-0.015em] text-foreground">
+            <Link
+              href={`/projetos/${project.id}`}
+              className="outline-none after:absolute after:inset-0 after:rounded-[1.5rem] focus-visible:underline"
+            >
               {project.name}
             </Link>
           </h3>
@@ -181,31 +228,46 @@ function ProjectCard({ project, stats }: { project: Project; stats: ReturnType<t
           aria-label={project.pinned ? `Tirar ${project.name} do foco` : `Colocar ${project.name} em foco`}
           title={project.pinned ? "Em foco na tela Hoje (clique para tirar)" : "Colocar em foco na tela Hoje"}
           className={cn(
-            "relative z-10 inline-flex size-7 shrink-0 items-center justify-center rounded-md outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40",
-            project.pinned ? "text-brand-ink" : "text-subtle-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+            "relative z-10 inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-full text-xs font-medium outline-none transition-[background-color,color,opacity,box-shadow] touch-target focus-visible:ring-2 focus-visible:ring-ring/40",
+            project.pinned
+              ? "border border-glow/40 bg-glow-soft px-2.5 text-brand-ink shadow-[0_0_14px_-4px_var(--glow)] hover:bg-glow-soft/70"
+              : "w-7 border border-transparent text-subtle-foreground opacity-0 group-hover:opacity-100 hover:border-glass-edge hover:bg-accent hover:text-foreground focus-visible:opacity-100 max-md:opacity-100"
           )}
         >
-          <Pin className={cn("size-3.5", project.pinned && "fill-current")} />
+          <Pin className={cn("size-3.5", project.pinned && "fill-current")} aria-hidden="true" />
+          {project.pinned ? "Em foco" : null}
         </button>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <ProjectStatusBadge status={project.status} />
         <ProjectTiming project={project} today={today} />
       </div>
 
-      <div className="mt-4">
-        <div className="flex items-baseline justify-between text-xs text-muted-foreground tabular-nums">
-          <span>
-            {stats.total === 0 ? "Sem tarefas ainda" : `${stats.done} de ${stats.total} tarefas`}
-            {stats.overdue > 0 ? <span className="text-overdue"> · {stats.overdue} atrasada{stats.overdue === 1 ? "" : "s"}</span> : null}
+      <div className="mt-5 flex items-end justify-between gap-3">
+        <p className="flex items-start leading-none">
+          <span
+            className={cn(
+              "display-number leading-[0.8] text-foreground",
+              featured ? "text-[56px]" : "text-[44px]"
+            )}
+          >
+            {stats.percent}
           </span>
-          <span className="font-medium text-foreground">{stats.percent}%</span>
-        </div>
-        <ProjectBar percent={stats.percent} className="mt-1.5" />
+          <span className={cn("display-number leading-none text-brand-ink", featured ? "text-2xl" : "text-xl")}>%</span>
+        </p>
+        <p className="pb-0.5 text-right text-xs text-muted-foreground tabular-nums">
+          {stats.total === 0 ? "Sem tarefas ainda" : `${stats.done} de ${stats.total} tarefas`}
+          {stats.overdue > 0 ? (
+            <span className="block text-overdue">
+              {stats.overdue} atrasada{stats.overdue === 1 ? "" : "s"}
+            </span>
+          ) : null}
+        </p>
       </div>
+      <ProjectBar percent={stats.percent} className="mt-3" />
 
-      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
         {owner ? (
           <span className="flex items-center gap-1.5">
             <PersonAvatar
@@ -230,18 +292,22 @@ function ProjectCard({ project, stats }: { project: Project; stats: ReturnType<t
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-16 text-center">
-      <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-        <FolderKanban className="size-5 text-muted-foreground" />
-      </div>
-      <h2 className="mt-4 text-sm font-semibold">Nenhum projeto por aqui</h2>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        Um projeto junta as tarefas de uma entrega (um site, uma identidade, a implantação de um cliente) ou de um ciclo
-        interno, com prazo e progresso.
-      </p>
-      <Button size="sm" className="mt-5" onClick={onCreate}>
-        Novo projeto
-      </Button>
-    </div>
+    <EmptyGlow
+      icon={<FolderKanban />}
+      title={
+        <>
+          Nenhum projeto por <em>aqui</em>
+        </>
+      }
+      actions={
+        <Button onClick={onCreate} className="gap-1.5">
+          <Plus />
+          Novo projeto
+        </Button>
+      }
+    >
+      Um projeto junta as tarefas de uma entrega (um site, uma identidade, a implantação de um cliente) ou de um ciclo
+      interno, com prazo e progresso.
+    </EmptyGlow>
   )
 }

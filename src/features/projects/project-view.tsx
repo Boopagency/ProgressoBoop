@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useState, useTransition, type ComponentProps, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { PageBody, PageContainer, PageHeader, PageMeta } from "@/components/layout/page"
@@ -82,6 +82,7 @@ export function ProjectView({
   finance,
   docs,
   approvalNames,
+  loadThread,
 }: {
   project: Project
   activity: ActivityEntry[]
@@ -91,6 +92,8 @@ export function ProjectView({
   docs: DocSummary[]
   /** Nome de quem do cliente respondeu cada etapa (por conta). */
   approvalNames: Record<string, string>
+  /** Fio da conversa com o cliente (a vitrine passa dados de exemplo). */
+  loadThread?: ComponentProps<typeof ProjectClientChat>["loadThread"]
 }) {
   const router = useRouter()
   const { tasks, today } = useTasks()
@@ -241,22 +244,7 @@ export function ProjectView({
       />
 
       <PageBody className="gap-6">
-        <section aria-label="Progresso" className="rounded-xl border bg-card px-4 py-4 sm:px-5">
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Progresso</p>
-              <p className="font-display text-[28px] leading-8 font-semibold tracking-tight tabular-nums">{stats.percent}%</p>
-            </div>
-            <Stat label="Tarefas" value={`${stats.done} de ${stats.total}`} />
-            <Stat label="Atrasadas" value={String(stats.overdue)} tone={stats.overdue > 0 ? "late" : undefined} />
-            <Stat label="Próxima entrega" value={stats.nextDue ? formatShortDate(stats.nextDue, today) : "—"} />
-            <div className="sm:ml-auto">
-              <p className="text-xs text-muted-foreground">Prazo</p>
-              <ProjectTiming project={project} today={today} className="text-sm" />
-            </div>
-          </div>
-          <Progress value={stats.percent} aria-label={`Progresso de ${project.name}`} className="mt-4 h-2" />
-        </section>
+        <ProgressHero project={project} stats={stats} today={today} />
 
         {/* Celular: uma coluna só, com a atividade (a parte mais longa) no fim. */}
         <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-x-8">
@@ -275,7 +263,7 @@ export function ProjectView({
           </div>
           <aside aria-label="Sobre o projeto" className="min-w-0 space-y-6">
             {project.client_id ? <ProjectApprovalsCard projectId={project.id} names={approvalNames} /> : null}
-            {project.client_id ? <ProjectClientChat projectId={project.id} /> : null}
+            {project.client_id ? <ProjectClientChat projectId={project.id} loadThread={loadThread} /> : null}
             <PanelCard
               id="sobre-projeto"
               title="Sobre o projeto"
@@ -350,11 +338,88 @@ export function ProjectView({
   )
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "late" }) {
+/**
+ * Painel de destaque do projeto: o percentual grande na serifada itálica, a
+ * barra no gradiente da marca e os números de apoio com a linha-guia fina.
+ */
+function ProgressHero({
+  project,
+  stats,
+  today,
+}: {
+  project: Project
+  stats: ReturnType<typeof projectStats>
+  today: string
+}) {
+  const complete = stats.total > 0 && stats.percent >= 100
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-sm font-medium tabular-nums", tone === "late" ? "text-overdue" : "text-foreground")}>{value}</p>
+    <section
+      aria-label="Progresso"
+      className="relative isolate overflow-hidden rounded-[2rem] glass-panel px-5 pt-5 pb-6 sm:px-8 sm:pt-7 sm:pb-7"
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 -right-16 -z-10 h-72 w-[28rem] rounded-full bg-glow-soft blur-3xl"
+      />
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+        <div className="shrink-0">
+          <p className="flex items-center gap-2 eyebrow text-muted-foreground">
+            <span
+              aria-hidden="true"
+              className={cn(
+                "size-1.5 rounded-full",
+                complete ? "bg-success shadow-[0_0_8px_var(--success)]" : "bg-glow shadow-[0_0_8px_var(--glow)]"
+              )}
+            />
+            Progresso
+          </p>
+          <p className="mt-2 flex items-start leading-none">
+            <span className="display-number text-[84px] leading-[0.8] text-foreground sm:text-[104px]">{stats.percent}</span>
+            <span className="mt-1 display-number text-[32px] leading-none text-brand-ink sm:text-[40px]">%</span>
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground tabular-nums">
+            {stats.total === 0 ? "Sem tarefas ainda" : `${stats.done} de ${stats.total} tarefas concluídas`}
+          </p>
+        </div>
+        <dl className="grid flex-1 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 sm:gap-x-8 lg:max-w-[640px]">
+          <HeroStat label="Atrasadas" alert={stats.overdue > 0}>
+            <span className={cn("display-number text-[40px] leading-[0.85]", stats.overdue > 0 ? "text-overdue" : "text-foreground")}>
+              {stats.overdue}
+            </span>
+          </HeroStat>
+          <HeroStat label="Próxima entrega">
+            <span className="font-display text-xl leading-7 font-medium tracking-tight text-foreground tabular-nums">
+              {stats.nextDue ? formatShortDate(stats.nextDue, today) : "—"}
+            </span>
+          </HeroStat>
+          <HeroStat label="Prazo" className="col-span-2 sm:col-span-1">
+            <ProjectTiming project={project} today={today} className="font-display text-xl leading-7 font-medium tracking-tight" />
+          </HeroStat>
+        </dl>
+      </div>
+      <Progress value={stats.percent} aria-label={`Progresso de ${project.name}`} className="mt-7 h-2" />
+    </section>
+  )
+}
+
+function HeroStat({
+  label,
+  alert,
+  className,
+  children,
+}: {
+  label: string
+  alert?: boolean
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className={cn("border-t border-foreground/15 pt-3", className)}>
+      <dt className="flex items-center gap-1.5 eyebrow text-muted-foreground">
+        {alert ? <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" /> : null}
+        {label}
+      </dt>
+      <dd className="mt-2.5">{children}</dd>
     </div>
   )
 }
@@ -379,7 +444,11 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
       }
       action={
         <div className="flex items-center gap-1">
-          <div role="radiogroup" aria-label="Modo de exibição" className="flex rounded-full bg-muted p-0.5">
+          <div
+            role="radiogroup"
+            aria-label="Modo de exibição"
+            className="flex rounded-full border border-glass-edge bg-card p-0.5 shadow-[inset_0_1px_0_var(--glass-highlight)]"
+          >
             {(
               [
                 { value: "list", label: "Lista", icon: <List /> },
@@ -395,7 +464,7 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
                 onClick={() => setMode(option.value)}
                 className={cn(
                   "inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&_svg]:size-3.5",
-                  mode === option.value && "bg-background text-foreground shadow-[0_1px_2px_0_rgb(0_0_0/0.06)]"
+                  mode === option.value && "bg-primary text-primary-foreground shadow-glow"
                 )}
               >
                 {option.icon}
@@ -424,13 +493,17 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
                 <div key={key}>
                   <p
                     className={cn(
-                      "px-4 pt-2.5 pb-0.5 text-xs font-medium",
+                      "flex items-center gap-1.5 px-5 pt-3.5 pb-1 eyebrow text-[10.5px]",
                       key === "overdue" ? "text-overdue" : "text-muted-foreground"
                     )}
                   >
-                    {TASK_GROUP_LABEL[key]} · {groups[key].length}
+                    {key === "overdue" ? (
+                      <span aria-hidden="true" className="size-1.5 rounded-full bg-overdue shadow-[0_0_8px_var(--overdue)]" />
+                    ) : null}
+                    {TASK_GROUP_LABEL[key]}
+                    <span className="tabular-nums opacity-70">{groups[key].length}</span>
                   </p>
-                  <div role="list" className="px-1">
+                  <div role="list" className="px-2">
                     {groups[key].map((task) => (
                       <TaskRow key={task.id} task={task} showAssignees />
                     ))}
@@ -445,7 +518,7 @@ function ProjectTasks({ projectId, onNew }: { projectId: string; onNew: () => vo
                 type="button"
                 aria-expanded={showDone}
                 onClick={() => setShowDone((current) => !current)}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hover:text-foreground"
+                className="flex w-full items-center gap-2 px-5 py-3 text-left eyebrow text-[10.5px] text-muted-foreground hover:text-foreground"
               >
                 Concluídas · {groups.done.length}
                 <ChevronDown className={cn("size-3.5 transition-transform", showDone && "rotate-180")} />

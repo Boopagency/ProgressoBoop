@@ -18,6 +18,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useEffectEvent, type ReactNode } from "react"
 
 import { EmptyPanel } from "@/components/empty-panel"
+import { KANBAN_SCREEN_HEIGHT } from "@/components/kanban"
 import { PageBody, PageContainer, PageHeader, PageToolbar } from "@/components/layout/page"
 import { PILL_ACTIVE, PillIndicator } from "@/components/pill-indicator"
 import { SegmentedControl } from "@/components/segmented-control"
@@ -300,7 +301,7 @@ export function TasksView() {
         ) : view === "table" ? (
           <TaskTable tasks={visible} />
         ) : view === "board" ? (
-          <TaskBoard tasks={visible} />
+          <TaskBoard tasks={visible} className={KANBAN_SCREEN_HEIGHT} />
         ) : (
           sections.map((key) => (
             <TaskSection

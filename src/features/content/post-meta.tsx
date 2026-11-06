@@ -79,6 +79,11 @@ export function clientDotColor(clientId: string): string {
   return clientColors(clientId).dot
 }
 
+/** Ponto da mesma paleta, pela posição (ex.: a origem dos leads no Comercial). */
+export function identityDotColor(index: number): string {
+  return (CLIENT_COLORS[Math.max(index, 0) % CLIENT_COLORS.length] ?? CLIENT_COLORS[0]).dot
+}
+
 const MARK_SIZE = {
   xs: "size-4 text-[9px]",
   sm: "size-5 text-[10px]",

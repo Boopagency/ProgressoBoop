@@ -148,14 +148,14 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
   - fase 1, #98: vidro fosco, brilho azul e tipografia (regra no `AGENTS.md`
     e na ARQUITETURA §10.1);
   - lotes 2B (#99), 2C (#100), 2A (#102) e portal (#101);
+  - ajuste final, #106: editor dos Processos no visual novo, peças
+    unificadas (`StatGrid`, `HeroPanel`, `EmptyPanel`) e varredura de cores;
   - referências em `docs/design/referencias/` e prints em
     `docs/design/prints/`.
 
 ## Em andamento (06/11/2026)
 
-- Ajuste final da repaginada (branch `claude/repaginada-ajuste-final`):
-  editor BlockNote no visual novo, unificar os componentes duplicados entre
-  os lotes e varrer as cores fixas.
+- Nada. Fora da coordenação: Comercial em quadro (#104, #105).
 
 ## Revisão de segurança (13/10/2026)
 

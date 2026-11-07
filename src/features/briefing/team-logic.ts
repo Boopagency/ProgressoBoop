@@ -461,14 +461,15 @@ export function checkStatusChange(
  * tolerante: o que não se entende aparece como texto, nunca some.
  *   choice          { choice: "<value>", other?: "texto", extras?: {...} }
  *   multiple        { choices: ["<value>"], other?, extras? }
- *   cards           { choices: ["<value>"], primary?: "<value>", extras? }
+ *   cards           { choices: ["<value>"], primary?: "<value>", rejected?: ["<value>"], extras? }
  *   number          { number: 180 }  (ou o número puro)
- *   palette         { colors: [{ hex: "#aabbcc", use: "use" | "avoid" }] }
+ *   palette         { colors: [{ hex: "#rrggbb" (minúsculo), use: "use" | "avoid" }] }
  *   links           { links: ["https://…", "@perfil"], extras? }
  *   dates           { dates: [{ date: "yyyy-MM-dd", label: "texto" }], extras? }
  *   identification  { brand_name, contact_name, region, instagram, site }
  *   short_text      com `fields`: { fields: { <key>: "texto" } }; sem, só `text`
- *   extras.<key>    no formato do tipo do complemento (texto, cores, links)
+ *   extras.<key>    texto curto/áudio: "texto"; links: { links: [...] };
+ *                   paleta: { colors: [...] } (como os tipos acima)
  */
 
 export type AnswerPart =
@@ -656,6 +657,12 @@ export function describeAnswer(
       })
       items.sort((a, b) => Number(b.primary) - Number(a.primary))
       if (items.length > 0) parts.push({ type: "tone", items })
+      // Os que o cliente marcou "assim não" (opcional).
+      const rejected = stringList(source?.rejected)
+      handled.add("rejected")
+      if (rejected.length > 0) {
+        parts.push({ type: "chips", label: "Assim não", items: rejected.map((item) => ({ label: labelOf(options, item) })) })
+      }
       break
     }
     case "number": {
@@ -732,17 +739,19 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MB`
 }
 
-/** Caminho no bucket do briefing ("<cliente>/<briefing>/<arquivo>"). */
-const BRIEFING_PATH = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[^/\\]{1,200}$/
-
-export function isBriefingPath(path: string): boolean {
-  return BRIEFING_PATH.test(path) && !path.includes("..")
+/**
+ * URL do app para um arquivo enviado no briefing (rota do portal, PR 2:
+ * confere a sessão e redireciona para a URL assinada; a equipe lê tudo pelo
+ * RLS do Storage). `download` baixa com o nome original.
+ */
+export function briefingFileUrl(path: string, download?: string): string {
+  const url = `/api/briefing/arquivos?caminho=${encodeURIComponent(path)}`
+  return download ? `${url}&baixar=1&nome=${encodeURIComponent(download)}` : url
 }
 
-/** URL do app para um arquivo do briefing (redireciona para a URL assinada). */
-export function briefingFileUrl(path: string, download?: string): string {
-  const url = `/api/briefing/arquivos/${path.split("/").map(encodeURIComponent).join("/")}`
-  return download ? `${url}?baixar=${encodeURIComponent(download)}` : url
+/** URL do app para um áudio do briefing, pelo id (rota do portal, PR 2). */
+export function briefingAudioUrl(id: string): string {
+  return `/api/briefing/audios/${encodeURIComponent(id)}`
 }
 
 /* ------------------------------------------------------------------ */

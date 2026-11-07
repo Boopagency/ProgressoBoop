@@ -1449,8 +1449,9 @@ rodapé tem quem está logado e "Sair".
   e respondida aparece marcada) com o resumo da IA em destaque, o estado da
   IA, as respostas fechadas legíveis (`describeAnswer`, que documenta o
   formato de `briefing_answers.value`) e o áudio com a transcrição num
-  clique. Áudios e arquivos passam por `/api/briefing/arquivos/<caminho>`
-  (URL assinada de 1 h; o RLS do Storage decide quem lê). A equipe marca
+  clique. Áudios e arquivos usam as rotas do portal
+  (`/api/briefing/audios/<id>` e `/api/briefing/arquivos?caminho=`; URL
+  assinada de 1 h, e a equipe lê tudo pelo RLS do Storage). A equipe marca
   Imersão feita (só com o briefing enviado e as obrigatórias completas),
   Documento enviado e Validado, e pode voltar um passo (`setBriefingStatus`).
   Notas da imersão em `briefing_immersions`, ligadas a uma reunião do

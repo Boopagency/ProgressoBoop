@@ -6,6 +6,7 @@ import { useState } from "react"
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
 import {
+  briefingAudioUrl,
   briefingFileUrl,
   describeAnswer,
   formatDuration,
@@ -156,7 +157,7 @@ function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateK
       ) : null}
 
       {answer && answer.files.length > 0 ? <Files files={answer.files} fileUrl={fileUrl} /> : null}
-      {audios.length > 0 ? <Audios audios={audios} fileUrl={fileUrl} /> : null}
+      {audios.length > 0 ? <Audios audios={audios} /> : null}
     </li>
   )
 }
@@ -305,7 +306,7 @@ function Files({ files, fileUrl }: { files: BriefingFile[]; fileUrl: (path: stri
 }
 
 /** Áudio original e transcrição completa, num clique. */
-function Audios({ audios, fileUrl }: { audios: TeamBriefingAudio[]; fileUrl: (path: string) => string }) {
+function Audios({ audios }: { audios: TeamBriefingAudio[] }) {
   const [open, setOpen] = useState(false)
   const total = audios.reduce((sum, audio) => sum + audio.duration_ms, 0)
   return (
@@ -329,7 +330,7 @@ function Audios({ audios, fileUrl }: { audios: TeamBriefingAudio[]; fileUrl: (pa
               <p className="text-xs font-medium text-muted-foreground">
                 {index === 0 ? "Áudio" : `Complemento ${index}`} · {formatDuration(audio.duration_ms)}
               </p>
-              <audio controls preload="none" src={fileUrl(audio.path)} className="mt-2 h-9 w-full">
+              <audio controls preload="none" src={briefingAudioUrl(audio.id)} className="mt-2 h-9 w-full">
                 Seu navegador não toca este áudio.
               </audio>
               <div className="mt-2">

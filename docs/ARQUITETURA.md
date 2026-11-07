@@ -1421,6 +1421,25 @@ rodapé tem quem está logado e "Sair".
   `listenToNotifications` do sino, na tabela `client_notifications`, com o
   token da sessão do portal (`getPortalRealtimeToken`); sem o Realtime, o
   menu pergunta a cada 30 segundos.
+- **Briefing de onboarding** (issue #108; migration `*_briefing.sql`,
+  `features/briefing`): formulário em `briefing_templates` →
+  `briefing_blocks` → `briefing_questions` (nunca apagados, só desativados;
+  o v1 de 30 perguntas vem na migration), o briefing do cliente em
+  `client_briefings` (um por cliente; a equipe libera no cartão "Briefing"
+  da ficha, com a identificação conferida e o prazo de 5 dias úteis,
+  `addBusinessDays`) e as respostas em `briefing_answers`, cada uma com a
+  cópia da pergunta (`question_snapshot`, gravada pelo banco). Áudios em
+  `briefing_answer_audios` e uploads no bucket privado `briefing`
+  ("<cliente>/<briefing>/<arquivo>"). Transcrição, resumo e estado da IA em
+  `briefing_transcriptions` e `briefing_summaries` (só a equipe lê); a
+  imersão em `briefing_immersions`. Liberado e não enviado
+  (`not_started`/`in_progress`), o portal desse cliente só tem o Briefing:
+  `pickPortalClient` leva a `/portal/briefing`, o menu mostra só ele e
+  `portal_review_post`/`portal_review_step` recusam com `briefing_pending`.
+  O cliente fecha etapa e envia por `portal_complete_briefing_block` e
+  `portal_submit_briefing` (só com os obrigatórios), que avisam a equipe
+  (`briefing_block_done`, `briefing_submitted`). Teste do SQL:
+  `src/features/briefing/briefing-sql.test.mjs`.
 
 ### Busca geral (Ctrl/⌘ + K)
 

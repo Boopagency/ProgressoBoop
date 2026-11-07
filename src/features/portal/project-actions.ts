@@ -3,6 +3,7 @@
 import type { PostgrestError } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
 
+import { BRIEFING_PENDING_MESSAGE } from "@/features/briefing/logic"
 import { MESSAGE_MAX } from "@/features/portal/content-logic"
 import { toPortalMessage, type PortalMessage } from "@/features/portal/content-queries"
 import { getPortalUser } from "@/features/portal/session"
@@ -37,6 +38,7 @@ const PORTAL_ERRORS: Partial<Record<string, string>> = {
   note_required: NOTE_REQUIRED,
   invalid_decision: INVALID_DECISION,
   not_awaiting_approval: "Esta etapa já foi respondida. Atualize a página.",
+  briefing_pending: BRIEFING_PENDING_MESSAGE,
 }
 
 function failure(error: PostgrestError, fallback: string): { ok: false; error: string } {

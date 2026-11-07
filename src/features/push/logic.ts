@@ -79,6 +79,8 @@ const TEAM_KINDS = new Set<string>([
   "site_lead",
   "instagram_publish_failed",
   "payment_overdue",
+  "briefing_block_done",
+  "briefing_submitted",
 ] satisfies NotificationKind[])
 
 const CLIENT_KINDS = new Set<string>([

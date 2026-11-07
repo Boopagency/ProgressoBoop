@@ -2,6 +2,7 @@ import {
   AiCallError,
   apiErrorMessage,
   audioFileName,
+  MAX_AUDIO_BYTES,
   outcomeForDownload,
   outcomeForStatus,
   SUMMARY_MODEL,
@@ -43,13 +44,48 @@ function timeLeft(deadline: number): AbortSignal {
   return AbortSignal.timeout(Math.max(1000, deadline - Date.now()))
 }
 
-/** Baixa o áudio pela URL assinada e transcreve em português. */
+const TOO_LARGE = "O áudio passa de 10 MB."
+
+/** Lê o corpo até `limit` bytes; passou, para de baixar. */
+async function readLimited(response: Response, limit: number): Promise<Uint8Array<ArrayBuffer>> {
+  const declared = Number(response.headers.get("content-length"))
+  if (Number.isFinite(declared) && declared > limit) {
+    await response.body?.cancel().catch(() => {})
+    throw new AiCallError(TOO_LARGE, "final")
+  }
+  if (!response.body) return new Uint8Array(await response.arrayBuffer())
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > limit) {
+      await reader.cancel().catch(() => {})
+      throw new AiCallError(TOO_LARGE, "final")
+    }
+    chunks.push(value)
+  }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return bytes
+}
+
+/**
+ * Baixa o áudio pela URL assinada (já conferida por isBriefingAudioUrl, sem
+ * seguir redirecionamento e com até 10 MB) e transcreve em português.
+ */
 export async function transcribeAudio(input: TranscribeInput): Promise<string> {
-  const audio = await input.fetch(input.signedUrl, { signal: timeLeft(input.deadline) })
+  const audio = await input.fetch(input.signedUrl, { redirect: "error", signal: timeLeft(input.deadline) })
   if (!audio.ok) {
     throw new AiCallError(`O áudio não pôde ser baixado (${audio.status}).`, outcomeForDownload(audio.status))
   }
-  const bytes = await audio.arrayBuffer()
+  const bytes = await readLimited(audio, MAX_AUDIO_BYTES)
   if (bytes.byteLength === 0) throw new AiCallError("O arquivo do áudio está vazio.", "final")
 
   const form = new FormData()

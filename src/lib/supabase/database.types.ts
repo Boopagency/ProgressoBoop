@@ -3071,6 +3071,7 @@ export type Database = {
           mime_type: string
           question: string
           signed_url: string
+          storage_path: string
         }[]
       }
       cancel_instagram_publish: {

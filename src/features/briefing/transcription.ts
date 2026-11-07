@@ -5,6 +5,7 @@ import { after } from "next/server"
 import { briefingAiKeys, briefingJobsSecret } from "@/features/briefing/ai-config"
 import { AUDIO_URL_TTL_SECONDS } from "@/features/briefing/ai-logic"
 import { processBriefingJobs } from "@/features/briefing/jobs"
+import { supabaseEnv } from "@/lib/supabase/env"
 import type { SupabaseServerClient } from "@/lib/supabase/server"
 
 /*
@@ -59,7 +60,7 @@ export async function queueBriefingAudio(supabase: SupabaseServerClient, input: 
   if (!secret || !keys.openai) return
   const deadline = Date.now() + IMMEDIATE_BUDGET_MS
   try {
-    after(() => processBriefingJobs({ supabase, secret, keys, deadline }))
+    after(() => processBriefingJobs({ supabase, secret, keys, supabaseUrl: supabaseEnv().url, deadline }))
   } catch (thrown) {
     // Fora de uma requisição (não deveria acontecer): o cron processa.
     console.error(`[briefing] processamento imediato: ${thrown instanceof Error ? thrown.message : thrown}`)

@@ -191,18 +191,23 @@ set search_path = ''
 as $$
 declare
   target_briefing uuid;
+  target_path text;
 begin
   if (select private.is_oauth_client()) then
     raise exception 'not_allowed' using errcode = '42501';
   end if;
-  select au.briefing_id into target_briefing from public.briefing_answer_audios au where au.id = p_audio_id;
+  select au.briefing_id, au.storage_path into target_briefing, target_path
+    from public.briefing_answer_audios au where au.id = p_audio_id;
   if not found then
     raise exception 'not_found' using errcode = 'P0002';
   end if;
   if not ((select private.is_team_member()) or target_briefing in (select private.my_open_briefing_ids())) then
     raise exception 'not_allowed' using errcode = '42501';
   end if;
+  -- Só a URL assinada deste arquivo no bucket (o app confere também o host
+  -- do Supabase antes de baixar).
   if p_signed_url is null or p_signed_url !~ '^https://' or char_length(p_signed_url) > 2000
+     or strpos(p_signed_url, '/storage/v1/object/sign/briefing/' || target_path || '?') = 0
      or p_url_expires_at is null or p_url_expires_at <= now() then
     raise exception 'invalid_url' using errcode = '22023';
   end if;
@@ -246,10 +251,12 @@ revoke all on function private.briefing_secret_ok(text) from public;
 -- de 2 minutos) voltam para pendente, ou desistem se já foram 3 tentativas;
 -- as de link vencido desistem. Depois trava
 -- até `p_limit` (máximo 10) em "processando", gasta uma tentativa e as
--- devolve com a URL, o tipo e a pergunta (ajuda a transcrição).
+-- devolve com o caminho no bucket, a URL, o tipo e a pergunta (ajuda a
+-- transcrição). O app só baixa a URL se ela for do Storage, deste caminho.
 create function public.briefing_transcriptions_due(p_secret text, p_limit integer)
 returns table (
   audio_id uuid,
+  storage_path text,
   signed_url text,
   mime_type text,
   duration_ms integer,
@@ -297,7 +304,7 @@ begin
        where t.audio_id = picked.audio_id
       returning t.audio_id, t.attempts
     )
-    select c.audio_id, s.signed_url, au.mime_type, au.duration_ms, c.attempts, a.question_snapshot ->> 'text'
+    select c.audio_id, au.storage_path, s.signed_url, au.mime_type, au.duration_ms, c.attempts, a.question_snapshot ->> 'text'
       from claimed c
       join private.briefing_audio_sources s on s.audio_id = c.audio_id
       join public.briefing_answer_audios au on au.id = c.audio_id

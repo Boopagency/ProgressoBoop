@@ -12,6 +12,10 @@ const logic = await load("@/features/briefing/ai-logic")
 const SECRET = "segredo-de-teste"
 const AUDIO = "11111111-1111-4111-8111-111111111111"
 const ANSWER = "22222222-2222-4222-8222-222222222222"
+const SUPABASE = "https://proj.supabase.test"
+const PATH = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/cccccccc-cccc-4ccc-8ccc-cccccccccccc/11111111-1111-4111-8111-111111111111"
+const OTHER_PATH = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/cccccccc-cccc-4ccc-8ccc-cccccccccccc/99999999-9999-4999-8999-999999999999"
+const signed = (path = PATH, base = SUPABASE) => `${base}/storage/v1/object/sign/briefing/${path}?token=x`
 const QUESTION = { text: "Como você descreve o seu cliente ideal?", hint: null, block_title: "Público", kind: "audio" }
 
 /** Banco simulado: devolve as filas na primeira chamada e guarda os resultados. */
@@ -45,7 +49,7 @@ function fakeFetch(routes) {
   return { fetch, requests }
 }
 
-const audioRow = { audio_id: AUDIO, signed_url: "https://storage.test/audio?token=x", mime_type: "audio/mp4", question: QUESTION.text }
+const audioRow = { audio_id: AUDIO, storage_path: PATH, signed_url: signed(), mime_type: "audio/mp4", question: QUESTION.text }
 const summaryRow = (extra = {}) => ({
   answer_id: ANSWER,
   question: QUESTION,
@@ -62,14 +66,14 @@ const deadline = () => Date.now() + 55_000
 test("transcreve o áudio em português e grava pela função do banco", async () => {
   const db = fakeDb({ transcriptions: [audioRow] })
   const net = fakeFetch({
-    "https://storage.test/": () => new Response(new Uint8Array([1, 2, 3]), { status: 200 }),
+    "https://proj.supabase.test/storage/": () => new Response(new Uint8Array([1, 2, 3]), { status: 200 }),
     "https://api.openai.com/v1/audio/transcriptions": { body: { text: "  Meu cliente é a mãe que trabalha fora.  " } },
   })
   const result = await processBriefingJobs({
     supabase: db.supabase,
     secret: SECRET,
     keys: { openai: "chave-openai", anthropic: null },
-    deadline: deadline(),
+    supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: net.fetch,
   })
   assert.deepEqual(result, { transcribed: 1, summarized: 0, failed: 0 })
@@ -95,7 +99,7 @@ test("sem as chaves da IA, não pede nada ao banco (nada pendente gasta tentativ
     supabase: db.supabase,
     secret: SECRET,
     keys: { openai: null, anthropic: null },
-    deadline: deadline(),
+    supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: async () => assert.fail("não deveria chamar a rede"),
   })
   assert.deepEqual(result, { transcribed: 0, summarized: 0, failed: 0 })
@@ -112,14 +116,14 @@ test("erros da OpenAI viram tentar de novo, desistir ou adiar", async () => {
   for (const { status, outcome } of cases) {
     const db = fakeDb({ transcriptions: [audioRow] })
     const net = fakeFetch({
-      "https://storage.test/": () => new Response(new Uint8Array([1]), { status: 200 }),
+      "https://proj.supabase.test/storage/": () => new Response(new Uint8Array([1]), { status: 200 }),
       "https://api.openai.com/": { status, body: { error: { message: "sk-proj-ABCDEFGHIJKLMNOP falhou" } } },
     })
     const errors = []
     const original = console.error
     console.error = (line) => errors.push(line)
     try {
-      await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, deadline: deadline(), fetch: net.fetch })
+      await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
     } finally {
       console.error = original
     }
@@ -133,11 +137,11 @@ test("erros da OpenAI viram tentar de novo, desistir ou adiar", async () => {
 
 test("link vencido ou arquivo sumido: desiste sem chamar a OpenAI", async () => {
   const db = fakeDb({ transcriptions: [audioRow] })
-  const net = fakeFetch({ "https://storage.test/": { status: 400, body: { error: "InvalidJWT" } } })
+  const net = fakeFetch({ "https://proj.supabase.test/storage/": { status: 400, body: { error: "InvalidJWT" } } })
   const original = console.error
   console.error = () => {}
   try {
-    await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, deadline: deadline(), fetch: net.fetch })
+    await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
   } finally {
     console.error = original
   }
@@ -164,7 +168,7 @@ test("resume com o Claude Haiku juntando a pergunta, o texto e os áudios", asyn
     supabase: db.supabase,
     secret: SECRET,
     keys: { openai: null, anthropic: "chave-anthropic" },
-    deadline: deadline(),
+    supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: net.fetch,
   })
   assert.deepEqual(result, { transcribed: 0, summarized: 1, failed: 0 })
@@ -197,7 +201,7 @@ test("nada mudou no que se resume: mantém o resumo sem chamar a IA", async () =
     supabase: db.supabase,
     secret: SECRET,
     keys: { openai: null, anthropic: "k" },
-    deadline: deadline(),
+    supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: async () => assert.fail("não deveria chamar a IA"),
   })
   assert.equal(db.named("briefing_summary_done")[0].p_summary, "Resumo antigo.")
@@ -208,7 +212,7 @@ test("resposta sem texto nem fala, ou recusa do modelo: desiste do resumo", asyn
   console.error = () => {}
   try {
     const empty = fakeDb({ summaries: [summaryRow({ transcripts: ["  "], missing_audios: 1 })] })
-    await processBriefingJobs({ supabase: empty.supabase, secret: SECRET, keys: { openai: null, anthropic: "k" }, deadline: deadline(), fetch: async () => assert.fail() })
+    await processBriefingJobs({ supabase: empty.supabase, secret: SECRET, keys: { openai: null, anthropic: "k" }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: async () => assert.fail() })
     assert.deepEqual(
       { outcome: empty.named("briefing_summary_failed")[0].p_outcome, error: empty.named("briefing_summary_failed")[0].p_error },
       { outcome: "final", error: "Os áudios não puderam ser transcritos." }
@@ -216,7 +220,7 @@ test("resposta sem texto nem fala, ou recusa do modelo: desiste do resumo", asyn
 
     const refused = fakeDb({ summaries: [summaryRow()] })
     const net = fakeFetch({ "https://api.anthropic.com/": { body: { stop_reason: "refusal", content: [] } } })
-    await processBriefingJobs({ supabase: refused.supabase, secret: SECRET, keys: { openai: null, anthropic: "k" }, deadline: deadline(), fetch: net.fetch })
+    await processBriefingJobs({ supabase: refused.supabase, secret: SECRET, keys: { openai: null, anthropic: "k" }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
     assert.equal(refused.named("briefing_summary_failed")[0].p_outcome, "final")
   } finally {
     console.error = original
@@ -242,12 +246,12 @@ test("transcreve e resume na mesma rodada (áudio de 3 minutos em bem menos de 2
     },
   }
   const net = fakeFetch({
-    "https://storage.test/": () => new Response(new Uint8Array(3 * 60 * 16000), { status: 200 }),
+    "https://proj.supabase.test/storage/": () => new Response(new Uint8Array(3 * 60 * 16000), { status: 200 }),
     "https://api.openai.com/": { body: { text: "Fala transcrita." } },
     "https://api.anthropic.com/": { body: { stop_reason: "end_turn", content: [{ type: "text", text: "Resumo." }] } },
   })
   const started = Date.now()
-  const result = await processBriefingJobs({ supabase, secret: SECRET, keys: { openai: "a", anthropic: "b" }, deadline: deadline(), fetch: net.fetch })
+  const result = await processBriefingJobs({ supabase, secret: SECRET, keys: { openai: "a", anthropic: "b" }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
   assert.deepEqual(result, { transcribed: 1, summarized: 1, failed: 0 })
   assert.ok(Date.now() - started < 5000)
   assert.deepEqual(calls, [
@@ -262,11 +266,97 @@ test("transcreve e resume na mesma rodada (áudio de 3 minutos em bem menos de 2
 
 test("sem tempo de sobra, não pega item novo (fica para o cron)", async () => {
   const db = fakeDb({ transcriptions: [audioRow], summaries: [summaryRow()] })
-  await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "a", anthropic: "b" }, deadline: Date.now() + 5000, fetch: async () => assert.fail() })
+  await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "a", anthropic: "b" }, supabaseUrl: SUPABASE, deadline: Date.now() + 5000, fetch: async () => assert.fail() })
   assert.equal(db.calls.length, 0)
 })
 
+/** Roda uma rodada só de transcrição, sem poluir a saída, e devolve a falha gravada. */
+async function transcriptionFailure(row, routes) {
+  const db = fakeDb({ transcriptions: [row] })
+  const net = fakeFetch(routes)
+  const original = console.error
+  console.error = () => {}
+  try {
+    await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
+  } finally {
+    console.error = original
+  }
+  assert.equal(db.named("briefing_transcription_done").length, 0)
+  return { failed: db.named("briefing_transcription_failed"), requests: net.requests }
+}
+
+test("URL de outro host: desiste sem baixar nada", async () => {
+  for (const url of [
+    signed(PATH, "https://evil.test"),
+    `${SUPABASE}.evil.test/storage/v1/object/sign/briefing/${PATH}?token=x`,
+    `https://proj.supabase.test@evil.test/storage/v1/object/sign/briefing/${PATH}?token=x`,
+    "http://169.254.169.254/latest/meta-data/",
+  ]) {
+    const { failed, requests } = await transcriptionFailure({ ...audioRow, signed_url: url }, {})
+    assert.equal(requests.length, 0, url)
+    assert.deepEqual(failed, [
+      { p_secret: SECRET, p_audio_id: AUDIO, p_error: "O link do áudio não é do Storage do briefing.", p_outcome: "final" },
+    ])
+  }
+})
+
+test("URL de outro arquivo (de outro áudio ou de outro bucket): desiste sem baixar", async () => {
+  for (const url of [
+    signed(OTHER_PATH),
+    `${SUPABASE}/storage/v1/object/sign/content/${PATH}?token=x`,
+    `${SUPABASE}/storage/v1/object/sign/briefing/${PATH}/../outro?token=x`,
+    `${SUPABASE}/storage/v1/object/public/briefing/${PATH}?token=x`,
+  ]) {
+    const { failed, requests } = await transcriptionFailure({ ...audioRow, signed_url: url }, {})
+    assert.equal(requests.length, 0, url)
+    assert.equal(failed[0].p_outcome, "final")
+  }
+  // Caminho que não é de áudio do briefing, mesmo batendo com a URL.
+  const odd = "../../storage/v1/x"
+  const { requests } = await transcriptionFailure({ ...audioRow, storage_path: odd, signed_url: signed(odd) }, {})
+  assert.equal(requests.length, 0)
+})
+
+test("áudio acima de 10 MB: para de baixar e desiste sem chamar a OpenAI", async () => {
+  const big = logic.MAX_AUDIO_BYTES + 1
+  // Pelo content-length.
+  const declared = await transcriptionFailure(audioRow, {
+    "https://proj.supabase.test/storage/": () => new Response("x", { headers: { "content-length": String(big) } }),
+  })
+  assert.deepEqual(
+    { outcome: declared.failed[0].p_outcome, error: declared.failed[0].p_error },
+    { outcome: "final", error: "O áudio passa de 10 MB." }
+  )
+  assert.ok(!declared.requests.some((r) => r.url.includes("openai")))
+
+  // Sem content-length: conta os bytes enquanto baixa.
+  let pulled = 0
+  const stream = new ReadableStream({
+    pull(controller) {
+      pulled++
+      controller.enqueue(new Uint8Array(1024 * 1024))
+      if (pulled > 50) controller.close()
+    },
+  })
+  const streamed = await transcriptionFailure(audioRow, { "https://proj.supabase.test/storage/": () => new Response(stream) })
+  assert.equal(streamed.failed[0].p_error, "O áudio passa de 10 MB.")
+  assert.ok(pulled <= 12, `parou de baixar (${pulled} MB lidos)`)
+  assert.ok(!streamed.requests.some((r) => r.url.includes("openai")))
+})
+
+test("o download não segue redirecionamento", async () => {
+  const db = fakeDb({ transcriptions: [audioRow] })
+  const net = fakeFetch({
+    "https://proj.supabase.test/storage/": () => new Response(new Uint8Array([1]), { status: 200 }),
+    "https://api.openai.com/": { body: { text: "ok" } },
+  })
+  await processBriefingJobs({ supabase: db.supabase, secret: SECRET, keys: { openai: "k", anthropic: null }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
+  assert.equal(net.requests[0].init.redirect, "error")
+})
+
 test("regras puras", () => {
+  assert.equal(logic.isBriefingAudioUrl(signed(), `${SUPABASE}/`, PATH), true, "barra no fim da URL do projeto")
+  assert.equal(logic.isBriefingAudioUrl(signed(PATH, "http://proj.supabase.test"), "http://proj.supabase.test", PATH), false)
   assert.equal(logic.outcomeForStatus(401), "defer")
   assert.equal(logic.outcomeForStatus(403), "defer")
   assert.equal(logic.outcomeForStatus(429), "retry")

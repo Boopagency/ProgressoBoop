@@ -3,6 +3,7 @@ import { after } from "next/server"
 import { briefingAiKeys, briefingJobsSecret } from "@/features/briefing/ai-config"
 import { processBriefingJobs } from "@/features/briefing/jobs"
 import { sameText } from "@/features/instagram/logic"
+import { supabaseEnv } from "@/lib/supabase/env"
 import { createClient } from "@/lib/supabase/server"
 
 /**
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   const deadline = Date.now() + (maxDuration - 8) * 1000
   const keys = briefingAiKeys()
   const supabase = await createClient()
-  after(() => processBriefingJobs({ supabase, secret, keys, deadline }))
+  after(() => processBriefingJobs({ supabase, secret, keys, supabaseUrl: supabaseEnv().url, deadline }))
 
   return Response.json({ accepted: job }, { status: 202, headers: { "Cache-Control": "no-store" } })
 }

@@ -14,6 +14,28 @@ export const SUMMARY_PROMPT_VERSION = "1"
 /** Validade da URL assinada do áudio: cobre as novas tentativas com folga. */
 export const AUDIO_URL_TTL_SECONDS = 7 * 24 * 60 * 60
 
+/** Tamanho máximo do áudio (o mesmo do trigger `prepare_briefing_audio`). */
+export const MAX_AUDIO_BYTES = 10 * 1024 * 1024
+
+/**
+ * A URL é a assinada do Storage do nosso Supabase para este arquivo do bucket
+ * `briefing`? A fila aceita a URL vinda do cliente (queue_briefing_audio é
+ * chamável pela API), então o job só baixa o que passar aqui: nada de outro
+ * host nem de outro arquivo.
+ */
+export function isBriefingAudioUrl(url: string, supabaseUrl: string, storagePath: string): boolean {
+  if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/.test(storagePath)) return false
+  const base = supabaseUrl.trim().replace(/\/+$/, "")
+  if (!base.startsWith("https://")) return false
+  const prefix = `${base}/storage/v1/object/sign/briefing/${storagePath}?`
+  if (!url.startsWith(prefix)) return false
+  try {
+    return new URL(url).origin === new URL(base).origin
+  } catch {
+    return false
+  }
+}
+
 /**
  * O que fazer com a tentativa que não deu certo (as funções do banco aceitam
  * os mesmos valores): `retry` tenta de novo nas próximas rodadas (até 3

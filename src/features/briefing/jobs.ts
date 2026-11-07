@@ -1,6 +1,7 @@
 import { summarizeAnswer, transcribeAudio, type FetchLike } from "@/features/briefing/ai-clients"
 import {
   hasSummaryContent,
+  isBriefingAudioUrl,
   outcomeForThrown,
   SUMMARY_MODEL,
   summarySourceHash,
@@ -30,6 +31,8 @@ export interface BriefingJobsInput {
   supabase: Pick<SupabaseServerClient, "rpc">
   secret: string
   keys: BriefingAiKeys
+  /** NEXT_PUBLIC_SUPABASE_URL: o único host de onde o job baixa áudio. */
+  supabaseUrl: string
   /** Até quando pode trabalhar (ms desde a época). */
   deadline: number
   fetch?: FetchLike
@@ -49,6 +52,7 @@ const SUMMARIZE_BATCH = 5
 
 interface TranscriptionDue {
   audio_id: string
+  storage_path: string
   signed_url: string
   mime_type: string
   question: string | null
@@ -107,6 +111,10 @@ export async function processBriefingJobs(input: BriefingJobsInput): Promise<Bri
       if (rows.length === 0) break
       await Promise.all(
         rows.map(async (row) => {
+          if (!isBriefingAudioUrl(row.signed_url, input.supabaseUrl, row.storage_path)) {
+            await fail("transcription", row.audio_id, "final", "O link do áudio não é do Storage do briefing.")
+            return
+          }
           try {
             const transcript = await transcribeAudio({
               signedUrl: row.signed_url,

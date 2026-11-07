@@ -36,7 +36,11 @@ const BRIEFING = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
 const ANSWER = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 const AUDIO_1 = "eeeeeeee-eeee-4eee-8eee-000000000001"
 const AUDIO_2 = "eeeeeeee-eeee-4eee-8eee-000000000002"
-const URL_OK = "https://storage.test/sign/briefing/a?token=x"
+const PATH_1 = `${CLIENT}/${BRIEFING}/${AUDIO_1}`
+const PATH_2 = `${CLIENT}/${BRIEFING}/${AUDIO_2}`
+const signedUrl = (path) => `https://proj.supabase.test/storage/v1/object/sign/briefing/${path}?token=x`
+const URL_OK = signedUrl(PATH_1)
+const URL_2 = signedUrl(PATH_2)
 
 // O mínimo do schema (Supabase e migration base do briefing) que a migration usa.
 const BOOTSTRAP = `
@@ -74,6 +78,7 @@ create table public.briefing_answer_audios (
   id uuid primary key default gen_random_uuid(),
   answer_id uuid not null references public.briefing_answers (id) on delete cascade,
   briefing_id uuid not null references public.client_briefings (id) on delete cascade,
+  storage_path text not null unique default ('${CLIENT}/${BRIEFING}/' || gen_random_uuid()),
   mime_type text not null default 'audio/webm', duration_ms integer not null default 180000,
   created_at timestamptz not null default now()
 );
@@ -142,7 +147,7 @@ test("o cron fica agendado a cada minuto", { skip }, () => {
 
 test("pergunta aberta sem nada: sem resumo; com áudio, transcrição e resumo pendentes", { skip }, () => {
   assert.equal(summary(), undefined)
-  psql(`insert into public.briefing_answer_audios (id, answer_id, briefing_id, mime_type) values ('${AUDIO_1}', '${ANSWER}', '${BRIEFING}', 'audio/mp4');`)
+  psql(`insert into public.briefing_answer_audios (id, answer_id, briefing_id, storage_path, mime_type) values ('${AUDIO_1}', '${ANSWER}', '${BRIEFING}', '${PATH_1}', 'audio/mp4');`)
   assert.deepEqual(transcription(AUDIO_1), { status: "pending", attempts: 0, transcript: null, error: null })
   assert.equal(summary().status, "pending")
   // Sem URL na fila, não há o que fazer: o cron não chama a rota.
@@ -154,6 +159,10 @@ test("pôr na fila: só quem pode responder o briefing, ou a equipe", { skip }, 
     `select public.queue_briefing_audio('${AUDIO_1}', '${url}', ${expires});`
   fails(as({ client: OTHER_CLIENT }, queue()), /not_allowed/)
   fails(as({ client: CLIENT }, queue("http://inseguro")), /invalid_url/)
+  // Só a URL assinada deste arquivo no bucket do briefing.
+  fails(as({ client: CLIENT }, queue("https://evil.test/qualquer")), /invalid_url/)
+  fails(as({ client: CLIENT }, queue(URL_2)), /invalid_url/)
+  fails(as({ client: CLIENT }, queue(URL_OK.replace("/briefing/", "/content/"))), /invalid_url/)
   fails(as({ client: CLIENT }, queue(URL_OK, "now() - interval '1 minute'")), /invalid_url/)
   fails(as({ client: CLIENT }, `select public.queue_briefing_audio(gen_random_uuid(), '${URL_OK}', now() + interval '1 day');`), /not_found/)
 
@@ -185,7 +194,7 @@ test("pegar as transcrições confere o segredo e trava cada item", { skip }, ()
   assert.equal(rows.length, 1)
   assert.deepEqual(
     { ...rows[0] },
-    { audio_id: AUDIO_1, signed_url: URL_OK, mime_type: "audio/mp4", duration_ms: 180000, attempts: 1, question: "Quem é o seu cliente ideal?" }
+    { audio_id: AUDIO_1, storage_path: PATH_1, signed_url: URL_OK, mime_type: "audio/mp4", duration_ms: 180000, attempts: 1, question: "Quem é o seu cliente ideal?" }
   )
   assert.equal(transcription(AUDIO_1).status, "processing")
   assert.deepEqual(due(), [], "o mesmo item não sai duas vezes")
@@ -252,9 +261,9 @@ test("editar o texto ou complementar com outro áudio volta o resumo para penden
   assert.equal(psql(`select public.briefing_summary_done('${SECRET}', '${ANSWER}', 'Velho.', 'm', 'h');`), "f")
   assert.equal(summary().status, "pending")
 
-  psql(`insert into public.briefing_answer_audios (id, answer_id, briefing_id, created_at) values ('${AUDIO_2}', '${ANSWER}', '${BRIEFING}', now() + interval '1 second');`)
+  psql(`insert into public.briefing_answer_audios (id, answer_id, briefing_id, storage_path, created_at) values ('${AUDIO_2}', '${ANSWER}', '${BRIEFING}', '${PATH_2}', now() + interval '1 second');`)
   assert.deepEqual(summariesDue(), [], "espera o áudio novo")
-  psql(`select public.queue_briefing_audio('${AUDIO_2}', '${URL_OK}', now() + interval '1 day');`)
+  psql(`select public.queue_briefing_audio('${AUDIO_2}', '${URL_2}', now() + interval '1 day');`)
   due()
   fail(AUDIO_2, "final", "Formato não aceito.")
   assert.deepEqual(transcription(AUDIO_2), { status: "failed", attempts: 3, transcript: null, error: "Formato não aceito." })
@@ -269,7 +278,7 @@ test("editar o texto ou complementar com outro áudio volta o resumo para penden
 })
 
 test("a equipe reenvia um áudio que desistiu: tentativas zeradas", { skip }, () => {
-  psql(as({ team: true }, `select public.queue_briefing_audio('${AUDIO_2}', '${URL_OK}', now() + interval '1 day');`))
+  psql(as({ team: true }, `select public.queue_briefing_audio('${AUDIO_2}', '${URL_2}', now() + interval '1 day');`))
   assert.deepEqual(transcription(AUDIO_2), { status: "pending", attempts: 0, transcript: null, error: null })
 })
 

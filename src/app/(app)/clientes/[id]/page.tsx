@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { BriefingCard } from "@/features/briefing/briefing-card"
-import { getClientBriefing } from "@/features/briefing/queries"
+import { BriefingTab } from "@/features/briefing/briefing-tab"
+import { immersionMeetingOptions } from "@/features/briefing/team-logic"
+import { getTeamBriefing } from "@/features/briefing/team-queries"
 import { getEvents } from "@/features/calendar/queries"
 import { getClientFiles } from "@/features/client-files/queries"
 import { ClientView } from "@/features/clients/client-view"
@@ -53,7 +54,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getClientFiles(id),
     getClientInstagram(id),
     getPaymentReminders(id),
-    getClientBriefing(id),
+    getTeamBriefing(id),
   ])
   if (!client) notFound()
 
@@ -93,9 +94,9 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
             today={today}
           />
         }
-        briefingCard={
+        briefingTab={
           briefing.available ? (
-            <BriefingCard
+            <BriefingTab
               clientId={client.id}
               clientName={client.name}
               defaults={{
@@ -106,6 +107,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
                 site: "",
               }}
               briefing={briefing.briefing}
+              meetings={immersionMeetingOptions(client.id, events, records, today, briefing.briefing?.immersion?.meeting_id ?? null)}
               today={today}
             />
           ) : null

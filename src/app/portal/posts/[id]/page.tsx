@@ -6,7 +6,7 @@ import type { PortalPost } from "@/features/portal/content-logic"
 import { getPortalPostMessages, getPortalPosts, getPortalProfile } from "@/features/portal/content-queries"
 import { PortalPostView } from "@/features/portal/post-view"
 import { ProfilePhoto } from "@/features/portal/profile-photo"
-import { pickPortalClient, requirePortalUser, type PortalClient } from "@/features/portal/session"
+import { pickPortalClient, requirePortalUser, requireUnlockedClient, type PortalClient } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
 import { isUuid } from "@/lib/utils"
 
@@ -33,6 +33,8 @@ export default async function PortalPostPage(props: PageProps<"/portal/posts/[id
   }
   if (!found) notFound()
   const { client, post } = found
+  // Achado em outro cliente da conta: vale o briefing pendente desse cliente.
+  requireUnlockedClient(user, client)
 
   const [messages, profile, readings] = await Promise.all([
     getPortalPostMessages(post.id),

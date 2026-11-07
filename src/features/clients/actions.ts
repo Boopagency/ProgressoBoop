@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
+import { clientBriefingPaths, removeBriefingObjects } from "@/features/briefing/storage"
 import { clientFilePaths, removeClientFileObjects } from "@/features/client-files/storage"
 import {
   insertClient,
@@ -56,8 +57,8 @@ export async function setPaymentReminders(id: string, on: boolean): Promise<Acti
 }
 
 /**
- * Exclui o cliente, as revisões, as comunicações e os posts dele (com as
- * imagens). Tarefas, projetos, eventos, processos, decisões e lançamentos
+ * Exclui o cliente, as revisões, as comunicações, os posts dele (com as
+ * imagens) e o briefing (com os áudios e os uploads). Tarefas, projetos, eventos, processos, decisões e lançamentos
  * continuam, sem o cliente.
  */
 export async function deleteClient(id: string): Promise<ActionResult> {
@@ -67,11 +68,19 @@ export async function deleteClient(id: string): Promise<ActionResult> {
   const supabase = await createClient()
   // Os posts e os documentos saem em cascata: as imagens deles (e a foto do
   // perfil) e os arquivos são lidos antes.
-  const [images, files] = await Promise.all([clientContentImages(supabase, id), clientFilePaths(supabase, id)])
+  const [images, files, briefingFiles] = await Promise.all([
+    clientContentImages(supabase, id),
+    clientFilePaths(supabase, id),
+    clientBriefingPaths(supabase, id),
+  ])
   const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id")
   if (error) return dbFailure(error, "Não foi possível excluir o cliente.")
   if (data.length === 0) return NOT_FOUND
-  await Promise.all([removeContentImages(supabase, images), removeClientFileObjects(supabase, files)])
+  await Promise.all([
+    removeContentImages(supabase, images),
+    removeClientFileObjects(supabase, files),
+    removeBriefingObjects(supabase, briefingFiles),
+  ])
   refreshApp()
   return { ok: true, data: null }
 }

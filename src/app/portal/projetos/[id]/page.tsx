@@ -10,7 +10,7 @@ import {
   getPortalStepDeliverables,
 } from "@/features/portal/project-queries"
 import { PortalProjectView } from "@/features/portal/project-view"
-import { pickPortalClient, requirePortalUser, type PortalClient } from "@/features/portal/session"
+import { pickPortalClient, requirePortalUser, requireUnlockedClient, type PortalClient } from "@/features/portal/session"
 import { todayKey } from "@/lib/dates"
 import { isUuid } from "@/lib/utils"
 
@@ -34,6 +34,8 @@ export default async function PortalProjectPage(props: PageProps<"/portal/projet
   }
   if (!found) notFound()
   const { client, project } = found
+  // Achado em outro cliente da conta: vale o briefing pendente desse cliente.
+  requireUnlockedClient(user, client)
 
   const [steps, messages, approvals, deliverables] = await Promise.all([
     getPortalProjectSteps(project.id),

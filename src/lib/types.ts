@@ -25,6 +25,8 @@ export type DocStatus = "draft" | "active" | "review"
 export type ClientHealth = "healthy" | "attention" | "at_risk"
 /** Contrato, Briefing, Marca, Relatório ou Outro (documentos do cliente). */
 export type ClientFileCategory = "contract" | "briefing" | "brand" | "report" | "other"
+/** Briefing de onboarding: Não enviado, Em preenchimento, Enviado, Imersão feita, Documento enviado ou Validado. */
+export type BriefingStatus = "not_started" | "in_progress" | "submitted" | "immersion_done" | "document_sent" | "validated"
 /** Planejado, Em andamento, Pausado, Concluído ou Cancelado. */
 export type ProjectStatus = "planned" | "active" | "paused" | "done" | "canceled"
 /** Em vigor ou Revogada. */

@@ -8,6 +8,8 @@ import {
   CheckCheck,
   CircleAlert,
   CircleCheck,
+  ClipboardCheck,
+  ClipboardList,
   HeartHandshake,
   ListTodo,
   MessageCircle,
@@ -70,6 +72,8 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   site_lead: UserPlus,
   instagram_publish_failed: CircleAlert,
   payment_overdue: Banknote,
+  briefing_block_done: ClipboardCheck,
+  briefing_submitted: ClipboardList,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

@@ -26,6 +26,8 @@ export type NotificationKind =
   | "site_lead"
   | "instagram_publish_failed"
   | "payment_overdue"
+  | "briefing_block_done"
+  | "briefing_submitted"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -112,6 +114,11 @@ export function describeNotification(notification: AppNotification, clientName?:
         subject: null,
         excerpt: item.body,
       }
+    case "briefing_block_done":
+      // Briefing de onboarding: o cliente (título) fechou uma etapa (trecho).
+      return { actor: fromClient, action: "concluiu a etapa", subject: item.body, excerpt: null }
+    case "briefing_submitted":
+      return { actor: fromClient, action: "enviou o briefing", subject: null, excerpt: null }
   }
 }
 

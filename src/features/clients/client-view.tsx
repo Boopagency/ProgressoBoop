@@ -119,6 +119,7 @@ export function ClientView({
   members,
   files,
   instagramCard,
+  briefingCard,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -146,6 +147,8 @@ export function ClientView({
   files: ClientFile[]
   /** Cartão "Instagram" (conta conectada), montado pela página. */
   instagramCard: ReactNode
+  /** Cartão "Briefing" (onboarding), montado pela página; vazio antes da migration. */
+  briefingCard?: ReactNode
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -362,6 +365,7 @@ export function ClientView({
             <ReviewCard key={`${client.id}:${period}`} client={client} period={period} reviews={reviews} />
           </div>
           <aside aria-label="Sobre o cliente" className="min-w-0 space-y-6">
+            {briefingCard}
             <AboutCard client={client} />
             <HealthHistoryCard clientId={client.id} reviews={reviews} period={period} />
           </aside>

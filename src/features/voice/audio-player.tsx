@@ -17,7 +17,18 @@ const SPEEDS = [1, 1.5, 2] as const
  * no primeiro play. A duração vem do banco (o webm gravado no navegador não
  * diz a dele).
  */
-export function AudioPlayer({ messageId, durationMs, mine = false }: { messageId: string; durationMs: number; mine?: boolean }) {
+export function AudioPlayer({
+  messageId,
+  durationMs,
+  mine = false,
+  src,
+}: {
+  messageId: string
+  durationMs: number
+  mine?: boolean
+  /** Outro endereço do áudio (ex.: o do briefing); sem ele, o da mensagem. */
+  src?: string
+}) {
   const audio = useRef<HTMLAudioElement>(null)
   const [state, setState] = useState<"paused" | "loading" | "playing">("paused")
   const [positionMs, setPositionMs] = useState(0)
@@ -71,7 +82,7 @@ export function AudioPlayer({ messageId, durationMs, mine = false }: { messageId
     <div className="flex w-64 max-w-full items-center gap-2.5 py-0.5">
       <audio
         ref={audio}
-        src={audioSrc(messageId)}
+        src={src ?? audioSrc(messageId)}
         preload="none"
         onPlaying={() => setState("playing")}
         onWaiting={() => setState("loading")}

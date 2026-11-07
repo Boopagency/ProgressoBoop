@@ -1440,6 +1440,26 @@ rodapé tem quem está logado e "Sair".
   `portal_submit_briefing` (só com os obrigatórios), que avisam a equipe
   (`briefing_block_done`, `briefing_submitted`). Teste do SQL:
   `src/features/briefing/briefing-sql.test.mjs`.
+- **Transcrição e resumo do briefing** (Parte 3; migration
+  `*_briefing_transcription.sql`, `features/briefing/{transcription,jobs,ai-*}.ts`):
+  ao salvar um áudio, `queueBriefingAudio` (sessão do cliente) assina a URL
+  (7 dias), guarda-a em `private.briefing_audio_sources` por
+  `queue_briefing_audio` (confere o briefing aberto da conta; a equipe pode
+  reenviar) e processa na hora com `after()`. O `pg_cron` (`briefing-process`,
+  a cada minuto) chama `private.run_briefing_job` → `pg_net` →
+  `/api/briefing/jobs` só quando há algo pendente (URL e segredo no Vault:
+  `briefing_jobs_url`, `briefing_jobs_secret`). A rota pega os itens por
+  `briefing_transcriptions_due`/`briefing_summaries_due` (`skip locked`),
+  transcreve com OpenAI `gpt-4o-mini-transcribe` (pt), resume com
+  `claude-haiku-5-5` (pergunta + texto + transcrições; expressões do cliente
+  entre aspas, sem inventar) e grava por `…_done`/`…_failed`, todas com o
+  segredo. Até 3 tentativas, com espera de 1 min por tentativa; 401/403
+  adia sem gastar tentativa; sem `OPENAI_API_KEY`/`ANTHROPIC_API_KEY`, nada é
+  pedido ao banco e os itens ficam pendentes. O resumo volta para pendente
+  quando a resposta muda (texto, pular) ou ganha/perde áudio (triggers) e só
+  roda com todos os áudios transcritos; `source_hash` evita chamar a IA se
+  nada do que se resume mudou. Testes: `jobs.test.mjs` (APIs simuladas) e
+  `transcription-sql.test.mjs` (Postgres local).
 
 ### Busca geral (Ctrl/⌘ + K)
 

@@ -3012,6 +3012,67 @@ export type Database = {
       }
     }
     Functions: {
+      briefing_summaries_due: {
+        Args: { p_limit: number; p_secret: string }
+        Returns: {
+          answer_id: string
+          answer_text: string
+          attempts: number
+          missing_audios: number
+          previous_summary: string
+          question: Json
+          source_hash: string
+          transcripts: string[]
+        }[]
+      }
+      briefing_summary_done: {
+        Args: {
+          p_answer_id: string
+          p_model: string
+          p_secret: string
+          p_source_hash: string
+          p_summary: string
+        }
+        Returns: boolean
+      }
+      briefing_summary_failed: {
+        Args: {
+          p_answer_id: string
+          p_error: string
+          p_outcome: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      briefing_transcription_done: {
+        Args: {
+          p_audio_id: string
+          p_model: string
+          p_secret: string
+          p_transcript: string
+        }
+        Returns: boolean
+      }
+      briefing_transcription_failed: {
+        Args: {
+          p_audio_id: string
+          p_error: string
+          p_outcome: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      briefing_transcriptions_due: {
+        Args: { p_limit: number; p_secret: string }
+        Returns: {
+          attempts: number
+          audio_id: string
+          duration_ms: number
+          mime_type: string
+          question: string
+          signed_url: string
+        }[]
+      }
       cancel_instagram_publish: {
         Args: { p_post_id: string }
         Returns: string[]
@@ -3454,6 +3515,14 @@ export type Database = {
       }
       portal_update_me: {
         Args: { new_avatar_path: string; new_name: string }
+        Returns: undefined
+      }
+      queue_briefing_audio: {
+        Args: {
+          p_audio_id: string
+          p_signed_url: string
+          p_url_expires_at: string
+        }
         Returns: undefined
       }
       reset_client_password: {

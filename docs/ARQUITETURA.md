@@ -1425,7 +1425,7 @@ rodapé tem quem está logado e "Sair".
   `features/briefing`): formulário em `briefing_templates` →
   `briefing_blocks` → `briefing_questions` (nunca apagados, só desativados;
   o v1 de 30 perguntas vem na migration), o briefing do cliente em
-  `client_briefings` (um por cliente; a equipe libera no cartão "Briefing"
+  `client_briefings` (um por cliente; a equipe libera na aba Briefing
   da ficha, com a identificação conferida e o prazo de 5 dias úteis,
   `addBusinessDays`) e as respostas em `briefing_answers`, cada uma com a
   cópia da pergunta (`question_snapshot`, gravada pelo banco). Áudios em
@@ -1440,6 +1440,24 @@ rodapé tem quem está logado e "Sair".
   `portal_submit_briefing` (só com os obrigatórios), que avisam a equipe
   (`briefing_block_done`, `briefing_submitted`). Teste do SQL:
   `src/features/briefing/briefing-sql.test.mjs`.
+- **Briefing, visão da equipe** (issue #108, Parte 2; `features/briefing/team-*`,
+  `briefing-tab.tsx`, `briefing-editor.tsx`): aba `?aba=briefing` da ficha
+  (para onde os avisos do sino apontam) com o status no topo (a sequência
+  inteira, % respondido, prazo, último acesso e as obrigatórias que faltam),
+  as respostas por bloco (`buildBriefingView`: o texto mostrado é a cópia
+  `question_snapshot`; pergunta criada depois do envio não conta; desativada
+  e respondida aparece marcada) com o resumo da IA em destaque, o estado da
+  IA, as respostas fechadas legíveis (`describeAnswer`, que documenta o
+  formato de `briefing_answers.value`) e o áudio com a transcrição num
+  clique. Áudios e arquivos passam por `/api/briefing/arquivos/<caminho>`
+  (URL assinada de 1 h; o RLS do Storage decide quem lê). A equipe marca
+  Imersão feita (só com o briefing enviado e as obrigatórias completas),
+  Documento enviado e Validado, e pode voltar um passo (`setBriefingStatus`).
+  Notas da imersão em `briefing_immersions`, ligadas a uma reunião do
+  cliente no calendário (o registro em `meetings` é criado se faltar).
+  Editor de perguntas em `/briefing` (menu Relacionamento): blocos e
+  perguntas do formulário ativo, criar, editar, reordenar e desativar, sem
+  apagar; o bloco 0 (identificação) é fixo.
 
 ### Busca geral (Ctrl/⌘ + K)
 

@@ -308,8 +308,30 @@ segunda, 07:00).
   **Conteúdo** (conteúdo com o feed, ideias e o cartão Instagram),
   **Conversas** (canal do cliente, comunicações e acesso ao portal),
   **Documentos** (documentos e arquivos do cliente) e **Financeiro**
-  (financeiro e negócios). A volta da conexão do Instagram abre Conteúdo.
-  Os cartões de cada seção estão descritos abaixo.
+  (financeiro e negócios) e **Briefing** (o briefing de onboarding). A
+  volta da conexão do Instagram abre Conteúdo; os avisos de briefing no
+  sino abrem Briefing. Os cartões de cada seção estão descritos abaixo.
+- **Briefing** (aba): antes de liberar, **Liberar briefing** (confere a
+  identificação e o prazo de 5 dias úteis). Liberado, o topo mostra em que
+  passo está (Não enviado → Em preenchimento → Enviado → Imersão feita →
+  Documento enviado → Validado), o % respondido, o prazo (editável enquanto
+  aberto), o último acesso do cliente e se as obrigatórias estão completas
+  (com a lista do que falta). Botões **Marcar imersão feita** (só com o
+  briefing enviado e todas as obrigatórias), **Marcar documento enviado** e
+  **Marcar como validado**, e **Voltar** um passo. Embaixo, as respostas por
+  bloco, com a pergunta como o cliente viu: resumo da IA em destaque, o
+  estado da IA quando não está pronta, escolhas, cards de tom, cores, links,
+  datas e arquivos com miniatura, e **Ouvir áudio e ler a transcrição** num
+  clique. Puladas ficam em amarelo, "levar pra reunião". Ao lado, a
+  **Imersão**: a reunião do calendário com o cliente, a transcrição (colar
+  ou **Subir .txt**) e o resumo livre.
+- **Perguntas do briefing** (`/briefing`, no menu Relacionamento, ou
+  **Editar perguntas** na aba): o formulário ativo, igual para todos os
+  clientes. Criar, editar, reordenar e desativar blocos (título, descrição,
+  tempo) e perguntas (texto, dica, tipo, opções conforme o tipo,
+  complementos e obrigatória). Nada é apagado; vale para os briefings novos
+  e os em preenchimento, e quem já enviou continua com a pergunta de quando
+  respondeu. A identificação (bloco 0) é fixa.
 - **Revisão do mês:**
   - **Como está o cliente?** Saudável, Atenção ou Em risco (clicar de novo
     desmarca). A saúde da revisão mais recente vira o selo do cliente.

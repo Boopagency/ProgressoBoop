@@ -1,11 +1,12 @@
 "use client"
 
-import { CalendarClock, ClipboardList, Send } from "lucide-react"
+import { CalendarClock, Check, CircleAlert, Send, Undo2 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { DatePicker } from "@/components/date-picker"
-import { PanelCard } from "@/components/panel-card"
+import { HeroEyebrow, HeroPanel } from "@/components/hero-panel"
+import { StatGrid } from "@/components/stat-grid"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,32 +29,45 @@ import {
   IDENTIFICATION_FIELDS,
   isBriefingOpen,
   type BriefingIdentification,
-  type ClientBriefingSummary,
 } from "@/features/briefing/logic"
-import { formatLongDate, formatShortDate, toDateKey } from "@/lib/dates"
-import { BRIEFING_STATUS_LABEL } from "@/lib/labels"
-import type { DateKey } from "@/lib/types"
+import { setBriefingStatus } from "@/features/briefing/team-actions"
+import {
+  nextTeamStatus,
+  previousTeamStatus,
+  TEAM_STATUS_ACTION,
+  type BriefingProgress,
+  type TeamBriefingDetail,
+} from "@/features/briefing/team-logic"
+import { formatLongDate, formatShortDate, toDateKey, toTimeLabel } from "@/lib/dates"
+import { BRIEFING_STATUSES, BRIEFING_STATUS_LABEL } from "@/lib/labels"
+import type { BriefingStatus, DateKey, Timestamp } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
+/** "hoje, 14:32" / "06/11, 09:10". */
+function moment(at: Timestamp, today: DateKey): string {
+  return `${formatShortDate(toDateKey(at), today)}, ${toTimeLabel(at)}`
+}
+
 /**
- * Ficha do cliente: o briefing de onboarding. Antes de liberar, a equipe
- * confere os dados de identificação (bloco 0) e o prazo (5 dias úteis,
- * editável); liberado, mostra o status, o andamento e o prazo. Enquanto o
- * cliente não envia, o portal dele só mostra o Briefing. A Parte 2 do
- * issue #108 transforma este cartão na aba Briefing.
+ * Topo da aba Briefing (o painel de destaque): o status na sequência, o
+ * andamento, o prazo, se os obrigatórios estão completos e os botões da
+ * equipe. Antes de liberar, explica e abre a liberação (identificação
+ * conferida e prazo de 5 dias úteis, editável).
  */
-export function BriefingCard({
+export function BriefingStatusPanel({
   clientId,
   clientName,
   defaults,
   briefing,
+  progress,
   today,
 }: {
   clientId: string
   clientName: string
   /** Dados que a ficha já tem, para preencher a identificação. */
   defaults: BriefingIdentification
-  briefing: ClientBriefingSummary | null
+  briefing: TeamBriefingDetail | null
+  progress: BriefingProgress | null
   today: DateKey
 }) {
   const [releaseOpen, setReleaseOpen] = useState(false)
@@ -87,113 +101,168 @@ export function BriefingCard({
     })
   }
 
-  const open = briefing ? isBriefingOpen(briefing.status) : false
-  const due = briefing ? dueState(briefing, today) : null
+  function changeStatus(to: BriefingStatus) {
+    if (!briefing) return
+    const from = briefing.status
+    startTransition(async () => {
+      const result = await setBriefingStatus(clientId, from, to)
+      if (!result.ok) toast.error(result.error)
+      else toast.success(`Briefing: ${BRIEFING_STATUS_LABEL[to]}.`)
+    })
+  }
+
+  const releaseDialog = (
+    <ReleaseDialog
+      key={releaseKey}
+      open={releaseOpen}
+      onOpenChange={setReleaseOpen}
+      clientId={clientId}
+      clientName={clientName}
+      defaults={defaults}
+      today={today}
+    />
+  )
+
+  if (!briefing || !progress) {
+    return (
+      <HeroPanel aria-label="Briefing de onboarding">
+        <HeroEyebrow>Briefing de onboarding</HeroEyebrow>
+        <p className="mt-6 max-w-2xl font-display text-[26px] leading-[1.15] font-medium tracking-[-0.03em] text-foreground sm:text-[32px]">
+          Briefing <em className="emphasis text-[1.14em] text-brand-ink">ainda não liberado</em>
+        </p>
+        <p className="mt-3 max-w-xl text-[13.5px] leading-6 text-muted-foreground">
+          Libere quando o contrato estiver assinado. O cliente responde no portal, de preferência por áudio, e até enviar
+          só vê o Briefing. As respostas aparecem aqui, por bloco.
+        </p>
+        <Button onClick={openRelease} className="mt-6 gap-1.5">
+          <Send />
+          Liberar briefing
+        </Button>
+        {releaseDialog}
+      </HeroPanel>
+    )
+  }
+
+  const open = isBriefingOpen(briefing.status)
+  const due = dueState(briefing, today)
+  const missing = progress.missing.length
+  const next = nextTeamStatus(briefing.status)
+  const previous = previousTeamStatus(briefing.status)
+  const blockedImmersion = next === "immersion_done" && missing > 0
 
   return (
-    <PanelCard
-      id="briefing-cliente"
-      title={
-        <>
-          <ClipboardList className="size-4 text-muted-foreground" aria-hidden="true" />
-          Briefing
-        </>
-      }
-      action={
-        briefing ? (
-          <span className="rounded-full border px-2.5 py-0.5 text-xs font-medium text-foreground">
-            {BRIEFING_STATUS_LABEL[briefing.status]}
-          </span>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={openRelease} className="h-7 gap-1 px-2 text-xs">
-            <Send className="size-3.5" />
-            Liberar briefing
-          </Button>
-        )
-      }
-    >
-      {briefing ? (
-        <div className="space-y-3 px-5 py-4">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
-            <div>
-              <dt className="eyebrow text-muted-foreground">Respostas</dt>
-              <dd className="mt-0.5 text-foreground tabular-nums">
-                {briefing.answered} de {briefing.total}
-              </dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-muted-foreground">{open ? "Prazo" : "Enviado em"}</dt>
-              <dd
-                className={cn(
-                  "mt-0.5 tabular-nums",
-                  due === "late" ? "text-destructive" : due === "today" ? "text-warning-ink" : "text-foreground"
-                )}
-              >
-                {open
-                  ? `${formatShortDate(briefing.due_on, today)}${due === "late" ? " · atrasado" : due === "today" ? " · hoje" : ""}`
-                  : briefing.submitted_at
-                    ? formatShortDate(toDateKey(briefing.submitted_at), today)
-                    : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-muted-foreground">Liberado em</dt>
-              <dd className="mt-0.5 text-foreground tabular-nums">{formatShortDate(toDateKey(briefing.released_at), today)}</dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-muted-foreground">Último acesso</dt>
-              <dd className="mt-0.5 text-foreground tabular-nums">
-                {briefing.last_seen_at ? formatShortDate(toDateKey(briefing.last_seen_at), today) : "Ainda não abriu"}
-              </dd>
-            </div>
-          </dl>
-          {open ? (
-            <>
-              <p className="text-xs leading-5 text-muted-foreground">
-                Até o cliente enviar, o portal dele mostra só o Briefing.
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <DatePicker
-                  value={briefing.due_on}
-                  onChange={changeDue}
-                  today={today}
-                  renderValue={(value) => `Prazo: ${formatShortDate(value, today)}`}
-                  placeholder="Prazo"
-                  icon={<CalendarClock className="size-3.5" />}
-                  aria-label="Mudar o prazo do briefing"
-                  className="h-8 text-xs"
-                />
-                {briefing.status === "not_started" && briefing.answered === 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-xs text-muted-foreground"
-                    disabled={isPending}
-                    onClick={() => setCancelOpen(true)}
-                  >
-                    Cancelar liberação
-                  </Button>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </div>
-      ) : (
-        <p className="px-5 py-4 text-[13px] leading-5 text-muted-foreground">
-          Libere quando o contrato estiver assinado. O cliente responde no portal, de preferência por áudio, e até
-          enviar só vê o Briefing.
-        </p>
-      )}
+    <HeroPanel aria-label="Situação do briefing">
+      <HeroEyebrow>Briefing de onboarding</HeroEyebrow>
+      <p className="mt-6 max-w-2xl font-display text-[26px] leading-[1.15] font-medium tracking-[-0.03em] text-foreground sm:text-[32px]">
+        <StatusHeadline briefing={briefing} progress={progress} today={today} />
+      </p>
 
-      <ReleaseDialog
-        key={releaseKey}
-        open={releaseOpen}
-        onOpenChange={setReleaseOpen}
-        clientId={clientId}
-        clientName={clientName}
-        defaults={defaults}
-        today={today}
+      <StatusSteps status={briefing.status} />
+
+      <StatGrid
+        variant="line"
+        className="mt-7"
+        items={[
+          {
+            key: "respostas",
+            label: "Respostas",
+            value: `${progress.percent}%`,
+            hint: `${progress.answered} de ${progress.total}${progress.skipped > 0 ? ` · ${progress.skipped} pulada${progress.skipped === 1 ? "" : "s"}` : ""}`,
+            progress: progress.percent,
+            accent: open,
+          },
+          {
+            key: "obrigatorias",
+            label: "Obrigatórias",
+            value: missing === 0 ? "Completas" : `Faltam ${missing}`,
+            hint: missing === 0 ? "a imersão pode ser marcada" : "para marcar a imersão",
+            alert: missing > 0 && !open,
+          },
+          open
+            ? {
+                key: "prazo",
+                label: "Prazo",
+                value: formatShortDate(briefing.due_on, today),
+                hint: due === "late" ? "atrasado" : due === "today" ? "vence hoje" : `liberado em ${formatShortDate(toDateKey(briefing.released_at), today)}`,
+                alert: due === "late",
+              }
+            : {
+                key: "enviado",
+                label: "Enviado em",
+                value: briefing.submitted_at ? formatShortDate(toDateKey(briefing.submitted_at), today) : "—",
+                hint: `prazo era ${formatShortDate(briefing.due_on, today)}`,
+              },
+          {
+            key: "acesso",
+            label: "Último acesso",
+            value: briefing.last_seen_at ? formatShortDate(toDateKey(briefing.last_seen_at), today) : "—",
+            hint: briefing.last_seen_at ? toTimeLabel(briefing.last_seen_at) : "ainda não abriu",
+          },
+        ]}
       />
+
+      {missing > 0 ? (
+        <details className="group mt-5 max-w-2xl text-[13px]">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-muted-foreground hover:text-foreground">
+            <CircleAlert className="size-3.5" aria-hidden="true" />
+            {missing === 1 ? "1 obrigatória sem resposta" : `${missing} obrigatórias sem resposta`}
+            <span className="text-xs group-open:hidden">· ver</span>
+          </summary>
+          <ul className="mt-2 space-y-1 pl-5 text-muted-foreground">
+            {progress.missing.map((item) => (
+              <li key={item.id} className="list-disc">
+                <span className="text-foreground">{item.text}</span> <span className="text-xs">· {item.block}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        {open ? (
+          <>
+            <p className="mr-2 text-xs leading-5 text-muted-foreground">Até o cliente enviar, o portal dele mostra só o Briefing.</p>
+            <DatePicker
+              value={briefing.due_on}
+              onChange={changeDue}
+              today={today}
+              renderValue={(value) => `Prazo: ${formatShortDate(value, today)}`}
+              placeholder="Prazo"
+              icon={<CalendarClock className="size-3.5" />}
+              aria-label="Mudar o prazo do briefing"
+              className="h-8 text-xs"
+            />
+            {briefing.status === "not_started" && briefing.answers.length === 0 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs text-muted-foreground"
+                disabled={isPending}
+                onClick={() => setCancelOpen(true)}
+              >
+                Cancelar liberação
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+        {next ? (
+          <Button onClick={() => changeStatus(next)} disabled={isPending || blockedImmersion} className="gap-1.5">
+            <Check />
+            {TEAM_STATUS_ACTION[next as keyof typeof TEAM_STATUS_ACTION]}
+          </Button>
+        ) : null}
+        {previous && !isBriefingOpen(previous) ? (
+          <Button variant="ghost" size="sm" onClick={() => changeStatus(previous)} disabled={isPending} className="gap-1.5 text-muted-foreground">
+            <Undo2 className="size-3.5" />
+            Voltar para {BRIEFING_STATUS_LABEL[previous]}
+          </Button>
+        ) : null}
+        {blockedImmersion ? (
+          <p className="text-xs text-muted-foreground">A imersão só pode ser marcada com todas as obrigatórias respondidas.</p>
+        ) : null}
+      </div>
+
+      {releaseDialog}
 
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
@@ -217,7 +286,80 @@ export function BriefingCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </PanelCard>
+    </HeroPanel>
+  )
+}
+
+function StatusHeadline({ briefing, progress, today }: { briefing: TeamBriefingDetail; progress: BriefingProgress; today: DateKey }) {
+  const em = "emphasis text-[1.14em] text-brand-ink"
+  switch (briefing.status) {
+    case "not_started":
+      return (
+        <>
+          Liberado, <em className={em}>esperando o cliente</em>
+        </>
+      )
+    case "in_progress":
+      return (
+        <>
+          Em preenchimento, <em className={em}>{progress.percent}% respondido</em>
+        </>
+      )
+    case "submitted":
+      return (
+        <>
+          Enviado{briefing.submitted_at ? ` ${moment(briefing.submitted_at, today).replace(",", " às")}` : ""},{" "}
+          <em className={em}>{progress.missing.length === 0 ? "pronto para a imersão" : "com obrigatórias em aberto"}</em>
+        </>
+      )
+    case "immersion_done":
+      return (
+        <>
+          Imersão feita, <em className={em}>falta o Documento de Marca</em>
+        </>
+      )
+    case "document_sent":
+      return (
+        <>
+          Documento enviado, <em className={em}>esperando a validação</em>
+        </>
+      )
+    case "validated":
+      return (
+        <>
+          Briefing <em className={em}>validado</em>
+        </>
+      )
+  }
+}
+
+/** A sequência inteira, com o passo atual em azul. */
+function StatusSteps({ status }: { status: BriefingStatus }) {
+  const current = BRIEFING_STATUSES.indexOf(status)
+  return (
+    <ol aria-label="Etapas do briefing" className="mt-6 flex flex-wrap gap-1.5">
+      {BRIEFING_STATUSES.map((step, index) => {
+        const done = index < current
+        const active = index === current
+        return (
+          <li
+            key={step}
+            aria-current={active ? "step" : undefined}
+            className={cn(
+              "inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium",
+              active
+                ? "border-transparent bg-primary text-primary-foreground shadow-glow"
+                : done
+                  ? "border-border bg-card text-foreground"
+                  : "border-dashed border-border text-muted-foreground"
+            )}
+          >
+            {done ? <Check className="size-3 text-brand-ink" aria-hidden="true" /> : null}
+            {BRIEFING_STATUS_LABEL[step]}
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 

@@ -4,6 +4,8 @@ import Link from "next/link"
 import { PageBody, PageContainer } from "@/components/layout/page"
 import { PortalHeader } from "@/features/portal/portal-ui"
 
+import { BRIEFING_SCREENS } from "./briefing/exemplos"
+
 const SCREENS = [
   { href: "/vitrine/portal", title: "Início", text: "O painel, com a data dos posts numa linha só no celular." },
   { href: "/vitrine/portal-telas/calendario", title: "Calendário", text: "O mês com os posts; no celular, os dias em lista." },
@@ -20,7 +22,8 @@ const SCREENS = [
   { href: "/vitrine/portal-telas/notificacoes", title: "Notificações", text: "Hoje, Ontem e Antes, com os não lidos marcados." },
   { href: "/vitrine/portal-telas/indicar", title: "Indicar", text: "Como funciona, o formulário e as indicações feitas." },
   { href: "/vitrine/portal-telas/conta", title: "Minha conta", text: "A janela da conta, aberta por cima de uma tela." },
-] as const
+  ...BRIEFING_SCREENS.map((screen) => ({ href: `/vitrine/portal-telas/briefing?tela=${screen.value}`, title: screen.title, text: screen.text })),
+]
 
 /** As telas do portal do cliente na vitrine (fase 3 da repaginada), com dados de exemplo. */
 export default function VitrinePortalScreensPage() {

@@ -457,19 +457,9 @@ export function checkStatusChange(
 /* ------------------------------------------------------------------ */
 
 /*
- * Formato de `briefing_answers.value` (gravado pelo portal). A leitura é
- * tolerante: o que não se entende aparece como texto, nunca some.
- *   choice          { choice: "<value>", other?: "texto", extras?: {...} }
- *   multiple        { choices: ["<value>"], other?, extras? }
- *   cards           { choices: ["<value>"], primary?: "<value>", rejected?: ["<value>"], extras? }
- *   number          { number: 180 }  (ou o número puro)
- *   palette         { colors: [{ hex: "#rrggbb" (minúsculo), use: "use" | "avoid" }] }
- *   links           { links: ["https://…", "@perfil"], extras? }
- *   dates           { dates: [{ date: "yyyy-MM-dd", label: "texto" }], extras? }
- *   identification  { brand_name, contact_name, region, instagram, site }
- *   short_text      com `fields`: { fields: { <key>: "texto" } }; sem, só `text`
- *   extras.<key>    texto curto/áudio: "texto"; links: { links: [...] };
- *                   paleta: { colors: [...] } (como os tipos acima)
+ * Leitura de `briefing_answers.value`. O formato é um só: `AnswerValue`, em
+ * `flow-logic.ts` (quem grava é o portal). A leitura aqui é tolerante: o que
+ * não se entende aparece como texto, nunca some.
  */
 
 export type AnswerPart =

@@ -1,23 +1,24 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
-import { getPortalBriefing } from "@/features/briefing/portal-queries"
-import { PortalBriefingWelcome } from "@/features/briefing/portal-welcome"
+import { BriefingFlow } from "@/features/briefing/briefing-flow"
+import { getPortalBriefingFlow } from "@/features/briefing/portal-queries"
 import { portalHref } from "@/features/portal/links"
 import { pickPortalClientForBriefing, requirePortalUser } from "@/features/portal/session"
+import { todayKey } from "@/lib/dates"
 
 export const metadata: Metadata = { title: "Briefing" }
 
 /**
- * Briefing de onboarding do cliente escolhido. Com ele liberado e não
- * enviado, é a única tela do portal desse cliente; sem briefing liberado,
- * volta para o início.
+ * Briefing de onboarding do cliente escolhido, uma pergunta por tela. Com ele
+ * liberado e não enviado, é a única tela do portal desse cliente; enviado,
+ * mostra o obrigado; sem briefing liberado, volta para o início.
  */
 export default async function PortalBriefingPage(props: PageProps<"/portal/briefing">) {
   const [user, searchParams] = await Promise.all([requirePortalUser(), props.searchParams])
   const client = pickPortalClientForBriefing(user, searchParams.cliente)
-  const briefing = await getPortalBriefing(client.id)
+  const data = await getPortalBriefingFlow(client.id)
   const home = portalHref("/portal", client, user.clients)
-  if (!briefing) redirect(home)
-  return <PortalBriefingWelcome clientName={client.name} briefing={briefing} homeHref={home} />
+  if (!data) redirect(home)
+  return <BriefingFlow key={data.briefingId} data={data} homeHref={home} today={todayKey()} />
 }

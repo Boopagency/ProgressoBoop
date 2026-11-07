@@ -1440,6 +1440,19 @@ rodapé tem quem está logado e "Sair".
   `portal_submit_briefing` (só com os obrigatórios), que avisam a equipe
   (`briefing_block_done`, `briefing_submitted`). Teste do SQL:
   `src/features/briefing/briefing-sql.test.mjs`.
+  **Fluxo do cliente** (`/portal/briefing`, `BriefingFlow`): boas-vindas,
+  uma pergunta por tela (áudio em destaque com até 3 min, onda enquanto
+  grava, ouvir, regravar e complementar; "prefiro escrever" embaixo), o
+  fechamento de cada etapa, a revisão (obrigatórias que faltam e puladas,
+  "ficam pra reunião") e o obrigado. Regras puras em `flow-logic.ts`; cada
+  resposta é salva sozinha (`saveBriefingAnswer`, upsert com o RLS) e a
+  pergunta em que parou vai em `current_question_id` (volta nela). Áudios e
+  arquivos vão do navegador ao bucket `briefing` por URL assinada e são lidos
+  por `/api/briefing/audios/[id]` e `/api/briefing/arquivos?caminho=`; cada
+  áudio salvo chama `queueBriefingAudio` (Parte 3). O card "Sua marca" monta-se
+  só com respostas fechadas e uploads. Vitrine em
+  `/vitrine/portal-telas/briefing?tela=…`; prints em
+  `docs/design/prints/briefing/`.
 - **Briefing, visão da equipe** (issue #108, Parte 2; `features/briefing/team-*`,
   `briefing-tab.tsx`, `briefing-editor.tsx`): aba `?aba=briefing` da ficha
   (para onde os avisos do sino apontam) com o status no topo (a sequência
@@ -1447,8 +1460,8 @@ rodapé tem quem está logado e "Sair".
   as respostas por bloco (`buildBriefingView`: o texto mostrado é a cópia
   `question_snapshot`; pergunta criada depois do envio não conta; desativada
   e respondida aparece marcada) com o resumo da IA em destaque, o estado da
-  IA, as respostas fechadas legíveis (`describeAnswer`, que documenta o
-  formato de `briefing_answers.value`) e o áudio com a transcrição num
+  IA, as respostas fechadas legíveis (`describeAnswer`, que lê o
+  formato `AnswerValue` de `flow-logic.ts`) e o áudio com a transcrição num
   clique. Áudios e arquivos usam as rotas do portal
   (`/api/briefing/audios/<id>` e `/api/briefing/arquivos?caminho=`; URL
   assinada de 1 h, e a equipe lê tudo pelo RLS do Storage). A equipe marca

@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   BRIEFING_FILE_MAX_BYTES,
+  colorsOf,
+  IDENTIFICATION_KEYS,
+  paletteOf,
+  type IdentificationKey,
   isBriefingFileType,
   isHexColor,
   parseBrl,
@@ -202,7 +206,7 @@ function MultipleInput({ question, answer, onChange }: InputProps) {
 /** Tom de voz: cada card com uma abertura de post, "assim sim" ou "assim não"; com duas, a principal. */
 function CardsInput({ question, answer, onChange }: InputProps) {
   const { cards, max, primary } = question.options
-  const current = answer.value.cards ?? { yes: [], no: [] }
+  const current = { yes: answer.value.choices ?? [], no: answer.value.rejected ?? [], primary: answer.value.primary }
   const full = max !== null && current.yes.length >= max
 
   function mark(value: string, verdict: "yes" | "no") {
@@ -211,7 +215,7 @@ function CardsInput({ question, answer, onChange }: InputProps) {
     const wasOn = verdict === "yes" ? current.yes.includes(value) : current.no.includes(value)
     if (!wasOn) (verdict === "yes" ? yes : no).push(value)
     const keepPrimary = current.primary && yes.includes(current.primary) ? current.primary : undefined
-    onChange(setValue(answer, { cards: { yes, no, ...(keepPrimary ? { primary: keepPrimary } : {}) } }))
+    onChange(setValue(answer, { choices: yes, rejected: no, primary: keepPrimary }))
   }
 
   return (
@@ -243,7 +247,7 @@ function CardsInput({ question, answer, onChange }: InputProps) {
                     type="button"
                     aria-pressed={isPrimary}
                     aria-label={`Marcar ${card.label} como a principal`}
-                    onClick={() => onChange(setValue(answer, { cards: { ...current, primary: card.value } }))}
+                    onClick={() => onChange(setValue(answer, { primary: card.value }))}
                     className={cn(
                       "flex size-8 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                       isPrimary ? "text-glow" : "text-muted-foreground hover:text-foreground"
@@ -515,8 +519,22 @@ function NumberInput({ question, answer, onChange }: InputProps) {
   )
 }
 
+/**
+ * Campos lado a lado. Na identificação, cada campo vai no topo do valor
+ * (`{ brand_name, … }`); nas outras, em `fields` (`{ fields: { use, avoid } }`).
+ */
 function FieldsInput({ question, answer, onChange, multiline }: InputProps & { multiline: boolean }) {
-  const fields = answer.value.fields ?? {}
+  const topLevel = question.kind === "identification"
+  const read = (key: string): string => {
+    if (topLevel) return (IDENTIFICATION_KEYS as readonly string[]).includes(key) ? (answer.value[key as IdentificationKey] ?? "") : ""
+    return answer.value.fields?.[key] ?? ""
+  }
+  const write = (key: string, text: string) =>
+    onChange(
+      topLevel
+        ? setValue(answer, { [key]: text })
+        : setValue(answer, { fields: { ...answer.value.fields, [key]: text } })
+    )
   return (
     <div className="space-y-3">
       {question.options.fields.map((field) => (
@@ -527,20 +545,20 @@ function FieldsInput({ question, answer, onChange, multiline }: InputProps & { m
           {multiline ? (
             <Textarea
               id={`${question.id}-${field.key}`}
-              value={fields[field.key] ?? ""}
+              value={read(field.key)}
               maxLength={2000}
               rows={3}
               placeholder={field.placeholder}
-              onChange={(event) => onChange(setValue(answer, { fields: { ...fields, [field.key]: event.target.value } }))}
+              onChange={(event) => write(field.key, event.target.value)}
               className="rounded-2xl bg-card text-[15px]"
             />
           ) : (
             <Input
               id={`${question.id}-${field.key}`}
-              value={fields[field.key] ?? ""}
+              value={read(field.key)}
               maxLength={200}
               placeholder={field.placeholder}
-              onChange={(event) => onChange(setValue(answer, { fields: { ...fields, [field.key]: event.target.value } }))}
+              onChange={(event) => write(field.key, event.target.value)}
               className="h-12 rounded-2xl bg-card text-[15px]"
             />
           )}
@@ -686,8 +704,8 @@ function ExtraField({
       return (
         <LinksField
           label={extra.label}
-          value={Array.isArray(value) ? value : []}
-          onChange={setExtraValue}
+          value={value && typeof value === "object" && "links" in value ? value.links : []}
+          onChange={(links) => setExtraValue({ links })}
           max={null}
           placeholder={extra.placeholder}
         />
@@ -696,8 +714,8 @@ function ExtraField({
       return (
         <PaletteInput
           label={extra.label}
-          value={value && typeof value === "object" && !Array.isArray(value) ? value : { use: [], avoid: [] }}
-          onChange={setExtraValue}
+          value={paletteOf(value && typeof value === "object" && "colors" in value ? value.colors : [])}
+          onChange={(palette) => setExtraValue({ colors: colorsOf(palette) })}
         />
       )
     case "audio":
@@ -764,7 +782,7 @@ export function QuestionInput(props: InputProps) {
       break
     case "palette":
       main = (
-        <PaletteInput value={answer.value.palette ?? { use: [], avoid: [] }} onChange={(palette) => onChange(setValue(answer, { palette }))} />
+        <PaletteInput value={paletteOf(answer.value.colors)} onChange={(palette) => onChange(setValue(answer, { colors: colorsOf(palette) }))} />
       )
       break
     case "upload":

@@ -44,7 +44,7 @@ function initialAnswers(data: FlowData): Record<string, FlowAnswer> {
   for (const block of data.blocks) {
     for (const question of block.questions) {
       if (question.kind === "identification" && !answers[question.id]) {
-        answers[question.id] = { ...EMPTY_ANSWER, value: { fields: { ...data.identification } } }
+        answers[question.id] = { ...EMPTY_ANSWER, value: { ...data.identification } }
       }
     }
   }

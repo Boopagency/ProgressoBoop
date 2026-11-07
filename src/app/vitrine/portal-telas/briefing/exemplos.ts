@@ -1,4 +1,4 @@
-import { buildSteps, EMPTY_ANSWER, parseOptions, type FlowAnswer, type FlowBlock, type FlowData, type QuestionKind } from "@/features/briefing/flow-logic"
+import { buildSteps, colorsOf, EMPTY_ANSWER, parseOptions, type FlowAnswer, type FlowBlock, type FlowData, type QuestionKind } from "@/features/briefing/flow-logic"
 import { addBusinessDays } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
 
@@ -146,7 +146,7 @@ const answered = (patch: Partial<FlowAnswer>): FlowAnswer => ({ ...EMPTY_ANSWER,
 
 /** Respostas de quem já passou da primeira etapa. */
 const PROGRESS: Record<string, FlowAnswer> = {
-  "q-identification": answered({ value: { fields: IDENTIFICATION } }),
+  "q-identification": answered({ value: { ...IDENTIFICATION } }),
   "q-brand_age": answered({ value: { choice: "3_10y" } }),
   "q-offer": answered({ audios: [{ id: "demo-audio-1", duration_ms: 74000, created_at: "2026-11-07T15:00:00Z" }] }),
   "q-average_ticket": answered({ skipped: true }),
@@ -193,7 +193,7 @@ export function briefingExample(screen: BriefingScreen, today: DateKey): { data:
     answers: {
       ...PROGRESS,
       "q-dream_client": answered({ text: "A Helena, que pediu o café da manhã de aniversário da mãe e voltou no Natal." }),
-      "q-brand_tone": answered({ value: { cards: { yes: ["warm", "close"], no: ["formal"], primary: "warm" } } }),
+      "q-brand_tone": answered({ value: { choices: ["warm", "close"], rejected: ["formal"], primary: "warm" } }),
     },
   }
   switch (screen) {
@@ -208,7 +208,7 @@ export function briefingExample(screen: BriefingScreen, today: DateKey): { data:
     case "cores": {
       const identity = answered({
         files: [{ path: "demo/logo", name: "logo-cafe-aurora.png", mime_type: "image/png", size_bytes: 248000 }],
-        value: { extras: { palette: { use: ["#a16207", "#f5f5f4", "#1f2937"], avoid: ["#ec4899"] } } },
+        value: { extras: { palette: { colors: colorsOf({ use: ["#a16207", "#f5f5f4", "#1f2937"], avoid: ["#ec4899"] }) } } },
       })
       return { data: { ...toneDone, completedBlockIds: ["b0", "b1", "b2", "b4"], answers: { ...toneDone.answers, "q-identity": identity } }, startAt: at("identity") }
     }
@@ -222,7 +222,7 @@ export function briefingExample(screen: BriefingScreen, today: DateKey): { data:
         answers: {
           ...toneDone.answers,
           "q-competitors": answered({ value: { links: ["@padariaboa", "@docedalu"] } }),
-          "q-identity": answered({ value: { extras: { palette: { use: ["#a16207", "#f5f5f4", "#1f2937"], avoid: [] } } } }),
+          "q-identity": answered({ value: { extras: { palette: { colors: colorsOf({ use: ["#a16207", "#f5f5f4", "#1f2937"], avoid: [] }) } } } }),
         },
       }
       return { data: screen === "obrigado" ? { ...done, status: "submitted" } : done, startAt: steps.length - 1 }

@@ -33,11 +33,17 @@ test("normalizeValue tira o vazio e devolve null quando não sobra nada", () => 
   assert.equal(logic.normalizeValue({ choices: [], links: ["  "], fields: { a: " " }, extras: { meta: "" } }), null)
   assert.deepEqual(logic.normalizeValue({ choice: "a", other: "não vale sem Outro" }), { choice: "a" })
   assert.deepEqual(logic.normalizeValue({ choice: "other", other: "  feira  " }), { choice: "other", other: "feira" })
-  assert.deepEqual(logic.normalizeValue({ palette: { use: ["#FF0000", "vermelho"], avoid: ["#ff0000"] } }), {
-    palette: { use: ["#ff0000"], avoid: ["#ff0000"] },
+  assert.deepEqual(
+    logic.normalizeValue({ colors: [{ hex: "#FF0000", use: "use" }, { hex: "vermelho", use: "use" }, { hex: "#ff0000", use: "avoid" }] }),
+    { colors: [{ hex: "#ff0000", use: "use" }] }
+  )
+  assert.deepEqual(logic.normalizeValue({ choices: ["calm"], rejected: ["calm", "formal"], primary: "formal" }), {
+    choices: ["calm"],
+    rejected: ["formal"],
   })
-  assert.deepEqual(logic.normalizeValue({ cards: { yes: ["calm"], no: ["calm", "formal"], primary: "formal" } }), {
-    cards: { yes: ["calm"], no: ["formal"] },
+  assert.deepEqual(logic.normalizeValue({ brand_name: "  Doceria ", site: "" }), { brand_name: "Doceria" })
+  assert.deepEqual(logic.normalizeValue({ extras: { folder: { links: [" https://drive ", ""] }, palette: { colors: [] }, meta: " 20 " } }), {
+    extras: { folder: { links: ["https://drive"] }, meta: "20" },
   })
   assert.deepEqual(logic.normalizeValue({ dates: [{ date: "", label: "x" }, { date: "2026-12-01", label: " Natal " }] }), {
     dates: [{ date: "2026-12-01", label: "Natal" }],
@@ -61,17 +67,17 @@ test("isAnswerComplete por tipo, com obrigatório extra e pulada", () => {
   assert.equal(logic.isAnswerComplete(multiple, answer({ value: { choices: ["a", "b"] } })), true)
 
   const cards = q("t", "cards", { max: 2, primary: true, cards: [{ value: "x", label: "X", example: "x" }] })
-  assert.equal(logic.isAnswerComplete(cards, answer({ value: { cards: { yes: ["x", "y"], no: [] } } })), false)
-  assert.equal(logic.isAnswerComplete(cards, answer({ value: { cards: { yes: ["x", "y"], no: [], primary: "y" } } })), true)
+  assert.equal(logic.isAnswerComplete(cards, answer({ value: { choices: ["x", "y"] } })), false)
+  assert.equal(logic.isAnswerComplete(cards, answer({ value: { choices: ["x", "y"], primary: "y" } })), true)
 
   const approver = q("ap", "choice", { choices: [{ value: "1d", label: "1 dia" }], extras: [{ key: "name", kind: "short_text", label: "Nome", required: true }] })
   assert.equal(logic.isAnswerComplete(approver, answer({ value: { choice: "1d" } })), false)
   assert.equal(logic.isAnswerComplete(approver, answer({ value: { choice: "1d", extras: { name: "Ana" } } })), true)
 
   assert.equal(logic.isAnswerComplete(q("n", "number"), answer({ value: { number: 0 } })), true)
-  assert.equal(logic.isAnswerComplete(q("id", "identification"), answer({ value: { fields: { brand_name: "Doceria" } } })), true)
+  assert.equal(logic.isAnswerComplete(q("id", "identification"), answer({ value: { brand_name: "Doceria" } })), true)
   const upload = q("u", "upload", { extras: [{ key: "folder", kind: "links", label: "Pasta" }] })
-  assert.equal(logic.isAnswerComplete(upload, answer({ value: { extras: { folder: ["https://drive"] } } })), true)
+  assert.equal(logic.isAnswerComplete(upload, answer({ value: { extras: { folder: { links: ["https://drive"] } } } })), true)
 })
 
 test("telas, retomada e o que falta", () => {
@@ -89,7 +95,7 @@ test("telas, retomada e o que falta", () => {
   assert.equal(logic.resumeIndex(steps, null), 0)
   assert.equal(logic.resumeIndex(steps, "sumiu"), 0)
 
-  const answers = { id: answer({ value: { fields: { brand_name: "Doceria" } } }), y: answer({ skipped: true }) }
+  const answers = { id: answer({ value: { brand_name: "Doceria" } }), y: answer({ skipped: true }) }
   assert.deepEqual(logic.missingRequired(blocks, answers).map((item) => item.id), ["x"])
   assert.deepEqual(logic.missingRequired(blocks, answers, "b0"), [])
   assert.deepEqual(logic.skippedQuestions(blocks, answers).map((item) => item.id), ["y"])
@@ -114,11 +120,11 @@ test("card Sua marca: só o que o cliente escolheu e enviou", () => {
     blocks,
     identification: { brand_name: "Da equipe", region: "Curitiba" },
     answers: {
-      i: answer({ value: { fields: { brand_name: "Doceria da Ana" } } }),
+      i: answer({ value: { brand_name: "Doceria da Ana" } }),
       s: answer({ value: { choice: "whatsapp" } }),
-      t: answer({ value: { cards: { yes: ["calm", "close"], no: [], primary: "close" } } }),
+      t: answer({ value: { choices: ["calm", "close"], primary: "close" } }),
       l: answer({ value: { links: ["@a", "@b"] } }),
-      u: answer({ files: [{ path: "p", name: "logo.png", mime_type: "image/png", size_bytes: 10 }], value: { extras: { palette: { use: ["#ff0000"], avoid: [] } } } }),
+      u: answer({ files: [{ path: "p", name: "logo.png", mime_type: "image/png", size_bytes: 10 }], value: { extras: { palette: { colors: [{ hex: "#ff0000", use: "use" }, { hex: "#000000", use: "avoid" }] } } } }),
     },
   })
   assert.equal(card.name, "Doceria da Ana")

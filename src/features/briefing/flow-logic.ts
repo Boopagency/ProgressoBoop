@@ -124,26 +124,77 @@ export interface BriefingAudio {
   created_at: Timestamp
 }
 
+/** Uma cor da paleta: `#rrggbb` (minúsculo), para usar ou para evitar. */
+export interface ColorPick {
+  hex: string
+  use: "use" | "avoid"
+}
+
+/** A paleta como a tela edita (as duas listas); no banco vira `colors`. */
 export interface PaletteValue {
   use: string[]
   avoid: string[]
 }
 
-export type ExtraValue = string | string[] | PaletteValue
+/**
+ * Complemento de uma pergunta (`extras.<key>`): texto (texto curto e o
+ * texto alternativo do áudio), `{ links }` ou `{ colors }`.
+ */
+export type ExtraValue = string | { links: string[] } | { colors: ColorPick[] }
 
-/** Resposta estruturada (`briefing_answers.value`). */
-export interface AnswerValue {
+export const IDENTIFICATION_KEYS = ["brand_name", "contact_name", "region", "instagram", "site"] as const
+export type IdentificationKey = (typeof IDENTIFICATION_KEYS)[number]
+
+/**
+ * Resposta estruturada (`briefing_answers.value`), no formato combinado com a
+ * visão da equipe (Parte 2), por tipo de pergunta:
+ *   choice   { choice, other?, extras? }
+ *   multiple { choices, other?, extras? }
+ *   cards    { choices, primary?, rejected?, extras? }   (rejected: "assim não")
+ *   number   { number }
+ *   palette  { colors: [{ hex, use }] }
+ *   links    { links, extras? }
+ *   dates    { dates: [{ date, label }], extras? }
+ *   identification { brand_name, contact_name, region, instagram, site }
+ *   short_text com campos { fields: { use, avoid } } (sem campos, só `text`)
+ *   upload   arquivos em `files`, { extras? }
+ */
+export interface AnswerValue extends Partial<Record<IdentificationKey, string>> {
   choice?: string
   choices?: string[]
   /** Texto do "Outro". */
   other?: string
+  primary?: string
+  rejected?: string[]
   number?: number
   fields?: Record<string, string>
   links?: string[]
   dates?: { date: DateKey; label: string }[]
-  palette?: PaletteValue
-  cards?: { yes: string[]; no: string[]; primary?: string }
+  colors?: ColorPick[]
   extras?: Record<string, ExtraValue>
+}
+
+/** `colors` → as duas listas da tela. */
+export function paletteOf(colors: readonly ColorPick[] | undefined): PaletteValue {
+  return {
+    use: (colors ?? []).filter((item) => item.use === "use").map((item) => item.hex),
+    avoid: (colors ?? []).filter((item) => item.use === "avoid").map((item) => item.hex),
+  }
+}
+
+/** As duas listas da tela → `colors` (sem repetir; a mesma cor não fica nas duas). */
+export function colorsOf(palette: PaletteValue): ColorPick[] {
+  const seen = new Set<string>()
+  const picks: ColorPick[] = []
+  for (const use of ["use", "avoid"] as const) {
+    for (const raw of palette[use]) {
+      const hex = raw.toLowerCase()
+      if (!isHexColor(hex) || seen.has(hex)) continue
+      seen.add(hex)
+      picks.push({ hex, use })
+    }
+  }
+  return picks
 }
 
 export interface FlowAnswer {
@@ -232,6 +283,11 @@ export function parseAnswerValue(raw: unknown): AnswerValue {
   if (asString(source.choice)) value.choice = asString(source.choice)
   if (Array.isArray(source.choices)) value.choices = strings(source.choices)
   if (asString(source.other)) value.other = asString(source.other)
+  if (asString(source.primary)) value.primary = asString(source.primary)
+  if (Array.isArray(source.rejected)) value.rejected = strings(source.rejected)
+  for (const key of IDENTIFICATION_KEYS) {
+    if (typeof source[key] === "string") value[key] = source[key]
+  }
   if (typeof source.number === "number" && Number.isFinite(source.number)) value.number = source.number
   if (source.fields) {
     value.fields = Object.fromEntries(Object.entries(asRecord(source.fields)).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
@@ -244,27 +300,27 @@ export function parseAnswerValue(raw: unknown): AnswerValue {
       return date ? [{ date, label: asString(row.label) ?? "" }] : []
     })
   }
-  if (source.palette) value.palette = parsePalette(source.palette)
-  if (source.cards) {
-    const cards = asRecord(source.cards)
-    value.cards = { yes: strings(cards.yes), no: strings(cards.no), ...(asString(cards.primary) ? { primary: asString(cards.primary) } : {}) }
-  }
+  if (Array.isArray(source.colors)) value.colors = parseColors(source.colors)
   if (source.extras) {
     const extras: Record<string, ExtraValue> = {}
-    for (const [key, item] of Object.entries(asRecord(source.extras))) {
-      if (typeof item === "string") extras[key] = item
-      else if (Array.isArray(item)) extras[key] = strings(item)
-      else if (item && typeof item === "object") extras[key] = parsePalette(item)
+    for (const [key, raw] of Object.entries(asRecord(source.extras))) {
+      const item = asRecord(raw)
+      if (typeof raw === "string") extras[key] = raw
+      else if (Array.isArray(item.links)) extras[key] = { links: strings(item.links) }
+      else if (Array.isArray(item.colors)) extras[key] = { colors: parseColors(item.colors) }
     }
     value.extras = extras
   }
   return value
 }
 
-function parsePalette(raw: unknown): PaletteValue {
-  const source = asRecord(raw)
-  const colors = (input: unknown) => asArray(input).filter((item): item is string => typeof item === "string" && isHexColor(item))
-  return { use: colors(source.use), avoid: colors(source.avoid) }
+function parseColors(raw: unknown[]): ColorPick[] {
+  return raw.flatMap((item) => {
+    const row = asRecord(item)
+    const hex = asString(row.hex)?.toLowerCase()
+    const use = row.use === "avoid" ? "avoid" : row.use === "use" ? "use" : null
+    return hex && isHexColor(hex) && use ? [{ hex, use }] : []
+  })
 }
 
 export function isHexColor(value: string): boolean {
@@ -291,11 +347,9 @@ export function parseFiles(raw: unknown): BriefingFile[] {
 
 const clean = (text: string | undefined) => (text ?? "").replace(/[ \t]+/g, " ").trim()
 
-function cleanPalette(palette: PaletteValue | undefined): PaletteValue | undefined {
-  if (!palette) return undefined
-  const use = [...new Set(palette.use.filter(isHexColor).map((color) => color.toLowerCase()))]
-  const avoid = [...new Set(palette.avoid.filter(isHexColor).map((color) => color.toLowerCase()))]
-  return use.length || avoid.length ? { use, avoid } : undefined
+function cleanColors(colors: readonly ColorPick[] | undefined): ColorPick[] | undefined {
+  const picks = colorsOf(paletteOf(colors))
+  return picks.length ? picks : undefined
 }
 
 function cleanList(list: string[] | undefined): string[] | undefined {
@@ -314,6 +368,13 @@ export function normalizeValue(value: AnswerValue): AnswerValue | null {
   if (choices.length) result.choices = choices
   const pickedOther = value.choice === "other" || choices.includes("other")
   if (pickedOther && clean(value.other)) result.other = clean(value.other)
+  if (value.primary && choices.includes(value.primary)) result.primary = value.primary
+  const rejected = [...new Set(value.rejected ?? [])].filter((item) => !choices.includes(item))
+  if (rejected.length) result.rejected = rejected
+  for (const key of IDENTIFICATION_KEYS) {
+    const text = clean(value[key])
+    if (text) result[key] = text
+  }
   if (typeof value.number === "number" && Number.isFinite(value.number) && value.number >= 0) result.number = value.number
   if (value.fields) {
     const fields = Object.fromEntries(Object.entries(value.fields).map(([key, text]) => [key, clean(text)]).filter((entry) => entry[1]))
@@ -323,25 +384,19 @@ export function normalizeValue(value: AnswerValue): AnswerValue | null {
   if (links) result.links = links
   const dates = (value.dates ?? []).filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.date)).map((item) => ({ date: item.date, label: clean(item.label) }))
   if (dates.length) result.dates = dates
-  const palette = cleanPalette(value.palette)
-  if (palette) result.palette = palette
-  if (value.cards && (value.cards.yes.length || value.cards.no.length)) {
-    const yes = [...new Set(value.cards.yes)]
-    const no = [...new Set(value.cards.no)].filter((item) => !yes.includes(item))
-    const primary = value.cards.primary && yes.includes(value.cards.primary) ? value.cards.primary : undefined
-    result.cards = { yes, no, ...(primary ? { primary } : {}) }
-  }
+  const colors = cleanColors(value.colors)
+  if (colors) result.colors = colors
   if (value.extras) {
     const extras: Record<string, ExtraValue> = {}
     for (const [key, item] of Object.entries(value.extras)) {
       if (typeof item === "string") {
         if (clean(item)) extras[key] = clean(item)
-      } else if (Array.isArray(item)) {
-        const list = cleanList(item)
-        if (list) extras[key] = list
+      } else if ("links" in item) {
+        const list = cleanList(item.links)
+        if (list) extras[key] = { links: list }
       } else {
-        const palette = cleanPalette(item)
-        if (palette) extras[key] = palette
+        const picks = cleanColors(item.colors)
+        if (picks) extras[key] = { colors: picks }
       }
     }
     if (Object.keys(extras).length) result.extras = extras
@@ -352,8 +407,8 @@ export function normalizeValue(value: AnswerValue): AnswerValue | null {
 function extraFilled(value: ExtraValue | undefined): boolean {
   if (value === undefined) return false
   if (typeof value === "string") return clean(value) !== ""
-  if (Array.isArray(value)) return value.some((item) => clean(item) !== "")
-  return value.use.length + value.avoid.length > 0
+  if ("links" in value) return value.links.some((item) => clean(item) !== "")
+  return value.colors.length > 0
 }
 
 /** O principal da pergunta está respondido (sem contar os complementos opcionais). */
@@ -362,7 +417,7 @@ function mainFilled(question: FlowQuestion, answer: FlowAnswer): boolean {
   const { options } = question
   switch (question.kind) {
     case "identification":
-      return clean(value.fields?.brand_name) !== ""
+      return clean(value.brand_name) !== ""
     case "audio":
       return clean(answer.text) !== "" || answer.audios.length > 0
     case "short_text":
@@ -380,12 +435,12 @@ function mainFilled(question: FlowQuestion, answer: FlowAnswer): boolean {
       return !choices.includes("other") || clean(value.other) !== ""
     }
     case "cards": {
-      const yes = value.cards?.yes ?? []
+      const yes = value.choices ?? []
       if (yes.length === 0 || (options.max !== null && yes.length > options.max)) return false
-      return !(options.primary && yes.length > 1 && !value.cards?.primary)
+      return !(options.primary && yes.length > 1 && !value.primary)
     }
     case "palette":
-      return (value.palette?.use.length ?? 0) + (value.palette?.avoid.length ?? 0) > 0
+      return (value.colors ?? []).length > 0
     case "upload":
       return answer.files.length > 0 || question.options.extras.some((extra) => extraFilled(value.extras?.[extra.key]))
     case "links":
@@ -501,15 +556,15 @@ export function buildBrandCard(data: Pick<FlowData, "blocks" | "answers" | "iden
     const question = findQuestion(blocks, key)
     return { question, answer: question ? answers[question.id] : undefined }
   }
-  const identification = answerOf("identification").answer?.value.fields ?? {}
-  const field = (key: string) => clean(identification[key] ?? data.identification[key]) || null
+  const identification = answerOf("identification").answer?.value ?? {}
+  const field = (key: IdentificationKey) => clean(identification[key] ?? data.identification[key]) || null
 
   const age = answerOf("brand_age")
   const channel = answerOf("sales_channel")
   const price = answerOf("price_position")
   const tone = answerOf("brand_tone")
-  const yes = tone.answer && !tone.answer.skipped ? (tone.answer.value.cards?.yes ?? []) : []
-  const primary = tone.answer?.value.cards?.primary
+  const yes = tone.answer && !tone.answer.skipped ? (tone.answer.value.choices ?? []) : []
+  const primary = tone.answer?.value.primary
   const ordered = primary ? [primary, ...yes.filter((item) => item !== primary)] : yes
   const tones = ordered.flatMap((value) => {
     const label = tone.question?.options.cards.find((card) => card.value === value)?.label
@@ -525,10 +580,11 @@ export function buildBrandCard(data: Pick<FlowData, "blocks" | "answers" | "iden
       if (!answer || answer.skipped) continue
       if (question.kind === "upload") materials += answer.files.length
       if (question.kind === "links") references.count += (answer.value.links ?? []).length
-      const palettes = [answer.value.palette, ...Object.values(answer.value.extras ?? {})]
-      for (const palette of palettes) {
-        if (palette && typeof palette === "object" && !Array.isArray(palette)) colors.push(...palette.use)
+      const picks = [...(answer.value.colors ?? [])]
+      for (const extra of Object.values(answer.value.extras ?? {})) {
+        if (typeof extra === "object" && "colors" in extra) picks.push(...extra.colors)
       }
+      colors.push(...picks.filter((pick) => pick.use === "use").map((pick) => pick.hex))
     }
   }
 

@@ -34,6 +34,8 @@ const BRIEFING_GONE = { ok: false, error: "Esse briefing não existe mais. Atual
 
 function refresh(clientId: string) {
   revalidatePath(`/clientes/${clientId}`)
+  // A central lista todos e abre cada briefing em /briefing/<cliente>.
+  revalidatePath("/briefing", "layout")
   revalidatePath("/portal", "layout")
 }
 

@@ -337,6 +337,16 @@ segunda, 07:00).
   obrigatórias, e o cliente **Confirma** ou muda (depois disso a ficha mostra
   "Boop preencheu · cliente revisou"). Etapa preenchida inteira pela Boop
   abre numa revisão só, com **Tá tudo certo**.
+  **Análise do briefing** (logo abaixo do topo, só a equipe vê): o Claude lê
+  o briefing inteiro e entrega **Pontos importantes**, **Leitura do
+  posicionamento** (o que é, para quem, contra o quê), **Contradições** entre
+  respostas, **Lacunas e respostas vagas** (puladas, sem resposta, vagas e as
+  que só repetem o exemplo), **Perguntas para a reunião de imersão** e uma
+  primeira proposta de **Pilares de conteúdo** com o porquê. Sai sozinha uns
+  minutos depois que o cliente envia (espera as transcrições e os resumos).
+  Antes disso, com 60% das obrigatórias respondidas, **Gerar análise agora**
+  faz uma leitura parcial. Se as respostas mudarem, aparece **Refazer
+  análise**. **Copiar como contexto** copia tudo em texto limpo.
 - **Perguntas do briefing** (`/briefing`, no menu Relacionamento, ou
   **Editar perguntas** na aba): o formulário ativo, igual para todos os
   clientes. Criar, editar, reordenar e desativar blocos (título, descrição,

@@ -1511,6 +1511,30 @@ rodapé tem quem está logado e "Sair".
   roda com todos os áudios transcritos; `source_hash` evita chamar a IA se
   nada do que se resume mudou. Testes: `jobs.test.mjs` (APIs simuladas) e
   `transcription-sql.test.mjs` (Postgres local).
+- **Análise do briefing inteiro** (migration `*_briefing_analysis.sql`,
+  `features/briefing/analysis-{logic,source,actions}.ts`, `briefing-analysis.tsx`):
+  só a equipe lê (`briefing_analyses`, uma linha por briefing, sem chave
+  estrangeira; a política exige o briefing). Entra na fila pelo envio
+  (trigger `briefing_submitted_analysis`) ou pelo botão "Gerar análise agora"
+  / "Refazer análise" (`request_briefing_analysis`: equipe; antes do envio, só
+  com 60% das obrigatórias). O mesmo cron `briefing-process`
+  (`briefing_has_work` trocada) leva à rota, que por último pega
+  `briefing_analyses_due` (só com as transcrições e os resumos daquele
+  briefing assentados, ou depois de 15 min; travada volta em 10 min) e chama
+  `claude-opus-5-5` por `fetch` com `output_config` (`effort: medium` e
+  `format` com o JSON schema das seções), sem `temperature` nem prefill; o
+  briefing vai entre marcas, como dado. Recusa (`stop_reason: refusal`)
+  desiste com mensagem curta. A rota passou a ter `maxDuration` de 300 s e a
+  análise só começa com 3 min de folga. `source_hash` (perguntas, respostas
+  legíveis, falas; não o resumo) é calculado igual na ficha e no job: se não
+  bate, a tela oferece "Refazer"; se bate no envio, guarda a anterior sem
+  chamar a API. Seções: pontos importantes, posicionamento, contradições,
+  lacunas (pulada, sem resposta, vaga, repete o exemplo), perguntas para a
+  imersão e pilares; "Copiar como contexto" leva o texto limpo
+  (`analysisToText`). Vitrine: `/vitrine/briefing-analise?aba=briefing&estado=`
+  `pronta|gerando|parcial|desatualizada|falhou` (Doceria Flor de Açúcar);
+  prints em `docs/design/prints/briefing-analise/`. Testes: `analysis.test.mjs`
+  (API simulada) e `analysis-sql.test.mjs` (Postgres local).
 
 ### Busca geral (Ctrl/⌘ + K)
 

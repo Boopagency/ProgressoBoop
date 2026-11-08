@@ -196,7 +196,7 @@ function StatusLine({
       <>
         <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
         {isAnalysisGivenUp(analysis)
-          ? `A análise não saiu${analysis.error ? `: ${analysis.error}` : "."}`
+          ? `A análise não saiu${analysis.error ? `: ${analysis.error.charAt(0).toLowerCase()}${analysis.error.slice(1)}` : "."}`
           : "A análise falhou e vai tentar de novo sozinha em instantes."}
       </>
     )
@@ -354,7 +354,7 @@ function AnalysisBody({ content }: { content: AnalysisContent }) {
 
       <section className="px-5 py-5">
         <SectionTitle>Pilares de conteúdo · primeira proposta</SectionTitle>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {content.content_pillars.map((pillar, index) => (
             <article key={index} className="rounded-xl border border-border bg-background/40 px-4 py-3.5">
               <h4 className="text-[14px] font-semibold tracking-tight text-foreground">{pillar.name}</h4>

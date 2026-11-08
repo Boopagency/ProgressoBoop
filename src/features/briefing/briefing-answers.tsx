@@ -1,24 +1,23 @@
 "use client"
 
-import { AudioLines, ChevronDown, Clock, FileText, Flag, Sparkles } from "lucide-react"
+import { AudioLines, BadgeCheck, ChevronDown, Clock, FileText, Flag, PencilLine, Sparkles, UserCheck } from "lucide-react"
 import { useState } from "react"
 
 import { PanelCard } from "@/components/panel-card"
 import { Button } from "@/components/ui/button"
+import { AnswerPartView } from "@/features/briefing/answer-parts"
 import {
   briefingAudioUrl,
   briefingFileUrl,
   describeAnswer,
   formatDuration,
   formatFileSize,
-  type AnswerPart,
   type BriefingAiStatus,
   type BriefingFile,
   type BriefingItem,
   type BriefingSection,
   type TeamBriefingAudio,
 } from "@/features/briefing/team-logic"
-import { formatShortDate } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -33,11 +32,14 @@ export function BriefingAnswers({
   sections,
   today,
   fileUrl = briefingFileUrl,
+  onFill,
 }: {
   sections: BriefingSection[]
   today: DateKey
   /** URL de um arquivo do bucket (a vitrine troca por imagens de exemplo). */
   fileUrl?: (path: string) => string
+  /** A equipe responde pelo cliente (abre os campos do portal). */
+  onFill?: (item: BriefingItem) => void
 }) {
   return (
     <div className="space-y-6">
@@ -65,7 +67,7 @@ export function BriefingAnswers({
         >
           <ul className="divide-y divide-border">
             {section.items.map((item) => (
-              <AnswerItem key={item.question.id} item={item} today={today} fileUrl={fileUrl} />
+              <AnswerItem key={item.question.id} item={item} today={today} fileUrl={fileUrl} onFill={onFill} />
             ))}
           </ul>
         </PanelCard>
@@ -96,7 +98,17 @@ function AiState({ what, status, error }: { what: string; status: BriefingAiStat
   )
 }
 
-function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateKey; fileUrl: (path: string) => string }) {
+function AnswerItem({
+  item,
+  today,
+  fileUrl,
+  onFill,
+}: {
+  item: BriefingItem
+  today: DateKey
+  fileUrl: (path: string) => string
+  onFill?: (item: BriefingItem) => void
+}) {
   const { answer } = item
   const parts = answer ? describeAnswer(item.kind, item.options, answer.value, answer.text) : []
   const skipped = answer?.skipped ?? false
@@ -104,12 +116,25 @@ function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateK
   const audios = answer?.audios ?? []
   const transcriptionStatus = audios.find((audio) => audio.transcription && audio.transcription.status !== "ready")?.transcription
   const empty = !item.filled && !skipped
+  const byBoop = answer?.filled_by_team === true && item.filled
+  const reviewed = !byBoop && answer?.team_filled_at && answer.by_client && item.filled
 
   return (
     <li className={cn("px-5 py-4", skipped && "border-l-2 border-l-attention-line bg-attention-soft")}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
         <h3 className="min-w-0 flex-1 basis-64 text-[14px] leading-6 font-medium text-foreground">{item.text}</h3>
         <div className="flex flex-wrap items-center gap-1.5">
+          {byBoop ? (
+            <span className="inline-flex h-6 items-center gap-1 rounded-full border border-primary/20 bg-brand-soft px-2.5 text-[11.5px] font-medium text-brand-ink">
+              <BadgeCheck className="size-3" aria-hidden="true" />
+              Preenchida pela Boop
+            </span>
+          ) : reviewed ? (
+            <span className="inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-[11.5px] font-medium text-muted-foreground">
+              <UserCheck className="size-3" aria-hidden="true" />
+              Boop preencheu · cliente revisou
+            </span>
+          ) : null}
           {skipped ? (
             <span className="inline-flex h-6 items-center gap-1 rounded-full border border-attention-line/25 bg-attention-muted px-2.5 text-[11.5px] font-medium text-attention-ink">
               <Flag className="size-3" aria-hidden="true" />
@@ -121,6 +146,18 @@ function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateK
             <span className="inline-flex h-6 items-center rounded-full border border-dashed px-2.5 text-[11.5px] text-muted-foreground">
               Pergunta desativada
             </span>
+          ) : null}
+          {onFill && !item.retired ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onFill(item)}
+              className="h-7 gap-1.5 rounded-full px-2.5 text-xs shadow-none"
+              aria-label={`${empty ? "Preencher" : "Editar"}: ${item.text}`}
+            >
+              <PencilLine className="size-3" />
+              {empty || skipped ? "Preencher" : "Editar"}
+            </Button>
           ) : null}
         </div>
       </div>
@@ -151,7 +188,7 @@ function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateK
       {parts.length > 0 ? (
         <div className={cn("mt-3 space-y-3", summary?.status === "ready" && "text-muted-foreground")}>
           {parts.map((part, index) => (
-            <Part key={index} part={part} today={today} />
+            <AnswerPartView key={index} part={part} today={today} />
           ))}
         </div>
       ) : null}
@@ -160,117 +197,6 @@ function AnswerItem({ item, today, fileUrl }: { item: BriefingItem; today: DateK
       {audios.length > 0 ? <Audios audios={audios} /> : null}
     </li>
   )
-}
-
-function PartLabel({ children }: { children?: string }) {
-  return children ? <p className="mb-1 text-xs font-medium text-muted-foreground">{children}</p> : null
-}
-
-function Part({ part, today }: { part: AnswerPart; today: DateKey }) {
-  switch (part.type) {
-    case "text":
-      return (
-        <div>
-          <PartLabel>{part.label}</PartLabel>
-          <p className="text-[13.5px] leading-6 whitespace-pre-line text-foreground">{part.text}</p>
-        </div>
-      )
-    case "chips":
-      return (
-        <div>
-          <PartLabel>{part.label}</PartLabel>
-          <ul className="flex flex-wrap gap-1.5">
-            {part.items.map((item, index) => (
-              <li key={index} className="inline-flex min-h-7 items-center rounded-full border bg-card px-3 py-0.5 text-[13px] text-foreground">
-                {item.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    case "tone":
-      return (
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {part.items.map((item, index) => (
-            <li
-              key={index}
-              className={cn("rounded-xl border bg-card px-3.5 py-3", item.primary && "border-primary/40 ring-1 ring-primary/20")}
-            >
-              <p className="flex items-center gap-2 text-[13.5px] font-medium text-foreground">
-                {item.label}
-                {item.primary && part.items.length > 1 ? <span className="eyebrow text-brand-ink">Principal</span> : null}
-              </p>
-              {item.description ? <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p> : null}
-              {item.example ? <p className="mt-2 text-[13px] leading-5 text-foreground/85 italic">“{item.example}”</p> : null}
-            </li>
-          ))}
-        </ul>
-      )
-    case "colors":
-      return (
-        <div>
-          <PartLabel>{part.label}</PartLabel>
-          <ul className="flex flex-wrap gap-2">
-            {part.items.map((item, index) => (
-              <li key={index} className="flex items-center gap-2 rounded-full border bg-card py-1 pr-3 pl-1 text-xs text-foreground">
-                {/* A cor é a resposta do cliente (dado), não um token do visual. */}
-                <span aria-hidden="true" className="size-6 rounded-full border" style={{ backgroundColor: item.hex }} />
-                <span className="font-mono uppercase">{item.hex}</span>
-                {item.use ? (
-                  <span className={cn(item.use === "avoid" ? "text-destructive" : "text-success-ink")}>
-                    {item.use === "avoid" ? "evitar" : "usar"}
-                  </span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    case "links":
-      return (
-        <div>
-          <PartLabel>{part.label}</PartLabel>
-          <ul className="space-y-1">
-            {part.items.map((item, index) => (
-              <li key={index} className="text-[13.5px] break-all">
-                {item.href ? (
-                  <a href={item.href} target="_blank" rel="noopener noreferrer nofollow" className="text-brand-ink underline-offset-2 hover:underline">
-                    {item.text}
-                  </a>
-                ) : (
-                  <span className="text-foreground">{item.text}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    case "dates":
-      return (
-        <div>
-          <PartLabel>{part.label}</PartLabel>
-          <ul className="space-y-1">
-            {part.items.map((item, index) => (
-              <li key={index} className="flex gap-3 text-[13.5px]">
-                <span className="w-20 shrink-0 text-muted-foreground tabular-nums">{item.date ? formatShortDate(item.date, today) : "—"}</span>
-                <span className="text-foreground">{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    case "fields":
-      return (
-        <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-          {part.items.map((item, index) => (
-            <div key={index} className="min-w-0">
-              <dt className="text-xs font-medium text-muted-foreground">{item.label}</dt>
-              <dd className="text-[13.5px] leading-6 break-words whitespace-pre-line text-foreground">{item.text}</dd>
-            </div>
-          ))}
-        </dl>
-      )
-  }
 }
 
 function Files({ files, fileUrl }: { files: BriefingFile[]; fileUrl: (path: string) => string }) {
@@ -290,7 +216,7 @@ function Files({ files, fileUrl }: { files: BriefingFile[]; fileUrl: (path: stri
               <span className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
                 {image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={fileUrl(file.path)} alt="" loading="lazy" className="size-full object-cover" />
+                  <img src={fileUrl(file.path)} alt="" loading="lazy" className="size-full object-contain p-2" />
                 ) : (
                   <FileText className="size-6 text-muted-foreground" aria-hidden="true" />
                 )}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   BRIEFING_FILE_MAX_BYTES,
+  briefingFileSrc,
   colorsOf,
   IDENTIFICATION_KEYS,
   paletteOf,
@@ -39,6 +40,13 @@ export interface InputProps {
   onUpload: (files: File[]) => Promise<void>
   onRemoveFile: (file: BriefingFile) => void
   uploading: boolean
+  /**
+   * Gravar áudio. A equipe, respondendo pelo cliente na ficha, escreve
+   * (`false`): os áudios que existirem são mostrados na ficha, não aqui.
+   */
+  allowAudio?: boolean
+  /** Endereço de um arquivo enviado (a vitrine troca por imagens de exemplo). */
+  fileUrl?: (path: string) => string
 }
 
 const OPTION_CLASS =
@@ -100,6 +108,9 @@ function WriteInstead({
 /** Pergunta aberta: o áudio em destaque e o "prefiro escrever" embaixo. */
 function AudioInput(props: InputProps) {
   const { answer, onChange } = props
+  if (props.allowAudio === false) {
+    return <WriteInstead value={answer.text} onChange={(text) => onChange({ text })} placeholder="O que a Boop já sabe sobre isso" startOpen />
+  }
   return (
     <div className="flex flex-col gap-5">
       <VoiceAnswer audios={answer.audios} onRecorded={props.onRecord} onDelete={props.onDeleteAudio} />
@@ -574,7 +585,26 @@ function formatSize(bytes: number): string {
 }
 
 /** Upload: arrastar, escolher ou tirar foto na hora. */
-function UploadInput({ question, answer, onUpload, onRemoveFile, uploading }: InputProps) {
+/** Miniatura da imagem enviada; sem ela (ou se não abrir), o ícone. */
+function FileThumb({ file, fileUrl }: { file: BriefingFile; fileUrl: (path: string) => string }) {
+  const [failed, setFailed] = useState(false)
+  if (!file.mime_type.startsWith("image/") || failed) {
+    const Icon = file.mime_type.startsWith("image/") ? ImageIcon : FileText
+    return <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={fileUrl(file.path)}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="size-10 shrink-0 rounded-lg border bg-muted object-contain p-0.5"
+    />
+  )
+}
+
+function UploadInput({ question, answer, onUpload, onRemoveFile, uploading, fileUrl = briefingFileSrc }: InputProps) {
   const pick = useRef<HTMLInputElement>(null)
   const camera = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
@@ -627,11 +657,7 @@ function UploadInput({ question, answer, onUpload, onRemoveFile, uploading }: In
         <ul className="space-y-1.5" aria-label="Arquivos enviados">
           {answer.files.map((file) => (
             <li key={file.path} className="flex items-center gap-3 rounded-2xl border bg-card px-3 py-2">
-              {file.mime_type.startsWith("image/") ? (
-                <ImageIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              ) : (
-                <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              )}
+              <FileThumb file={file} fileUrl={fileUrl} />
               <span className="min-w-0 flex-1 truncate text-[14px] text-foreground">{file.name}</span>
               <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{formatSize(file.size_bytes)}</span>
               <Button
@@ -726,7 +752,9 @@ function ExtraField({
             {extra.label}
             <span className="ml-1.5 text-xs font-normal text-muted-foreground">opcional</span>
           </p>
-          <VoiceAnswer compact audios={props.answer.audios} onRecorded={props.onRecord} onDelete={props.onDeleteAudio} />
+          {props.allowAudio === false ? null : (
+            <VoiceAnswer compact audios={props.answer.audios} onRecorded={props.onRecord} onDelete={props.onDeleteAudio} />
+          )}
           <Textarea
             id={id}
             value={typeof value === "string" ? value : ""}

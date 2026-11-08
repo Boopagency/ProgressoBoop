@@ -325,6 +325,18 @@ segunda, 07:00).
   clique. Puladas ficam em amarelo, "levar pra reunião". Ao lado, a
   **Imersão**: a reunião do calendário com o cliente, a transcrição (colar
   ou **Subir .txt**) e o resumo livre.
+  **Preparar antes de liberar** cria o briefing sem liberar (status
+  Preparando): o cliente não vê nada e o portal dele segue normal. Em
+  qualquer pergunta, **Preencher**/**Editar** abre os mesmos campos do portal
+  (upload de arquivos e paleta; sem gravar áudio) e a resposta fica marcada
+  **Preenchida pela Boop** — vale preparando, liberado e depois do envio.
+  **Liberar briefing** confere a identificação e o prazo, que conta a partir
+  daí; **Descartar preparação** tira o briefing e o que foi preenchido. No
+  portal, a pergunta preenchida aparece respondida com o selo **A Boop já
+  preencheu**, conta para o progresso, para o card "Sua marca" e para as
+  obrigatórias, e o cliente **Confirma** ou muda (depois disso a ficha mostra
+  "Boop preencheu · cliente revisou"). Etapa preenchida inteira pela Boop
+  abre numa revisão só, com **Tá tudo certo**.
 - **Perguntas do briefing** (`/briefing`, no menu Relacionamento, ou
   **Editar perguntas** na aba): o formulário ativo, igual para todos os
   clientes. Criar, editar, reordenar e desativar blocos (título, descrição,

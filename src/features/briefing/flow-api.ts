@@ -39,7 +39,7 @@ export interface BriefingApi {
 const NO_CONNECTION = "Sem conexão. Confira a internet e tente de novo."
 
 /** Manda o arquivo ao Storage pela URL assinada (direto do navegador). */
-async function putToStorage(uploadUrl: string, blob: Blob, type: string, name: string): Promise<boolean> {
+export async function putToStorage(uploadUrl: string, blob: Blob, type: string, name: string): Promise<boolean> {
   const body = new FormData()
   body.append("cacheControl", "3600")
   body.append("", new File([blob], name, { type }))

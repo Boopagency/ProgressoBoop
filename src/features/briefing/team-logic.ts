@@ -1,4 +1,4 @@
-import { isBriefingOpen } from "@/features/briefing/logic"
+import { isBriefingOpen, type BriefingIdentification } from "@/features/briefing/logic"
 import { meetingEntry, meetingsOverview, recordDate } from "@/features/meetings/logic"
 import { isDateKey } from "@/lib/dates"
 import type { Database } from "@/lib/supabase/database.types"
@@ -197,6 +197,12 @@ export interface TeamBriefingAnswer {
   files: BriefingFile[]
   skipped: boolean
   updated_at: Timestamp
+  /** O conteúdo atual foi preenchido pela Boop e o cliente ainda não confirmou nem mudou. */
+  filled_by_team: boolean
+  /** Última vez que a equipe gravou (fica depois que o cliente confirma). */
+  team_filled_at: Timestamp | null
+  /** O cliente gravou esta resposta (respondeu, confirmou ou mudou). */
+  by_client: boolean
   audios: TeamBriefingAudio[]
   summary: { status: BriefingAiStatus; summary: string | null; error: string | null } | null
 }
@@ -213,6 +219,8 @@ export interface TeamBriefingDetail {
   id: string
   status: BriefingStatus
   due_on: DateKey
+  /** Bloco 0 conferido pela equipe (preparando, é o que vai para a liberação). */
+  identification: BriefingIdentification
   released_at: Timestamp
   started_at: Timestamp | null
   submitted_at: Timestamp | null

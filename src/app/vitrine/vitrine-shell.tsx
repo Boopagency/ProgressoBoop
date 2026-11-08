@@ -36,12 +36,15 @@ export function VitrineShell({
   active,
   children,
   briefingOnly = false,
+  clientName = "Café Aurora",
 }: {
   area: "admin" | "portal"
   active: string
   children: ReactNode
   /** Portal com o briefing pendente: o menu só tem o Briefing. */
   briefingOnly?: boolean
+  /** Cliente mostrado no portal. */
+  clientName?: string
 }) {
   const portalItems = briefingOnly ? [PORTAL_BRIEFING_NAV] : PORTAL_NAV
   const groups = area === "admin" ? NAV_GROUPS : [{ label: null, items: portalItems }]
@@ -69,7 +72,7 @@ export function VitrineShell({
                       <span className="font-display text-[15px] font-semibold tracking-tight text-foreground">
                         {area === "admin" ? "Boop Admin" : "Boop"}
                       </span>
-                      {area === "portal" ? <span className="truncate text-xs text-muted-foreground">Café Aurora</span> : null}
+                      {area === "portal" ? <span className="truncate text-xs text-muted-foreground">{clientName}</span> : null}
                     </span>
                   </Link>
                 </SidebarMenuButton>

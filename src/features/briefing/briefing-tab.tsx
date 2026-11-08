@@ -1,19 +1,19 @@
-import { ListChecks, PencilLine } from "lucide-react"
+import { PencilLine } from "lucide-react"
 import Link from "next/link"
 
-import { EmptyPanel } from "@/components/empty-panel"
 import { Button } from "@/components/ui/button"
-import { BriefingAnswers } from "@/features/briefing/briefing-answers"
 import { BriefingStatusPanel } from "@/features/briefing/briefing-card"
 import { BriefingImmersionCard } from "@/features/briefing/briefing-immersion"
 import type { BriefingIdentification } from "@/features/briefing/logic"
+import { TeamBriefingAnswers } from "@/features/briefing/team-answer-editor"
 import { buildBriefingView, type ImmersionMeetingOption, type TeamBriefingDetail } from "@/features/briefing/team-logic"
 import type { DateKey } from "@/lib/types"
 
 /**
  * Aba Briefing da ficha do cliente (`?aba=briefing`; os avisos do sino abrem
- * aqui): o status no topo, as respostas por bloco e, ao lado, as notas da
- * imersão e o atalho para o editor de perguntas.
+ * aqui): o status no topo, as respostas por bloco (a equipe pode preencher
+ * qualquer pergunta pelo cliente) e, ao lado, as notas da imersão e o atalho
+ * para o editor de perguntas.
  */
 export function BriefingTab({
   clientId,
@@ -23,6 +23,8 @@ export function BriefingTab({
   meetings,
   today,
   fileUrl,
+  demo = false,
+  editing,
 }: {
   clientId: string
   clientName: string
@@ -32,6 +34,10 @@ export function BriefingTab({
   today: DateKey
   /** Só a vitrine passa: imagens de exemplo no lugar do bucket. */
   fileUrl?: (path: string) => string
+  /** Vitrine: nada vai ao servidor ao preencher. */
+  demo?: boolean
+  /** Vitrine: id da pergunta aberta no editor. */
+  editing?: string
 }) {
   const view = briefing ? buildBriefingView(briefing) : null
 
@@ -49,13 +55,14 @@ export function BriefingTab({
       {briefing && view ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start xl:gap-x-8">
           <div className="min-w-0">
-            {briefing.answers.length === 0 ? (
-              <EmptyPanel icon={ListChecks} title="Nenhuma resposta ainda">
-                As respostas aparecem aqui por bloco, assim que o cliente for respondendo no portal.
-              </EmptyPanel>
-            ) : (
-              <BriefingAnswers sections={view.sections} today={today} fileUrl={fileUrl} />
-            )}
+            <TeamBriefingAnswers
+              clientId={clientId}
+              sections={view.sections}
+              today={today}
+              fileUrl={fileUrl}
+              demo={demo}
+              editing={editing}
+            />
           </div>
           <aside aria-label="Imersão" className="min-w-0 space-y-6 xl:sticky xl:top-20">
             <BriefingImmersionCard

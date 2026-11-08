@@ -203,6 +203,11 @@ export interface FlowAnswer {
   files: BriefingFile[]
   skipped: boolean
   audios: BriefingAudio[]
+  /**
+   * A Boop preencheu e o cliente ainda não confirmou nem mudou ("A Boop já
+   * preencheu"). Conta como respondida; confirmar é gravar de novo.
+   */
+  prefilled?: boolean
 }
 
 export const EMPTY_ANSWER: FlowAnswer = { text: "", value: {}, files: [], skipped: false, audios: [] }
@@ -467,15 +472,43 @@ export function hasAnyContent(answer: FlowAnswer | undefined): boolean {
 
 export type FlowStep =
   | { type: "intro" }
+  /** Etapa que a Boop já preencheu inteira: a revisão dela numa tela só. */
+  | { type: "block_review"; blockIndex: number }
   | { type: "question"; blockIndex: number; questionIndex: number; question: FlowQuestion }
   | { type: "block_done"; blockIndex: number }
   | { type: "review" }
 
-/** A ordem das telas: boas-vindas, as perguntas de cada etapa com o fechamento dela, e a revisão para enviar. */
-export function buildSteps(blocks: readonly FlowBlock[]): FlowStep[] {
+/** A Boop preencheu e o cliente ainda não confirmou: aparece como respondida, com o selo. */
+export function isPrefilled(question: FlowQuestion, answer: FlowAnswer | undefined): boolean {
+  return answer?.prefilled === true && isAnswerComplete(question, answer)
+}
+
+/**
+ * Etapas que a Boop preencheu inteiras (todas as perguntas, completas) e que
+ * o cliente ainda não fechou: o fluxo passa por elas numa revisão só.
+ */
+export function prefilledBlockIds(blocks: readonly FlowBlock[], answers: Record<string, FlowAnswer>, completed: readonly string[]): string[] {
+  return blocks
+    .filter(
+      (block) =>
+        block.questions.length > 0 &&
+        !completed.includes(block.id) &&
+        block.questions.every((question) => isPrefilled(question, answers[question.id]))
+    )
+    .map((block) => block.id)
+}
+
+/**
+ * A ordem das telas: boas-vindas, as perguntas de cada etapa com o fechamento
+ * dela, e a revisão para enviar. Nas etapas de `reviewBlockIds` (a Boop já
+ * preencheu tudo), a revisão da etapa vem antes das perguntas: confirmar
+ * pula direto para o fechamento; "revisar uma por uma" segue pelas perguntas.
+ */
+export function buildSteps(blocks: readonly FlowBlock[], reviewBlockIds: readonly string[] = []): FlowStep[] {
   const steps: FlowStep[] = [{ type: "intro" }]
   blocks.forEach((block, blockIndex) => {
     if (block.questions.length === 0) return
+    if (reviewBlockIds.includes(block.id)) steps.push({ type: "block_review", blockIndex })
     block.questions.forEach((question, questionIndex) => steps.push({ type: "question", blockIndex, questionIndex, question }))
     steps.push({ type: "block_done", blockIndex })
   })

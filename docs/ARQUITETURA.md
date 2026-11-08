@@ -1472,6 +1472,25 @@ rodapé tem quem está logado e "Sair".
   Editor de perguntas em `/briefing` (menu Relacionamento): blocos e
   perguntas do formulário ativo, criar, editar, reordenar e desativar, sem
   apagar; o bloco 0 (identificação) é fixo.
+- **Briefing, preparar e a Boop responder** (migration `*_briefing_prepare.sql`,
+  `team-answer-editor.tsx`): status novo `preparing` (antes de `not_started`),
+  que `briefing_locked`, `my_briefing_ids` e `my_open_briefing_ids` ignoram
+  (o cliente não vê nada e o portal não trava); liberar muda para
+  `not_started` com `released_at` de agora (`releaseBriefing`). A equipe grava
+  respostas (política de insert) e arquivos no bucket `briefing` (política de
+  insert na pasta de um briefing existente) por `saveTeamBriefingAnswer` e
+  `createTeamBriefingUpload`, reaproveitando `QuestionInput` (com
+  `allowAudio={false}`). `briefing_answers.filled_by_team` (e
+  `team_filled_by`/`team_filled_at`) é gravado pelo trigger
+  `prepare_briefing_answer`: a equipe marca; o cliente, ao gravar (confirmar
+  ou mudar, inclusive um áudio), tira a marca e o histórico fica. No portal,
+  `FlowAnswer.prefilled` mostra o selo; `prefilledBlockIds` e o passo
+  `block_review` de `buildSteps` fazem a revisão rápida da etapa inteira.
+  Vitrine: `/vitrine/briefing-preencher?marca=velmont|barbara` (ficha;
+  `&editar=1` abre os campos) e `/vitrine/portal-telas/briefing?tela=boop`
+  ou `boop-etapa` (`&marca=`), com a identidade real das duas marcas
+  (`marcas.ts`, logos em `public/vitrine/briefing-preencher/`); prints em
+  `docs/design/prints/briefing-preencher/`.
 - **Transcrição e resumo do briefing** (Parte 3; migration
   `*_briefing_transcription.sql`, `features/briefing/{transcription,jobs,ai-*}.ts`):
   ao salvar um áudio, `queueBriefingAudio` (sessão do cliente) assina a URL

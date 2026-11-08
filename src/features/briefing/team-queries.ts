@@ -1,7 +1,9 @@
 import "server-only"
 
 import { requireUser } from "@/features/auth/session"
-import { parseIdentification } from "@/features/briefing/logic"
+import { parseAnalysisContent, type TeamBriefingAnalysis } from "@/features/briefing/analysis-logic"
+import { analysisSourceHash, buildAnalysisSource } from "@/features/briefing/analysis-source"
+import { isBriefingOpen, isBriefingPreparing, parseIdentification } from "@/features/briefing/logic"
 import {
   parseFiles,
   parseQuestionOptions,
@@ -88,7 +90,7 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
   }
   if (!briefing) return { available: true, briefing: null }
 
-  const [form, answers, audios, immersion] = await Promise.all([
+  const [form, answers, audios, immersion, analysis] = await Promise.all([
     loadForm(supabase, briefing.template_id),
     supabase
       .from("briefing_answers")
@@ -100,10 +102,17 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
       .eq("briefing_id", briefing.id)
       .order("created_at"),
     supabase.from("briefing_immersions").select("meeting_id, transcript, notes, updated_at").eq("briefing_id", briefing.id).maybeSingle(),
+    supabase
+      .from("briefing_analyses")
+      .select("status, attempts, content, error, origin, source_hash, requested_at, finished_at")
+      .eq("briefing_id", briefing.id)
+      .maybeSingle(),
   ])
   if (answers.error) throw loadError(answers.error, "as respostas do briefing")
   if (audios.error) throw loadError(audios.error, "os áudios do briefing")
   if (immersion.error) throw loadError(immersion.error, "as notas da imersão")
+  // Antes da migration da análise, a aba segue sem ela.
+  if (analysis.error && !isMissingRelation(analysis.error)) throw loadError(analysis.error, "a análise do briefing")
 
   const answerIds = answers.data.map((answer) => answer.id)
   const audioIds = audios.data.map((audio) => audio.id)
@@ -121,9 +130,7 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
   const transcriptionByAudio = new Map(transcriptions.data.map((row) => [row.audio_id, row]))
   const summaryByAnswer = new Map(summaries.data.map((row) => [row.answer_id, row]))
 
-  return {
-    available: true,
-    briefing: {
+  const detail: TeamBriefingDetail = {
       id: briefing.id,
       status: briefing.status,
       due_on: briefing.due_on,
@@ -176,7 +183,40 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
             updated_at: immersion.data.updated_at,
           }
         : null,
-    },
+  }
+  detail.analysis = analysis.error || !analysis.data ? null : toAnalysis(detail, analysis.data)
+  return { available: true, briefing: detail }
+}
+
+/** A análise guardada, com o aviso de que as respostas mudaram depois que ela leu. */
+function toAnalysis(
+  detail: TeamBriefingDetail,
+  row: {
+    status: TeamBriefingAnalysis["status"]
+    attempts: number
+    content: unknown
+    error: string | null
+    origin: string
+    source_hash: string | null
+    requested_at: string
+    finished_at: string | null
+  }
+): TeamBriefingAnalysis {
+  const content = parseAnalysisContent(row.content)
+  const submitted = !isBriefingOpen(detail.status) && !isBriefingPreparing(detail.status)
+  const stale =
+    content !== null &&
+    row.source_hash !== null &&
+    analysisSourceHash(buildAnalysisSource(detail, detail.identification, submitted)) !== row.source_hash
+  return {
+    status: row.status,
+    attempts: row.attempts,
+    content,
+    error: row.error,
+    origin: row.origin === "manual" ? "manual" : "submitted",
+    requested_at: row.requested_at,
+    finished_at: row.finished_at,
+    stale,
   }
 }
 

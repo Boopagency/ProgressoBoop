@@ -51,6 +51,14 @@ respeitando as restrições abaixo.
 6. Comentar no PR o resultado e, na próxima issue, as notas para o agente.
 
 Lições de out–nov/2026:
+- **Migration com `delete`, `drop` ou `truncate` (mesmo dentro de função)
+  trava:** a ferramenta do Supabase pede confirmação, e a pessoa não consegue
+  responder pelo app; uma sessão filha em modo automático também é barrada.
+  Peça aos agentes migrations sem essas palavras (como a do #113). Se não der,
+  mande o arquivo para a pessoa rodar no SQL Editor e registre depois em
+  `supabase_migrations.schema_migrations` (version, name), como no #110.
+- **Conferir a migration aplicada:** `md5(statements[1])` em
+  `schema_migrations` é o md5 do arquivo sem a quebra de linha final.
 - **A ferramenta do Supabase pode pedir a confirmação da pessoa** ao aplicar
   migration (aconteceu com uma que tinha `delete` dentro de função; outras
   com `delete` passaram sem pedir). Se ninguém responder em ~4 min, nada é
@@ -153,9 +161,22 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
   - referências em `docs/design/referencias/` e prints em
     `docs/design/prints/`.
 
-## Em andamento (06/11/2026)
+## Concluído em 07–08/11/2026
 
-- Nada. Fora da coordenação: Comercial em quadro (#104, #105).
+- **Briefing de onboarding (issue #108):** base (#109), fluxo do cliente no
+  portal (#112), visão da equipe e editor de perguntas (#111), transcrição e
+  resumo (#110) e preparar antes de liberar com a Boop respondendo (#113).
+  - Migrations: 20261107200007_briefing, 20261108033945_briefing_prepare e
+    20261108155416_briefing_transcription (esta rodada pela pessoa no SQL
+    Editor e registrada à mão).
+  - Jobs: `briefing-process` a cada minuto; Vault `briefing_jobs_url` e
+    `briefing_jobs_secret` = `BRIEFING_JOBS_SECRET` (Vercel, Production).
+  - Velmont e Bárbara com o briefing em "preparando" e a identidade visual
+    preenchida pela Boop.
+
+## Em andamento (08/11/2026)
+
+- Nada.
 
 ## Revisão de segurança (13/10/2026)
 
@@ -196,6 +217,10 @@ merge de PR que muda o app (PR só de docs pode entrar com o CI verde) e
 pedir à pessoa uma sessão com os conectores.
 
 ## Pendências com a pessoa
+
+- Briefing: `OPENAI_API_KEY` e `ANTHROPIC_API_KEY` na Vercel (Production);
+  subir os logos da Velmont e da Bárbara pela ficha e liberar o briefing;
+  teste completo com um dos dois antes de clientes novos.
 
 - **Instagram:**
   - criar o app na Meta (Instagram → API com login do Instagram) e pôr

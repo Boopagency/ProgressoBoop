@@ -1,5 +1,5 @@
-// Testa as migrations do briefing (20261107150000_briefing e as que vêm
-// depois, como a do preparo: 20261108120000_briefing_prepare) num Postgres
+// Testa as migrations do briefing (20261107200007_briefing e as que vêm
+// depois, como a do preparo: 20261108033945_briefing_prepare) num Postgres
 // descartável: formulário v1, RLS do cliente e da equipe, cópia da pergunta,
 // áudios no Storage, envio só com os obrigatórios, avisos e o bloqueio das
 // aprovações. Precisa do psql e de um servidor local onde se possa criar um
@@ -317,7 +317,7 @@ test("enviar só com os obrigatórios; depois o cliente não muda mais e o porta
   assert.equal(psql(`select count(*) from public.briefing_questions where key = 'offer'`), "1")
 })
 
-// Preparar sem liberar e a equipe responder pelo cliente (20261108120000_briefing_prepare).
+// Preparar sem liberar e a equipe responder pelo cliente (20261108033945_briefing_prepare).
 const PREPARED = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
 const LOGO_FILE = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 

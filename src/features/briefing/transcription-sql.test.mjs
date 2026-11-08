@@ -1,5 +1,5 @@
 // Testa as funções da fila de transcrição e resumo do briefing (migration
-// 20261107201500_briefing_transcription) num Postgres descartável. Precisa do
+// 20261108155416_briefing_transcription) num Postgres descartável. Precisa do
 // psql e de um servidor local onde se possa criar um banco (nunca o Supabase):
 //   BRIEFING_SQL_TEST_DB="host=/var/run/postgresql port=5432 user=postgres" \
 //     node --test src/features/briefing/transcription-sql.test.mjs
@@ -13,7 +13,7 @@ import { after, before, test } from "node:test"
 
 const server = process.env.BRIEFING_SQL_TEST_DB
 const database = `briefing_sql_test_${process.pid}`
-const migration = new URL("../../../supabase/migrations/20261107201500_briefing_transcription.sql", import.meta.url)
+const migration = new URL("../../../supabase/migrations/20261108155416_briefing_transcription.sql", import.meta.url)
 
 function psql(sql, { db = database } = {}) {
   const args = [`${server} dbname=${db}`, "-v", "ON_ERROR_STOP=1", "-X", "-q", "-At"]

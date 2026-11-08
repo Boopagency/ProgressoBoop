@@ -19,6 +19,14 @@ export function isBriefingOpen(status: BriefingStatus): boolean {
   return BRIEFING_OPEN_STATUSES.includes(status)
 }
 
+/**
+ * Preparando: a equipe criou o briefing e preenche o que já sabe antes de
+ * liberar. O cliente não vê e o portal não trava; o prazo conta ao liberar.
+ */
+export function isBriefingPreparing(status: BriefingStatus): boolean {
+  return status === "preparing"
+}
+
 /** Prazo sugerido ao liberar hoje. */
 export function defaultBriefingDue(today: DateKey): DateKey {
   return addBusinessDays(today, BRIEFING_DUE_BUSINESS_DAYS)

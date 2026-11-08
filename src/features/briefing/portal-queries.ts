@@ -46,7 +46,7 @@ export async function getPortalBriefingFlow(clientId: string): Promise<FlowData 
       .eq("active", true)
       .eq("briefing_blocks.template_id", briefing.template_id)
       .order("position"),
-    supabase.from("briefing_answers").select("id, question_id, text, value, files, skipped").eq("briefing_id", briefing.id),
+    supabase.from("briefing_answers").select("id, question_id, text, value, files, skipped, filled_by_team").eq("briefing_id", briefing.id),
     supabase
       .from("briefing_answer_audios")
       .select("id, answer_id, duration_ms, created_at")
@@ -87,6 +87,7 @@ export async function getPortalBriefingFlow(clientId: string): Promise<FlowData 
       files: parseFiles(row.files),
       skipped: row.skipped,
       audios: audiosByAnswer.get(row.id) ?? [],
+      prefilled: row.filled_by_team,
     }
   }
 

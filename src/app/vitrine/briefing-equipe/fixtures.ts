@@ -16,10 +16,11 @@ import type { BriefingStatus, DateKey } from "@/lib/types"
  */
 
 export const VB_BRIEFING_CLIENT = "00000000-0000-4000-8000-0000000000a1"
-const BRIEFING = "00000000-0000-4000-8000-00000000bf01"
+export const VB_BRIEFING_ID = "00000000-0000-4000-8000-00000000bf01"
+const BRIEFING = VB_BRIEFING_ID
 const OLD = "2026-10-01T12:00:00.000Z"
 
-const BLOCKS: TeamBriefingBlock[] = [
+export const VB_BRIEFING_BLOCKS: TeamBriefingBlock[] = [
   { id: "b0", position: 0, title: "Pra começar", description: "Confere se a gente anotou tudo certinho.", estimated_minutes: 1, active: true },
   { id: "b1", position: 1, title: "Negócio e prioridades", description: "O que você vende e o que precisa vender mais agora.", estimated_minutes: 6, active: true },
   { id: "b2", position: 2, title: "Quem compra", description: "Quem é o seu cliente e como ele decide.", estimated_minutes: 5, active: true },
@@ -42,7 +43,7 @@ function q(
   return { id, block_id: block, position, key: null, text, hint, kind, options: parseQuestionOptions(options), required, active, created_at: OLD }
 }
 
-const QUESTIONS: TeamBriefingQuestion[] = [
+export const VB_BRIEFING_QUESTIONS: TeamBriefingQuestion[] = [
   q("q0", "b0", 1, "identification", "Esses dados estão certos?", {
     fields: [
       { key: "brand_name", label: "Nome da marca" },
@@ -113,8 +114,8 @@ function path(name: string) {
   return `${VB_BRIEFING_CLIENT}/${BRIEFING}/${name}`
 }
 
-function a(questionId: string, extra: Partial<TeamBriefingAnswer>, snapshotText?: string): TeamBriefingAnswer {
-  const question = QUESTIONS.find((item) => item.id === questionId)!
+export function vbAnswer(questionId: string, extra: Partial<TeamBriefingAnswer>, snapshotText?: string): TeamBriefingAnswer {
+  const question = VB_BRIEFING_QUESTIONS.find((item) => item.id === questionId)!
   return {
     id: `a-${questionId}`,
     question_id: questionId,
@@ -131,6 +132,9 @@ function a(questionId: string, extra: Partial<TeamBriefingAnswer>, snapshotText?
     files: [],
     skipped: false,
     updated_at: OLD,
+    filled_by_team: false,
+    team_filled_at: null,
+    by_client: true,
     audios: [],
     summary: null,
     ...extra,
@@ -142,11 +146,11 @@ function audio(id: string, seconds: number, transcription: TeamBriefingAnswer["a
 }
 
 const ANSWERS: TeamBriefingAnswer[] = [
-  a("q0", {
+  vbAnswer("q0", {
     value: { brand_name: "Café Aurora", contact_name: "Marina Prado", region: "Curitiba, Batel e Água Verde", instagram: "@aurora.cafe", site: "auroracafe.com.br" },
   }),
-  a("q1", { value: { choice: "3_10y" } }),
-  a("q2", {
+  vbAnswer("q1", { value: { choice: "3_10y" } }),
+  vbAnswer("q2", {
     audios: [
       audio("a1", 102, {
         status: "ready",
@@ -161,37 +165,37 @@ const ANSWERS: TeamBriefingAnswer[] = [
       error: null,
     },
   }, "O que você vende? Liste os principais produtos ou serviços."),
-  a("q3", { value: { number: 46 } }),
-  a("q4", { value: { choices: ["client_referral", "organic_social"], extras: { share: "Uns 60% indicação, o resto Instagram" } } }),
-  a("q5", {
+  vbAnswer("q3", { value: { number: 46 } }),
+  vbAnswer("q4", { value: { choices: ["client_referral", "organic_social"], extras: { share: "Uns 60% indicação, o resto Instagram" } } }),
+  vbAnswer("q5", {
     audios: [
       audio("a2", 74, { status: "ready", transcript: "A gente posta quando dá, sem plano. Abrimos a segunda loja e precisamos que ela fique conhecida rápido.", error: null }),
       audio("a3", 31, { status: "processing", transcript: null, error: null }),
     ],
     summary: { status: "processing", summary: null, error: null },
   }),
-  a("q6", {
+  vbAnswer("q6", {
     text: "A Júlia, que comprou o kit de presente pro time inteiro no fim do ano e voltou pra encomendar o café da empresa. Valorizou o cuidado com a embalagem e o bilhete escrito à mão.",
     summary: { status: "ready", summary: "Cliente ideal: empresas que compram kits de presente e viram assinantes. Valorizam embalagem caprichada e o toque pessoal (bilhete à mão).", error: null },
   }),
-  a("q7", { skipped: true }),
-  a("q8", { value: { choice: "price", extras: { phrase: "“Nossa, mas um pacote de café por esse preço?”" } } }),
-  a("q9", { value: { choices: ["warm", "close"], primary: "close" } }),
-  a("q10", { value: { fields: { use: "fornada, torra da semana, cafezinho", avoid: "“o melhor café da cidade”, política" } } }),
-  a("q11", { value: { links: ["@cafedobairro", "https://www.instagram.com/torrefacaosul/"] } }),
-  a("q12", {
+  vbAnswer("q7", { skipped: true }),
+  vbAnswer("q8", { value: { choice: "price", extras: { phrase: "“Nossa, mas um pacote de café por esse preço?”" } } }),
+  vbAnswer("q9", { value: { choices: ["warm", "close"], primary: "close" } }),
+  vbAnswer("q10", { value: { fields: { use: "fornada, torra da semana, cafezinho", avoid: "“o melhor café da cidade”, política" } } }),
+  vbAnswer("q11", { value: { links: ["@cafedobairro", "https://www.instagram.com/torrefacaosul/"] } }),
+  vbAnswer("q12", {
     files: [
       { path: path("logo-aurora.png"), name: "logo-aurora.png", mime_type: "image/png", size_bytes: 182_000 },
       { path: path("manual-da-marca.pdf"), name: "manual-da-marca.pdf", mime_type: "application/pdf", size_bytes: 3_400_000 },
     ],
     value: { extras: { palette: { colors: [{ hex: "#3b2a20", use: "use" }, { hex: "#e9b872", use: "use" }, { hex: "#ff3d7f", use: "avoid" }] } } },
   }),
-  a("q13", {
+  vbAnswer("q13", {
     value: { dates: [{ date: "2026-11-28", label: "Black Friday dos kits" }, { date: "2026-12-12", label: "Aniversário de 5 anos" }] },
     audios: [audio("a4", 48, { status: "failed", transcript: null, error: "Tempo esgotado ao falar com a OpenAI." })],
     summary: { status: "failed", summary: null, error: "Sem transcrição." },
   }),
-  a("q14", { text: "Uma resposta guardada de uma pergunta que saiu do formulário." }),
+  vbAnswer("q14", { text: "Uma resposta guardada de uma pergunta que saiu do formulário." }),
 ]
 
 export function vbBriefing(today: DateKey, status: BriefingStatus): TeamBriefingDetail {
@@ -201,6 +205,13 @@ export function vbBriefing(today: DateKey, status: BriefingStatus): TeamBriefing
     id: BRIEFING,
     status,
     due_on: addDaysToKey(today, open ? 2 : -1),
+    identification: {
+      brand_name: "Café Aurora",
+      contact_name: "Marina Prado",
+      region: "Curitiba, Batel e Água Verde",
+      instagram: "@aurora.cafe",
+      site: "auroracafe.com.br",
+    },
     released_at: `${addDaysToKey(today, -6)}T13:00:00.000Z`,
     started_at: open ? `${addDaysToKey(today, -4)}T13:00:00.000Z` : `${addDaysToKey(today, -5)}T13:00:00.000Z`,
     submitted_at: open ? null : `${addDaysToKey(today, -1)}T21:40:00.000Z`,
@@ -208,8 +219,8 @@ export function vbBriefing(today: DateKey, status: BriefingStatus): TeamBriefing
     document_sent_at: null,
     validated_at: null,
     last_seen_at: status === "not_started" ? null : `${addDaysToKey(today, open ? 0 : -1)}T18:20:00.000Z`,
-    blocks: BLOCKS,
-    questions: QUESTIONS,
+    blocks: VB_BRIEFING_BLOCKS,
+    questions: VB_BRIEFING_QUESTIONS,
     answers,
     immersion: open
       ? null
@@ -225,8 +236,8 @@ export function vbBriefing(today: DateKey, status: BriefingStatus): TeamBriefing
 export function vbBriefingForm(): BriefingForm {
   return {
     template: { id: "t1", name: "Briefing de onboarding", version: 1 },
-    blocks: BLOCKS,
-    questions: QUESTIONS,
+    blocks: VB_BRIEFING_BLOCKS,
+    questions: VB_BRIEFING_QUESTIONS,
     answerCounts: Object.fromEntries(ANSWERS.map((answer) => [answer.question_id, 3])),
   }
 }

@@ -1,6 +1,7 @@
 import "server-only"
 
 import { requireUser } from "@/features/auth/session"
+import { parseIdentification } from "@/features/briefing/logic"
 import {
   parseFiles,
   parseQuestionOptions,
@@ -77,7 +78,7 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
   const { data: briefing, error } = await supabase
     .from("client_briefings")
     .select(
-      "id, template_id, status, due_on, released_at, started_at, submitted_at, immersion_at, document_sent_at, validated_at, last_seen_at"
+      "id, template_id, status, due_on, identification, released_at, started_at, submitted_at, immersion_at, document_sent_at, validated_at, last_seen_at"
     )
     .eq("client_id", clientId)
     .maybeSingle()
@@ -91,7 +92,7 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
     loadForm(supabase, briefing.template_id),
     supabase
       .from("briefing_answers")
-      .select("id, question_id, question_snapshot, text, value, files, skipped, updated_at")
+      .select("id, question_id, question_snapshot, text, value, files, skipped, updated_at, filled_by_team, team_filled_at, answered_by")
       .eq("briefing_id", briefing.id),
     supabase
       .from("briefing_answer_audios")
@@ -126,6 +127,7 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
       id: briefing.id,
       status: briefing.status,
       due_on: briefing.due_on,
+      identification: parseIdentification(briefing.identification),
       released_at: briefing.released_at,
       started_at: briefing.started_at,
       submitted_at: briefing.submitted_at,
@@ -146,6 +148,9 @@ export async function getTeamBriefing(clientId: string): Promise<TeamBriefingSta
           files: parseFiles(answer.files),
           skipped: answer.skipped,
           updated_at: answer.updated_at,
+          filled_by_team: answer.filled_by_team,
+          team_filled_at: answer.team_filled_at,
+          by_client: answer.answered_by !== null,
           audios: audios.data
             .filter((audio) => audio.answer_id === answer.id)
             .map((audio) => {

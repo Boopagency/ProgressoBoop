@@ -1,12 +1,26 @@
 "use client"
 
-import { ArrowLeft, ArrowRight, CalendarClock, Check, Clock3, CloudOff, Loader2, Mic, PartyPopper, SkipForward } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  CalendarClock,
+  Check,
+  Clock3,
+  CloudOff,
+  FileText,
+  Loader2,
+  Mic,
+  PartyPopper,
+  SkipForward,
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { AnswerPartView } from "@/features/briefing/answer-parts"
 import { BrandCardView } from "@/features/briefing/brand-card"
 import { demoBriefingApi, serverBriefingApi, type BriefingApi } from "@/features/briefing/flow-api"
 import {
@@ -15,7 +29,9 @@ import {
   EMPTY_ANSWER,
   hasAnyContent,
   isAnswerComplete,
+  isPrefilled,
   missingRequired,
+  prefilledBlockIds,
   progressFraction,
   remainingMinutes,
   resumeIndex,
@@ -28,6 +44,7 @@ import {
   type FlowStep,
 } from "@/features/briefing/flow-logic"
 import { checkUpload, QuestionInput } from "@/features/briefing/question-input"
+import { describeAnswer, parseQuestionOptions } from "@/features/briefing/team-logic"
 import type { Recording } from "@/features/voice/upload"
 import { formatDayMonth, formatShortDate, formatWeekdayLong, formatWeekdayShort } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
@@ -58,6 +75,10 @@ function initialAnswers(data: FlowData): Record<string, FlowAnswer> {
  * sozinho e volta exatamente onde parou. O card "Sua marca" vai se montando
  * ao lado (no celular, nas telas de pausa). Com `demo`, nada vai ao servidor
  * (vitrine).
+ *
+ * O que a Boop já preencheu aparece respondido, com o selo "A Boop já
+ * preencheu": o cliente confirma (grava de novo) ou muda. Etapa preenchida
+ * inteira pela Boop abre numa revisão só, com "Tá tudo certo".
  */
 export function BriefingFlow({
   data,
@@ -65,6 +86,7 @@ export function BriefingFlow({
   today,
   demo = false,
   startAt,
+  fileUrl,
 }: {
   data: FlowData
   homeHref: string
@@ -72,10 +94,14 @@ export function BriefingFlow({
   demo?: boolean
   /** Vitrine: abre direto numa tela (índice das telas). */
   startAt?: number
+  /** Vitrine: imagens de exemplo no lugar do bucket. */
+  fileUrl?: (path: string) => string
 }) {
   const router = useRouter()
   const api = useMemo<BriefingApi>(() => (demo ? demoBriefingApi() : serverBriefingApi(data.briefingId)), [demo, data.briefingId])
-  const steps = useMemo(() => buildSteps(data.blocks), [data.blocks])
+  // Etapas que a Boop preencheu inteiras, como chegaram (a lista não muda enquanto o cliente responde).
+  const [reviewBlocks] = useState(() => prefilledBlockIds(data.blocks, initialAnswers(data), data.completedBlockIds))
+  const steps = useMemo(() => buildSteps(data.blocks, reviewBlocks), [data.blocks, reviewBlocks])
   const [index, setIndex] = useState(() => Math.min(startAt ?? resumeIndex(steps, data.currentQuestionId), steps.length - 1))
   const [direction, setDirection] = useState<1 | -1>(1)
   const [answers, setAnswers] = useState(() => initialAnswers(data))
@@ -114,6 +140,8 @@ export function BriefingFlow({
     const result = await api.saveAnswer(questionId, { text: answer.text, value: answer.value, files: answer.files, skipped: answer.skipped })
     setSaveState(result.ok ? "saved" : "error")
     if (!result.ok) toast.error(result.error)
+    // Gravada pelo cliente: o que a Boop preencheu passa a ser confirmado.
+    else if (answer.prefilled) commit(questionId, (before) => ({ ...before, prefilled: false }))
     return result.ok
   }
 
@@ -126,7 +154,7 @@ export function BriefingFlow({
 
   function update(question: FlowQuestion, patch: Partial<FlowAnswer>, delay = SAVE_DELAY_MS) {
     commit(question.id, (before) => {
-      const merged = { ...before, ...patch }
+      const merged = { ...before, ...patch, prefilled: false }
       // Responder tira o "pular por agora".
       return { ...merged, skipped: patch.skipped ?? (hasAnyContent(merged) ? false : merged.skipped) }
     })
@@ -182,6 +210,35 @@ export function BriefingFlow({
     }
   }
 
+  /** "Tá tudo certo" na etapa que a Boop preencheu: confirma cada resposta e fecha a etapa. */
+  async function confirmBlock(blockIndex: number) {
+    const block = data.blocks[blockIndex]
+    if (!block || busy) return
+    setBusy(true)
+    try {
+      for (const question of block.questions) {
+        if (latest.current[question.id]?.prefilled && !(await persist(question.id))) return
+      }
+      if (!completed.includes(block.id)) {
+        const missing = missingRequired([block], latest.current)
+        if (missing[0]) {
+          toast.error("Falta responder uma pergunta desta etapa.")
+          goToQuestion(missing[0].id)
+          return
+        }
+        const result = await api.completeBlock(block.id)
+        if (!result.ok) {
+          toast.error(result.error)
+          return
+        }
+        setCompleted((current) => [...current, block.id])
+      }
+      goTo(steps.findIndex((item) => item.type === "block_done" && item.blockIndex === blockIndex))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function skip(question: FlowQuestion) {
     commit(question.id, (before) => ({ ...before, skipped: true }))
     await advance({ type: "question", blockIndex: 0, questionIndex: 0, question })
@@ -206,7 +263,7 @@ export function BriefingFlow({
       toast.error(result.error)
       return false
     }
-    commit(question.id, (before) => ({ ...before, skipped: false, audios: [...before.audios, result.data] }))
+    commit(question.id, (before) => ({ ...before, skipped: false, prefilled: false, audios: [...before.audios, result.data] }))
     setSaveState("saved")
     return true
   }
@@ -259,6 +316,7 @@ export function BriefingFlow({
         data={data}
         today={today}
         started={started}
+        reviewBlocks={reviewBlocks}
         onStart={() => (started && data.currentQuestionId ? goToQuestion(data.currentQuestionId) : goTo(1))}
       />
     )
@@ -268,6 +326,7 @@ export function BriefingFlow({
     const answer = answers[question.id] ?? EMPTY_ANSWER
     const complete = isAnswerComplete(question, answer)
     const canContinue = complete || (!question.required && hasAnyContent(answer) && !answer.skipped)
+    const byBoop = isPrefilled(question, answer)
     content = (
       <div className="space-y-7">
         <QuestionHeader
@@ -291,6 +350,7 @@ export function BriefingFlow({
             </p>
           ) : null}
         </div>
+        {byBoop ? <PrefilledNote /> : null}
         <QuestionInput
           key={question.id}
           question={question}
@@ -301,6 +361,7 @@ export function BriefingFlow({
           onUpload={(files) => upload(question, files)}
           onRemoveFile={(file) => removeFile(question, file)}
           uploading={uploading}
+          fileUrl={fileUrl}
         />
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <Button
@@ -311,8 +372,8 @@ export function BriefingFlow({
             onClick={() => void advance(step)}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            Continuar
-            <ArrowRight className="size-4" />
+            {byBoop ? "Confirmar" : "Continuar"}
+            {byBoop ? <Check className="size-4" /> : <ArrowRight className="size-4" />}
           </Button>
           {!question.required ? (
             <Button
@@ -331,6 +392,25 @@ export function BriefingFlow({
           )}
         </div>
       </div>
+    )
+  } else if (step.type === "block_review") {
+    const block = blockOf(step.blockIndex)!
+    aside = false
+    content = (
+      <BlockReviewScreen
+        blockNumber={step.blockIndex + 1}
+        totalBlocks={data.blocks.length}
+        title={block.title}
+        questions={block.questions}
+        answers={answers}
+        today={today}
+        busy={busy}
+        onBack={() => goTo(index - 1)}
+        onConfirm={() => void confirmBlock(step.blockIndex)}
+        onOneByOne={() => goTo(index + 1)}
+        onOpen={goToQuestion}
+        card={<BrandCardView card={card} doneBlocks={completed.length} totalBlocks={totalBlocks} />}
+      />
     )
   } else if (step.type === "block_done") {
     const left = remainingMinutes(data.blocks, completed)
@@ -470,9 +550,25 @@ function QuestionHeader({
   )
 }
 
-function IntroScreen({ data, today, started, onStart }: { data: FlowData; today: DateKey; started: boolean; onStart: () => void }) {
+function IntroScreen({
+  data,
+  today,
+  started,
+  reviewBlocks,
+  onStart,
+}: {
+  data: FlowData
+  today: DateKey
+  started: boolean
+  reviewBlocks: readonly string[]
+  onStart: () => void
+}) {
   const blocks = data.blocks.filter((block) => block.questions.length > 0)
-  const minutes = remainingMinutes(blocks, data.completedBlockIds)
+  // Etapa que a Boop já preencheu é só conferir: não entra na conta do tempo.
+  const minutes = remainingMinutes(
+    blocks.filter((block) => !reviewBlocks.includes(block.id)),
+    data.completedBlockIds
+  )
   return (
     <div className="space-y-7">
       <div className="space-y-3">
@@ -515,7 +611,12 @@ function IntroScreen({ data, today, started, onStart }: { data: FlowData; today:
                 <p className="text-[14px] font-medium text-foreground">{block.title}</p>
                 {block.description ? <p className="truncate text-[13px] text-muted-foreground">{block.description}</p> : null}
               </div>
-              {block.estimated_minutes ? (
+              {reviewBlocks.includes(block.id) && !done ? (
+                <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand-ink">
+                  <BadgeCheck className="size-3.5" aria-hidden="true" />
+                  Só conferir
+                </span>
+              ) : block.estimated_minutes ? (
                 <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground tabular-nums">
                   <Clock3 className="size-3.5" aria-hidden="true" />
                   {block.estimated_minutes} min
@@ -532,6 +633,112 @@ function IntroScreen({ data, today, started, onStart }: { data: FlowData; today:
           <ArrowRight className="size-4" />
         </Button>
         <span className="text-[13px] text-muted-foreground">Cerca de {minutes} min no total</span>
+      </div>
+    </div>
+  )
+}
+
+/** O selo da pergunta que a Boop já preencheu (o cliente confirma ou muda). */
+function PrefilledNote() {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-brand-soft px-4 py-3">
+      <BadgeCheck className="mt-0.5 size-5 shrink-0 text-brand-ink" aria-hidden="true" />
+      <p className="text-[14px] leading-6 text-foreground">
+        <span className="font-medium text-brand-ink">A Boop já preencheu</span>
+        <span className="block text-muted-foreground">Confere aqui embaixo. Se estiver certo, é só confirmar; se não, muda o que precisar.</span>
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Etapa que a Boop preencheu inteira: as respostas numa tela só, para
+ * confirmar de uma vez ou revisar uma por uma.
+ */
+function BlockReviewScreen({
+  blockNumber,
+  totalBlocks,
+  title,
+  questions,
+  answers,
+  today,
+  busy,
+  card,
+  onBack,
+  onConfirm,
+  onOneByOne,
+  onOpen,
+}: {
+  blockNumber: number
+  totalBlocks: number
+  title: string
+  questions: FlowQuestion[]
+  answers: Record<string, FlowAnswer>
+  today: DateKey
+  busy: boolean
+  card: ReactNode
+  onBack: () => void
+  onConfirm: () => void
+  onOneByOne: () => void
+  onOpen: (questionId: string) => void
+}) {
+  return (
+    <div className="space-y-7">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" size="icon" className="-ml-2 size-10 rounded-full" aria-label="Voltar" onClick={onBack}>
+            <ArrowLeft className="size-5" />
+          </Button>
+          <p className="eyebrow text-muted-foreground">
+            Etapa {blockNumber} de {totalBlocks} · {title}
+          </p>
+        </div>
+        <h1 className="font-display text-[30px] leading-[1.1] font-medium tracking-[-0.04em] text-foreground sm:text-[38px]">
+          Essa a Boop <em className="emphasis pr-[0.05em] text-[1.14em] leading-none text-gradient-brand">já sabe</em>
+        </h1>
+        <p className="text-[15px] leading-6 text-muted-foreground">
+          A gente já preencheu esta etapa com o que tem da sua marca. Confere: se estiver tudo certo, é um toque só.
+        </p>
+      </div>
+
+      <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
+        {questions.map((question) => {
+          const answer = answers[question.id]
+          const parts = answer ? describeAnswer(question.kind, parseQuestionOptions(question.options), answer.value, answer.text) : []
+          const files = answer?.files ?? []
+          return (
+            <li key={question.id} className="space-y-2.5 px-4 py-4">
+              <div className="flex items-start gap-3">
+                <p className="min-w-0 flex-1 text-[14px] leading-6 font-medium text-foreground">{question.text}</p>
+                <Button type="button" variant="ghost" size="sm" className="-mr-2 h-8 shrink-0 rounded-full text-xs" onClick={() => onOpen(question.id)}>
+                  Mudar
+                </Button>
+              </div>
+              {parts.map((part, index) => (
+                <AnswerPartView key={index} part={part} today={today} />
+              ))}
+              {files.length > 0 ? (
+                <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                  <FileText className="size-3.5" aria-hidden="true" />
+                  {files.map((file) => file.name).join(" · ")}
+                </p>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+
+      {card}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" size="lg" className="h-12 min-w-44 flex-1 gap-2 rounded-full text-[15px] sm:flex-none" disabled={busy} onClick={onConfirm}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+          Tá tudo certo
+        </Button>
+        <Button type="button" variant="ghost" size="lg" className="h-12 gap-2 rounded-full" disabled={busy} onClick={onOneByOne}>
+          Revisar uma por uma
+          <ArrowRight className="size-4" />
+        </Button>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarClock, Check, CircleAlert, Send, Undo2 } from "lucide-react"
+import { CalendarClock, Check, CircleAlert, NotebookPen, Send, Undo2 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -21,13 +21,14 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cancelBriefing, changeBriefingDue, releaseBriefing } from "@/features/briefing/actions"
+import { cancelBriefing, changeBriefingDue, prepareBriefing, releaseBriefing } from "@/features/briefing/actions"
 import {
   BRIEFING_DUE_BUSINESS_DAYS,
   defaultBriefingDue,
   dueState,
   IDENTIFICATION_FIELDS,
   isBriefingOpen,
+  isBriefingPreparing,
   type BriefingIdentification,
 } from "@/features/briefing/logic"
 import { setBriefingStatus } from "@/features/briefing/team-actions"
@@ -52,7 +53,8 @@ function moment(at: Timestamp, today: DateKey): string {
  * Topo da aba Briefing (o painel de destaque): o status na sequência, o
  * andamento, o prazo, se os obrigatórios estão completos e os botões da
  * equipe. Antes de liberar, explica e abre a liberação (identificação
- * conferida e prazo de 5 dias úteis, editável).
+ * conferida e prazo de 5 dias úteis, editável) ou a preparação: a equipe
+ * preenche o que já sabe, o cliente não vê nada e o prazo conta ao liberar.
  */
 export function BriefingStatusPanel({
   clientId,
@@ -89,7 +91,16 @@ export function BriefingStatusPanel({
     })
   }
 
+  function prepare() {
+    startTransition(async () => {
+      const result = await prepareBriefing(clientId, { identification: defaults })
+      if (!result.ok) toast.error(result.error)
+      else toast.success("Briefing em preparação. Preencha o que a Boop já sabe e libere quando quiser.")
+    })
+  }
+
   function confirmCancel() {
+    const preparing = briefing ? isBriefingPreparing(briefing.status) : false
     startTransition(async () => {
       const result = await cancelBriefing(clientId)
       if (!result.ok) {
@@ -97,7 +108,7 @@ export function BriefingStatusPanel({
         return
       }
       setCancelOpen(false)
-      toast.success("Liberação cancelada. O portal do cliente voltou ao normal.")
+      toast.success(preparing ? "Preparação descartada." : "Liberação cancelada. O portal do cliente voltou ao normal.")
     })
   }
 
@@ -118,10 +129,42 @@ export function BriefingStatusPanel({
       onOpenChange={setReleaseOpen}
       clientId={clientId}
       clientName={clientName}
-      defaults={defaults}
+      defaults={briefing && isBriefingPreparing(briefing.status) ? briefing.identification : defaults}
+      preparing={briefing ? isBriefingPreparing(briefing.status) : false}
       today={today}
     />
   )
+
+  const cancelDialog = (
+    <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {briefing && isBriefingPreparing(briefing.status) ? "Descartar a preparação do briefing?" : "Cancelar a liberação do briefing?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {briefing && isBriefingPreparing(briefing.status)
+              ? "As respostas que a Boop preencheu e os arquivos enviados saem junto. O cliente nunca viu este briefing."
+              : "O cliente ainda não respondeu nada. O portal dele volta ao normal e você pode liberar de novo depois."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Voltar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isPending}
+            onClick={(event) => {
+              event.preventDefault()
+              confirmCancel()
+            }}
+          >
+            {isPending ? "Cancelando…" : briefing && isBriefingPreparing(briefing.status) ? "Descartar" : "Cancelar liberação"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+
+  const missing = progress?.missing.length ?? 0
 
   if (!briefing || !progress) {
     return (
@@ -134,18 +177,93 @@ export function BriefingStatusPanel({
           Libere quando o contrato estiver assinado. O cliente responde no portal, de preferência por áudio, e até enviar
           só vê o Briefing. As respostas aparecem aqui, por bloco.
         </p>
-        <Button onClick={openRelease} className="mt-6 gap-1.5">
-          <Send />
-          Liberar briefing
-        </Button>
+        <p className="mt-2 max-w-xl text-[13.5px] leading-6 text-muted-foreground">
+          Já conhece a marca? Prepare antes: preencha o que a Boop já sabe (a identidade visual, por exemplo) e libere
+          depois. O cliente não pergunta de novo o que já está respondido.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <Button onClick={openRelease} className="gap-1.5">
+            <Send />
+            Liberar briefing
+          </Button>
+          <Button variant="outline" onClick={prepare} disabled={isPending} className="gap-1.5 shadow-none">
+            <NotebookPen />
+            {isPending ? "Preparando…" : "Preparar antes de liberar"}
+          </Button>
+        </div>
         {releaseDialog}
+      </HeroPanel>
+    )
+  }
+
+  if (isBriefingPreparing(briefing.status)) {
+    const byBoop = briefing.answers.filter((answer) => answer.filled_by_team).length
+    return (
+      <HeroPanel aria-label="Situação do briefing">
+        <HeroEyebrow>Briefing de onboarding</HeroEyebrow>
+        <p className="mt-6 max-w-2xl font-display text-[26px] leading-[1.15] font-medium tracking-[-0.03em] text-foreground sm:text-[32px]">
+          <StatusHeadline briefing={briefing} progress={progress} today={today} />
+        </p>
+        <StatusSteps status={briefing.status} />
+        <StatGrid
+          variant="line"
+          className="mt-7"
+          items={[
+            {
+              key: "respostas",
+              label: "Já respondidas",
+              value: `${progress.percent}%`,
+              hint: `${progress.answered} de ${progress.total} · ${byBoop === 1 ? "1 pela Boop" : `${byBoop} pela Boop`}`,
+              progress: progress.percent,
+              accent: true,
+            },
+            {
+              key: "obrigatorias",
+              label: "Obrigatórias",
+              value: missing === 0 ? "Completas" : `Faltam ${missing}`,
+              hint: "o cliente responde o resto",
+            },
+            {
+              key: "prazo",
+              label: "Prazo",
+              value: "Ao liberar",
+              hint: `${BRIEFING_DUE_BUSINESS_DAYS} dias úteis a partir daí`,
+            },
+            {
+              key: "cliente",
+              label: "Cliente",
+              value: "Não vê",
+              hint: "o portal segue normal",
+            },
+          ]}
+        />
+        <p className="mt-5 max-w-2xl text-[13px] leading-6 text-muted-foreground">
+          Preencha nas perguntas abaixo o que a Boop já sabe. Ao liberar, o cliente vê essas respostas como já
+          respondidas, com o selo “A Boop já preencheu”, e só confirma ou muda.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <Button onClick={openRelease} className="gap-1.5">
+            <Send />
+            Liberar briefing
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs text-muted-foreground"
+            disabled={isPending}
+            onClick={() => setCancelOpen(true)}
+          >
+            Descartar preparação
+          </Button>
+        </div>
+        {releaseDialog}
+        {cancelDialog}
       </HeroPanel>
     )
   }
 
   const open = isBriefingOpen(briefing.status)
   const due = dueState(briefing, today)
-  const missing = progress.missing.length
   const next = nextTeamStatus(briefing.status)
   const previous = previousTeamStatus(briefing.status)
   const blockedImmersion = next === "immersion_done" && missing > 0
@@ -232,7 +350,7 @@ export function BriefingStatusPanel({
               aria-label="Mudar o prazo do briefing"
               className="h-8 text-xs"
             />
-            {briefing.status === "not_started" && briefing.answers.length === 0 ? (
+            {briefing.status === "not_started" && !briefing.answers.some((answer) => answer.by_client) ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -263,29 +381,7 @@ export function BriefingStatusPanel({
       </div>
 
       {releaseDialog}
-
-      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar a liberação do briefing?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O cliente ainda não respondeu nada. O portal dele volta ao normal e você pode liberar de novo depois.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Voltar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isPending}
-              onClick={(event) => {
-                event.preventDefault()
-                confirmCancel()
-              }}
-            >
-              {isPending ? "Cancelando…" : "Cancelar liberação"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {cancelDialog}
     </HeroPanel>
   )
 }
@@ -293,6 +389,12 @@ export function BriefingStatusPanel({
 function StatusHeadline({ briefing, progress, today }: { briefing: TeamBriefingDetail; progress: BriefingProgress; today: DateKey }) {
   const em = "emphasis text-[1.14em] text-brand-ink"
   switch (briefing.status) {
+    case "preparing":
+      return (
+        <>
+          Preparando, <em className={em}>o cliente ainda não vê</em>
+        </>
+      )
     case "not_started":
       return (
         <>
@@ -333,12 +435,13 @@ function StatusHeadline({ briefing, progress, today }: { briefing: TeamBriefingD
   }
 }
 
-/** A sequência inteira, com o passo atual em azul. */
+/** A sequência inteira, com o passo atual em azul. "Preparando" só aparece enquanto é o passo atual. */
 function StatusSteps({ status }: { status: BriefingStatus }) {
-  const current = BRIEFING_STATUSES.indexOf(status)
+  const sequence = BRIEFING_STATUSES.filter((step) => step !== "preparing" || status === "preparing")
+  const current = sequence.indexOf(status)
   return (
     <ol aria-label="Etapas do briefing" className="mt-6 flex flex-wrap gap-1.5">
-      {BRIEFING_STATUSES.map((step, index) => {
+      {sequence.map((step, index) => {
         const done = index < current
         const active = index === current
         return (
@@ -370,6 +473,7 @@ function ReleaseDialog({
   clientId,
   clientName,
   defaults,
+  preparing,
   today,
 }: {
   open: boolean
@@ -377,6 +481,8 @@ function ReleaseDialog({
   clientId: string
   clientName: string
   defaults: BriefingIdentification
+  /** Libera o briefing em preparação (com as respostas da Boop). */
+  preparing: boolean
   today: DateKey
 }) {
   const [fields, setFields] = useState<BriefingIdentification>(defaults)
@@ -403,7 +509,9 @@ function ReleaseDialog({
           <DialogHeader>
             <DialogTitle>Liberar briefing</DialogTitle>
             <DialogDescription>
-              Confira os dados que o cliente vai confirmar no começo. Até ele enviar, o portal mostra só o Briefing.
+              {preparing
+                ? "Confira os dados do começo. O que a Boop preencheu vai junto, já respondido; o prazo conta a partir de hoje e, até o cliente enviar, o portal mostra só o Briefing."
+                : "Confira os dados que o cliente vai confirmar no começo. Até ele enviar, o portal mostra só o Briefing."}
             </DialogDescription>
           </DialogHeader>
 

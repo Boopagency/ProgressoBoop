@@ -144,3 +144,44 @@ test("parseBrl entende o jeito brasileiro de escrever dinheiro", () => {
   assert.equal(logic.parseBrl("1.500"), 1500)
   assert.equal(logic.parseBrl(""), null)
 })
+
+test("o que a Boop preencheu conta como respondido e a etapa inteira vira uma revisão só", () => {
+  const blocks = [
+    { id: "b1", title: "Negócio", description: null, estimated_minutes: 5, questions: [q("idade", "choice", { choices: [{ value: "a", label: "A" }] })] },
+    {
+      id: "b6",
+      title: "Materiais",
+      description: null,
+      estimated_minutes: 3,
+      questions: [
+        q("links", "links", {}, false),
+        q("identidade", "upload", { extras: [{ key: "palette", kind: "palette", label: "Cores" }] }, false),
+      ],
+    },
+  ]
+  const logo = { path: "c/b/files/logo", name: "logo.webp", mime_type: "image/webp", size_bytes: 10 }
+  const answers = {
+    links: answer({ value: { links: ["@marca"] }, prefilled: true }),
+    identidade: answer({ files: [logo], value: { extras: { palette: { colors: [{ hex: "#210b12", use: "use" }] } } }, prefilled: true }),
+  }
+  // Preenchida pela Boop: completa, conta para o progresso e para o card.
+  assert.equal(logic.isPrefilled(blocks[1].questions[1], answers.identidade), true)
+  assert.equal(logic.isAnswerComplete(blocks[1].questions[1], answers.identidade), true)
+  assert.equal(logic.progressFraction(blocks, answers), 2 / 3)
+  assert.deepEqual(logic.buildBrandCard({ blocks, answers, identification: {} }).colors, ["#210b12"])
+  // Marcada, mas vazia: não é "já preencheu".
+  assert.equal(logic.isPrefilled(blocks[1].questions[0], answer({ prefilled: true })), false)
+
+  // Só a etapa 6 veio inteira da Boop; fechada, não precisa de revisão.
+  assert.deepEqual(logic.prefilledBlockIds(blocks, answers, []), ["b6"])
+  assert.deepEqual(logic.prefilledBlockIds(blocks, answers, ["b6"]), [])
+  assert.deepEqual(logic.prefilledBlockIds(blocks, { ...answers, links: answer({ value: { links: ["@marca"] } }) }, []), [])
+
+  const steps = logic.buildSteps(blocks, ["b6"])
+  assert.deepEqual(
+    steps.map((step) => step.type + (step.question ? `:${step.question.id}` : "")),
+    ["intro", "question:idade", "block_done", "block_review", "question:links", "question:identidade", "block_done", "review"]
+  )
+  // Sem etapas para revisar, a ordem de sempre.
+  assert.equal(logic.buildSteps(blocks).some((step) => step.type === "block_review"), false)
+})

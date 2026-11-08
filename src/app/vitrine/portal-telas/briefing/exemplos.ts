@@ -2,6 +2,8 @@ import { buildSteps, colorsOf, EMPTY_ANSWER, parseOptions, type FlowAnswer, type
 import { addBusinessDays } from "@/lib/dates"
 import type { DateKey } from "@/lib/types"
 
+import { brandFiles, VITRINE_BRANDS, type VitrineBrand } from "../../briefing-preencher/marcas"
+
 /*
  * Briefing de exemplo para a vitrine: uma parte do formulário v1 (os mesmos
  * textos da migration) e respostas de mentira. Nada vem do banco.
@@ -154,7 +156,7 @@ const PROGRESS: Record<string, FlowAnswer> = {
   "q-sales_channel": answered({ value: { choice: "whatsapp" } }),
 }
 
-export type BriefingScreen = "inicio" | "audio" | "escolha" | "tom" | "cores" | "etapa" | "envio" | "obrigado"
+export type BriefingScreen = "inicio" | "audio" | "escolha" | "tom" | "cores" | "etapa" | "envio" | "obrigado" | "boop" | "boop-etapa"
 
 export const BRIEFING_SCREENS: { value: BriefingScreen; title: string; text: string }[] = [
   { value: "inicio", title: "Briefing: boas-vindas", text: "As etapas com o tempo de cada uma e o prazo." },
@@ -165,14 +167,16 @@ export const BRIEFING_SCREENS: { value: BriefingScreen; title: string; text: str
   { value: "etapa", title: "Briefing: etapa concluída", text: "O fechamento da etapa com o card Sua marca." },
   { value: "envio", title: "Briefing: revisar e enviar", text: "As puladas marcadas para a reunião e o envio." },
   { value: "obrigado", title: "Briefing: obrigado", text: "Depois de enviar, o portal abre." },
+  { value: "boop", title: "Briefing: a Boop já preencheu", text: "Logo, fontes e cores que a Boop já tinha (Velmont ou Bárbara, ?marca=), com o selo." },
+  { value: "boop-etapa", title: "Briefing: etapa com o que a Boop preencheu", text: "Depois de confirmar, o card Sua marca com as cores." },
 ]
 
 export function isBriefingScreen(value: unknown): value is BriefingScreen {
   return BRIEFING_SCREENS.some((screen) => screen.value === value)
 }
 
-/** Os dados e a tela inicial de cada tela da vitrine. */
-export function briefingExample(screen: BriefingScreen, today: DateKey): { data: FlowData; startAt: number } {
+/** Os dados e a tela inicial de cada tela da vitrine. `brand` vale nas telas "boop". */
+export function briefingExample(screen: BriefingScreen, today: DateKey, brand: VitrineBrand = "velmont"): { data: FlowData; startAt: number } {
   const steps = buildSteps(BLOCKS)
   const at = (key: string) => steps.findIndex((step) => step.type === "question" && step.question.key === key)
   const base: FlowData = {
@@ -214,6 +218,25 @@ export function briefingExample(screen: BriefingScreen, today: DateKey): { data:
     }
     case "etapa":
       return { data: { ...progress, completedBlockIds: ["b0", "b1"] }, startAt: steps.findIndex((step) => step.type === "block_done" && step.blockIndex === 1) }
+    case "boop":
+    case "boop-etapa": {
+      const data = VITRINE_BRANDS[brand]
+      const identification = { brand_name: data.name, contact_name: "", region: "", instagram: "", site: "" }
+      // O que a Boop preencheu: o logo, as fontes e as cores (marcadas até o cliente confirmar).
+      const identity = answered({
+        files: brandFiles(brand, "demo"),
+        value: { extras: { palette: { colors: colorsOf(data.palette) } } },
+        prefilled: screen === "boop",
+      })
+      // Só o que é de verdade da marca: o nome e a identidade visual (nada inventado no card).
+      const answers = { "q-identification": answered({ value: identification }), "q-identity": identity }
+      const brandData = { ...base, identification, answers, completedBlockIds: ["b0"] }
+      if (screen === "boop") return { data: brandData, startAt: at("identity") }
+      return {
+        data: { ...brandData, completedBlockIds: [...brandData.completedBlockIds, "b6"] },
+        startAt: steps.findIndex((step) => step.type === "block_done" && step.blockIndex === BLOCKS.findIndex((block) => block.id === "b6")),
+      }
+    }
     case "envio":
     case "obrigado": {
       const done = {

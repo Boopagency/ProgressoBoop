@@ -210,8 +210,9 @@ export async function saveBriefingAudio(
     .select("id, duration_ms, created_at")
     .single()
   if (error) return failure(error, INVALID_AUDIO)
-  // Gravar o áudio desfaz o "pular por agora".
-  await supabase.from("briefing_answers").update({ skipped: false }).eq("id", answer.id).eq("skipped", true)
+  // Gravar o áudio desfaz o "pular por agora" e, numa resposta que a Boop
+  // preencheu, conta como o cliente ter mexido (o banco tira a marca).
+  await supabase.from("briefing_answers").update({ skipped: false }).eq("id", answer.id)
   await queueBriefingAudio(supabase, { audioId: audio.id, storagePath: path })
   return { ok: true, data: audio }
 }

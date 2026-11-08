@@ -138,10 +138,13 @@ export type Database = {
           briefing_id: string
           created_at: string
           files: Json
+          filled_by_team: boolean
           id: string
           question_id: string
           question_snapshot: Json
           skipped: boolean
+          team_filled_at: string | null
+          team_filled_by: string | null
           text: string | null
           updated_at: string
           value: Json | null
@@ -151,10 +154,13 @@ export type Database = {
           briefing_id: string
           created_at?: string
           files?: Json
+          filled_by_team?: boolean
           id?: string
           question_id: string
           question_snapshot?: Json
           skipped?: boolean
+          team_filled_at?: string | null
+          team_filled_by?: string | null
           text?: string | null
           updated_at?: string
           value?: Json | null
@@ -164,10 +170,13 @@ export type Database = {
           briefing_id?: string
           created_at?: string
           files?: Json
+          filled_by_team?: boolean
           id?: string
           question_id?: string
           question_snapshot?: Json
           skipped?: boolean
+          team_filled_at?: string | null
+          team_filled_by?: string | null
           text?: string | null
           updated_at?: string
           value?: Json | null
@@ -3551,6 +3560,7 @@ export type Database = {
         | "links"
         | "dates"
       briefing_status:
+        | "preparing"
         | "not_started"
         | "in_progress"
         | "submitted"
@@ -3811,6 +3821,7 @@ export const Constants = {
         "dates",
       ],
       briefing_status: [
+        "preparing",
         "not_started",
         "in_progress",
         "submitted",

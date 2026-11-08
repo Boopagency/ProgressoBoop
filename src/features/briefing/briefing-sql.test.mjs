@@ -1,4 +1,5 @@
-// Testa a migration do briefing (20261107150000_briefing) num Postgres
+// Testa as migrations do briefing (20261107150000_briefing e as que vêm
+// depois, como a do preparo: 20261108120000_briefing_prepare) num Postgres
 // descartável: formulário v1, RLS do cliente e da equipe, cópia da pergunta,
 // áudios no Storage, envio só com os obrigatórios, avisos e o bloqueio das
 // aprovações. Precisa do psql e de um servidor local onde se possa criar um
@@ -6,7 +7,8 @@
 //   BRIEFING_SQL_TEST_DB="host=/var/run/postgresql port=5432 user=postgres" \
 //     node --test src/features/briefing/briefing-sql.test.mjs
 // Sem a variável, o teste é pulado. Cria o banco `briefing_sql_test_<pid>`,
-// com o mínimo das tabelas do app, roda a migration inteira e apaga o banco.
+// com o mínimo das tabelas do app, roda as migrations (cada uma numa
+// transação, como o Supabase aplica) e apaga o banco.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { readdirSync, readFileSync } from "node:fs"
@@ -15,8 +17,10 @@ import { after, before, test } from "node:test"
 const server = process.env.BRIEFING_SQL_TEST_DB
 const database = `briefing_sql_test_${process.pid}`
 const migrationsDir = new URL("../../../supabase/migrations/", import.meta.url)
-const migrationName = readdirSync(migrationsDir).find((name) => /^\d+_briefing\.sql$/.test(name))
-const migration = new URL(migrationName ?? "missing.sql", migrationsDir)
+const migrationNames = readdirSync(migrationsDir)
+  .filter((name) => /^\d+_briefing(_[a-z_]+)?\.sql$/.test(name))
+  .sort()
+const migrations = migrationNames.map((name) => new URL(name, migrationsDir))
 
 function psql(sql, { db = database, singleTransaction = false } = {}) {
   const args = [`${server} dbname=${db}`, "-v", "ON_ERROR_STOP=1", "-X", "-q", "-At"]
@@ -127,7 +131,8 @@ before(() => {
   if (!server) return
   psql(`create database ${database};`, { db: "postgres" })
   psql(BOOTSTRAP)
-  psql(readFileSync(migration, "utf8"), { singleTransaction: true })
+  assert.ok(migrations.length >= 2, "faltam as migrations do briefing")
+  for (const migration of migrations) psql(readFileSync(migration, "utf8"), { singleTransaction: true })
   psql(GRANTS)
   psql(`
     insert into auth.users (id) values ${[OWNER, TEAM, MEMBER, OTHER_MEMBER].map((id) => `(${quote(id)})`).join(", ")};
@@ -310,4 +315,99 @@ test("enviar só com os obrigatórios; depois o cliente não muda mais e o porta
   // Formulário: nunca se apaga (sem política de delete).
   as(TEAM, `delete from public.briefing_questions where key = 'offer';`)
   assert.equal(psql(`select count(*) from public.briefing_questions where key = 'offer'`), "1")
+})
+
+// Preparar sem liberar e a equipe responder pelo cliente (20261108120000_briefing_prepare).
+const PREPARED = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+const LOGO_FILE = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+
+test("a migration do preparo não tem drop, delete nem truncate", { skip }, () => {
+  const name = migrationNames.find((item) => item.endsWith("_briefing_prepare.sql"))
+  assert.ok(name, "falta a migration do preparo")
+  const text = readFileSync(new URL(name, migrationsDir), "utf8")
+  assert.doesNotMatch(text, /\b(drop|delete|truncate)\b/i)
+})
+
+test("preparando: o portal não trava e o cliente não vê nada", { skip }, () => {
+  as(TEAM, `insert into public.client_briefings (id, client_id, template_id, due_on, status, identification)
+    select ${quote(PREPARED)}, ${quote(OTHER_CLIENT)}, id, '2026-11-20', 'preparing', '{"brand_name": "Outra E2E"}' from public.briefing_templates where active;`)
+  assert.equal(psql(`select private.briefing_locked(${quote(OTHER_CLIENT)})`), "f")
+  assert.equal(as(OTHER_MEMBER, `select count(*) from public.client_briefings;`), "0")
+  assert.equal(as(OTHER_MEMBER, `select count(*) from public.briefing_questions;`), "0")
+  assert.equal(as(OTHER_MEMBER, `select count(*) from public.briefing_templates;`), "0")
+  // O cliente não responde nem envia arquivo no briefing em preparação.
+  failsAs(OTHER_MEMBER, `insert into public.briefing_answers (briefing_id, question_id, text) values (${quote(PREPARED)}, ${quote(questionId("offer"))}, 'x');`)
+  failsAs(OTHER_MEMBER, `insert into storage.objects (bucket_id, name) values ('briefing', '${OTHER_CLIENT}/${PREPARED}/x');`)
+  failsAs(OTHER_MEMBER, `select public.portal_submit_briefing(${quote(PREPARED)});`)
+  // Aprovar continua aberto para esse cliente (o post é de outro cliente; aqui basta a trava).
+  assert.equal(as(OTHER_MEMBER, `select count(*) from public.client_briefings where status::text = 'preparing';`), "0")
+})
+
+test("a equipe responde pelo cliente, com arquivo e paleta, e a resposta fica marcada", { skip }, () => {
+  const logo = `${OTHER_CLIENT}/${PREPARED}/files/${LOGO_FILE}`
+  as(TEAM, `insert into storage.objects (bucket_id, name, metadata) values ('briefing', ${quote(logo)}, '{"mimetype": "image/webp", "size": 8366}');`)
+  // Fora da pasta de um briefing que existe: recusado.
+  failsAs(TEAM, `insert into storage.objects (bucket_id, name) values ('briefing', '${OTHER_CLIENT}/${BRIEFING}/x');`)
+  failsAs(TEAM, `insert into storage.objects (bucket_id, name) values ('briefing', 'solto.png');`)
+  // O conector do Claude não envia, mesmo com a sessão da equipe.
+  assert.match(
+    String(
+      (() => {
+        try {
+          psql(`set test.oauth = 'on'; set role authenticated; select set_config('test.uid', ${quote(TEAM)}, false);
+            insert into storage.objects (bucket_id, name) values ('briefing', '${OTHER_CLIENT}/${PREPARED}/files/outro');`)
+        } catch (error) {
+          return error.stderr ?? error.message
+        }
+        return ""
+      })()
+    ),
+    /row-level security/
+  )
+
+  const identity = questionId("identity")
+  as(TEAM, `insert into public.briefing_answers (briefing_id, question_id, files, value, answered_by)
+    values (${quote(PREPARED)}, ${quote(identity)},
+      '[{"path": "${logo}", "name": "velmont-logo.webp", "mime_type": "image/webp", "size_bytes": 8366}]',
+      '{"extras": {"palette": {"colors": [{"hex": "#210b12", "use": "use"}, {"hex": "#ddc5a1", "use": "use"}]}}}',
+      ${quote(OTHER_MEMBER)});`)
+  const row = JSON.parse(
+    psql(`select json_build_object('team', filled_by_team, 'by', team_filled_by, 'at', team_filled_at is not null, 'answered', answered_by,
+      'snapshot', question_snapshot ->> 'kind') from public.briefing_answers where briefing_id = ${quote(PREPARED)} and question_id = ${quote(identity)}`)
+  )
+  assert.deepEqual(row, { team: true, by: TEAM, at: true, answered: null, snapshot: "upload" })
+  // Uma obrigatória respondida pela equipe conta como respondida.
+  const before = Number(psql(`select count(*) from private.briefing_missing_required(${quote(PREPARED)})`))
+  as(TEAM, `insert into public.briefing_answers (briefing_id, question_id, value) values (${quote(PREPARED)}, ${quote(questionId("brand_age"))}, '{"choice": "3_10y"}');`)
+  assert.equal(Number(psql(`select count(*) from private.briefing_missing_required(${quote(PREPARED)})`)), before - 1)
+  // Arquivo de outro briefing numa resposta: recusado também para a equipe.
+  assert.match(
+    failsAs(TEAM, `update public.briefing_answers set files = '[{"path": "${CLIENT}/${BRIEFING}/x"}]' where briefing_id = ${quote(PREPARED)} and question_id = ${quote(identity)};`),
+    /invalid_file/
+  )
+})
+
+test("liberar: o portal trava, o cliente vê o que a Boop preencheu e confirma", { skip }, () => {
+  as(TEAM, `update public.client_briefings set status = 'not_started', released_at = now(), due_on = '2026-11-20' where id = ${quote(PREPARED)};`)
+  assert.equal(psql(`select private.briefing_locked(${quote(OTHER_CLIENT)})`), "t")
+  assert.equal(as(OTHER_MEMBER, `select count(*) from public.client_briefings;`), "1")
+  const identity = questionId("identity")
+  assert.equal(as(OTHER_MEMBER, `select filled_by_team from public.briefing_answers where question_id = ${quote(identity)};`), "t")
+  // O cliente lê o logo que a equipe enviou.
+  assert.equal(as(OTHER_MEMBER, `select count(*) from storage.objects where bucket_id = 'briefing';`), "1")
+
+  // Confirmar (gravar de novo, igual) tira a marca; o histórico da equipe fica.
+  as(OTHER_MEMBER, `update public.briefing_answers set skipped = false where question_id = ${quote(identity)};`)
+  const row = JSON.parse(
+    psql(`select json_build_object('team', filled_by_team, 'by', team_filled_by, 'answered', answered_by)
+      from public.briefing_answers where briefing_id = ${quote(PREPARED)} and question_id = ${quote(identity)}`)
+  )
+  assert.deepEqual(row, { team: false, by: TEAM, answered: OTHER_MEMBER })
+  // O cliente não finge que foi a equipe.
+  as(OTHER_MEMBER, `update public.briefing_answers set filled_by_team = true, team_filled_by = ${quote(OTHER_MEMBER)} where question_id = ${quote(questionId("brand_age"))} and briefing_id = ${quote(PREPARED)};`)
+  assert.equal(psql(`select filled_by_team || ' ' || team_filled_by from public.briefing_answers where briefing_id = ${quote(PREPARED)} and question_id = ${quote(questionId("brand_age"))}`), `false ${TEAM}`)
+
+  // Depois de liberado a equipe ainda completa o que sabe.
+  as(TEAM, `insert into public.briefing_answers (briefing_id, question_id, value) values (${quote(PREPARED)}, ${quote(questionId("competitors"))}, '{"links": ["@marca"]}');`)
+  assert.equal(psql(`select filled_by_team from public.briefing_answers where briefing_id = ${quote(PREPARED)} and question_id = ${quote(questionId("competitors"))}`), "t")
 })

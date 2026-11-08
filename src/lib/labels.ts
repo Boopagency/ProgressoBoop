@@ -119,6 +119,7 @@ export const PAYMENT_REMINDERS_LABEL = "Avisar o cliente sobre pagamentos em atr
 export const PORTAL_FINANCE_STATUS_LABEL = { ok: "Em dia", overdue: "Pagamento em aberto" } as const
 
 export const BRIEFING_STATUSES = [
+  "preparing",
   "not_started",
   "in_progress",
   "submitted",
@@ -127,6 +128,7 @@ export const BRIEFING_STATUSES = [
   "validated",
 ] as const satisfies readonly BriefingStatus[]
 export const BRIEFING_STATUS_LABEL: Record<BriefingStatus, string> = {
+  preparing: "Preparando",
   not_started: "Não enviado",
   in_progress: "Em preenchimento",
   submitted: "Enviado",

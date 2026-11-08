@@ -337,8 +337,17 @@ segunda, 07:00).
   obrigatórias, e o cliente **Confirma** ou muda (depois disso a ficha mostra
   "Boop preencheu · cliente revisou"). Etapa preenchida inteira pela Boop
   abre numa revisão só, com **Tá tudo certo**.
-- **Perguntas do briefing** (`/briefing`, no menu Relacionamento, ou
-  **Editar perguntas** na aba): o formulário ativo, igual para todos os
+- **Central de briefings** (`/briefing`, no menu Relacionamento), aba
+  **Briefings**: todos os briefings numa lista (tabela no computador,
+  cartões no celular) com status, % respondido, prazo (atraso em vermelho),
+  último acesso, obrigatórias que faltam e o sinal "IA pendente"/"IA
+  falhou". Primeiro o que pede ação: enviado esperando a imersão, depois
+  atrasado, depois em preenchimento. Filtro por status (e "Pedem ação") e
+  busca por nome. Clicar abre o briefing na própria central
+  (`/briefing/<cliente>`), igual à aba da ficha, com **Abrir a ficha**.
+  Clientes ativos sem briefing aparecem à parte, com **Preparar briefing**.
+- **Perguntas do briefing** (aba **Configuração** da central,
+  `/briefing/configuracao`, ou **Editar perguntas** na aba): o formulário ativo, igual para todos os
   clientes. Criar, editar, reordenar e desativar blocos (título, descrição,
   tempo) e perguntas (texto, dica, tipo, opções conforme o tipo,
   complementos e obrigatória). Nada é apagado; vale para os briefings novos

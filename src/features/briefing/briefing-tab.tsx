@@ -11,7 +11,7 @@ import type { DateKey } from "@/lib/types"
 
 /**
  * Aba Briefing da ficha do cliente (`?aba=briefing`; os avisos do sino abrem
- * aqui): o status no topo, as respostas por bloco (a equipe pode preencher
+ * aqui) e o briefing aberto pela central (`/briefing/<cliente>`): o status no topo, as respostas por bloco (a equipe pode preencher
  * qualquer pergunta pelo cliente) e, ao lado, as notas da imersão e o atalho
  * para o editor de perguntas.
  */
@@ -89,7 +89,7 @@ function EditorLink() {
         As perguntas são as mesmas para todos os clientes. Mudar uma pergunta não mexe em briefing já enviado.
       </p>
       <Button asChild variant="outline" size="sm" className="gap-1.5 shadow-none">
-        <Link href="/briefing">
+        <Link href="/briefing/configuracao">
           <PencilLine className="size-3.5" />
           Editar perguntas
         </Link>

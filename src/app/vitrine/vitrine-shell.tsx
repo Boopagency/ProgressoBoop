@@ -22,7 +22,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { PORTAL_NAV } from "@/features/portal/portal-nav"
+import { PORTAL_BRIEFING_NAV, PORTAL_NAV } from "@/features/portal/portal-nav"
 import { CommandPaletteProvider, SearchButton } from "@/features/search/command-palette"
 
 /*
@@ -31,10 +31,30 @@ import { CommandPaletteProvider, SearchButton } from "@/features/search/command-
  * que consultam o servidor (não lidas, sino, alertas do portal). Só para ver
  * o visual com dados de exemplo.
  */
-export function VitrineShell({ area, active, children }: { area: "admin" | "portal"; active: string; children: ReactNode }) {
-  const groups = area === "admin" ? NAV_GROUPS : [{ label: null, items: PORTAL_NAV }]
-  const current = (area === "admin" ? NAV_ITEMS : PORTAL_NAV).find((item) => item.href === active)
-  const tabs = area === "admin" ? NAV_ITEMS.filter((item) => ["/hoje", "/tarefas", "/conteudo", "/comunicacoes"].includes(item.href)) : PORTAL_NAV.filter((item) => ["/portal", "/portal/calendario", "/portal/comunicacao", "/portal/notificacoes"].includes(item.href))
+export function VitrineShell({
+  area,
+  active,
+  children,
+  briefingOnly = false,
+  clientName = "Café Aurora",
+}: {
+  area: "admin" | "portal"
+  active: string
+  children: ReactNode
+  /** Portal com o briefing pendente: o menu só tem o Briefing. */
+  briefingOnly?: boolean
+  /** Cliente mostrado no portal. */
+  clientName?: string
+}) {
+  const portalItems = briefingOnly ? [PORTAL_BRIEFING_NAV] : PORTAL_NAV
+  const groups = area === "admin" ? NAV_GROUPS : [{ label: null, items: portalItems }]
+  const current = (area === "admin" ? NAV_ITEMS : portalItems).find((item) => item.href === active)
+  const tabs =
+    area === "admin"
+      ? NAV_ITEMS.filter((item) => ["/hoje", "/tarefas", "/conteudo", "/comunicacoes"].includes(item.href))
+      : briefingOnly
+        ? portalItems
+        : PORTAL_NAV.filter((item) => ["/portal", "/portal/calendario", "/portal/comunicacao", "/portal/notificacoes"].includes(item.href))
 
   return (
     <CommandPaletteProvider>
@@ -52,7 +72,7 @@ export function VitrineShell({ area, active, children }: { area: "admin" | "port
                       <span className="font-display text-[15px] font-semibold tracking-tight text-foreground">
                         {area === "admin" ? "Boop Admin" : "Boop"}
                       </span>
-                      {area === "portal" ? <span className="truncate text-xs text-muted-foreground">Café Aurora</span> : null}
+                      {area === "portal" ? <span className="truncate text-xs text-muted-foreground">{clientName}</span> : null}
                     </span>
                   </Link>
                 </SidebarMenuButton>

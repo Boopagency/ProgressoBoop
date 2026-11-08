@@ -4,6 +4,7 @@ import {
   Bell,
   Building2,
   Check,
+  ClipboardList,
   FileText,
   FolderKanban,
   HeartHandshake,
@@ -21,7 +22,7 @@ import { TabBar, TabBarItem } from "@/components/layout/tab-bar"
 import { AccountDialog, type AccountDialogUser } from "@/features/account/account-dialog"
 import { portalHref, selectedClient } from "@/features/portal/links"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
-import { isPortalDetail, PORTAL_CONTENT_HREFS, portalSectionOf } from "@/features/portal/portal-nav"
+import { isPortalDetail, PORTAL_BRIEFING_NAV, PORTAL_CONTENT_HREFS, portalSectionOf } from "@/features/portal/portal-nav"
 import type { PortalClient } from "@/features/portal/session"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
 
@@ -29,6 +30,8 @@ import { PersonAvatar } from "@/features/workspace/person-avatar"
  * Menu de baixo do portal no celular: Início, Conteúdo (calendário e feed),
  * Comunicação e Notificações, com as não lidas, e Mais (projetos,
  * documentos, financeiro, indicar, a troca de cliente, a conta e o tema).
+ * Com o briefing do cliente pendente, só o Briefing e o Mais (conta, tema,
+ * troca de cliente).
  */
 export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clients: readonly PortalClient[] }) {
   const pathname = usePathname()
@@ -46,6 +49,7 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
     section === "/portal/indicar"
   // Na troca de cliente, um post ou projeto aberto volta para a seção (o item é do cliente anterior).
   const switchTarget = isPortalDetail(pathname) ? (section ?? "/portal") : pathname
+  const locked = client?.briefingLocked ?? false
 
   function closeThen(next?: () => void) {
     setMoreOpen(false)
@@ -55,29 +59,40 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
   return (
     <>
       <TabBar label="Menu do portal">
-        <TabBarItem href={href("/portal")} title="Início" icon={House} active={section === "/portal"} />
-        <TabBarItem
-          href={href("/portal/calendario")}
-          title="Conteúdo"
-          icon={Megaphone}
-          active={section !== null && PORTAL_CONTENT_HREFS.includes(section)}
-        />
-        <TabBarItem
-          href={href("/portal/comunicacao")}
-          title="Comunicação"
-          icon={MessagesSquare}
-          active={section === "/portal/comunicacao"}
-          count={counts.messages}
-          countLabel={`${counts.messages} ${counts.messages === 1 ? "mensagem não lida" : "mensagens não lidas"}`}
-        />
-        <TabBarItem
-          href={href("/portal/notificacoes")}
-          title="Notificações"
-          icon={Bell}
-          active={section === "/portal/notificacoes"}
-          count={counts.notifications}
-          countLabel={`${counts.notifications} ${counts.notifications === 1 ? "aviso não lido" : "avisos não lidos"}`}
-        />
+        {locked ? (
+          <TabBarItem
+            href={href(PORTAL_BRIEFING_NAV.href)}
+            title={PORTAL_BRIEFING_NAV.title}
+            icon={ClipboardList}
+            active={section === PORTAL_BRIEFING_NAV.href}
+          />
+        ) : (
+          <>
+            <TabBarItem href={href("/portal")} title="Início" icon={House} active={section === "/portal"} />
+            <TabBarItem
+              href={href("/portal/calendario")}
+              title="Conteúdo"
+              icon={Megaphone}
+              active={section !== null && PORTAL_CONTENT_HREFS.includes(section)}
+            />
+            <TabBarItem
+              href={href("/portal/comunicacao")}
+              title="Comunicação"
+              icon={MessagesSquare}
+              active={section === "/portal/comunicacao"}
+              count={counts.messages}
+              countLabel={`${counts.messages} ${counts.messages === 1 ? "mensagem não lida" : "mensagens não lidas"}`}
+            />
+            <TabBarItem
+              href={href("/portal/notificacoes")}
+              title="Notificações"
+              icon={Bell}
+              active={section === "/portal/notificacoes"}
+              count={counts.notifications}
+              countLabel={`${counts.notifications} ${counts.notifications === 1 ? "aviso não lido" : "avisos não lidos"}`}
+            />
+          </>
+        )}
         <TabBarItem title="Mais" icon={Menu} active={inMore || moreOpen} onClick={() => setMoreOpen(true)} />
       </TabBar>
 
@@ -88,36 +103,38 @@ export function PortalTabBar({ user, clients }: { user: AccountDialogUser; clien
           email={user.email}
           onOpenAccount={() => closeThen(() => setAccountOpen(true))}
         />
-        <MoreSheetSection>
-          <MoreSheetItem
-            href={href("/portal/projetos")}
-            title="Projetos"
-            icon={FolderKanban}
-            active={section === "/portal/projetos"}
-            onClick={() => closeThen()}
-          />
-          <MoreSheetItem
-            href={href("/portal/documentos")}
-            title="Documentos"
-            icon={FileText}
-            active={section === "/portal/documentos"}
-            onClick={() => closeThen()}
-          />
-          <MoreSheetItem
-            href={href("/portal/financeiro")}
-            title="Financeiro"
-            icon={Wallet}
-            active={section === "/portal/financeiro"}
-            onClick={() => closeThen()}
-          />
-          <MoreSheetItem
-            href={href("/portal/indicar")}
-            title="Indicar"
-            icon={HeartHandshake}
-            active={section === "/portal/indicar"}
-            onClick={() => closeThen()}
-          />
-        </MoreSheetSection>
+        {locked ? null : (
+          <MoreSheetSection>
+            <MoreSheetItem
+              href={href("/portal/projetos")}
+              title="Projetos"
+              icon={FolderKanban}
+              active={section === "/portal/projetos"}
+              onClick={() => closeThen()}
+            />
+            <MoreSheetItem
+              href={href("/portal/documentos")}
+              title="Documentos"
+              icon={FileText}
+              active={section === "/portal/documentos"}
+              onClick={() => closeThen()}
+            />
+            <MoreSheetItem
+              href={href("/portal/financeiro")}
+              title="Financeiro"
+              icon={Wallet}
+              active={section === "/portal/financeiro"}
+              onClick={() => closeThen()}
+            />
+            <MoreSheetItem
+              href={href("/portal/indicar")}
+              title="Indicar"
+              icon={HeartHandshake}
+              active={section === "/portal/indicar"}
+              onClick={() => closeThen()}
+            />
+          </MoreSheetSection>
+        )}
         {client && clients.length > 1 ? (
           <MoreSheetSection label="Clientes">
             {clients.map((item) => (

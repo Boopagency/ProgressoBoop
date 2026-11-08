@@ -81,6 +81,399 @@ export type Database = {
           },
         ]
       }
+      briefing_answer_audios: {
+        Row: {
+          answer_id: string
+          briefing_id: string
+          created_at: string
+          created_by: string | null
+          duration_ms: number
+          id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          answer_id: string
+          briefing_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_ms: number
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          answer_id?: string
+          briefing_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_ms?: number
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_answer_audios_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_answer_audios_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "client_briefings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_answers: {
+        Row: {
+          answered_by: string | null
+          briefing_id: string
+          created_at: string
+          files: Json
+          filled_by_team: boolean
+          id: string
+          question_id: string
+          question_snapshot: Json
+          skipped: boolean
+          team_filled_at: string | null
+          team_filled_by: string | null
+          text: string | null
+          updated_at: string
+          value: Json | null
+        }
+        Insert: {
+          answered_by?: string | null
+          briefing_id: string
+          created_at?: string
+          files?: Json
+          filled_by_team?: boolean
+          id?: string
+          question_id: string
+          question_snapshot?: Json
+          skipped?: boolean
+          team_filled_at?: string | null
+          team_filled_by?: string | null
+          text?: string | null
+          updated_at?: string
+          value?: Json | null
+        }
+        Update: {
+          answered_by?: string | null
+          briefing_id?: string
+          created_at?: string
+          files?: Json
+          filled_by_team?: boolean
+          id?: string
+          question_id?: string
+          question_snapshot?: Json
+          skipped?: boolean
+          team_filled_at?: string | null
+          team_filled_by?: string | null
+          text?: string | null
+          updated_at?: string
+          value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_answers_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "client_briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_blocks: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          estimated_minutes: number | null
+          id: string
+          position: number
+          template_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          position: number
+          template_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          position?: number
+          template_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_blocks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_immersions: {
+        Row: {
+          briefing_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          meeting_id: string | null
+          notes: string | null
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          briefing_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_id?: string | null
+          notes?: string | null
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          briefing_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_id?: string | null
+          notes?: string | null
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_immersions_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: true
+            referencedRelation: "client_briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_immersions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_immersions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_questions: {
+        Row: {
+          active: boolean
+          block_id: string
+          created_at: string
+          hint: string | null
+          id: string
+          key: string | null
+          kind: Database["public"]["Enums"]["briefing_question_kind"]
+          options: Json
+          position: number
+          required: boolean
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          block_id: string
+          created_at?: string
+          hint?: string | null
+          id?: string
+          key?: string | null
+          kind: Database["public"]["Enums"]["briefing_question_kind"]
+          options?: Json
+          position: number
+          required?: boolean
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          block_id?: string
+          created_at?: string
+          hint?: string | null
+          id?: string
+          key?: string | null
+          kind?: Database["public"]["Enums"]["briefing_question_kind"]
+          options?: Json
+          position?: number
+          required?: boolean
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_questions_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_summaries: {
+        Row: {
+          answer_id: string
+          attempts: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          model: string | null
+          source_hash: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["briefing_ai_status"]
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer_id: string
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          source_hash?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer_id?: string
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          source_hash?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_summaries_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: true
+            referencedRelation: "briefing_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      briefing_transcriptions: {
+        Row: {
+          attempts: number
+          audio_id: string
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          model: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["briefing_ai_status"]
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          audio_id: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          audio_id?: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_transcriptions_audio_id_fkey"
+            columns: ["audio_id"]
+            isOneToOne: true
+            referencedRelation: "briefing_answer_audios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_members: {
         Row: {
           channel_id: string
@@ -184,6 +577,98 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_briefings: {
+        Row: {
+          client_id: string
+          completed_block_ids: string[]
+          created_at: string
+          current_question_id: string | null
+          document_sent_at: string | null
+          due_on: string
+          id: string
+          identification: Json
+          immersion_at: string | null
+          last_seen_at: string | null
+          released_at: string
+          released_by: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["briefing_status"]
+          submitted_at: string | null
+          template_id: string
+          updated_at: string
+          validated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          completed_block_ids?: string[]
+          created_at?: string
+          current_question_id?: string | null
+          document_sent_at?: string | null
+          due_on: string
+          id?: string
+          identification?: Json
+          immersion_at?: string | null
+          last_seen_at?: string | null
+          released_at?: string
+          released_by?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_status"]
+          submitted_at?: string | null
+          template_id: string
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          completed_block_ids?: string[]
+          created_at?: string
+          current_question_id?: string | null
+          document_sent_at?: string | null
+          due_on?: string
+          id?: string
+          identification?: Json
+          immersion_at?: string | null
+          last_seen_at?: string | null
+          released_at?: string
+          released_by?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_status"]
+          submitted_at?: string | null
+          template_id?: string
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_briefings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_briefings_current_question_id_fkey"
+            columns: ["current_question_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_briefings_released_by_fkey"
+            columns: ["released_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_briefings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -2536,6 +3021,68 @@ export type Database = {
       }
     }
     Functions: {
+      briefing_summaries_due: {
+        Args: { p_limit: number; p_secret: string }
+        Returns: {
+          answer_id: string
+          answer_text: string
+          attempts: number
+          missing_audios: number
+          previous_summary: string
+          question: Json
+          source_hash: string
+          transcripts: string[]
+        }[]
+      }
+      briefing_summary_done: {
+        Args: {
+          p_answer_id: string
+          p_model: string
+          p_secret: string
+          p_source_hash: string
+          p_summary: string
+        }
+        Returns: boolean
+      }
+      briefing_summary_failed: {
+        Args: {
+          p_answer_id: string
+          p_error: string
+          p_outcome: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      briefing_transcription_done: {
+        Args: {
+          p_audio_id: string
+          p_model: string
+          p_secret: string
+          p_transcript: string
+        }
+        Returns: boolean
+      }
+      briefing_transcription_failed: {
+        Args: {
+          p_audio_id: string
+          p_error: string
+          p_outcome: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      briefing_transcriptions_due: {
+        Args: { p_limit: number; p_secret: string }
+        Returns: {
+          attempts: number
+          audio_id: string
+          duration_ms: number
+          mime_type: string
+          question: string
+          signed_url: string
+          storage_path: string
+        }[]
+      }
       cancel_instagram_publish: {
         Args: { p_post_id: string }
         Returns: string[]
@@ -2755,6 +3302,10 @@ export type Database = {
           instagram_handle: string
         }[]
       }
+      portal_complete_briefing_block: {
+        Args: { target_block: string; target_briefing: string }
+        Returns: boolean
+      }
       portal_direct_channels: {
         Args: { target_client: string }
         Returns: {
@@ -2968,8 +3519,20 @@ export type Database = {
           url: string
         }[]
       }
+      portal_submit_briefing: {
+        Args: { target_briefing: string }
+        Returns: string
+      }
       portal_update_me: {
         Args: { new_avatar_path: string; new_name: string }
+        Returns: undefined
+      }
+      queue_briefing_audio: {
+        Args: {
+          p_audio_id: string
+          p_signed_url: string
+          p_url_expires_at: string
+        }
         Returns: undefined
       }
       reset_client_password: {
@@ -3053,6 +3616,27 @@ export type Database = {
     }
     Enums: {
       activity_action: "created" | "updated" | "deleted" | "comment"
+      briefing_ai_status: "pending" | "processing" | "ready" | "failed"
+      briefing_question_kind:
+        | "identification"
+        | "audio"
+        | "short_text"
+        | "number"
+        | "choice"
+        | "multiple"
+        | "cards"
+        | "palette"
+        | "upload"
+        | "links"
+        | "dates"
+      briefing_status:
+        | "preparing"
+        | "not_started"
+        | "in_progress"
+        | "submitted"
+        | "immersion_done"
+        | "document_sent"
+        | "validated"
       channel_kind: "client" | "internal" | "direct"
       client_approval_result: "approved" | "changes"
       client_file_category:
@@ -3152,6 +3736,8 @@ export type Database = {
         | "site_lead"
         | "instagram_publish_failed"
         | "payment_overdue"
+        | "briefing_block_done"
+        | "briefing_submitted"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -3290,6 +3876,29 @@ export const Constants = {
   public: {
     Enums: {
       activity_action: ["created", "updated", "deleted", "comment"],
+      briefing_ai_status: ["pending", "processing", "ready", "failed"],
+      briefing_question_kind: [
+        "identification",
+        "audio",
+        "short_text",
+        "number",
+        "choice",
+        "multiple",
+        "cards",
+        "palette",
+        "upload",
+        "links",
+        "dates",
+      ],
+      briefing_status: [
+        "preparing",
+        "not_started",
+        "in_progress",
+        "submitted",
+        "immersion_done",
+        "document_sent",
+        "validated",
+      ],
       channel_kind: ["client", "internal", "direct"],
       client_approval_result: ["approved", "changes"],
       client_file_category: [
@@ -3392,6 +4001,8 @@ export const Constants = {
         "site_lead",
         "instagram_publish_failed",
         "payment_overdue",
+        "briefing_block_done",
+        "briefing_submitted",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

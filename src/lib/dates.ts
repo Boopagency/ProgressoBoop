@@ -114,6 +114,23 @@ export function addDaysToKey(key: DateKey, days: number): DateKey {
   return formatDateKey(addDays(parseDateKey(key), days))
 }
 
+/**
+ * Dia útil (segunda a sexta) que fica `days` dias úteis depois de `key`.
+ * O próprio dia não conta: de sexta, 1 dia útil é a segunda. Com `days`
+ * negativo, conta para trás. Feriados não entram (o prazo é editável).
+ */
+export function addBusinessDays(key: DateKey, days: number): DateKey {
+  const step = days < 0 ? -1 : 1
+  let date = parseDateKey(key)
+  let left = Math.abs(Math.trunc(days))
+  while (left > 0) {
+    date = addDays(date, step)
+    const weekday = date.getDay()
+    if (weekday !== 0 && weekday !== 6) left -= 1
+  }
+  return formatDateKey(date)
+}
+
 export function daysBetween(from: DateKey, to: DateKey): number {
   return differenceInCalendarDays(parseDateKey(to), parseDateKey(from))
 }

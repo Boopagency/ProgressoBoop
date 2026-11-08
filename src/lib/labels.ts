@@ -1,4 +1,5 @@
 import type {
+  BriefingStatus,
   ClientFileCategory,
   ClientHealth,
   CommunicationChannel,
@@ -116,6 +117,25 @@ export const PAYMENT_REMINDERS_LABEL = "Avisar o cliente sobre pagamentos em atr
 
 /** Selo do financeiro no portal. */
 export const PORTAL_FINANCE_STATUS_LABEL = { ok: "Em dia", overdue: "Pagamento em aberto" } as const
+
+export const BRIEFING_STATUSES = [
+  "preparing",
+  "not_started",
+  "in_progress",
+  "submitted",
+  "immersion_done",
+  "document_sent",
+  "validated",
+] as const satisfies readonly BriefingStatus[]
+export const BRIEFING_STATUS_LABEL: Record<BriefingStatus, string> = {
+  preparing: "Preparando",
+  not_started: "Não enviado",
+  in_progress: "Em preenchimento",
+  submitted: "Enviado",
+  immersion_done: "Imersão feita",
+  document_sent: "Documento enviado",
+  validated: "Validado",
+}
 
 export const PUBLISH_STATUS_LABEL: Record<PublishStatus, string> = {
   queued: "Agendado",

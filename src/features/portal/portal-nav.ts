@@ -1,6 +1,7 @@
 import {
   Bell,
   CalendarDays,
+  ClipboardList,
   FileText,
   FolderKanban,
   HeartHandshake,
@@ -37,6 +38,14 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { title: "Indicar", href: "/portal/indicar", icon: HeartHandshake },
 ]
 
+/** Briefing de onboarding: com ele liberado e não enviado, é o único item do menu. */
+export const PORTAL_BRIEFING_NAV: PortalNavItem = { title: "Briefing", href: "/portal/briefing", icon: ClipboardList }
+
+/** Itens do menu do cliente escolhido: só o Briefing enquanto ele estiver pendente. */
+export function portalNavFor(client: { briefingLocked?: boolean } | null): PortalNavItem[] {
+  return client?.briefingLocked ? [PORTAL_BRIEFING_NAV] : PORTAL_NAV
+}
+
 /** No menu de baixo do celular, Calendário e Feed ficam juntos em "Conteúdo". */
 export const PORTAL_CONTENT_HREFS = ["/portal/calendario", "/portal/feed"]
 
@@ -46,6 +55,7 @@ export const PORTAL_CONTENT_HREFS = ["/portal/calendario", "/portal/feed"]
  */
 export function portalSectionOf(pathname: string): PortalNavItem | null {
   if (pathname === "/portal" || pathname.startsWith("/portal/posts/")) return PORTAL_NAV[0] ?? null
+  if (pathname === PORTAL_BRIEFING_NAV.href || pathname.startsWith(`${PORTAL_BRIEFING_NAV.href}/`)) return PORTAL_BRIEFING_NAV
   return (
     PORTAL_NAV.find((item) => item.href !== "/portal" && (pathname === item.href || pathname.startsWith(`${item.href}/`))) ??
     null

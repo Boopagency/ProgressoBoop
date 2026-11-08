@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   CalendarPlus,
   ChevronDown,
+  ClipboardList,
   FileText,
   LayoutGrid,
   Megaphone,
@@ -94,8 +95,8 @@ import type {
 import { cn } from "@/lib/utils"
 
 /** Seções da página do cliente (`?aba=`); sem aba, a visão geral. */
-type ClientSection = "geral" | "trabalho" | "conteudo" | "conversas" | "documentos" | "financeiro"
-const SECTIONS: ClientSection[] = ["geral", "trabalho", "conteudo", "conversas", "documentos", "financeiro"]
+type ClientSection = "geral" | "trabalho" | "conteudo" | "conversas" | "documentos" | "financeiro" | "briefing"
+const SECTIONS: ClientSection[] = ["geral", "trabalho", "conteudo", "conversas", "documentos", "financeiro", "briefing"]
 
 function isSection(value: string | null): value is ClientSection {
   return value !== null && (SECTIONS as string[]).includes(value)
@@ -119,6 +120,7 @@ export function ClientView({
   members,
   files,
   instagramCard,
+  briefingTab,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -146,6 +148,8 @@ export function ClientView({
   files: ClientFile[]
   /** Cartão "Instagram" (conta conectada), montado pela página. */
   instagramCard: ReactNode
+  /** Aba "Briefing" (onboarding), montada pela página; sem ela (antes da migration), a aba não aparece. */
+  briefingTab?: ReactNode
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -165,7 +169,11 @@ export function ClientView({
   // A seção aberta fica na URL (?aba=); a volta do Instagram (?instagram=) abre a de Conteúdo, onde está o cartão.
   const requestedSection = searchParams.get("aba")
   const [section, setSection] = useState<ClientSection>(() =>
-    isSection(requestedSection) ? requestedSection : searchParams.has("instagram") ? "conteudo" : "geral"
+    isSection(requestedSection) && (requestedSection !== "briefing" || briefingTab)
+      ? requestedSection
+      : searchParams.has("instagram")
+        ? "conteudo"
+        : "geral"
   )
   function changeSection(next: ClientSection) {
     setSection(next)
@@ -196,6 +204,7 @@ export function ClientView({
     { value: "conversas", label: "Conversas", icon: <MessagesSquare /> },
     { value: "documentos", label: "Documentos", icon: <FileText /> },
     { value: "financeiro", label: "Financeiro", icon: <Wallet /> },
+    ...(briefingTab ? [{ value: "briefing" as const, label: "Briefing", icon: <ClipboardList /> }] : []),
   ]
 
   function panel(value: ClientSection) {
@@ -418,6 +427,8 @@ export function ClientView({
           <ClientFinanceCard clientId={client.id} finance={finance} today={today} reminders={paymentReminders} />
           <ClientDealsCard clientId={client.id} deals={deals} today={today} />
         </div>
+
+        {briefingTab ? <div {...panel("briefing")}>{briefingTab}</div> : null}
       </PageBody>
 
       <ClientDialog state={clientDialog} onOpenChange={(open) => setClientDialog((current) => ({ ...current, open }))} />

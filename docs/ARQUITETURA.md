@@ -1421,6 +1421,96 @@ rodapé tem quem está logado e "Sair".
   `listenToNotifications` do sino, na tabela `client_notifications`, com o
   token da sessão do portal (`getPortalRealtimeToken`); sem o Realtime, o
   menu pergunta a cada 30 segundos.
+- **Briefing de onboarding** (issue #108; migration `*_briefing.sql`,
+  `features/briefing`): formulário em `briefing_templates` →
+  `briefing_blocks` → `briefing_questions` (nunca apagados, só desativados;
+  o v1 de 30 perguntas vem na migration), o briefing do cliente em
+  `client_briefings` (um por cliente; a equipe libera na aba Briefing
+  da ficha, com a identificação conferida e o prazo de 5 dias úteis,
+  `addBusinessDays`) e as respostas em `briefing_answers`, cada uma com a
+  cópia da pergunta (`question_snapshot`, gravada pelo banco). Áudios em
+  `briefing_answer_audios` e uploads no bucket privado `briefing`
+  ("<cliente>/<briefing>/<arquivo>"). Transcrição, resumo e estado da IA em
+  `briefing_transcriptions` e `briefing_summaries` (só a equipe lê); a
+  imersão em `briefing_immersions`. Liberado e não enviado
+  (`not_started`/`in_progress`), o portal desse cliente só tem o Briefing:
+  `pickPortalClient` leva a `/portal/briefing`, o menu mostra só ele e
+  `portal_review_post`/`portal_review_step` recusam com `briefing_pending`.
+  O cliente fecha etapa e envia por `portal_complete_briefing_block` e
+  `portal_submit_briefing` (só com os obrigatórios), que avisam a equipe
+  (`briefing_block_done`, `briefing_submitted`). Teste do SQL:
+  `src/features/briefing/briefing-sql.test.mjs`.
+  **Fluxo do cliente** (`/portal/briefing`, `BriefingFlow`): boas-vindas,
+  uma pergunta por tela (áudio em destaque com até 3 min, onda enquanto
+  grava, ouvir, regravar e complementar; "prefiro escrever" embaixo), o
+  fechamento de cada etapa, a revisão (obrigatórias que faltam e puladas,
+  "ficam pra reunião") e o obrigado. Regras puras em `flow-logic.ts`; cada
+  resposta é salva sozinha (`saveBriefingAnswer`, upsert com o RLS) e a
+  pergunta em que parou vai em `current_question_id` (volta nela). Áudios e
+  arquivos vão do navegador ao bucket `briefing` por URL assinada e são lidos
+  por `/api/briefing/audios/[id]` e `/api/briefing/arquivos?caminho=`; cada
+  áudio salvo chama `queueBriefingAudio` (Parte 3). O card "Sua marca" monta-se
+  só com respostas fechadas e uploads. Vitrine em
+  `/vitrine/portal-telas/briefing?tela=…`; prints em
+  `docs/design/prints/briefing/`.
+- **Briefing, visão da equipe** (issue #108, Parte 2; `features/briefing/team-*`,
+  `briefing-tab.tsx`, `briefing-editor.tsx`): aba `?aba=briefing` da ficha
+  (para onde os avisos do sino apontam) com o status no topo (a sequência
+  inteira, % respondido, prazo, último acesso e as obrigatórias que faltam),
+  as respostas por bloco (`buildBriefingView`: o texto mostrado é a cópia
+  `question_snapshot`; pergunta criada depois do envio não conta; desativada
+  e respondida aparece marcada) com o resumo da IA em destaque, o estado da
+  IA, as respostas fechadas legíveis (`describeAnswer`, que lê o
+  formato `AnswerValue` de `flow-logic.ts`) e o áudio com a transcrição num
+  clique. Áudios e arquivos usam as rotas do portal
+  (`/api/briefing/audios/<id>` e `/api/briefing/arquivos?caminho=`; URL
+  assinada de 1 h, e a equipe lê tudo pelo RLS do Storage). A equipe marca
+  Imersão feita (só com o briefing enviado e as obrigatórias completas),
+  Documento enviado e Validado, e pode voltar um passo (`setBriefingStatus`).
+  Notas da imersão em `briefing_immersions`, ligadas a uma reunião do
+  cliente no calendário (o registro em `meetings` é criado se faltar).
+  Editor de perguntas em `/briefing` (menu Relacionamento): blocos e
+  perguntas do formulário ativo, criar, editar, reordenar e desativar, sem
+  apagar; o bloco 0 (identificação) é fixo.
+- **Briefing, preparar e a Boop responder** (migration `*_briefing_prepare.sql`,
+  `team-answer-editor.tsx`): status novo `preparing` (antes de `not_started`),
+  que `briefing_locked`, `my_briefing_ids` e `my_open_briefing_ids` ignoram
+  (o cliente não vê nada e o portal não trava); liberar muda para
+  `not_started` com `released_at` de agora (`releaseBriefing`). A equipe grava
+  respostas (política de insert) e arquivos no bucket `briefing` (política de
+  insert na pasta de um briefing existente) por `saveTeamBriefingAnswer` e
+  `createTeamBriefingUpload`, reaproveitando `QuestionInput` (com
+  `allowAudio={false}`). `briefing_answers.filled_by_team` (e
+  `team_filled_by`/`team_filled_at`) é gravado pelo trigger
+  `prepare_briefing_answer`: a equipe marca; o cliente, ao gravar (confirmar
+  ou mudar, inclusive um áudio), tira a marca e o histórico fica. No portal,
+  `FlowAnswer.prefilled` mostra o selo; `prefilledBlockIds` e o passo
+  `block_review` de `buildSteps` fazem a revisão rápida da etapa inteira.
+  Vitrine: `/vitrine/briefing-preencher?marca=velmont|barbara` (ficha;
+  `&editar=1` abre os campos) e `/vitrine/portal-telas/briefing?tela=boop`
+  ou `boop-etapa` (`&marca=`), com a identidade real das duas marcas
+  (`marcas.ts`, logos em `public/vitrine/briefing-preencher/`); prints em
+  `docs/design/prints/briefing-preencher/`.
+- **Transcrição e resumo do briefing** (Parte 3; migration
+  `*_briefing_transcription.sql`, `features/briefing/{transcription,jobs,ai-*}.ts`):
+  ao salvar um áudio, `queueBriefingAudio` (sessão do cliente) assina a URL
+  (7 dias), guarda-a em `private.briefing_audio_sources` por
+  `queue_briefing_audio` (confere o briefing aberto da conta; a equipe pode
+  reenviar) e processa na hora com `after()`. O `pg_cron` (`briefing-process`,
+  a cada minuto) chama `private.run_briefing_job` → `pg_net` →
+  `/api/briefing/jobs` só quando há algo pendente (URL e segredo no Vault:
+  `briefing_jobs_url`, `briefing_jobs_secret`). A rota pega os itens por
+  `briefing_transcriptions_due`/`briefing_summaries_due` (`skip locked`),
+  transcreve com OpenAI `gpt-4o-mini-transcribe` (pt), resume com
+  `claude-haiku-5-5` (pergunta + texto + transcrições; expressões do cliente
+  entre aspas, sem inventar) e grava por `…_done`/`…_failed`, todas com o
+  segredo. Até 3 tentativas, com espera de 1 min por tentativa; 401/403
+  adia sem gastar tentativa; sem `OPENAI_API_KEY`/`ANTHROPIC_API_KEY`, nada é
+  pedido ao banco e os itens ficam pendentes. O resumo volta para pendente
+  quando a resposta muda (texto, pular) ou ganha/perde áudio (triggers) e só
+  roda com todos os áudios transcritos; `source_hash` evita chamar a IA se
+  nada do que se resume mudou. Testes: `jobs.test.mjs` (APIs simuladas) e
+  `transcription-sql.test.mjs` (Postgres local).
 
 ### Busca geral (Ctrl/⌘ + K)
 

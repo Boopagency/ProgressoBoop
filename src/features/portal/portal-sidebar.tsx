@@ -35,7 +35,7 @@ import { signOut } from "@/features/auth/actions"
 import { portalHref, selectedClient } from "@/features/portal/links"
 import { countLabel } from "@/features/portal/notification-logic"
 import { usePortalAlerts } from "@/features/portal/portal-alerts"
-import { isPortalDetail, PORTAL_NAV, portalSectionOf } from "@/features/portal/portal-nav"
+import { isPortalDetail, portalNavFor, portalSectionOf } from "@/features/portal/portal-nav"
 import type { PortalClient } from "@/features/portal/session"
 import { forgetThisDevice } from "@/features/push/browser"
 import { PersonAvatar } from "@/features/workspace/person-avatar"
@@ -87,7 +87,7 @@ export function PortalSidebar({
         <SidebarGroup className="py-1.5">
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
-              {PORTAL_NAV.map((item) => (
+              {portalNavFor(client).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

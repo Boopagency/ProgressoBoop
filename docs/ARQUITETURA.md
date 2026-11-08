@@ -1469,9 +1469,29 @@ rodapé tem quem está logado e "Sair".
   Documento enviado e Validado, e pode voltar um passo (`setBriefingStatus`).
   Notas da imersão em `briefing_immersions`, ligadas a uma reunião do
   cliente no calendário (o registro em `meetings` é criado se faltar).
-  Editor de perguntas em `/briefing` (menu Relacionamento): blocos e
-  perguntas do formulário ativo, criar, editar, reordenar e desativar, sem
-  apagar; o bloco 0 (identificação) é fixo.
+  Editor de perguntas em `/briefing/configuracao` (aba Configuração da
+  central): blocos e perguntas do formulário ativo, criar, editar,
+  reordenar e desativar, sem apagar; o bloco 0 (identificação) é fixo.
+- **Central de briefings** (`/briefing`, menu Relacionamento;
+  `briefing-central.tsx`, `central-logic.ts`, `central-nav.tsx`,
+  `briefing-detail.tsx`): abas Briefings (padrão) e Configuração, por rota.
+  A lista sai de uma consulta só (`getBriefingCentral`: `clients` com
+  `client_briefings` → `briefing_answers` → resumo e áudios → transcrição
+  embutidos, mais os formulários usados numa leitura) e as contas usam
+  `buildBriefingView`, a mesma regra da aba da ficha (% respondido,
+  obrigatórias que faltam); a IA mostra "falhou" se algo falhou e
+  "pendente" se algo está na fila. Ordem (`compareBriefingRows`): enviado
+  esperando a imersão, atrasado, em preenchimento, não enviado, preparando,
+  e o resto na sequência. Filtro por status ("Pedem ação" = enviado ou
+  atrasado) e busca sem acento. Computador: tabela densa (`bg-card-solid`);
+  celular: cartões. Clientes ativos sem briefing ficam à parte, com
+  "Preparar briefing" (`prepareBriefing`). Cada briefing abre em
+  `/briefing/<cliente>` com a mesma `BriefingTab` da ficha; a aba
+  `?aba=briefing` da ficha continua, e os avisos do sino seguem apontando
+  para ela (`notify_briefing_team`). As ações do briefing revalidam
+  `/briefing` (layout). Vitrine: `/vitrine/briefing-central` (e
+  `/configuracao`, `/<cliente>`); prints em
+  `docs/design/prints/briefing-central/`. Teste: `central-logic.test.mjs`.
 - **Briefing, preparar e a Boop responder** (migration `*_briefing_prepare.sql`,
   `team-answer-editor.tsx`): status novo `preparing` (antes de `not_started`),
   que `briefing_locked`, `my_briefing_ids` e `my_open_briefing_ids` ignoram

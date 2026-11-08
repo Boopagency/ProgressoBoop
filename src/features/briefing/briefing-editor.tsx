@@ -74,7 +74,17 @@ type QuestionDialogState = { open: boolean; key: number; blockId?: string; quest
  * preenchimento; a resposta guarda a cópia da pergunta, então o que já foi
  * respondido e enviado continua com o texto original.
  */
-export function BriefingEditor({ form }: { form: BriefingForm }) {
+export function BriefingEditor({
+  form,
+  title,
+  nav,
+}: {
+  form: BriefingForm
+  /** Título da tela (a central usa o dela, igual nas duas abas). */
+  title?: ReactNode
+  /** Abas da central, logo abaixo do título. */
+  nav?: ReactNode
+}) {
   const [blockDialog, setBlockDialog] = useState<BlockDialogState>({ open: false, key: 0 })
   const [questionDialog, setQuestionDialog] = useState<QuestionDialogState>({ open: false, key: 0 })
   const [isPending, startTransition] = useTransition()
@@ -96,9 +106,11 @@ export function BriefingEditor({ form }: { form: BriefingForm }) {
     <PageContainer>
       <PageHeader
         title={
-          <>
-            Perguntas do <em>briefing</em>
-          </>
+          title ?? (
+            <>
+              Perguntas do <em>briefing</em>
+            </>
+          )
         }
         description={
           <PageMeta
@@ -115,6 +127,7 @@ export function BriefingEditor({ form }: { form: BriefingForm }) {
           </Button>
         }
       />
+      {nav}
 
       <PageBody width="reading" className="gap-6">
         <p className="flex gap-2.5 rounded-2xl border bg-card px-4 py-3 text-[13px] leading-5 text-muted-foreground">

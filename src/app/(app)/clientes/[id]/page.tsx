@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { BriefingTab } from "@/features/briefing/briefing-tab"
+import { briefingDefaults } from "@/features/briefing/central-logic"
 import { immersionMeetingOptions } from "@/features/briefing/team-logic"
 import { getTeamBriefing } from "@/features/briefing/team-queries"
 import { getEvents } from "@/features/calendar/queries"
@@ -99,13 +100,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
             <BriefingTab
               clientId={client.id}
               clientName={client.name}
-              defaults={{
-                brand_name: client.name,
-                contact_name: client.contact_name ?? "",
-                region: "",
-                instagram: client.instagram_handle ? `@${client.instagram_handle.replace(/^@/, "")}` : "",
-                site: "",
-              }}
+              defaults={briefingDefaults(client)}
               briefing={briefing.briefing}
               meetings={immersionMeetingOptions(client.id, events, records, today, briefing.briefing?.immersion?.meeting_id ?? null)}
               today={today}

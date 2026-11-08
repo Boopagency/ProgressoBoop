@@ -33,11 +33,14 @@ const FORM_GONE = { ok: false, error: "Esse item do formulário não existe mais
 
 function refreshClient(clientId: string) {
   revalidatePath(`/clientes/${clientId}`)
+  // A central lista todos e abre cada briefing em /briefing/<cliente>.
+  revalidatePath("/briefing", "layout")
   revalidatePath("/portal", "layout")
 }
 
 function refreshForm() {
-  revalidatePath("/briefing")
+  // A configuração e a central (o andamento muda com as perguntas).
+  revalidatePath("/briefing", "layout")
   // Briefings em andamento mostram as perguntas novas; a ficha recalcula o que falta.
   revalidatePath("/clientes", "layout")
   revalidatePath("/portal", "layout")

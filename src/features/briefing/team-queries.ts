@@ -3,6 +3,7 @@ import "server-only"
 import { requireUser } from "@/features/auth/session"
 import { parseAnalysisContent, type TeamBriefingAnalysis } from "@/features/briefing/analysis-logic"
 import { analysisSourceHash, buildAnalysisSource } from "@/features/briefing/analysis-source"
+import { buildBriefingCentral, type BriefingCentral, type CentralClient } from "@/features/briefing/central-logic"
 import { isBriefingOpen, isBriefingPreparing, parseIdentification } from "@/features/briefing/logic"
 import {
   parseFiles,
@@ -15,6 +16,7 @@ import {
 import { isMissingRelation } from "@/features/client-files/queries"
 import { loadError } from "@/lib/supabase/errors"
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server"
+import type { DateKey } from "@/lib/types"
 
 /*
  * Leituras da equipe: a aba Briefing da ficha do cliente e o editor de
@@ -59,8 +61,10 @@ function toQuestion(row: {
   return { ...row, options: parseQuestionOptions(row.options) }
 }
 
-async function loadForm(supabase: SupabaseServerClient, templateId: string) {
-  const blocks = await supabase.from("briefing_blocks").select(BLOCK_COLUMNS).eq("template_id", templateId).order("position")
+/** Blocos e perguntas dos formulários indicados (a central lê todos os que os briefings usam de uma vez). */
+async function loadForms(supabase: SupabaseServerClient, templateIds: string[]) {
+  if (templateIds.length === 0) return { blocks: [], questions: [] }
+  const blocks = await supabase.from("briefing_blocks").select(BLOCK_COLUMNS).in("template_id", templateIds).order("position")
   if (blocks.error) throw loadError(blocks.error, "o formulário do briefing")
   const blockIds = blocks.data.map((block) => block.id)
   const questions =
@@ -68,7 +72,14 @@ async function loadForm(supabase: SupabaseServerClient, templateId: string) {
       ? { data: [], error: null }
       : await supabase.from("briefing_questions").select(QUESTION_COLUMNS).in("block_id", blockIds).order("position")
   if (questions.error) throw loadError(questions.error, "o formulário do briefing")
-  return { blocks: blocks.data.map(toBlock), questions: questions.data.map(toQuestion) }
+  return {
+    blocks: blocks.data.map((row) => ({ ...toBlock(row), template_id: row.template_id })),
+    questions: questions.data.map(toQuestion),
+  }
+}
+
+function loadForm(supabase: SupabaseServerClient, templateId: string) {
+  return loadForms(supabase, [templateId])
 }
 
 /** A aba Briefing: `available: false` antes da migration; `briefing: null` antes de liberar. */
@@ -218,6 +229,75 @@ function toAnalysis(
     finished_at: row.finished_at,
     stale,
   }
+}
+
+/** A central: `available: false` antes da migration do briefing. */
+export type BriefingCentralState = { available: false } | { available: true; central: BriefingCentral }
+
+/*
+ * Tudo da lista numa consulta só: os clientes com o briefing (um por
+ * cliente) e, embutidas, as respostas com a quantidade de áudios e os
+ * estados da IA. Sem a cópia da pergunta nem as transcrições: só o que a
+ * conta do andamento usa. Depois, os formulários usados (uma leitura para
+ * todos), para saber o que conta e o que é obrigatório.
+ */
+const CENTRAL_SELECT =
+  "id, name, active, avatar_path, contact_name, instagram_handle, client_briefings(id, template_id, status, due_on, released_at, submitted_at, last_seen_at, briefing_answers(question_id, skipped, text, value, files, briefing_summaries(status), briefing_answer_audios(id, briefing_transcriptions(status))))"
+
+export async function getBriefingCentral(today: DateKey): Promise<BriefingCentralState> {
+  await requireUser()
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("clients").select(CENTRAL_SELECT).order("name")
+  if (error) {
+    // Antes da migration, a relação embutida não existe (PGRST200).
+    if (isMissingRelation(error) || error.code === "PGRST200") return { available: false }
+    throw loadError(error, "os briefings")
+  }
+
+  const clients: CentralClient[] = data.map((client) => {
+    // Um briefing por cliente (relação 1:1: vem o objeto ou null).
+    const raw = client.client_briefings
+    return {
+      id: client.id,
+      name: client.name,
+      active: client.active,
+      avatar_path: client.avatar_path,
+      contact_name: client.contact_name,
+      instagram_handle: client.instagram_handle,
+      briefing: raw
+        ? {
+            id: raw.id,
+            template_id: raw.template_id,
+            status: raw.status,
+            due_on: raw.due_on,
+            released_at: raw.released_at,
+            submitted_at: raw.submitted_at,
+            last_seen_at: raw.last_seen_at,
+            answers: raw.briefing_answers.map((answer) => {
+              const summary = answer.briefing_summaries
+              return {
+                question_id: answer.question_id,
+                skipped: answer.skipped,
+                text: answer.text,
+                value: answer.value,
+                files: parseFiles(answer.files),
+                audios: answer.briefing_answer_audios.length,
+                ai: [
+                  ...(summary ? [summary.status] : []),
+                  ...answer.briefing_answer_audios.flatMap((audio) =>
+                    audio.briefing_transcriptions ? [audio.briefing_transcriptions.status] : []
+                  ),
+                ],
+              }
+            }),
+          }
+        : null,
+    }
+  })
+
+  const templateIds = [...new Set(clients.flatMap((client) => (client.briefing ? [client.briefing.template_id] : [])))]
+  const form = await loadForms(supabase, templateIds)
+  return { available: true, central: buildBriefingCentral(clients, form, today) }
 }
 
 /** O formulário ativo, para o editor de perguntas. */

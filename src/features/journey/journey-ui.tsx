@@ -58,16 +58,16 @@ export function ActorPill({ actor, className }: { actor: JourneyActor; className
 export function StepClock({ status, className }: { status: JourneyStatus; className?: string }) {
   if (!status.current) return null
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs tabular-nums", className)}>
+    <span className={cn("inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs tabular-nums", className)}>
       {status.late ? (
-        <span className="inline-flex h-5 items-center gap-1 rounded-full bg-overdue/12 px-2 font-medium text-overdue">
+        <span className="inline-flex h-5 items-center gap-1 rounded-full bg-overdue/12 px-2 font-medium whitespace-nowrap text-overdue">
           <Clock className="size-3" aria-hidden="true" />
           {lateLabel(status.late_days)}
         </span>
       ) : (
-        <span className="text-muted-foreground">até {formatDayMonth(status.current.due)}</span>
+        <span className="whitespace-nowrap text-muted-foreground">até {formatDayMonth(status.current.due)}</span>
       )}
-      <span className="text-subtle-foreground">· {daysLabel(status.days_in_step)}</span>
+      <span className="whitespace-nowrap text-subtle-foreground">· {daysLabel(status.days_in_step)}</span>
     </span>
   )
 }
@@ -92,7 +92,7 @@ export function PhaseTrack({ phase, className }: { phase: JourneyPhase; classNam
           <span
             className={cn(
               "truncate text-[10.5px] tracking-[0.06em] uppercase",
-              index === currentIndex ? "font-semibold text-foreground" : "text-subtle-foreground"
+              index === currentIndex ? "font-semibold text-foreground" : "text-subtle-foreground max-sm:invisible"
             )}
             aria-current={index === currentIndex ? "step" : undefined}
           >

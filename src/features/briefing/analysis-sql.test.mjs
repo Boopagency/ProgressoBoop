@@ -1,4 +1,4 @@
-// Testa a fila da análise do briefing (migration 20261108210000_briefing_analysis)
+// Testa a fila da análise do briefing (migration 20261109101823_briefing_analysis)
 // num Postgres descartável, como os outros testes de SQL do briefing. Precisa do
 // psql e de um servidor local onde se possa criar um banco (nunca o Supabase):
 //   BRIEFING_SQL_TEST_DB="host=/var/run/postgresql port=5432 user=postgres" \
@@ -15,7 +15,7 @@ const server = process.env.BRIEFING_SQL_TEST_DB
 const database = `briefing_analysis_test_${process.pid}`
 const migrations = [
   new URL("../../../supabase/migrations/20261108155416_briefing_transcription.sql", import.meta.url),
-  new URL("../../../supabase/migrations/20261108210000_briefing_analysis.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20261109101823_briefing_analysis.sql", import.meta.url),
 ]
 
 function psql(sql, { db = database } = {}) {

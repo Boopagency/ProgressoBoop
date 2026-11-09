@@ -4167,7 +4167,13 @@ export const Constants = {
       journey_line: ["social", "traffic"],
       journey_mark_state: ["done", "not_applicable", "open"],
       journey_mode: ["compact", "full"],
-      journey_phase: ["entry", "onboarding", "ongoing", "renewal", "offboarding"],
+      journey_phase: [
+        "entry",
+        "onboarding",
+        "ongoing",
+        "renewal",
+        "offboarding",
+      ],
       lead_source: [
         "referral",
         "instagram",

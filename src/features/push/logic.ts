@@ -81,6 +81,7 @@ const TEAM_KINDS = new Set<string>([
   "payment_overdue",
   "briefing_block_done",
   "briefing_submitted",
+  "journey_alert",
 ] satisfies NotificationKind[])
 
 const CLIENT_KINDS = new Set<string>([

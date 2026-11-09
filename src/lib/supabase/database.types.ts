@@ -736,6 +736,51 @@ export type Database = {
           },
         ]
       }
+      client_journeys: {
+        Row: {
+          client_id: string
+          contract_ends_on: string | null
+          created_at: string
+          created_by: string | null
+          ended_on: string | null
+          id: string
+          line: Database["public"]["Enums"]["journey_line"]
+          mode: Database["public"]["Enums"]["journey_mode"]
+          phase: Database["public"]["Enums"]["journey_phase"]
+          phase_started_on: string
+          started_on: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          contract_ends_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          ended_on?: string | null
+          id?: string
+          line: Database["public"]["Enums"]["journey_line"]
+          mode?: Database["public"]["Enums"]["journey_mode"]
+          phase: Database["public"]["Enums"]["journey_phase"]
+          phase_started_on: string
+          started_on: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          contract_ends_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          ended_on?: string | null
+          id?: string
+          line?: Database["public"]["Enums"]["journey_line"]
+          mode?: Database["public"]["Enums"]["journey_mode"]
+          phase?: Database["public"]["Enums"]["journey_phase"]
+          phase_started_on?: string
+          started_on?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_members: {
         Row: {
           avatar_path: string | null
@@ -2043,6 +2088,47 @@ export type Database = {
           },
         ]
       }
+      journey_marks: {
+        Row: {
+          id: string
+          journey_id: string
+          marked_at: string
+          marked_by: string | null
+          note: string | null
+          round: string
+          state: Database["public"]["Enums"]["journey_mark_state"]
+          step_key: string
+        }
+        Insert: {
+          id?: string
+          journey_id: string
+          marked_at?: string
+          marked_by?: string | null
+          note?: string | null
+          round: string
+          state: Database["public"]["Enums"]["journey_mark_state"]
+          step_key: string
+        }
+        Update: {
+          id?: string
+          journey_id?: string
+          marked_at?: string
+          marked_by?: string | null
+          note?: string | null
+          round?: string
+          state?: Database["public"]["Enums"]["journey_mark_state"]
+          step_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_marks_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "client_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_results: {
         Row: {
           baseline_value: number | null
@@ -3345,6 +3431,7 @@ export type Database = {
         }[]
       }
       portal_finance: { Args: { target_client: string }; Returns: Json }
+      portal_journey: { Args: { target_client: string }; Returns: Json }
       portal_my_clients: {
         Args: never
         Returns: {
@@ -3600,6 +3687,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      team_journeys: { Args: { p_client?: string }; Returns: Json }
       win_deal: {
         Args: {
           client_id?: string
@@ -3712,6 +3800,15 @@ export type Database = {
         | "owner_draw"
         | "reinvestment"
       finance_kind: "income" | "expense"
+      journey_line: "social" | "traffic"
+      journey_mark_state: "done" | "not_applicable" | "open"
+      journey_mode: "compact" | "full"
+      journey_phase:
+        | "entry"
+        | "onboarding"
+        | "ongoing"
+        | "renewal"
+        | "offboarding"
       lead_source:
         | "referral"
         | "instagram"
@@ -3738,6 +3835,7 @@ export type Database = {
         | "payment_overdue"
         | "briefing_block_done"
         | "briefing_submitted"
+        | "journey_alert"
       project_status: "planned" | "active" | "paused" | "done" | "canceled"
       task_area:
         | "commercial"
@@ -3976,6 +4074,10 @@ export const Constants = {
         "reinvestment",
       ],
       finance_kind: ["income", "expense"],
+      journey_line: ["social", "traffic"],
+      journey_mark_state: ["done", "not_applicable", "open"],
+      journey_mode: ["compact", "full"],
+      journey_phase: ["entry", "onboarding", "ongoing", "renewal", "offboarding"],
       lead_source: [
         "referral",
         "instagram",
@@ -4003,6 +4105,7 @@ export const Constants = {
         "payment_overdue",
         "briefing_block_done",
         "briefing_submitted",
+        "journey_alert",
       ],
       project_status: ["planned", "active", "paused", "done", "canceled"],
       task_area: [

@@ -1,3 +1,4 @@
+import type { TeamBriefingAnalysis } from "@/features/briefing/analysis-logic"
 import { isBriefingOpen, type BriefingIdentification } from "@/features/briefing/logic"
 import { meetingEntry, meetingsOverview, recordDate } from "@/features/meetings/logic"
 import { isDateKey } from "@/lib/dates"
@@ -232,6 +233,8 @@ export interface TeamBriefingDetail {
   questions: TeamBriefingQuestion[]
   answers: TeamBriefingAnswer[]
   immersion: TeamBriefingImmersion | null
+  /** Análise da IA do briefing inteiro (null antes de pedir ou antes da migration). */
+  analysis?: TeamBriefingAnalysis | null
 }
 
 const KINDS: readonly BriefingQuestionKind[] = [

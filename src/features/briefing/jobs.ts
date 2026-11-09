@@ -1,4 +1,4 @@
-import { summarizeAnswer, transcribeAudio, type FetchLike } from "@/features/briefing/ai-clients"
+import { analyzeBriefing, summarizeAnswer, transcribeAudio, type FetchLike } from "@/features/briefing/ai-clients"
 import {
   hasSummaryContent,
   isBriefingAudioUrl,
@@ -9,12 +9,24 @@ import {
   type FailureOutcome,
   type SummarySource,
 } from "@/features/briefing/ai-logic"
+import { parseAnalysisContent } from "@/features/briefing/analysis-logic"
+import {
+  ANALYSIS_MODEL,
+  analysisSourceHash,
+  buildAnalysisSource,
+  detailFromDueRow,
+  hasAnalysisContent,
+} from "@/features/briefing/analysis-source"
+import { isBriefingOpen, isBriefingPreparing, parseIdentification } from "@/features/briefing/logic"
+import type { BriefingStatus } from "@/lib/types"
+import type { Json } from "@/lib/supabase/database.types"
 import type { SupabaseServerClient } from "@/lib/supabase/server"
 
 /*
  * Uma rodada do processamento do briefing, sem sessão: pede ao banco as
  * transcrições pendentes, transcreve, grava; depois os resumos das respostas
- * que já têm todos os áudios transcritos. Tudo pelas funções que conferem o
+ * que já têm todos os áudios transcritos; por fim, a análise do briefing
+ * inteiro (o banco só a entrega com a IA daquele briefing assentada). Tudo pelas funções que conferem o
  * segredo do Vault. Chamada pela rota /api/briefing/jobs (cron) e logo depois
  * de salvar um áudio (`after()` em queueBriefingAudio).
  *
@@ -41,12 +53,15 @@ export interface BriefingJobsInput {
 export interface BriefingJobsResult {
   transcribed: number
   summarized: number
+  analyzed: number
   failed: number
 }
 
 /** Só pede novas transcrições se der tempo de terminar (um áudio de 3 min leva uns 15 s). */
 const TRANSCRIBE_RESERVE_MS = 30_000
 const SUMMARIZE_RESERVE_MS = 12_000
+/** O Claude Opus pode levar uns minutos para ler o briefing inteiro: só começa com folga. */
+const ANALYZE_RESERVE_MS = 180_000
 const TRANSCRIBE_BATCH = 3
 const SUMMARIZE_BATCH = 5
 
@@ -68,14 +83,33 @@ interface SummaryDue {
   previous_summary: string | null
 }
 
+interface AnalysisDue {
+  briefing_id: string
+  source_hash: string | null
+  previous_content: unknown
+  identification: unknown
+  status: string
+  submitted_at: string | null
+  blocks: unknown
+  questions: unknown
+  answers: unknown
+}
+
 export async function processBriefingJobs(input: BriefingJobsInput): Promise<BriefingJobsResult> {
   const { supabase, secret, keys, deadline } = input
   const fetchImpl: FetchLike = input.fetch ?? ((url, init) => fetch(url, init))
-  const result: BriefingJobsResult = { transcribed: 0, summarized: 0, failed: 0 }
+  const result: BriefingJobsResult = { transcribed: 0, summarized: 0, analyzed: 0, failed: 0 }
 
-  async function fail(kind: "transcription" | "summary", id: string, outcome: FailureOutcome, message: string) {
+  async function fail(kind: "transcription" | "summary" | "analysis", id: string, outcome: FailureOutcome, message: string) {
     const { error } =
-      kind === "transcription"
+      kind === "analysis"
+        ? await supabase.rpc("briefing_analysis_failed", {
+            p_secret: secret,
+            p_briefing_id: id,
+            p_error: message,
+            p_outcome: outcome,
+          })
+        : kind === "transcription"
         ? await supabase.rpc("briefing_transcription_failed", {
             p_secret: secret,
             p_audio_id: id,
@@ -206,9 +240,54 @@ export async function processBriefingJobs(input: BriefingJobsInput): Promise<Bri
     }
   }
 
-  if (result.transcribed || result.summarized || result.failed) {
+  // Análise do briefing inteiro, uma por vez.
+  if (keys.anthropic) {
+    let keyRejected = false
+    while (!keyRejected && Date.now() < deadline - ANALYZE_RESERVE_MS) {
+      const { data, error } = await supabase.rpc("briefing_analyses_due", { p_secret: secret, p_limit: 1 })
+      if (error) {
+        console.error(`[briefing] análises pendentes: ${error.message}`)
+        break
+      }
+      const rows = (Array.isArray(data) ? data : []) as AnalysisDue[]
+      if (rows.length === 0) break
+      for (const row of rows) {
+        const status = row.status as BriefingStatus
+        const submitted = !isBriefingOpen(status) && !isBriefingPreparing(status)
+        const source = buildAnalysisSource(detailFromDueRow(row), parseIdentification(row.identification), submitted)
+        if (!hasAnalysisContent(source)) {
+          await fail("analysis", row.briefing_id, "final", "O briefing ainda não tem respostas para analisar.")
+          continue
+        }
+        const hash = analysisSourceHash(source)
+        try {
+          // Nada mudou no que a análise lê (ex.: o envio sem mudar respostas): mantém a anterior.
+          const previous = row.source_hash === hash ? parseAnalysisContent(row.previous_content) : null
+          const content =
+            previous ??
+            (await analyzeBriefing({ source, apiKey: keys.anthropic as string, deadline, fetch: fetchImpl }))
+          const { error: saveError } = await supabase.rpc("briefing_analysis_done", {
+            p_secret: secret,
+            p_briefing_id: row.briefing_id,
+            p_content: content as unknown as Json,
+            p_model: ANALYSIS_MODEL,
+            p_source_hash: hash,
+          })
+          if (saveError) console.error(`[briefing] análise ${row.briefing_id}: ${saveError.message}`)
+          else result.analyzed++
+        } catch (thrown) {
+          const { outcome, message } = outcomeForThrown(thrown)
+          if (outcome === "defer") keyRejected = true
+          await fail("analysis", row.briefing_id, outcome, message)
+        }
+      }
+      if (keyRejected) console.error("[briefing] a Anthropic recusou a chave: as análises ficam pendentes.")
+    }
+  }
+
+  if (result.transcribed || result.summarized || result.analyzed || result.failed) {
     console.info(
-      `[briefing] transcritos: ${result.transcribed}, resumidos: ${result.summarized}, com falha: ${result.failed}`
+      `[briefing] transcritos: ${result.transcribed}, resumidos: ${result.summarized}, análises: ${result.analyzed}, com falha: ${result.failed}`
     )
   }
   return result

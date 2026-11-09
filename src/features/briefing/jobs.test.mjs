@@ -76,7 +76,7 @@ test("transcreve o áudio em português e grava pela função do banco", async (
     supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: net.fetch,
   })
-  assert.deepEqual(result, { transcribed: 1, summarized: 0, failed: 0 })
+  assert.deepEqual(result, { transcribed: 1, summarized: 0, analyzed: 0, failed: 0 })
 
   const openai = net.requests.find((r) => r.url.includes("openai"))
   assert.equal(openai.init.headers.Authorization, "Bearer chave-openai")
@@ -102,7 +102,7 @@ test("sem as chaves da IA, não pede nada ao banco (nada pendente gasta tentativ
     supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: async () => assert.fail("não deveria chamar a rede"),
   })
-  assert.deepEqual(result, { transcribed: 0, summarized: 0, failed: 0 })
+  assert.deepEqual(result, { transcribed: 0, summarized: 0, analyzed: 0, failed: 0 })
   assert.equal(db.calls.length, 0)
 })
 
@@ -171,7 +171,7 @@ test("resume com o Claude Haiku juntando a pergunta, o texto e os áudios", asyn
     supabaseUrl: SUPABASE, deadline: deadline(),
     fetch: net.fetch,
   })
-  assert.deepEqual(result, { transcribed: 0, summarized: 1, failed: 0 })
+  assert.deepEqual(result, { transcribed: 0, summarized: 1, analyzed: 0, failed: 0 })
 
   const [request] = net.requests
   assert.equal(request.init.headers["x-api-key"], "chave-anthropic")
@@ -252,7 +252,7 @@ test("transcreve e resume na mesma rodada (áudio de 3 minutos em bem menos de 2
   })
   const started = Date.now()
   const result = await processBriefingJobs({ supabase, secret: SECRET, keys: { openai: "a", anthropic: "b" }, supabaseUrl: SUPABASE, deadline: deadline(), fetch: net.fetch })
-  assert.deepEqual(result, { transcribed: 1, summarized: 1, failed: 0 })
+  assert.deepEqual(result, { transcribed: 1, summarized: 1, analyzed: 0, failed: 0 })
   assert.ok(Date.now() - started < 5000)
   assert.deepEqual(calls, [
     "briefing_transcriptions_due",

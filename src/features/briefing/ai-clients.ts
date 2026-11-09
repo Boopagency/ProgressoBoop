@@ -13,6 +13,14 @@ import {
   transcriptionPrompt,
   type SummarySource,
 } from "@/features/briefing/ai-logic"
+import { ANALYSIS_SCHEMA, type AnalysisContent } from "@/features/briefing/analysis-logic"
+import {
+  ANALYSIS_MODEL,
+  ANALYSIS_SYSTEM,
+  analysisFromMessage,
+  analysisUserMessage,
+  type AnalysisSource,
+} from "@/features/briefing/analysis-source"
 
 /*
  * Chamadas às APIs de IA, com `fetch` direto (sem SDK). O `fetch` vem por
@@ -145,4 +153,45 @@ export async function summarizeAnswer(input: SummarizeInput): Promise<string> {
   const result = summaryFromMessage(body)
   if (!result.ok) throw new AiCallError(result.error, result.outcome)
   return result.text
+}
+
+export interface AnalyzeInput {
+  source: AnalysisSource
+  apiKey: string
+  deadline: number
+  fetch: FetchLike
+}
+
+/**
+ * Analisa o briefing inteiro com o Claude Opus: esforço médio e saída
+ * estruturada no JSON schema das seções. Sem `temperature`, sem orçamento de
+ * raciocínio e sem prefill (o modelo não aceita).
+ */
+export async function analyzeBriefing(input: AnalyzeInput): Promise<AnalysisContent> {
+  const response = await input.fetch(ANTHROPIC_MESSAGES_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": input.apiKey,
+      "anthropic-version": ANTHROPIC_VERSION,
+    },
+    body: JSON.stringify({
+      model: ANALYSIS_MODEL,
+      max_tokens: 16000,
+      output_config: {
+        effort: "medium",
+        format: { type: "json_schema", schema: ANALYSIS_SCHEMA },
+      },
+      system: ANALYSIS_SYSTEM,
+      messages: [{ role: "user", content: analysisUserMessage(input.source) }],
+    }),
+    signal: timeLeft(input.deadline),
+  })
+  const body = await jsonOrNull(response)
+  if (!response.ok) {
+    throw new AiCallError(apiErrorMessage("A Anthropic", response.status, body), outcomeForStatus(response.status))
+  }
+  const result = analysisFromMessage(body)
+  if (!result.ok) throw new AiCallError(result.error, result.outcome)
+  return result.content
 }

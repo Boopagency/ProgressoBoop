@@ -81,6 +81,57 @@ export type Database = {
           },
         ]
       }
+      briefing_analyses: {
+        Row: {
+          attempts: number
+          briefing_id: string
+          content: Json | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          model: string | null
+          origin: string
+          requested_at: string
+          requested_by: string | null
+          source_hash: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["briefing_ai_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          briefing_id: string
+          content?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          origin?: string
+          requested_at?: string
+          requested_by?: string | null
+          source_hash?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          briefing_id?: string
+          content?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          model?: string | null
+          origin?: string
+          requested_at?: string
+          requested_by?: string | null
+          source_hash?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["briefing_ai_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       briefing_answer_audios: {
         Row: {
           answer_id: string
@@ -3107,6 +3158,41 @@ export type Database = {
       }
     }
     Functions: {
+      briefing_analyses_due: {
+        Args: { p_limit: number; p_secret: string }
+        Returns: {
+          answers: Json
+          attempts: number
+          blocks: Json
+          briefing_id: string
+          client_name: string
+          identification: Json
+          previous_content: Json
+          questions: Json
+          source_hash: string
+          status: string
+          submitted_at: string
+        }[]
+      }
+      briefing_analysis_done: {
+        Args: {
+          p_briefing_id: string
+          p_content: Json
+          p_model: string
+          p_secret: string
+          p_source_hash: string
+        }
+        Returns: boolean
+      }
+      briefing_analysis_failed: {
+        Args: {
+          p_briefing_id: string
+          p_error: string
+          p_outcome: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
       briefing_summaries_due: {
         Args: { p_limit: number; p_secret: string }
         Returns: {
@@ -3620,6 +3706,10 @@ export type Database = {
           p_signed_url: string
           p_url_expires_at: string
         }
+        Returns: undefined
+      }
+      request_briefing_analysis: {
+        Args: { target_briefing: string }
         Returns: undefined
       }
       reset_client_password: {

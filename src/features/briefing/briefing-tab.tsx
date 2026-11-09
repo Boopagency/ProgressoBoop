@@ -2,16 +2,19 @@ import { PencilLine } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
+import { analysisReadiness } from "@/features/briefing/analysis-logic"
+import { BriefingAnalysisPanel } from "@/features/briefing/briefing-analysis"
 import { BriefingStatusPanel } from "@/features/briefing/briefing-card"
 import { BriefingImmersionCard } from "@/features/briefing/briefing-immersion"
-import type { BriefingIdentification } from "@/features/briefing/logic"
+import { isBriefingOpen, isBriefingPreparing, type BriefingIdentification } from "@/features/briefing/logic"
 import { TeamBriefingAnswers } from "@/features/briefing/team-answer-editor"
 import { buildBriefingView, type ImmersionMeetingOption, type TeamBriefingDetail } from "@/features/briefing/team-logic"
 import type { DateKey } from "@/lib/types"
 
 /**
  * Aba Briefing da ficha do cliente (`?aba=briefing`; os avisos do sino abrem
- * aqui) e o briefing aberto pela central (`/briefing/<cliente>`): o status no topo, as respostas por bloco (a equipe pode preencher
+ * aqui) e o briefing aberto pela central (`/briefing/<cliente>`): o status no
+ * topo, a análise da IA do briefing inteiro, as respostas por bloco (a equipe pode preencher
  * qualquer pergunta pelo cliente) e, ao lado, as notas da imersão e o atalho
  * para o editor de perguntas.
  */
@@ -51,6 +54,18 @@ export function BriefingTab({
         progress={view?.progress ?? null}
         today={today}
       />
+
+      {briefing && view ? (
+        <BriefingAnalysisPanel
+          clientId={clientId}
+          brandName={briefing.identification.brand_name || clientName}
+          analysis={briefing.analysis ?? null}
+          readiness={analysisReadiness(view, briefing.status)}
+          submitted={!isBriefingOpen(briefing.status) && !isBriefingPreparing(briefing.status)}
+          today={today}
+          demo={demo}
+        />
+      ) : null}
 
       {briefing && view ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start xl:gap-x-8">

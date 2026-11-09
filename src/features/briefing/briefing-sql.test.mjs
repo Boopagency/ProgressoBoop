@@ -56,6 +56,14 @@ end $$;
 create schema private;
 create schema auth;
 create schema storage;
+-- pg_cron, Vault e pg_net (transcrição e análise, #110 em diante).
+create schema cron;
+create schema vault;
+create schema net;
+create function cron.schedule(text, text, text) returns bigint language sql as $f$ select 1::bigint $f$;
+create table vault.decrypted_secrets (name text primary key, decrypted_secret text);
+create function net.http_post(url text, body jsonb, headers jsonb, timeout_milliseconds integer) returns bigint
+  language sql as $f$ select 1::bigint $f$;
 create function auth.uid() returns uuid language sql stable as $f$ select nullif(current_setting('test.uid', true), '')::uuid $f$;
 create table auth.users (id uuid primary key);
 create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);

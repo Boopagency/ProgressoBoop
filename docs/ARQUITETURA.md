@@ -1094,6 +1094,53 @@ Substitui a antiga tela Segunda (`/segunda` redireciona para cá).
   mês** (seis meses) e **Decisões**.
 - Menu: nova reunião, novo documento do cliente, desativar/reativar e excluir.
 
+### Jornada (`/jornada`) e a barra da ficha (issue #115, item 1)
+
+Cada cliente anda por **linhas de serviço** (social media e tráfego pago; site
+é projeto) e, em cada uma, pelas fases **Entrada → Onboarding → Ongoing →
+Renovação (→ Saída)**, com as etapas do processo oficial da Boop (SOCIAL 00 a
+07, nos Processos).
+
+- **Catálogo no código** (`src/features/journey/catalog.ts`): fases, etapas,
+  quem age (Boop ou cliente), prazo-alvo (dias úteis desde o começo da fase,
+  com compacto e completo no onboarding social; dia do mês ou enésimo dia útil
+  no ongoing), portões e a regra automática. Nada configurável pela tela.
+- **Banco** (migration `journey`): `client_journeys` (linha, fase, modo, começo
+  da fase, fim do contrato, fim da jornada; uma por cliente e linha) e
+  `journey_marks` (feita, não se aplica ou reaberta, por rodada: o mês no
+  ongoing, o começo da fase nas outras; quem e quando gravados pelo banco).
+  Sem chave estrangeira para `clients`/`profiles` (histórico; o trigger confere
+  o cliente) e sem política de exclusão: encerrar é `ended_on`. Só a equipe lê
+  e grava.
+- **Marcação automática** (`private.journey_facts`): negócio ganho, 1ª fatura
+  paga, responsável definido, acesso ao portal, briefing liberado/enviado,
+  imersão feita, Instagram conectado, 1º post publicado e a revisão mensal do
+  mês. A marcação à mão vale mais; "Reabrir" desliga o automático.
+- **Leitura**: `team_journeys(p_client)`, uma chamada com as jornadas, as
+  marcações e os dados agregados (security invoker). O portal (próximo PR)
+  lê por `portal_journey(target_client)` (security definer, só a versão
+  resumida da jornada do próprio cliente).
+- **Fase que anda**: Entrada e Onboarding andam sozinhas quando a última etapa
+  fica pronta (portões não aceitam "não se aplica"); Ongoing → Renovação pela
+  equipe (destacado 30 dias antes do fim do contrato); Renovação → Ongoing
+  ("Renovou", com o novo fim) ou Saída; Saída pronta encerra a jornada.
+- **Entrada na jornada**: ganhar um negócio inicia a linha do serviço na
+  Entrada (`startJourneyForWonDeal`, depois de `win_deal`); clientes que já
+  rodam entram por "Iniciar jornada", escolhendo a linha e a fase.
+- **Avisos** (`journey_alert`, job `journey-alerts` às 08:13): etapa parada
+  além do prazo-alvo, acessos e materiais sem chegar em 3 dias úteis e 30 dias
+  antes do fim do contrato (o escrito na jornada ou o fim das recorrências do
+  Financeiro). Para o responsável do cliente (sem ele, a equipe toda), uma vez
+  cada (`private.journey_notices`). A conta espelha `logic.ts` com a cópia do
+  catálogo em `private.journey_steps`; `journey-sql.test.mjs` compara os dois.
+- **Tela**: quadro por fase (no celular, as colunas deslizam) ou lista, filtro
+  por linha e por responsável, o que pede ação primeiro (atraso, fase pronta,
+  renovação; depois quem age), há quantos dias está na etapa e o atraso, e os
+  clientes fora da jornada. **Ficha**: a barra no topo com a trilha de fases,
+  a etapa atual, quem age, o que falta e os botões de marcar; as etapas do
+  briefing apontam para a aba dele. Vitrine em `/vitrine/jornada`; prints em
+  `docs/design/prints/jornada/`.
+
 ### Comunicações (`/comunicacoes`)
 
 Canais estilo Slack. O canal de cliente também é a Comunicação do portal:

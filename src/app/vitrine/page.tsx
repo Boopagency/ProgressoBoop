@@ -74,7 +74,7 @@ export default function VitrinePage() {
             <Button variant="outline" onClick={() => setChoice(resolved === "dark" ? "light" : "dark")}>
               Tema {resolved === "dark" ? "claro" : "escuro"}
             </Button>
-            {["hoje", "portal", "tarefas", "admin-a", "admin-b", "admin-c", "portal-telas"].map((screen) => (
+            {["hoje", "portal", "tarefas", "admin-a", "admin-b", "admin-c", "portal-telas", "jornada"].map((screen) => (
               <Button key={screen} variant="glass" asChild>
                 <Link href={`/vitrine/${screen}`}>/{screen}</Link>
               </Button>

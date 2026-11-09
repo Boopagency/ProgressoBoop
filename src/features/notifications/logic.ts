@@ -28,6 +28,7 @@ export type NotificationKind =
   | "payment_overdue"
   | "briefing_block_done"
   | "briefing_submitted"
+  | "journey_alert"
 
 /** Aviso da pessoa logada. O texto é uma cópia do momento em que nasceu. */
 export interface AppNotification {
@@ -119,6 +120,14 @@ export function describeNotification(notification: AppNotification, clientName?:
       return { actor: fromClient, action: "concluiu a etapa", subject: item.body, excerpt: null }
     case "briefing_submitted":
       return { actor: fromClient, action: "enviou o briefing", subject: null, excerpt: null }
+    case "journey_alert":
+      // Jornada do cliente (job diário): a etapa ou "Fim do contrato" (título) e o motivo no trecho.
+      return {
+        actor: clientName ? `Jornada (${clientName})` : "Jornada",
+        action: "pede atenção em",
+        subject: item.title,
+        excerpt: item.body,
+      }
   }
 }
 

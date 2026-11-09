@@ -1,6 +1,8 @@
 import "server-only"
 
 import { parseDealInput, parseDealPatch, parseWinInput } from "@/features/deals/validation"
+import { startJourneyForWonDeal } from "@/features/journey/mutations"
+import { todayKey } from "@/lib/dates"
 import { dbFailure } from "@/lib/supabase/errors"
 import type { SupabaseServerClient } from "@/lib/supabase/server"
 import type { ActionResult } from "@/lib/types"
@@ -81,5 +83,8 @@ export async function markDealWon(supabase: SupabaseServerClient, id: string, in
     if (error.code === "23505") return { ok: false, error: "Já existe um cliente com esse nome." }
     return dbFailure(error, "Não foi possível marcar como ganho.")
   }
-  return { ok: true, data: data as unknown as WinResult }
+  const result = data as unknown as WinResult
+  // Negócio ganho começa a jornada do cliente na Entrada (#115).
+  await startJourneyForWonDeal(supabase, id, result.client_id, todayKey())
+  return { ok: true, data: result }
 }

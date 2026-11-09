@@ -15,6 +15,7 @@ import {
   MessageCircle,
   MessageSquare,
   PencilLine,
+  Route,
   UserPlus,
   Volume2,
   VolumeX,
@@ -74,6 +75,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   payment_overdue: Banknote,
   briefing_block_done: ClipboardCheck,
   briefing_submitted: ClipboardList,
+  journey_alert: Route,
 }
 
 /** Avisos do navegador mostrados de uma vez (o resto fica no sino). */

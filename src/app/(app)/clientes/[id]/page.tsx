@@ -20,6 +20,8 @@ import { getFinance } from "@/features/finance/queries"
 import { InstagramCard } from "@/features/instagram/instagram-card"
 import { connectNotice } from "@/features/instagram/logic"
 import { getClientInstagram } from "@/features/instagram/queries"
+import { JourneyBar } from "@/features/journey/journey-bar"
+import { getJourneys } from "@/features/journey/queries"
 import { getMeetingRecords } from "@/features/meetings/queries"
 import { getClientMembers } from "@/features/portal/access-queries"
 import { getTasks } from "@/features/tasks/queries"
@@ -38,7 +40,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
   if (!isUuid(id)) notFound()
   const searchParams = await props.searchParams
 
-  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files, instagram, paymentReminders, briefing] = await Promise.all([
+  const [client, reviews, tasks, events, { records }, docs, communications, decisions, finance, deals, posts, ideas, members, files, instagram, paymentReminders, briefing, journeys] = await Promise.all([
     getClient(id),
     getClientReviews(id),
     getTasks(),
@@ -56,6 +58,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
     getClientInstagram(id),
     getPaymentReminders(id),
     getTeamBriefing(id),
+    getJourneys(id),
   ])
   if (!client) notFound()
 
@@ -95,6 +98,7 @@ export default async function ClientPage(props: PageProps<"/clientes/[id]">) {
             today={today}
           />
         }
+        journeyBar={journeys.available ? <JourneyBar clientId={client.id} journeys={journeys.journeys} today={today} /> : null}
         briefingTab={
           briefing.available ? (
             <BriefingTab

@@ -121,6 +121,7 @@ export function ClientView({
   files,
   instagramCard,
   briefingTab,
+  journeyBar,
 }: {
   client: ClientDetail
   reviews: ClientReview[]
@@ -150,6 +151,8 @@ export function ClientView({
   instagramCard: ReactNode
   /** Aba "Briefing" (onboarding), montada pela página; sem ela (antes da migration), a aba não aparece. */
   briefingTab?: ReactNode
+  /** Barra da jornada (fase, etapa atual e o que falta), montada pela página; sem ela (antes da migration), nada aparece. */
+  journeyBar?: ReactNode
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -320,6 +323,7 @@ export function ClientView({
       />
 
       <PageBody className="gap-6">
+        {journeyBar}
         <section aria-label="Números do cliente">
           <StatGrid
             items={[

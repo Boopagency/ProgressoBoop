@@ -1319,6 +1319,27 @@ animado de instalar (Android: ⋮ → Instalar e criar atalho → Instalar; iPho
 pede para ativar os avisos. "Agora não" não mostra de novo aquela etapa
 naquele aparelho, e tudo continua em Minha conta. No computador, não aparece.
 
+### 2.30 Jornada (`/jornada`) e a barra na ficha do cliente
+
+- **Onde cada cliente está:** cada linha de serviço (Social media, Tráfego
+  pago) anda pelas fases Entrada, Onboarding, Ongoing e Renovação (ou Saída),
+  com as etapas do processo da Boop (SOCIAL 00 a 07).
+- **Tela Jornada:** quadro por fase ou lista, com o cliente, a linha, a etapa
+  atual, quem age (Boop ou cliente), há quantos dias está nela e o atraso em
+  vermelho. O que pede ação vem primeiro. Filtros por linha e por
+  responsável. Embaixo, os clientes fora da jornada, com "Iniciar".
+- **Barra na ficha do cliente:** a trilha de fases, a etapa atual, o que falta
+  e os botões **Feita**, **Não se aplica** (portão não pode) e **Reabrir**,
+  com quem marcou e quando. As etapas do briefing têm "Abrir briefing".
+  Menu: modo do onboarding (compacto para o Básico, completo para os outros),
+  fim do contrato e encerrar.
+- **Sozinho:** negócio ganho, 1ª fatura paga, responsável, acesso ao portal,
+  briefing liberado e enviado, imersão, Instagram conectado, 1º post e a
+  revisão do mês marcam as etapas. Ganhar um negócio no Comercial já começa a
+  jornada na Entrada.
+- **Avisos no sino:** etapa parada além do prazo, acessos e materiais sem
+  chegar em 3 dias úteis e 30 dias antes do fim do contrato.
+
 ## 3. Regras: como os números são calculados
 
 O fuso é o de São Paulo e a semana vai de segunda a domingo.

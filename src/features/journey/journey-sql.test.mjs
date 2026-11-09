@@ -1,4 +1,4 @@
-// Testa a migration da jornada (20261108210000_journey) num Postgres
+// Testa a migration da jornada (20261109120000_journey) num Postgres
 // descartável: a cópia do catálogo igual à do código, o RLS (só a equipe), as
 // travas das marcações, a leitura do portal, as etapas que faltam e os prazos
 // iguais aos de logic.ts e os avisos do job (uma vez cada). Precisa do psql e

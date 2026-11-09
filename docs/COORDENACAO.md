@@ -173,10 +173,24 @@ Todas as migrations do repositório estão aplicadas no Supabase (a última é
     `briefing_jobs_secret` = `BRIEFING_JOBS_SECRET` (Vercel, Production).
   - Velmont e Bárbara com o briefing em "preparando" e a identidade visual
     preenchida pela Boop.
+- **Central de briefings** (#116): `/briefing` lista os briefings de todos
+  os clientes, com a aba Configuração (o editor).
+- **Análise do briefing com IA** (#117): pontos-chave, contradições,
+  lacunas, perguntas para a imersão e pilares. Sai sozinha no envio, ou pelo
+  botão com 60% das obrigatórias. Migration 20261109101823_briefing_analysis.
+  Testada em produção com o cliente Teste: ficou pronta em 58 s.
 
-## Em andamento (08/11/2026)
+## Concluído em 09/11/2026
 
-- Nada.
+- **Jornada do cliente, base** (issue #115, #118): fases e etapas do processo
+  SOCIAL 00–07, tela `/jornada` (quadro e lista), barra na ficha e avisos no
+  sino. Migration 20261109103943_journey; job `journey-alerts` às 8h13.
+  Ganhar negócio inicia a jornada na Entrada.
+
+## Em andamento (09/11/2026)
+
+- Jornada, PR 2: portal "Onde estamos" (lê `portal_journey`). Depois vem o
+  PR 3 (calendário do ongoing) e o item 4 (modelos de site e tráfego).
 
 ## Revisão de segurança (13/10/2026)
 
@@ -218,9 +232,10 @@ pedir à pessoa uma sessão com os conectores.
 
 ## Pendências com a pessoa
 
-- Briefing: `OPENAI_API_KEY` e `ANTHROPIC_API_KEY` na Vercel (Production);
-  subir os logos da Velmont e da Bárbara pela ficha e liberar o briefing;
-  teste completo com um dos dois antes de clientes novos.
+- Briefing: subir os logos da Velmont e da Bárbara pela ficha e liberar o briefing;
+  trocar a senha (ou apagar o acesso) do cliente Teste.
+- Jornada: iniciar a jornada dos clientes que já rodam (botão "Iniciar
+  jornada", em geral no Ongoing).
 
 - **Instagram:**
   - criar o app na Meta (Instagram → API com login do Instagram) e pôr

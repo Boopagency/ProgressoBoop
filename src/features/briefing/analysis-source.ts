@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 
-import { parseAnalysisContent, type AnalysisContent } from "@/features/briefing/analysis-logic"
+import { analysisToText, parseAnalysisContent, type AnalysisContent } from "@/features/briefing/analysis-logic"
 import type { FailureOutcome } from "@/features/briefing/ai-logic"
 import { IDENTIFICATION_FIELDS, type BriefingIdentification } from "@/features/briefing/logic"
 import {
@@ -183,6 +183,60 @@ export function analysisSourceHash(source: AnalysisSource): string {
 /** Tem o mínimo para analisar? */
 export function hasAnalysisContent(source: AnalysisSource): boolean {
   return source.blocks.some((block) => block.items.some((item) => item.state === "answered"))
+}
+
+/* ------------------------------------------------------------------ */
+/* Exportar em Markdown                                                */
+/* ------------------------------------------------------------------ */
+
+const quote = (text: string) => text.trim().split("\n").map((line) => `> ${line}`.trimEnd()).join("\n")
+
+/**
+ * O briefing em Markdown, para levar a outra ferramenta de escrita: a análise
+ * (se houver), cada resposta com o resumo e as transcrições dos áudios, e as
+ * notas e a transcrição da imersão.
+ */
+export function briefingMarkdown(
+  source: AnalysisSource,
+  analysis: AnalysisContent | null,
+  immersion: { notes: string; transcript: string } | null
+): string {
+  const out: string[] = [`# Briefing — ${source.brandName || "cliente"}`]
+  if (!source.submitted) out.push("", "_Em preenchimento: leitura parcial._")
+  if (source.identification.length > 0) {
+    out.push("", "## Identificação", "")
+    for (const field of source.identification) out.push(`- **${field.label}:** ${field.text}`)
+  }
+  if (analysis) out.push("", analysisToText(analysis, source.brandName, true))
+
+  out.push("", "## Respostas")
+  for (const block of source.blocks) {
+    out.push("", `### ${block.title}`)
+    for (const item of block.items) {
+      out.push("", `#### ${item.n}. ${item.question}`)
+      if (item.state === "skipped") out.push("", "_Pulada pelo cliente._")
+      else if (item.state === "empty") out.push("", "_Sem resposta._")
+      if (item.byTeam) out.push("", "_Preenchida pela Boop; o cliente ainda não confirmou._")
+      if (item.answer.length > 0) out.push("", ...item.answer.map((line) => `- ${line}`))
+      if (item.files > 0) out.push("", `_${item.files} ${item.files === 1 ? "arquivo enviado" : "arquivos enviados"}._`)
+      if (item.summary) out.push("", "**Resumo:**", "", item.summary)
+      item.transcripts.forEach((transcript, index) => {
+        out.push("", `**Transcrição${item.transcripts.length > 1 ? ` do áudio ${index + 1}` : " do áudio"}:**`, "", quote(transcript))
+      })
+      if (item.missingAudios > 0) {
+        out.push("", `_${item.missingAudios} ${item.missingAudios === 1 ? "áudio ainda sem transcrição" : "áudios ainda sem transcrição"}._`)
+      }
+    }
+  }
+
+  const notes = immersion?.notes.trim() ?? ""
+  const meeting = immersion?.transcript.trim() ?? ""
+  if (notes || meeting) {
+    out.push("", "## Imersão")
+    if (notes) out.push("", "### Notas", "", notes)
+    if (meeting) out.push("", "### Transcrição da reunião", "", meeting)
+  }
+  return out.join("\n") + "\n"
 }
 
 /* ------------------------------------------------------------------ */

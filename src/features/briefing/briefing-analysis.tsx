@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle, Check, ChevronDown, Copy, Loader2, RefreshCw, Sparkles } from "lucide-react"
+import { AlertTriangle, Check, ChevronDown, Copy, Download, Loader2, RefreshCw, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -108,6 +108,13 @@ export function BriefingAnalysisPanel({
       }
       action={
         <div className="flex items-center gap-1.5">
+          <Button asChild variant="outline" size="sm" className="gap-1.5 shadow-none">
+            <a href={`/api/briefing/exportar?cliente=${clientId}`} download title="Análise, respostas, resumos e transcrições em Markdown">
+              <Download className="size-3.5" />
+              <span className="hidden sm:inline">Exportar .md</span>
+              <span className="sm:hidden">.md</span>
+            </a>
+          </Button>
           {content ? (
             <Button variant="outline" size="sm" className="gap-1.5 shadow-none" onClick={copy}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

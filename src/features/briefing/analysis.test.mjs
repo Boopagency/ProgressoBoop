@@ -299,3 +299,19 @@ test("sem tempo de sobra, sem chave ou sem respostas: não chama a análise", as
   await run(empty, fakeAnthropic(() => assert.fail()))
   assert.deepEqual(empty.named("briefing_analysis_failed")[0].p_outcome, "final")
 })
+
+test("exportar .md: análise, respostas, resumo e transcrição", () => {
+  const detail = teamDetail()
+  const built = source.buildAnalysisSource(detail, IDENTIFICATION, true)
+  const md = source.briefingMarkdown(built, CONTENT, { notes: "Gosta de bastidores.", transcript: "" })
+  assert.match(md, /^# Briefing — Flor de Açúcar\n/)
+  assert.match(md, /\n## Análise do briefing — Flor de Açúcar\n\n### Pontos importantes\n- Doceria/)
+  assert.match(md, /\n## Respostas\n\n### Negócio\n\n#### 1\. O que você vende\?/)
+  assert.match(md, /_Pulada pelo cliente\._/)
+  assert.match(md, /\n## Imersão\n\n### Notas\n\nGosta de bastidores\.\n$/)
+  for (const item of built.blocks.flatMap((block) => block.items)) {
+    for (const transcript of item.transcripts) assert.ok(md.includes(`> ${transcript.split("\n")[0]}`), "transcrição citada")
+    if (item.summary) assert.ok(md.includes(item.summary), "resumo")
+  }
+  assert.doesNotMatch(source.briefingMarkdown(built, null, null), /Análise do briefing|## Imersão/)
+})

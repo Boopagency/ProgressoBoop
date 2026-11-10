@@ -225,14 +225,17 @@ export const ANALYSIS_GAP_LABEL: Record<AnalysisGapKind, string> = {
 /* Copiar como contexto                                                */
 /* ------------------------------------------------------------------ */
 
-/** A análise em texto limpo, para colar como contexto (num chat, num documento). */
-export function analysisToText(content: AnalysisContent, brandName: string): string {
+/**
+ * A análise em texto limpo, para colar como contexto (num chat, num
+ * documento). Com `markdown`, os títulos viram `##`/`###` (exportar .md).
+ */
+export function analysisToText(content: AnalysisContent, brandName: string, markdown = false): string {
   const lines: string[] = []
   const section = (title: string) => {
     if (lines.length > 0) lines.push("")
-    lines.push(title.toUpperCase())
+    lines.push(markdown ? `### ${title}` : title.toUpperCase())
   }
-  lines.push(`Análise do briefing${brandName.trim() ? ` — ${brandName.trim()}` : ""}`)
+  lines.push(`${markdown ? "## " : ""}Análise do briefing${brandName.trim() ? ` — ${brandName.trim()}` : ""}`)
 
   section("Pontos importantes")
   for (const point of content.key_points) lines.push(`- ${point}`)

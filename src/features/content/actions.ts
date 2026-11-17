@@ -6,11 +6,9 @@ import { requireUser } from "@/features/auth/session"
 import { isContentImagePath } from "@/features/content/logic"
 import { insertFrontTasks, insertPost, NOT_FOUND, patchPost, removePost } from "@/features/content/mutations"
 import { fetchPost } from "@/features/content/queries"
-import { CONTENT_BUCKET, removeContentImages } from "@/features/content/storage"
+import { removeContentImages, signContentImageUpload } from "@/features/content/storage"
 import {
   DISCARD_MAX,
-  IMAGE_MAX,
-  IMAGE_TYPES,
   parseFeedProfile,
   type FeedProfileInput,
   type FrontTaskInput,
@@ -95,21 +93,7 @@ export async function createContentImageUpload(
 ): Promise<ActionResult<{ uploadUrl: string; path: string }>> {
   await requireUser()
   if (!isUuid(clientId)) return CLIENT_NOT_FOUND
-  if (!(IMAGE_TYPES as readonly string[]).includes(contentType)) {
-    return { ok: false, error: "Use uma imagem PNG, JPG ou WebP." }
-  }
-  if (!Number.isFinite(size) || size <= 0 || size > IMAGE_MAX) {
-    return { ok: false, error: "A imagem precisa ter até 5 MB." }
-  }
-
-  const path = `${clientId}/${crypto.randomUUID()}`
-  const supabase = await createClient()
-  const { data, error } = await supabase.storage.from(CONTENT_BUCKET).createSignedUploadUrl(path)
-  if (error || !data) {
-    console.error(`[storage] ${error?.message ?? "sem dados"}`)
-    return { ok: false, error: "Não foi possível enviar a imagem." }
-  }
-  return { ok: true, data: { uploadUrl: data.signedUrl, path } }
+  return signContentImageUpload(await createClient(), clientId, contentType, size)
 }
 
 /**

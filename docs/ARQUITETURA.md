@@ -715,8 +715,12 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     (`textToBlocks`); editar slides pelo MCP mantém as imagens no lugar.
     Fora do MCP: acesso de cliente ao portal, login e senha, o
     consentimento do conector, excluir cliente (excluir post e ideia vale,
-    pelas mesmas `removePost`/`removeIdea` da tela), as imagens e
-    mudanças de schema; também os parâmetros do financeiro. O financeiro
+    pelas mesmas `removePost`/`removeIdea` da tela), mudanças de schema e
+    os parâmetros do financeiro. Imagens de capa e de slide entram por link
+    de upload: `link_para_imagem` devolve a URL assinada do bucket `content`
+    (mesma regra da tela, `signContentImageUpload`) e `anexar_imagem` confere
+    o caminho (prefixo do cliente do post, objeto existente) e grava pelo
+    `patchPost`, que apaga a imagem anterior. O financeiro
     vale pelo conector para quem já o vê na tela (mesmo RLS), com os
     valores sempre em reais (entrada e saída), e as leituras dele, do
     comercial e das metas usam `fetchFinance`, `fetchDeals`, `fetchGoals` e

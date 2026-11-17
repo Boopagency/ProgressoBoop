@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
-import { isContentImagePath, postImagePaths } from "@/features/content/logic"
-import { insertFrontTasks, insertPost, NOT_FOUND, patchPost } from "@/features/content/mutations"
-import { asSlides, fetchPost } from "@/features/content/queries"
+import { isContentImagePath } from "@/features/content/logic"
+import { insertFrontTasks, insertPost, NOT_FOUND, patchPost, removePost } from "@/features/content/mutations"
+import { fetchPost } from "@/features/content/queries"
 import { CONTENT_BUCKET, removeContentImages } from "@/features/content/storage"
 import {
   DISCARD_MAX,
@@ -66,23 +66,10 @@ export async function updatePost(id: string, patch: PostPatch): Promise<ActionRe
   return refreshed(await patchPost(await createClient(), id, patch))
 }
 
-/** Exclui o post e as imagens dele (com as cópias em JPEG do Instagram). As tarefas geradas continuam, sem o vínculo (o banco limpa). */
+/** Exclui o post e as imagens dele (regra em mutations.ts). */
 export async function deletePost(id: string): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return NOT_FOUND
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("content_posts").delete().eq("id", id).select("cover_path, slides, publish_jpeg_paths")
-  if (error) return dbFailure(error, "Não foi possível excluir o post.")
-  if (data.length === 0) return NOT_FOUND
-  await removeContentImages(
-    supabase,
-    data.flatMap((post) => [
-      ...postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) }),
-      ...post.publish_jpeg_paths,
-    ])
-  )
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await removePost(await createClient(), id))
 }
 
 /** Uma tarefa por frente escolhida (copy, design, vídeo), ligada ao post (regra em mutations.ts). */

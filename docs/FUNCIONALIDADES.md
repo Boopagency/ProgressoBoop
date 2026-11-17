@@ -1231,8 +1231,9 @@ própria conta.
     checklist, notas, concluir e próximo passo, que vira tarefa);
   - **conteúdo:** a semana, ver/criar/editar posts (etapa, frentes,
     conteúdo, roteiro, slides, legenda, data e horário), tarefas das
-    frentes, o banco de ideias (listar, criar, editar, virar post) e o que
-    está aguardando o cliente (posts e etapas de projeto);
+    frentes, excluir post (com as imagens dele), o banco de ideias
+    (listar, criar, editar, virar post, excluir) e o que está aguardando o
+    cliente (posts e etapas de projeto);
   - **comunicações:** canais, ler a conversa, escrever (de cliente, interno
     ou conversa direta; no de cliente, também interna, como pedido de ajuste
     ou sobre um projeto), editar e apagar a própria mensagem, resolver
@@ -1257,8 +1258,8 @@ própria conta.
 - **Texto do cliente:** mensagens do portal, pedidos de ajuste, notas de
   aprovação e avisos do portal chegam ao Claude marcados como escritos pelo
   cliente; ele não age por um pedido escrito ali sem a pessoa confirmar.
-- **Limites:** vê e faz só o que a pessoa vê e faz; não exclui cliente,
-  post nem arquivo, não mexe nas imagens dos posts, nos parâmetros do
+- **Limites:** vê e faz só o que a pessoa vê e faz; não exclui cliente
+  nem arquivo, não mexe nas imagens dos posts, nos parâmetros do
   financeiro nem no acesso ao portal. Para desconectar, remove o conector
   no Claude.
 

@@ -46,6 +46,15 @@ export async function patchIdea(supabase: SupabaseServerClient, id: string, patc
   return { ok: true, data: null }
 }
 
+/** Exclui a ideia. O post que nasceu dela (se houver) continua. */
+export async function removeIdea(supabase: SupabaseServerClient, id: string): Promise<ActionResult> {
+  if (!isUuid(id)) return NOT_FOUND
+  const { data, error } = await supabase.from("content_ideas").delete().eq("id", id).select("id")
+  if (error) return dbFailure(error, "Não foi possível excluir a ideia.")
+  if (data.length === 0) return NOT_FOUND
+  return { ok: true, data: null }
+}
+
 /**
  * "Virar post": cria o post do cliente com o título e o formato da ideia (ou
  * o formato escolhido, quando a ideia não tem) e as notas e o link de

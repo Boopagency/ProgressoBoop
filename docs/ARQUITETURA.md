@@ -714,7 +714,8 @@ projetos no portal: `portal_projects`, `portal_project_steps`,
     conteúdo dos processos vai como texto simples e vira blocos do editor
     (`textToBlocks`); editar slides pelo MCP mantém as imagens no lugar.
     Fora do MCP: acesso de cliente ao portal, login e senha, o
-    consentimento do conector, excluir cliente ou post, as imagens e
+    consentimento do conector, excluir cliente (excluir post e ideia vale,
+    pelas mesmas `removePost`/`removeIdea` da tela), as imagens e
     mudanças de schema; também os parâmetros do financeiro. O financeiro
     vale pelo conector para quem já o vê na tela (mesmo RLS), com os
     valores sempre em reais (entrada e saída), e as leituras dele, do

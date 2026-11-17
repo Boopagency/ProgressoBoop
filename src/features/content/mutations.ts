@@ -127,6 +127,26 @@ export async function patchPost(supabase: SupabaseServerClient, id: string, patc
 }
 
 /**
+ * Exclui o post e as imagens dele (com as cópias em JPEG do Instagram). As
+ * tarefas geradas continuam, sem o vínculo, e a ideia de origem volta a ser
+ * livre (o banco limpa os dois).
+ */
+export async function removePost(supabase: SupabaseServerClient, id: string): Promise<ActionResult> {
+  if (!isUuid(id)) return NOT_FOUND
+  const { data, error } = await supabase.from("content_posts").delete().eq("id", id).select("cover_path, slides, publish_jpeg_paths")
+  if (error) return dbFailure(error, "Não foi possível excluir o post.")
+  if (data.length === 0) return NOT_FOUND
+  await removeContentImages(
+    supabase,
+    data.flatMap((post) => [
+      ...postImagePaths({ cover_path: post.cover_path, slides: asSlides(post.slides) }),
+      ...post.publish_jpeg_paths,
+    ])
+  )
+  return { ok: true, data: null }
+}
+
+/**
  * Gera uma tarefa por frente escolhida (copy, design, vídeo), ligada ao post
  * (`content_post_id`), ao cliente e ao projeto dele, com responsáveis e prazo.
  */

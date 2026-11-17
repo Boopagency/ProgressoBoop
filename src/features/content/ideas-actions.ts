@@ -3,13 +3,11 @@
 import { revalidatePath } from "next/cache"
 
 import { requireUser } from "@/features/auth/session"
-import { ideaToPost, insertIdea, NOT_FOUND, patchIdea } from "@/features/content/ideas-mutations"
+import { ideaToPost, insertIdea, patchIdea, removeIdea } from "@/features/content/ideas-mutations"
 import type { IdeaInput, IdeaPatch } from "@/features/content/ideas-validation"
 import type { PostSummary } from "@/features/content/logic"
-import { dbFailure } from "@/lib/supabase/errors"
 import { createClient } from "@/lib/supabase/server"
 import type { ActionResult, ContentFormat, ContentIdea } from "@/lib/types"
-import { isUuid } from "@/lib/utils"
 
 /*
  * Server Actions do banco de ideias. O banco cuida da autoria, do
@@ -40,13 +38,7 @@ export async function updateIdea(id: string, patch: IdeaPatch): Promise<ActionRe
 /** Exclui a ideia. O post que nasceu dela (se houver) continua. */
 export async function deleteIdea(id: string): Promise<ActionResult> {
   await requireUser()
-  if (!isUuid(id)) return NOT_FOUND
-  const supabase = await createClient()
-  const { data, error } = await supabase.from("content_ideas").delete().eq("id", id).select("id")
-  if (error) return dbFailure(error, "Não foi possível excluir a ideia.")
-  if (data.length === 0) return NOT_FOUND
-  refreshApp()
-  return { ok: true, data: null }
+  return refreshed(await removeIdea(await createClient(), id))
 }
 
 /** "Virar post": cria o post a partir da ideia e liga os dois (regra em ideas-mutations.ts). */

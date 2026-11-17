@@ -1,10 +1,10 @@
 import "server-only"
 
 import { ideaHref } from "@/features/content/ideas-logic"
-import { ideaToPost, insertIdea, patchIdea } from "@/features/content/ideas-mutations"
+import { ideaToPost, insertIdea, patchIdea, removeIdea } from "@/features/content/ideas-mutations"
 import { IDEA_COLUMNS } from "@/features/content/ideas-queries"
-import { frontTaskDue, isLate, pendingFronts, publishLabel } from "@/features/content/logic"
-import { insertFrontTasks, insertPost, patchPost } from "@/features/content/mutations"
+import { frontTaskDue, isLate, pendingFronts, postImagePaths, publishLabel } from "@/features/content/logic"
+import { insertFrontTasks, insertPost, patchPost, removePost } from "@/features/content/mutations"
 import { fetchPost } from "@/features/content/queries"
 import type { McpContext } from "@/features/mcp/auth"
 import {
@@ -25,10 +25,13 @@ import {
 import { textResult, toolError, type Tool } from "@/features/mcp/protocol"
 import { loadDirectory, loadPostsAround, namesOf, type Directory, type Names, type PostRow } from "@/features/mcp/queries"
 import {
+  CONFIRM,
+  DESTRUCTIVE,
   EDIT,
   READ_ONLY,
   WRITE,
   approvalLabel,
+  confirmFirst,
   enumOptions,
   enumValue,
   findClient,
@@ -62,8 +65,8 @@ import type { ContentFront, ContentPost } from "@/lib/types"
 /*
  * Central de Conteúdo pelo conector: a semana, os posts (ver, criar, editar
  * etapa, frentes, textos e data; tarefas das frentes), o banco de ideias
- * (listar, criar, editar, virar post) e o que espera o cliente. Imagens e
- * exclusão de post ficam só na tela. As gravações passam por
+ * (listar, criar, editar, virar post, excluir), excluir post e o que espera
+ * o cliente. Imagens ficam só na tela. As gravações passam por
  * features/content/mutations.ts e ideas-mutations.ts.
  */
 
@@ -409,6 +412,44 @@ const frontTasks: Tool<McpContext> = {
   },
 }
 
+const deletePost: Tool<McpContext> = {
+  name: "excluir_post",
+  title: "Excluir post",
+  description:
+    "Exclui um post da Central de Conteúdo e as imagens dele (capa e slides). Em dois passos: sem confirmar, só mostra o que seria apagado; com confirmar: true, apaga. Só confirme depois que a pessoa disser que quer.",
+  inputSchema: { type: "object", properties: { post: POST_ARG, confirmar: CONFIRM }, required: ["post"], additionalProperties: false },
+  annotations: DESTRUCTIVE,
+  async run(args, context) {
+    const { supabase, today } = context
+    const query = readRequiredText(args, "post", 200)
+    if (!query.ok) return toolError(query.error)
+    const found = await findPost(context, query.value)
+    if (!found.ok) return toolError(found.error)
+    const post = found.value
+    const [directory, tasks, ideas] = await Promise.all([
+      loadDirectory(supabase),
+      fetchTasks(supabase),
+      supabase.from("content_ideas").select("id").eq("post_id", post.id),
+    ])
+    const names = namesOf(directory)
+    const images = postImagePaths(post).length
+    const own = tasks.filter((task) => task.content_post_id === post.id).length
+
+    const pending = confirmFirst(args, `o post "${post.title}" (id ${post.id})`, [
+      bullet(names.client(post.client_id), CONTENT_FORMAT_LABEL[post.format], publishLabel(post, today), CONTENT_STAGE_LABEL[post.stage]).slice(2),
+      images > 0 ? `Vão junto: ${count(images, "imagem", "imagens")} (capa e slides) e os textos do post.` : "Vão junto: os textos do post (não há imagens).",
+      post.auto_publish ? "O post está na fila de publicação automática do Instagram e sai dela." : null,
+      own > 0 ? `${count(own, "tarefa das frentes continua", "tarefas das frentes continuam")}, sem o vínculo com o post.` : null,
+      (ideas.data?.length ?? 0) > 0 ? "A ideia de onde ele veio volta para as ideias livres." : null,
+    ].filter((line): line is string => line !== null))
+    if (pending) return pending
+
+    const removed = await removePost(supabase, post.id)
+    if (!removed.ok) return toolError(removed.error)
+    return textResult(`Post "${post.title}" excluído.`)
+  },
+}
+
 /* ------------------------------------------------------------------ */
 /* Ideias                                                              */
 /* ------------------------------------------------------------------ */
@@ -558,6 +599,44 @@ const ideaPost: Tool<McpContext> = {
   },
 }
 
+const deleteIdea: Tool<McpContext> = {
+  name: "excluir_ideia",
+  title: "Excluir ideia",
+  description:
+    "Exclui uma ideia do banco de ideias. O post que nasceu dela (se houver) continua. Em dois passos: sem confirmar, só mostra o que seria apagado; com confirmar: true, apaga. Só confirme depois que a pessoa disser que quer.",
+  inputSchema: {
+    type: "object",
+    properties: { ideia: { type: "string", description: "Id (de preferência) ou título da ideia." }, confirmar: CONFIRM },
+    required: ["ideia"],
+    additionalProperties: false,
+  },
+  annotations: DESTRUCTIVE,
+  async run(args, context) {
+    const { supabase } = context
+    const query = readRequiredText(args, "ideia", 200)
+    if (!query.ok) return toolError(query.error)
+    const found = await findIdea(context, query.value)
+    if (!found.ok) return toolError(found.error)
+    const [directory, { data: idea, error }] = await Promise.all([
+      loadDirectory(supabase),
+      supabase.from("content_ideas").select("title, client_id, format, notes, post_id").eq("id", found.value.id).maybeSingle(),
+    ])
+    if (error) return toolError("Não foi possível ler a ideia.")
+    if (!idea) return toolError("Essa ideia não existe mais.")
+    const names = namesOf(directory)
+
+    const pending = confirmFirst(args, `a ideia "${idea.title}" (id ${found.value.id})`, [
+      bullet(names.client(idea.client_id), idea.format ? CONTENT_FORMAT_LABEL[idea.format] : "sem formato", idea.notes ? `"${excerpt(idea.notes, 120)}"` : null).slice(2),
+      idea.post_id ? "Ela já virou post: o post continua, só a ideia sai." : "Ela ainda não virou post.",
+    ])
+    if (pending) return pending
+
+    const removed = await removeIdea(supabase, found.value.id)
+    if (!removed.ok) return toolError(removed.error)
+    return textResult(`Ideia "${idea.title}" excluída.`)
+  },
+}
+
 /* ------------------------------------------------------------------ */
 /* O que espera o cliente                                              */
 /* ------------------------------------------------------------------ */
@@ -603,4 +682,17 @@ const awaitingClient: Tool<McpContext> = {
   },
 }
 
-export const CONTENT_TOOLS = [weekContent, viewPost, createPost, editPost, frontTasks, listIdeas, createIdea, editIdea, ideaPost, awaitingClient]
+export const CONTENT_TOOLS = [
+  weekContent,
+  viewPost,
+  createPost,
+  editPost,
+  frontTasks,
+  deletePost,
+  listIdeas,
+  createIdea,
+  editIdea,
+  ideaPost,
+  deleteIdea,
+  awaitingClient,
+]

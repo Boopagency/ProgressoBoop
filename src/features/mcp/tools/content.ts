@@ -3,9 +3,11 @@ import "server-only"
 import { ideaHref } from "@/features/content/ideas-logic"
 import { ideaToPost, insertIdea, patchIdea, removeIdea } from "@/features/content/ideas-mutations"
 import { IDEA_COLUMNS } from "@/features/content/ideas-queries"
-import { frontTaskDue, isLate, pendingFronts, postImagePaths, publishLabel } from "@/features/content/logic"
+import { frontTaskDue, isContentImagePath, isLate, pendingFronts, postImagePaths, publishLabel } from "@/features/content/logic"
 import { insertFrontTasks, insertPost, patchPost, removePost } from "@/features/content/mutations"
 import { fetchPost } from "@/features/content/queries"
+import { CONTENT_BUCKET, signContentImageUpload } from "@/features/content/storage"
+import { IMAGE_TYPES } from "@/features/content/validation"
 import type { McpContext } from "@/features/mcp/auth"
 import {
   bullet,
@@ -65,8 +67,9 @@ import type { ContentFront, ContentPost } from "@/lib/types"
 /*
  * Central de Conteúdo pelo conector: a semana, os posts (ver, criar, editar
  * etapa, frentes, textos e data; tarefas das frentes), o banco de ideias
- * (listar, criar, editar, virar post, excluir), excluir post e o que espera
- * o cliente. Imagens ficam só na tela. As gravações passam por
+ * (listar, criar, editar, virar post, excluir), excluir post, imagens de
+ * capa e de slide (por link de upload) e o que espera o cliente. As
+ * gravações passam por
  * features/content/mutations.ts e ideas-mutations.ts.
  */
 
@@ -451,6 +454,117 @@ const deletePost: Tool<McpContext> = {
 }
 
 /* ------------------------------------------------------------------ */
+/* Imagens (capa e slides)                                             */
+/* ------------------------------------------------------------------ */
+
+/*
+ * O conector só recebe texto: a imagem vai num PUT para a URL assinada que
+ * `link_para_imagem` devolve, e `anexar_imagem` grava o caminho no post. A
+ * imagem anterior daquele lugar sai do Storage (patchPost cuida disso).
+ */
+
+const IMAGE_TARGET = {
+  type: "string",
+  description: "\"capa\" ou o número do slide (1, 2, 3…). O slide precisa existir: crie os textos dos slides antes.",
+} as const
+
+/** "capa" → null; número do slide (1…n) → índice; inválido → mensagem. */
+function readImageTarget(args: Args, slides: number): Parsed<number | null> {
+  const raw = String(args.destino ?? "").trim().toLowerCase()
+  if (raw === "capa") return { ok: true, value: null }
+  const number = Number(raw)
+  if (!Number.isInteger(number) || number < 1) return { ok: false, error: "Destino inválido: use \"capa\" ou o número do slide." }
+  if (number > slides) {
+    return { ok: false, error: slides === 0 ? "O post ainda não tem slides. Crie os textos dos slides antes." : `O post tem ${count(slides, "slide", "slides")}.` }
+  }
+  return { ok: true, value: number - 1 }
+}
+
+const imageUploadLink: Tool<McpContext> = {
+  name: "link_para_imagem",
+  title: "Link para enviar imagem",
+  description:
+    "Primeiro passo para pôr uma imagem na capa ou num slide de um post: devolve uma URL assinada (vale por 2 horas) e o caminho. Envie o arquivo com PUT nessa URL, com o cabeçalho Content-Type igual ao tipo informado (ex.: curl -X PUT -H \"Content-Type: image/jpeg\" --data-binary @arquivo.jpg \"<url>\"), e depois chame anexar_imagem com o caminho. A imagem deve chegar pronta: PNG, JPG ou WebP, até 5 MB, lado maior até 1440 px (o app não redimensiona aqui).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      post: POST_ARG,
+      tipo: { type: "string", enum: [...IMAGE_TYPES], description: "Tipo do arquivo." },
+      tamanho: { type: "integer", minimum: 1, description: "Tamanho do arquivo em bytes." },
+    },
+    required: ["post", "tipo", "tamanho"],
+    additionalProperties: false,
+  },
+  annotations: WRITE,
+  async run(args, context) {
+    const query = readRequiredText(args, "post", 200)
+    if (!query.ok) return toolError(query.error)
+    const found = await findPost(context, query.value)
+    if (!found.ok) return toolError(found.error)
+    const signed = await signContentImageUpload(context.supabase, found.value.client_id, String(args.tipo ?? ""), Number(args.tamanho))
+    if (!signed.ok) return toolError(signed.error)
+    return textResult(
+      [
+        `Envie a imagem do post "${found.value.title}" com PUT para:`,
+        signed.data.uploadUrl,
+        `Caminho (para anexar_imagem): ${signed.data.path}`,
+      ].join("\n")
+    )
+  },
+}
+
+const attachImage: Tool<McpContext> = {
+  name: "anexar_imagem",
+  title: "Anexar imagem ao post",
+  description:
+    "Segundo passo: põe a imagem já enviada (pelo link de link_para_imagem) na capa ou num slide do post. Com caminho \"nenhum\", tira a imagem daquele lugar. A imagem que estava ali sai do Storage.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      post: POST_ARG,
+      destino: IMAGE_TARGET,
+      caminho: { type: "string", description: "O caminho devolvido por link_para_imagem, ou \"nenhum\" para tirar a imagem." },
+    },
+    required: ["post", "destino", "caminho"],
+    additionalProperties: false,
+  },
+  annotations: EDIT,
+  async run(args, context) {
+    const { supabase, origin } = context
+    const query = readRequiredText(args, "post", 200)
+    if (!query.ok) return toolError(query.error)
+    const found = await findPost(context, query.value)
+    if (!found.ok) return toolError(found.error)
+    const post = found.value
+    const target = readImageTarget(args, post.slides.length)
+    if (!target.ok) return toolError(target.error)
+
+    let path: string | null = null
+    if (!isClear(args.caminho)) {
+      const raw = String(args.caminho ?? "").trim()
+      if (!isContentImagePath(raw) || !raw.startsWith(`${post.client_id}/`)) return toolError("Caminho inválido: use o que link_para_imagem devolveu para este post.")
+      const { data: exists, error } = await supabase.storage.from(CONTENT_BUCKET).exists(raw)
+      if (error || !exists) return toolError("A imagem ainda não chegou ao Storage. Envie o arquivo pela URL de link_para_imagem antes.")
+      path = raw
+    }
+
+    const index = target.value
+    const patch =
+      index === null
+        ? { cover_path: path }
+        : { slides: post.slides.map((slide, position) => (position === index ? { ...slide, image_path: path } : slide)) }
+    const saved = await patchPost(supabase, post.id, patch)
+    if (!saved.ok) return toolError(saved.error)
+    const where = index === null ? "na capa" : `no slide ${index + 1}`
+    return textResult(
+      [path ? `Imagem posta ${where} do post "${post.title}".` : `Imagem tirada ${where} do post "${post.title}".`, saved.data, `${origin}/conteudo?post=${post.id}`]
+        .filter(Boolean)
+        .join("\n")
+    )
+  },
+}
+
+/* ------------------------------------------------------------------ */
 /* Ideias                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -689,6 +803,8 @@ export const CONTENT_TOOLS = [
   editPost,
   frontTasks,
   deletePost,
+  imageUploadLink,
+  attachImage,
   listIdeas,
   createIdea,
   editIdea,
